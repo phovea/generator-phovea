@@ -19,7 +19,8 @@
   },
   "main": "generators/web-plugin/index.js",
   "files": [
-    "generators/web-plugin"
+    "generators/",
+	"utils/"
   ],
   "keywords": [
     "yeoman-generator"
