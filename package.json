@@ -3,23 +3,39 @@
   "version": "0.0.0",
   "description": "helper generator for phovea",
   "homepage": "https://github.com/phovea/phovea-generator",
+  "version": "0.0.1",
   "author": {
-    "name": "Samuel Gratzl",
-    "email": "samuel_gratzl@gmx.at",
-    "url": ""
+    "name": "Caleydo Team",
+    "email": "contact@caleydo.org",
+    "url": "https://caleydo.org"
+  },
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/phovea/phovea-generator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phovea/phovea-generator.git"
   },
   "files": [
     "generators"
   ],
-  "main": "generators/index.js",
   "keywords": [
-    "",
     "yeoman-generator"
   ],
+  "engines": {
+    "node": ">=4.0.0"
+  },
   "dependencies": {
-    "yeoman-generator": "^0.23.0",
     "chalk": "^1.0.0",
-    "yosay": "^1.0.0"
+    "deep-extend": "^0.4.0",
+    "generator-node": "^1.7.0",
+    "inquirer-npm-name": "^2.0.0",
+    "lodash": "^4.6.1",
+    "mkdirp": "^0.5.1",
+    "superb": "^1.0.0",
+    "yeoman-generator": "^0.23.3",
+    "yosay": "^1.0.2"
   },
   "devDependencies": {
     "yeoman-test": "^1.0.0",
@@ -41,10 +57,8 @@
       "mocha": true
     }
   },
-  "repository": "git@github.com:sgratzl/phovea_container.git",
   "scripts": {
     "prepublish": "gulp prepublish",
     "test": "gulp"
-  },
-  "license": "MIT"
+  }
 }
