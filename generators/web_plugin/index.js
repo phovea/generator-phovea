@@ -12,26 +12,48 @@ function makeGeneratorName(name) {
   return name;
 }
 
-module.exports = generators.Base.extend({
-  initializing: function () {
-    this.props = {};
-  },
+class PluginGenerator extends Generators.Base {
 
-  prompting: function () {
+  constructor(args, options) {
+    super(args, options);
+
+    // Make options available
+    this.option('skip-welcome-message', {
+      desc: 'Skip the welcome message',
+      type: Boolean,
+      defaults: false
+    });
+    this.option('skip-install');
+
+    // Use our plain template as source
+    this.sourceRoot(baseRootPath);
+
+    this.config.save();
+
+
+    this.props = {};
+  }
+
+  initializing() {
+    if(!this.options['skip-welcome-message']) {
+      this.log(require('yeoman-welcome'));
+    }
+  }
+
+  prompting() {
     return askName({
       name: 'name',
       message: 'Your phovea plugin name',
       default: makeGeneratorName(path.basename(process.cwd())),
       filter: makeGeneratorName,
-      validate: function (str) {
-        return str.length > 'phovea-'.length;
-      }
-    }, this).then(function (props) {
+      validate: (str) => str.length > 'phovea-'.length
+    }, this).then((props) => {
       this.props.name = props.name;
-    }.bind(this));
-  },
+      this.config.set('name', this.props.name);
+    });
+  }
 
-  default: function () {
+  default() {
     if (path.basename(this.destinationPath()) !== this.props.name) {
       this.log(
         'Your generator must be inside a folder named ' + this.props.name + '\n' +
@@ -51,9 +73,9 @@ module.exports = generators.Base.extend({
     }, {
       local: require('generator-node').app
     });
-  },
+  }
 
-  writing: function () {
+  configuring() {
     var pkg = this.fs.readJSON(this.destinationPath('package.json'));
     var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))({
       name: this.props.name
@@ -62,19 +84,19 @@ module.exports = generators.Base.extend({
 
     this.fs.writeJSON(this.destinationPath('package.json'), pkg);
 
-    const templates = {
-      name: this.props.name,
-      repository: pkg.repository.url,
-      modules: [],
-      libraries: {},
-      extensions: []
-    };
-
-    this.fs.copy(this.templatPath('plain/**/*'), this.destinationPath(), templates);
-    this.fs.copyTpl(this.templatPath('processed/**/*'), this.destinationPath(), templates);
-  },
-
-  install: function () {
-    this.installDependencies({bower: false});
+    this.props.repository = pkg.repository.url;
   }
-});
+
+  writing() {
+    this.fs.copy(this.templatPath('plain/**/*'), this.destinationPath());
+    this.fs.copyTpl(this.templatPath('processed/**/*'), this.destinationPath(), this.props);
+  }
+
+  install() {
+    if(!this.options['skip-install']) {
+      this.installDependencies({ bower: false });
+    }
+  }
+}
+
+module.exports = PluginGenerator;
