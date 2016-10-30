@@ -52,17 +52,17 @@ class PluginGenerator extends Base {
 
   prompting() {
     return super.prompting().then(() => this.prompt([{
-      type    : 'checkbox',
-      name    : 'modules',
-      message : 'Which modules should be included?',
+      type: 'checkbox',
+      name: 'modules',
+      message: 'Which modules should be included?',
       choices: knownPluginNames,
-      default : this.config.get('modules')
-    },{
-      type    : 'checkbox',
-      name    : 'libraries',
-      message : 'Which libraries should be included?',
+      default: this.config.get('modules')
+    }, {
+      type: 'checkbox',
+      name: 'libraries',
+      message: 'Which libraries should be included?',
       choices: knownLibraryNames,
-      default : this.config.get('libraries')
+      default: this.config.get('libraries')
     }])).then((props) => {
       this.config.set('modules', props.modules);
       this.config.set('libraries', props.libraries);
@@ -70,7 +70,7 @@ class PluginGenerator extends Base {
     });;
   }
 
-  default() {
+  default () {
     this.composeWith('node:app', {
       options: {
         babel: false,
@@ -109,8 +109,10 @@ class PluginGenerator extends Base {
   }
 
   install() {
-    if(!this.options.skipInstall) {
-      this.installDependencies({ bower: false });
+    if (!this.options.skipInstall) {
+      this.installDependencies({
+        bower: false
+      });
     }
   }
 }

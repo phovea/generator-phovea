@@ -42,22 +42,22 @@ class BasePluginGenerator extends generators.Base {
     }
     return askName({
       name: 'name',
-      message: 'Your phovea '+this.type+' plugin name',
+      message: 'Your phovea ' + this.type + ' plugin name',
       default: path.basename(process.cwd()),
-      filter: _.kebabCase
+      filter: _.snakeCase
     }, this).then((props) => {
       this.config.set('name', props.name);
     });
   }
 
-  default() {
+  default () {
     this.log(this.basetype);
-    this.composeWith('phovea:'+this.basetype+'-plugin', {
+    this.composeWith('phovea:' + this.basetype + '-plugin', {
       options: {
         skipInstall: this.options.skipInstall
       }
     }, {
-      local: require.resolve('../generators/'+this.basetype+'-plugin')
+      local: require.resolve('../generators/' + this.basetype + '-plugin')
     });
   }
 
@@ -83,8 +83,8 @@ class BasePluginGenerator extends generators.Base {
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
-    this.fs.copy(this.templatePath('pluginname/plain/**/*'), this.destinationPath(config.name+'/'), includeDot);
-    this.fs.copyTpl(this.templatePath('pluginname/processed/**/*'), this.destinationPath(config.name+'/'), config, includeDot);
+    this.fs.copy(this.templatePath('pluginname/plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
+    this.fs.copyTpl(this.templatePath('pluginname/processed/**/*'), this.destinationPath(config.name + '/'), config, includeDot);
   }
 }
 
