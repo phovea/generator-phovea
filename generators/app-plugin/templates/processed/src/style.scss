@@ -1,0 +1,16 @@
+#datalist, #datatree {
+  display: inline-block;
+  width: 45%;
+}
+
+
+#datalist table {
+  //make the name column bold
+  th {
+    font-weight: bold;
+  }
+
+  td:nth-child(2) {
+    font-weight: bold;
+  }
+}
