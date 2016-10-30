@@ -66,7 +66,7 @@ class PluginGenerator extends Base {
         travis: false,
         name: this.config.get('name'),
         coveralls: false,
-        skipInstall: this.options.skipInstall
+        skipInstall: true
       }
     }, {
       local: require('generator-node').app
@@ -103,7 +103,7 @@ class PluginGenerator extends Base {
 
   writing() {
     const config = this.config.getAll();
-    this._patchPackageJSON(config);
+    this._patchPackageJSON(config, ['devDependencies', 'main', 'eslintConfig']);
     this._writeTemplates(config);
 
     const deps = this._generateDependencies(config);
