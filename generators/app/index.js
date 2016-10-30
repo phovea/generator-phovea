@@ -2,7 +2,7 @@
 var path = require('path');
 var generators = require('yeoman-generator');
 
-const knownPluginTypes = ['app', 'bundle', 'lib'];
+const knownPluginTypes = ['app', 'bundle', 'lib', 'server'];
 const defaultPluginType = ['app'];
 
 class ChooseGenerator extends generators.Base {

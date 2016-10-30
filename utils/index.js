@@ -20,9 +20,11 @@ function patchPackageJSON(config, unset, extra) {
 
 class BasePluginGenerator extends generators.Base {
 
-  constructor(type, args, options) {
+  constructor(type, args, options, basetype) {
     super(args, options);
     this.type = type;
+    this.basetype = basetype || 'web';
+    this.config.set('type', type);
     // Make options available
     this.option('skipInstall');
   }
@@ -49,12 +51,13 @@ class BasePluginGenerator extends generators.Base {
   }
 
   default() {
-    this.composeWith('phovea:web-plugin', {
+    this.log(this.basetype);
+    this.composeWith('phovea:'+this.basetype+'-plugin', {
       options: {
         skipInstall: this.options.skipInstall
       }
     }, {
-      local: require.resolve('../generators/web-plugin')
+      local: require.resolve('../generators/'+this.basetype+'-plugin')
     });
   }
 

@@ -38,24 +38,24 @@ class PluginGenerator extends Base {
 
   prompting() {
     return super.prompting().then(() => this.prompt([{
-      type    : 'checkbox',
-      name    : 'modules',
-      message : 'Which modules should be included?',
+      type: 'checkbox',
+      name: 'modules',
+      message: 'Which modules should be included?',
       choices: knownPluginNames,
-      default : this.config.get('smodules')
-    },{
-      type    : 'checkbox',
-      name    : 'libraries',
-      message : 'Which libraries should be included?',
+      default: this.config.get('smodules')
+    }, {
+      type: 'checkbox',
+      name: 'libraries',
+      message: 'Which libraries should be included?',
       choices: knownLibraryNames,
-      default : this.config.get('slibraries')
+      default: this.config.get('slibraries')
     }])).then((props) => {
       this.config.set('smodules', props.modules);
       this.config.set('slibraries', props.libraries);
     });;
   }
 
-  default() {
+  default () {
     this.composeWith('node:app', {
       options: {
         babel: false,
@@ -73,15 +73,50 @@ class PluginGenerator extends Base {
     });
   }
 
+  _generateDependencies(config) {
+    const pip = {},
+      debian = {},
+      redhat = {};
+
+    const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
+
+    //merge dependencies
+    this.config.get('smodules').forEach((m) => {
+      const p = knownPlugins.splugins[knownPluginNames.indexOf(m)];
+      extend(pip, p.requirements);
+      extend(debian, p.debian_packages);
+      extend(debian, p.redhat_packages);
+    });
+    this.config.get('slibraries').forEach((m) => {
+      const p = knownPlugins.slibraries[knownLibraryNames.indexOf(m)];
+      extend(pip, p.requirements);
+      extend(debian, p.debian_packages);
+      extend(debian, p.redhat_packages);
+    });
+
+    return {
+      pip: concat(pip),
+      debian: concat(debian),
+      redhat: concat(redhat)
+    };
+  }
+
   writing() {
     const config = this.config.getAll();
     this._patchPackageJSON(config);
     this._writeTemplates(config);
+
+    const deps = this._generateDependencies(config);
+    this.fs.write(this.destinationPath('requirements.txt'), deps.pip.join('\n'));
+    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debian.join('\n'));
+    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhat.join('\n'));
   }
 
   install() {
-    if(!this.options.skipInstall) {
+    if (!this.options.skipInstall) {
       //TODO pip install
     }
   }
 }
+
+module.exports = PluginGenerator;
