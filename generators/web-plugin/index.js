@@ -3,7 +3,7 @@ var path = require('path');
 var generators = require('yeoman-generator');
 var askName = require('inquirer-npm-name');
 var _ = require('lodash');
-var patchPackageJSON = require('../../utils').patchPackageJSON;
+var Base = require('../../utils').Base;
 
 function resolveRepo(repo) {
   if (!repo) {
@@ -15,15 +15,12 @@ function resolveRepo(repo) {
   return repo.url;
 }
 
-class PluginGenerator extends generators.Base {
+const knownPlugins = require('../../knownPhoveaPlugins.json');
+
+class PluginGenerator extends Base {
 
   constructor(args, options) {
-    super(args, options);
-
-    // Make options available
-    this.option('skipInstall');
-
-
+    super('', args, options);
   }
 
   initializing() {
@@ -41,19 +38,7 @@ class PluginGenerator extends generators.Base {
   }
 
   prompting() {
-    //already set
-    if (this.config.get('name')) {
-      return Promise.resolve(null);
-    }
-
-    return askName({
-      name: 'name',
-      message: 'Your phovea plugin name',
-      default: path.basename(process.cwd()),
-      filter: _.kebabCase
-    }, this).then((props) => {
-      this.config.set('name', this.props.name);
-    });
+    return super.prompting();
   }
 
   default() {
@@ -75,10 +60,7 @@ class PluginGenerator extends generators.Base {
   }
 
   writing() {
-    const config = this.config.getAll();
-    patchPackageJSON.call(this, config);
-    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath());
-    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config);
+    super.writing();
   }
 
   install() {
