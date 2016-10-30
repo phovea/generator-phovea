@@ -16,8 +16,12 @@ const knownPlugins = require('../../knownPhoveaPlugins.json');
 const knownPluginNames = knownPlugins.plugins.map((d) => d.name);
 const knownLibraryNames = knownPlugins.libraries.map((d) => d.name);
 
-function toLibraryAliasMap(libraryNames) {
+function toLibraryAliasMap(moduleNames, libraryNames) {
   var r = {};
+  moduleNames.forEach((m) => {
+    const plugin = knownPlugins.plugins[knownPluginNames.indexOf(m)];
+    libraryNames.push(...(plugin.libraries || []));
+  });
   libraryNames.forEach((l) => {
     const lib = knownPlugins.libraries[knownLibraryNames.indexOf(l)];
     r[lib.name] = lib.alias || lib.name;
@@ -37,7 +41,8 @@ class PluginGenerator extends Base {
       name: pkg.name || '',
       author: '',
       today: (new Date()).toUTCString(),
-      libraries: {},
+      libraries: [],
+      libraryAliases: {},
       modules: ['phovea_core'],
       extensions: [],
       description: pkg.description || '',
@@ -57,10 +62,11 @@ class PluginGenerator extends Base {
       name    : 'libraries',
       message : 'Which libraries should be included?',
       choices: knownLibraryNames,
-      default : Object.keys(this.config.get('libraries'))
+      default : this.config.get('libraries')
     }])).then((props) => {
       this.config.set('modules', props.modules);
-      this.config.set('libraries', toLibraryAliasMap(props.libraries));
+      this.config.set('libraries', props.libraries);
+      this.config.set('libraryAliases', toLibraryAliasMap(props.modules, props.libraries));
     });;
   }
 
@@ -88,7 +94,7 @@ class PluginGenerator extends Base {
     this.config.get('modules').forEach((m) => {
       extend(r, knownPlugins.plugins[knownPluginNames.indexOf(m)].dependencies);
     });
-    Object.keys(this.config.get('libraries')).forEach((m) => {
+    this.config.get('libraries').forEach((m) => {
       extend(r, knownPlugins.libraries[knownLibraryNames.indexOf(m)].dependencies);
     });
     return r;

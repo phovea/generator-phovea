@@ -11,9 +11,7 @@ class PluginGenerator extends BasePluginGenerator {
     super.initializing();
     this.config.defaults({
       app: '',
-      libraries: {
-        d3: 'd3/d3'
-      },
+      libraries: ['d3'],
       modules: ['phovea_core', 'phovea_bootstrap_fontawesome']
     });
   }

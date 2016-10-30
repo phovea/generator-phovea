@@ -10,6 +10,6 @@ const generate = require('./common_config.js');
  * list of all libraries used and their node_modules folder location
  */
 const libraries = {
-<%- Object.keys(libraries).map((d) => `'  ${d}': '${libraries[d]}'`).join(',\n') %>
+<%- Object.keys(libraryAliases).map((d) => `'  ${d}': '${libraryAliases[d]}'`).join(',\n') %>
 };
 module.exports = generate.karma.lib(libraries);

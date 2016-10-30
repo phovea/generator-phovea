@@ -4,25 +4,29 @@
     "description": "Phovea Core Plugin",
     "dependencies": {
       "phovea_core": "github:sgratzl/phovea_core"
-    }
+    },
+    "libraries": []
   }, {
     "name": "phovea_d3",
     "description": "Phovea D3 Plugin",
     "dependencies": {
       "phovea_d3": "github:sgratzl/phovea_d3"
-    }
+    },
+    "libraries": ["d3"]
   }, {
     "name": "phovea_vis",
     "description": "Phovea Vis Plugin",
     "dependencies": {
       "phovea_vis": "github:sgratzl/phovea_vis"
-    }
+    },
+    "libraries": ["d3"]
   }, {
     "name": "phovea_bootstrap_fontawesome",
     "description": "Phovea Common Style Plugin",
     "dependencies": {
       "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
-    }
+    },
+    "libraries": ["jquery"]
   }],
   "libraries": [{
     "name": "d3",
@@ -31,6 +35,14 @@
     "dependencies": {
       "@types/d3": "^3.5.36",
       "d3": "^3.5.17"
+    }
+  }, {
+    "name": "jquery",
+    "description": "JQuery 3.1",
+    "alias": "jquery",
+    "dependencies": {
+      "@types/jquery": "^2.0.33",
+      "jquery": "^3.1.1"
     }
   }]
 }
