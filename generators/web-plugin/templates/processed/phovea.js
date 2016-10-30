@@ -8,5 +8,5 @@
 //see phovea_core/plugin.ts -> push
 module.exports = function(registry) {
   //registry.push('extension-type', 'extension-id', function() { return require('./src/extension_impl');}, {});
-  <%- extensions.map(function(d) { return "registry.push('"+d.type+"', '"+d.id"', function() { return require('./src/"+d.module+"');}, "+JSON.stringify(d.extras)+");";}.join(',\n') %>
+  <%- extensions.map((d) => `registry.push('${d.type}', '${d.id}', function() { return require('./src/${d.module}');}, ${JSON.stringify(d.extras)});`).join(',\n') %>
 };

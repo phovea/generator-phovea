@@ -10,6 +10,6 @@ var registry = require('phovea_core/src/plugin');
  * build a registry by registering all phovea modules
  */
 //other modules
-<%- modules.map(function(d) { return "registry.register(require('" + d+ " /phovea.js'));";}.join('\n') %>
+<%- modules.map((d) => `registry.register(require('${d}/phovea.js'));`).join('\n') %>
 //self
 registry.register(require('./phovea.js'));

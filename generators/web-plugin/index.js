@@ -4,29 +4,14 @@ var generators = require('yeoman-generator');
 var askName = require('inquirer-npm-name');
 var _ = require('lodash');
 var extend = require('deep-extend');
-var mkdirp = require('mkdirp');
 
-function makeGeneratorName(name) {
-  name = _.kebabCase(name);
-  name = name.indexOf('phovea_') === 0 ? name : 'phovea_' + name;
-  return name;
-}
-
-class PluginGenerator extends Generators.Base {
+class PluginGenerator extends generators.Base {
 
   constructor(args, options) {
     super(args, options);
 
     // Make options available
-    this.option('skip-welcome-message', {
-      desc: 'Skip the welcome message',
-      type: Boolean,
-      defaults: false
-    });
     this.option('skip-install');
-
-    // Use our plain template as source
-    this.sourceRoot(baseRootPath);
 
     this.config.save();
 
@@ -35,39 +20,37 @@ class PluginGenerator extends Generators.Base {
   }
 
   initializing() {
-    if(!this.options['skip-welcome-message']) {
-      this.log(require('yeoman-welcome'));
-    }
+
   }
 
   prompting() {
     return askName({
       name: 'name',
       message: 'Your phovea plugin name',
-      default: makeGeneratorName(path.basename(process.cwd())),
-      filter: makeGeneratorName,
-      validate: (str) => str.length > 'phovea-'.length
+      default: path.basename(process.cwd()),
+      filter: _.kebabCase
     }, this).then((props) => {
       this.props.name = props.name;
+      this.props.description = '';
+      this.props.libraries = {};
+      this.props.modules = ['phovea_core'];
+      this.props.extensions = [];
+      this.props.repository = '';
       this.config.set('name', this.props.name);
     });
   }
 
   default() {
-    if (path.basename(this.destinationPath()) !== this.props.name) {
-      this.log(
-        'Your generator must be inside a folder named ' + this.props.name + '\n' +
-        'I\'ll automatically create this folder.'
-      );
-      mkdirp(this.props.name);
-      this.destinationRoot(this.destinationPath(this.props.name));
-    }
-
     this.composeWith('node:app', {
       options: {
         babel: false,
         boilerplate: false,
+        editorconfig: false,
+        git: false,
+        gulp: false,
+        travis: false,
         name: this.props.name,
+        coveralls: false,
         skipInstall: this.options.skipInstall
       }
     }, {
@@ -75,8 +58,8 @@ class PluginGenerator extends Generators.Base {
     });
   }
 
-  configuring() {
-    var pkg = this.fs.readJSON(this.destinationPath('package.json'));
+  writing() {
+    var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
     var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))({
       name: this.props.name
     }));
@@ -84,12 +67,11 @@ class PluginGenerator extends Generators.Base {
 
     this.fs.writeJSON(this.destinationPath('package.json'), pkg);
 
-    this.props.repository = pkg.repository.url;
-  }
+    this.props.repository = '';
+    this.log(pkg);
 
-  writing() {
-    this.fs.copy(this.templatPath('plain/**/*'), this.destinationPath());
-    this.fs.copyTpl(this.templatPath('processed/**/*'), this.destinationPath(), this.props);
+    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath());
+    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), this.props);
   }
 
   install() {

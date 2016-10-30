@@ -1,9 +1,0 @@
-/.tscache
-/.idea
-node_modules
-build
-*.map
-src/**/*.js
-tests/**/*.js
-*.css
-*.log
