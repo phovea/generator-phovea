@@ -5,12 +5,12 @@ var askName = require('inquirer-npm-name');
 var _ = require('lodash');
 var extend = require('deep-extend');
 
-function patchPackageJSON(config, unset) {
+function patchPackageJSON(config, unset, extra) {
   var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
   this.log('PACKAGE', pkg);
 
   var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
-  extend(pkg, pkg_patch);
+  extend(pkg, pkg_patch, extra || {});
 
   (unset || []).forEach((d) => delete pkg[d]);
 
@@ -67,8 +67,8 @@ class BasePluginGenerator extends generators.Base {
     this._writeTemplates(config);
   }
 
-  _patchPackageJSON(config, unset) {
-    return patchPackageJSON.call(this, config, unset);
+  _patchPackageJSON(config, unset, extra) {
+    return patchPackageJSON.call(this, config, unset, extra);
   }
 
   _writeTemplates(config) {

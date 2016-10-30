@@ -1,0 +1,36 @@
+{
+  "plugins": [{
+    "name": "phovea_core",
+    "description": "Phovea Core Plugin",
+    "dependencies": {
+      "phovea_core": "github:sgratzl/phovea_core"
+    }
+  }, {
+    "name": "phovea_d3",
+    "description": "Phovea D3 Plugin",
+    "dependencies": {
+      "phovea_d3": "github:sgratzl/phovea_d3"
+    }
+  }, {
+    "name": "phovea_vis",
+    "description": "Phovea Vis Plugin",
+    "dependencies": {
+      "phovea_vis": "github:sgratzl/phovea_vis"
+    }
+  }, {
+    "name": "phovea_bootstrap_fontawesome",
+    "description": "Phovea Common Style Plugin",
+    "dependencies": {
+      "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
+    }
+  }],
+  "libraries": [{
+    "name": "d3",
+    "description": "D3 v3 Library",
+    "alias": "d3/d3",
+    "dependencies": {
+      "@types/d3": "^3.5.36",
+      "d3": "^3.5.17"
+    }
+  }]
+}

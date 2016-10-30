@@ -1,8 +1,5 @@
 'use strict';
-var path = require('path');
-var generators = require('yeoman-generator');
-var askName = require('inquirer-npm-name');
-var _ = require('lodash');
+var extend = require('deep-extend');
 var Base = require('../../utils').Base;
 
 function resolveRepo(repo) {
@@ -16,6 +13,17 @@ function resolveRepo(repo) {
 }
 
 const knownPlugins = require('../../knownPhoveaPlugins.json');
+const knownPluginNames = knownPlugins.plugins.map((d) => d.name);
+const knownLibraryNames = knownPlugins.libraries.map((d) => d.name);
+
+function toLibraryAliasMap(libraryNames) {
+  var r = {};
+  libraryNames.forEach((l) => {
+    const lib = knownPlugins.libraries[knownLibraryNames.indexOf(l)];
+    r[lib.name] = lib.alias || lib.name;
+  });
+  return r;
+}
 
 class PluginGenerator extends Base {
 
@@ -38,7 +46,22 @@ class PluginGenerator extends Base {
   }
 
   prompting() {
-    return super.prompting();
+    return super.prompting().then(() => this.prompt([{
+      type    : 'checkbox',
+      name    : 'modules',
+      message : 'Which modules should be included?',
+      choices: knownPluginNames,
+      default : this.config.get('modules')
+    },{
+      type    : 'checkbox',
+      name    : 'libraries',
+      message : 'Which libraries should be included?',
+      choices: knownLibraryNames,
+      default : Object.keys(this.config.get('libraries'))
+    }])).then((props) => {
+      this.config.set('modules', props.modules);
+      this.config.set('libraries', toLibraryAliasMap(props.libraries));
+    });;
   }
 
   default() {
@@ -59,8 +82,24 @@ class PluginGenerator extends Base {
     });
   }
 
+  _generateDependencies() {
+    var r = {};
+    //merge dependencies
+    this.config.get('modules').forEach((m) => {
+      extend(r, knownPlugins.plugins[knownPluginNames.indexOf(m)].dependencies);
+    });
+    Object.keys(this.config.get('libraries')).forEach((m) => {
+      extend(r, knownPlugins.libraries[knownLibraryNames.indexOf(m)].dependencies);
+    });
+    return r;
+  }
+
   writing() {
-    super.writing();
+    const config = this.config.getAll();
+    this._patchPackageJSON(config, [], {
+      dependencies: this._generateDependencies()
+    });
+    this._writeTemplates(config);
   }
 
   install() {
