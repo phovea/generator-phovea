@@ -1,5 +1,5 @@
 'use strict';
-var BasePluginGenerator = require('../../utils');
+var BasePluginGenerator = require('../../utils').Base;
 
 class PluginGenerator extends BasePluginGenerator {
 
@@ -29,10 +29,14 @@ class PluginGenerator extends BasePluginGenerator {
     });
   }
 
+  default() {
+    super.default();
+  }
+
   writing() {
     const config = this.config.getAll();
     this._patchPackageJSON(config, ['main']);
-    this._writeTemplates();
+    this._writeTemplates(config);
   }
 }
 

@@ -5,6 +5,19 @@ var askName = require('inquirer-npm-name');
 var _ = require('lodash');
 var extend = require('deep-extend');
 
+function patchPackageJSON(config, unset) {
+  var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
+  this.log('PACKAGE', pkg);
+
+  var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
+  extend(pkg, pkg_patch);
+
+  (unset || []).forEach((d) => delete pkg[d]);
+
+  this.fs.writeJSON(this.destinationPath('package.json'), pkg);
+}
+
+
 class BasePluginGenerator extends generators.Base {
 
   constructor(type, args, options) {
@@ -15,7 +28,9 @@ class BasePluginGenerator extends generators.Base {
   }
 
   initializing() {
-
+    this.config.defaults({
+      name: ''
+    });
   }
 
   prompting() {
@@ -39,29 +54,21 @@ class BasePluginGenerator extends generators.Base {
         skipInstall: this.options.skipInstall
       }
     }, {
-      local: require.resolve('../web-plugin')
+      local: require.resolve('../generators/web-plugin')
     });
   }
 
-  _patchPackageJSON(config, unset) {
-    var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
-    this.log('PACKAGE', pkg);
-
-    var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
-    extend(pkg, pkg_patch);
-
-    (unset || []).forEach((d) => delete pkg[d]);
-
-    this.fs.writeJSON(this.destinationPath('package.json'), pkg);
-
-  }
 
   writing() {
     const config = this.config.getAll();
     if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
       this._patchPackageJSON(config);
     }
-    this._writeTemplates();
+    this._writeTemplates(config);
+  }
+
+  _patchPackageJSON(config, unset) {
+    return patchPackageJSON.call(this, config, unset);
   }
 
   _writeTemplates(config) {
@@ -70,4 +77,7 @@ class BasePluginGenerator extends generators.Base {
   }
 }
 
-module.exports = BasePluginGenerator;
+module.exports = {
+  Base: BasePluginGenerator,
+  patchPackageJSON: patchPackageJSON
+};
