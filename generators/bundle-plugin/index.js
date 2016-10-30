@@ -4,12 +4,12 @@ var BasePluginGenerator = require('../../utils').Base;
 class PluginGenerator extends BasePluginGenerator {
 
   constructor(args, options) {
-    super('library', args, options);
+    super('bundle', args, options);
   }
 
   initializing() {
     //since just last in the hierarchy used, need to do super calls
-    super.initializing();
+    return super.initializing();
   }
 
   prompting() {
