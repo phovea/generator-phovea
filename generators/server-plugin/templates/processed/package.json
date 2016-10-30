@@ -1,0 +1,15 @@
+{
+  "files": [
+    "src",
+    "__init__.py",
+    "__main__.py",
+    "build",
+    "requirements.txt",
+    "assets"
+  ],
+  "scripts": {
+    "check": "flake8",
+    "test_only": "python test_runner.py",
+    "test": "npm run check && npm run test_only"
+  }
+}

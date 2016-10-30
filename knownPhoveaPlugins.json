@@ -44,5 +44,11 @@
       "@types/jquery": "^2.0.33",
       "jquery": "^3.1.1"
     }
-  }]
+  }],
+  "splugins": [
+
+  ],
+  "slibraries": {
+
+  }
 }
