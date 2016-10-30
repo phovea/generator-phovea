@@ -1,8 +1,7 @@
 {
   "name": "generator-phovea",
-  "version": "0.0.0",
   "description": "helper generator for phovea",
-  "homepage": "https://github.com/phovea/phovea-generator",
+  "homepage": "https://github.com/phovea/generator-phovea",
   "version": "0.0.1",
   "author": {
     "name": "Caleydo Team",
@@ -11,17 +10,17 @@
   },
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/phovea/phovea-generator/issues"
+    "url": "https://github.com/phovea/generator-phovea/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/phovea/phovea-generator.git"
+    "url": "https://github.com/phovea/generator-phovea.git"
   },
-  "main": "generators/web-plugin/index.js",
+  "main": "generators/app/index.js",
   "files": [
     "generators/",
-	"utils/",
-	"knownPhoveaPlugins.json"
+    "utils/",
+    "knownPhoveaPlugins.json"
   ],
   "keywords": [
     "yeoman-generator"
@@ -33,14 +32,11 @@
     "escodegen": "^1.7.0",
     "esprima": "^2.7.0",
     "esprima-walk": "^0.1.0",
-    "chalk": "^1.0.0",
     "deep-extend": "^0.4.0",
     "generator-node": "^1.7.0",
     "inquirer-npm-name": "^2.0.0",
     "lodash": "^4.6.1",
-    "yeoman-generator": "^0.24.0",
-    "yosay": "^1.0.2",
-    "yeoman-welcome": "^1.0.1"
+    "yeoman-generator": "^0.24.0"
   },
   "devDependencies": {
     "yeoman-test": "^1.0.0",
