@@ -20,7 +20,8 @@
   "main": "generators/web-plugin/index.js",
   "files": [
     "generators/",
-	"utils/"
+	"utils/",
+	"knownPhoveaPlugins.json"
   ],
   "keywords": [
     "yeoman-generator"
