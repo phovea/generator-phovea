@@ -4,6 +4,17 @@ var generators = require('yeoman-generator');
 var askName = require('inquirer-npm-name');
 var _ = require('lodash');
 var extend = require('deep-extend');
+var patchPackageJSON = require('../../utils').patchPackageJSON;
+
+function resolveRepo(repo) {
+  if (!repo) {
+    return '';
+  }
+  if (typeof repo === 'string') {
+    return repo;
+  }
+  return repo.url;
+}
 
 class PluginGenerator extends generators.Base {
 
@@ -11,31 +22,35 @@ class PluginGenerator extends generators.Base {
     super(args, options);
 
     // Make options available
-    this.option('skip-install');
-
-    this.config.save();
+    this.option('skipInstall');
 
 
-    this.props = {};
   }
 
   initializing() {
-
+    const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
+    this.config.defaults({
+      name: pkg.name || '',
+      libraries: {},
+      modules: ['phovea_core'],
+      extensions: [],
+      description: pkg.description || '',
+      repository: resolveRepo(pkg.repository),
+    });
   }
 
   prompting() {
+    //already set
+    if (this.config.get('name')) {
+      return Promise.resolve(null);
+    }
+
     return askName({
       name: 'name',
       message: 'Your phovea plugin name',
       default: path.basename(process.cwd()),
       filter: _.kebabCase
     }, this).then((props) => {
-      this.props.name = props.name;
-      this.props.description = '';
-      this.props.libraries = {};
-      this.props.modules = ['phovea_core'];
-      this.props.extensions = [];
-      this.props.repository = '';
       this.config.set('name', this.props.name);
     });
   }
@@ -49,7 +64,7 @@ class PluginGenerator extends generators.Base {
         git: false,
         gulp: false,
         travis: false,
-        name: this.props.name,
+        name: this.config.get('name'),
         coveralls: false,
         skipInstall: this.options.skipInstall
       }
@@ -59,23 +74,14 @@ class PluginGenerator extends generators.Base {
   }
 
   writing() {
-    var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
-    this.log('PACKAGE', pkg);
-    var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))({
-      name: this.props.name
-    }));
-    extend(pkg, pkg_patch);
-
-    this.fs.writeJSON(this.destinationPath('package.json'), pkg);
-
-    this.props.repository = '';
-
+    const config = this.config.getAll();
+    patchPackageJSON.call(this, config);
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath());
-    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), this.props);
+    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config);
   }
 
   install() {
-    if(!this.options['skip-install']) {
+    if(!this.options.skipInstall) {
       this.installDependencies({ bower: false });
     }
   }

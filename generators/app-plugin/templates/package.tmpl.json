@@ -1,0 +1,8 @@
+{
+  "description": "<%= app%>\n<%=description%>",
+  "dependencies": {
+    "@types/d3": "^3.5.36",
+    "d3": "^3.5.17",
+    "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
+  }
+}

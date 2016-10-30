@@ -12,13 +12,12 @@ const entries = {
 
 //libraries name and their node_modules position goes here, e.g.
 const libraries = {
-  d3: 'd3/d3'
+  <%- Object.keys(libraries).map((d) => `'${d}': '${libraries[d]}'`).join(',\n') %>
 };
 
 //list of used phovea modules for externalization
 const modules = [
-  'phovea_core',
-  'phovea_bootstrap_fontawesome'
+  <%- modules.map((d) => `'${d}'`).join(',\n') %>
 ];
 
 module.exports = generate.webpack.app(entries, libraries, modules);

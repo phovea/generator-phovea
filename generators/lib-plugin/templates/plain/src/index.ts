@@ -1,10 +1,14 @@
 
 import {mixin} from 'phovea_core/src';
 
-export class Template {
-
+export interface IHelloOptions {
+  name?: string;
 }
 
-export function create() {
-  return new Template();
+export function hello(options?: IHelloOptions) {
+  //merge with default options
+  options = mixin({
+    name: 'World'
+  }, options);
+  return `Hello ${options.name}`;
 }

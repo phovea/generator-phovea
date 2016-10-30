@@ -1,7 +1,9 @@
-import {transform} from '../src/d3util';
+import {hello} from '../src/index';
 
-describe('transform', () => {
-  it('empty', () => {
-    expect(transform().toString()).toEqual('translate(0,0)rotate(0)skewX(0)scale(1,1)');
+describe('index', () => {
+  it('hello', () => {
+    expect(hello()).toEqual('Hello World');
+    expect(hello({})).toEqual('Hello World');
+    expect(hello({ name: 'Test' })).toEqual('Hello Test');
   });
 });
