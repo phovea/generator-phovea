@@ -1,4 +1,5 @@
-
+var _ = require('lodash');
+var extend = require('deep-extend');
 
 function patchPackageJSON(config, unset) {
   var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});

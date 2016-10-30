@@ -3,7 +3,6 @@ var path = require('path');
 var generators = require('yeoman-generator');
 var askName = require('inquirer-npm-name');
 var _ = require('lodash');
-var extend = require('deep-extend');
 var patchPackageJSON = require('../../utils').patchPackageJSON;
 
 function resolveRepo(repo) {
@@ -31,6 +30,8 @@ class PluginGenerator extends generators.Base {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
     this.config.defaults({
       name: pkg.name || '',
+      author: '',
+      today: (new Date()).toUTCString(),
       libraries: {},
       modules: ['phovea_core'],
       extensions: [],

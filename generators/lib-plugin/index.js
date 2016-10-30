@@ -2,6 +2,7 @@
 var path = require('path');
 var generators = require('yeoman-generator');
 var askName = require('inquirer-npm-name');
+var _ = require('lodash');
 
 class PluginGenerator extends generators.Base {
 
@@ -28,12 +29,12 @@ class PluginGenerator extends generators.Base {
   }
 
   default() {
-    this.composeWith('phovea:web-plugin',{
+    this.composeWith('phovea:web-plugin', {
       options: {
         skipInstall: this.options.skipInstall
       }
     }, {
-      local: require('../web-plugin')
+      local: require.resolve('../web-plugin')
     });
   }
 
