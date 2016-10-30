@@ -75,11 +75,16 @@ class BasePluginGenerator extends generators.Base {
   }
 
   _writeTemplates(config) {
-    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath());
-    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config);
+    const includeDot = {
+      globOptions: {
+        dot: true
+      }
+    };
+    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
+    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
-    this.fs.copy(this.templatePath('pluginname/plain/**/*'), this.destinationPath(config.name+'/'));
-    this.fs.copyTpl(this.templatePath('pluginname/processed/**/*'), this.destinationPath(config.name+'/'), config);
+    this.fs.copy(this.templatePath('pluginname/plain/**/*'), this.destinationPath(config.name+'/'), includeDot);
+    this.fs.copyTpl(this.templatePath('pluginname/processed/**/*'), this.destinationPath(config.name+'/'), config, includeDot);
   }
 }
 
