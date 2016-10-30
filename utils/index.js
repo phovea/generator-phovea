@@ -1,19 +1,73 @@
+'use strict';
+var path = require('path');
+var generators = require('yeoman-generator');
+var askName = require('inquirer-npm-name');
 var _ = require('lodash');
 var extend = require('deep-extend');
 
-function patchPackageJSON(config, unset) {
-  var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
-  this.log('PACKAGE', pkg);
+class BasePluginGenerator extends generators.Base {
 
-  var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
-  extend(pkg, pkg_patch);
+  constructor(type, args, options) {
+    super(args, options);
+    this.type = type;
+    // Make options available
+    this.option('skipInstall');
+  }
 
-  (unset || []).forEach((d) => delete pkg[d]);
+  initializing() {
 
-  this.fs.writeJSON(this.destinationPath('package.json'), pkg);
+  }
 
+  prompting() {
+    if (this.config.get('name') !== '') {
+      //already set
+      return Promise.resolve(null);
+    }
+    return askName({
+      name: 'name',
+      message: 'Your phovea '+this.type+' plugin name',
+      default: path.basename(process.cwd()),
+      filter: _.kebabCase
+    }, this).then((props) => {
+      this.config.set('name', props.name);
+    });
+  }
+
+  default() {
+    this.composeWith('phovea:web-plugin', {
+      options: {
+        skipInstall: this.options.skipInstall
+      }
+    }, {
+      local: require.resolve('../web-plugin')
+    });
+  }
+
+  _patchPackageJSON(config, unset) {
+    var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
+    this.log('PACKAGE', pkg);
+
+    var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
+    extend(pkg, pkg_patch);
+
+    (unset || []).forEach((d) => delete pkg[d]);
+
+    this.fs.writeJSON(this.destinationPath('package.json'), pkg);
+
+  }
+
+  writing() {
+    const config = this.config.getAll();
+    if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
+      this._patchPackageJSON(config);
+    }
+    this._writeTemplates();
+  }
+
+  _writeTemplates(config) {
+    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath());
+    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config);
+  }
 }
 
-module.exports = {
-  patchPackageJSON: patchPackageJSON
-}
+module.exports = BasePluginGenerator;
