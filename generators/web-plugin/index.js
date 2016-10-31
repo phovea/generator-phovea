@@ -2,16 +2,6 @@
 var extend = require('deep-extend');
 var Base = require('../../utils').Base;
 
-function resolveRepo(repo) {
-  if (!repo) {
-    return '';
-  }
-  if (typeof repo === 'string') {
-    return repo;
-  }
-  return repo.url;
-}
-
 const knownPlugins = require('../../knownPhoveaPlugins.json');
 const knownPluginNames = knownPlugins.plugins.map((d) => d.name);
 const knownLibraryNames = knownPlugins.libraries.map((d) => d.name);
@@ -36,37 +26,31 @@ class PluginGenerator extends Base {
   }
 
   initializing() {
-    const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
     this.config.defaults({
       type: 'lib',
-      name: pkg.name || '',
-      author: '',
-      today: (new Date()).toUTCString(),
       libraries: [],
       libraryAliases: {},
       modules: ['phovea_core'],
       entries: './index.js',
       ignores: [],
-      extensions: [],
-      description: pkg.description || '',
-      repository: resolveRepo(pkg.repository),
+      extensions: []
     });
   }
 
   prompting() {
-    return super.prompting().then(() => this.prompt([{
+    return this.prompt([{
       type: 'checkbox',
       name: 'modules',
-      message: 'Which modules should be included?',
+      message: 'Included Modules',
       choices: knownPluginNames,
       default: this.config.get('modules')
     }, {
       type: 'checkbox',
       name: 'libraries',
-      message: 'Which libraries should be included?',
+      message: 'Included Libraries',
       choices: knownLibraryNames,
       default: this.config.get('libraries')
-    }])).then((props) => {
+    }]).then((props) => {
       this.config.set('modules', props.modules);
       this.config.set('libraries', props.libraries);
       this.config.set('libraryAliases', toLibraryAliasMap(props.modules, props.libraries));
@@ -74,20 +58,8 @@ class PluginGenerator extends Base {
   }
 
   default() {
-    this.composeWith('node:app', {
-      options: {
-        babel: false,
-        boilerplate: false,
-        editorconfig: false,
-        git: false,
-        gulp: false,
-        travis: false,
-        name: this.config.get('name'),
-        coveralls: false,
-        skipInstall: this.options.skipInstall
-      }
-    }, {
-      local: require('generator-node').app
+    this.composeWith('phovea:node', {}, {
+      local: require.resolve('../node')
     });
   }
 

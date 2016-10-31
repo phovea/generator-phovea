@@ -1,7 +1,7 @@
-<%- name %> ![Phovea Web Library Plugin](https://img.shields.io/badge/Phovea-Client%20Plugin-F47D20.svg) ![Build Status](https://travis-ci.org/<%- repository %>.svg?branch=master)
+<%- name %> ![Phovea Web Library Plugin](https://img.shields.io/badge/Phovea-Client%20Plugin-F47D20.svg) ![Build Status](https://travis-ci.org/<%- gitHubAccount %>.svg?branch=master)
 =====================
 
-<%- description %>
+
 
 Installation
 ------------

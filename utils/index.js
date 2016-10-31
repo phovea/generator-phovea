@@ -7,9 +7,13 @@ var extend = require('deep-extend');
 
 function patchPackageJSON(config, unset, extra) {
   var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
-  this.log('PACKAGE', pkg);
 
-  var pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
+  var pkg_patch;
+  if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
+    pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
+  } else {
+    pkg_patch = {}
+  }
   extend(pkg, pkg_patch, extra || {});
 
   (unset || []).forEach((d) => delete pkg[d]);
@@ -36,22 +40,10 @@ class BasePluginGenerator extends generators.Base {
   }
 
   prompting() {
-    if (this.config.get('name') !== '') {
-      //already set
-      return Promise.resolve(null);
-    }
-    return askName({
-      name: 'name',
-      message: 'Your phovea ' + this.type + ' plugin name',
-      default: path.basename(process.cwd()),
-      filter: _.snakeCase
-    }, this).then((props) => {
-      this.config.set('name', props.name);
-    });
+    
   }
 
   default() {
-    this.log(this.basetype);
     this.composeWith('phovea:' + this.basetype + '-plugin', {
       options: {
         skipInstall: this.options.skipInstall

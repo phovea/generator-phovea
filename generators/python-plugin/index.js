@@ -23,54 +23,36 @@ class PluginGenerator extends Base {
   }
 
   initializing() {
-    const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
     this.config.defaults({
-      name: pkg.name || '',
-      author: '',
       today: (new Date()).toUTCString(),
       slibraries: [],
       smodules: ['phovea_server'],
-      sextensions: [],
-      description: pkg.description || '',
-      repository: resolveRepo(pkg.repository),
+      sextensions: []
     });
   }
 
   prompting() {
-    return super.prompting().then(() => this.prompt([{
+    return this.prompt([{
       type: 'checkbox',
       name: 'modules',
-      message: 'Which modules should be included?',
+      message: 'Included Modules',
       choices: knownPluginNames,
       default: this.config.get('smodules')
     }, {
       type: 'checkbox',
       name: 'libraries',
-      message: 'Which libraries should be included?',
+      message: 'Included Libraries',
       choices: knownLibraryNames,
       default: this.config.get('slibraries')
-    }])).then((props) => {
+    }]).then((props) => {
       this.config.set('smodules', props.modules);
       this.config.set('slibraries', props.libraries);
     });
-    ;
   }
 
   default() {
-    this.composeWith('node:app', {
-      options: {
-        babel: false,
-        boilerplate: false,
-        editorconfig: false,
-        git: false,
-        gulp: false,
-        travis: false,
-        name: this.config.get('name'),
-        coveralls: false,
-        skipInstall: true
-      }
-    }, {
-      local: require('generator-node').app
+    this.composeWith('phovea:node', {}, {
+      local: require.resolve('../node')
     });
   }
 
@@ -104,7 +86,7 @@ class PluginGenerator extends Base {
 
   writing() {
     const config = this.config.getAll();
-    this._patchPackageJSON(config, ['devDependencies', 'main', 'eslintConfig']);
+    this._patchPackageJSON(config, ['devDependencies']);
     this._writeTemplates(config);
 
     const deps = this._generateDependencies(config);

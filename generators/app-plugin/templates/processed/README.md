@@ -1,7 +1,6 @@
 <%- name %> !![Phovea Wep Application](https://img.shields.io/badge/Phovea-Application-1BA64E.svg) ![Build Status](https://travis-ci.org/<%- repository %>.svg?branch=master)
 =====================
 
-<%- description %>
 
 Installation
 ------------
