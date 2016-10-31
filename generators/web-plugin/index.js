@@ -45,7 +45,7 @@ class PluginGenerator extends Base {
       libraries: [],
       libraryAliases: {},
       modules: ['phovea_core'],
-      entries: './src/index.ts',
+      entries: './index.js',
       ignores: [],
       extensions: [],
       description: pkg.description || '',
