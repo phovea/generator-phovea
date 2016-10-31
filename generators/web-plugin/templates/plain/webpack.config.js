@@ -258,6 +258,7 @@ function generateWebpackConfig(env) {
   } else if (type === 'bundle') {
     base.library = true; //expose as library
     base.moduleBundle = true; //expose as library 'phovea'
+    base.name = pkg.name; //to avoid adding _bundle
     base.bundle = true;
   } else { //type === 'lib'
     base.library = true;
