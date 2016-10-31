@@ -20,12 +20,12 @@ class PluginGenerator extends BasePluginGenerator {
   }
 
   prompting() {
-    return super.prompting().then(() => this.prompt([{
+    return this.prompt([{
       type: 'input',
       name: 'app',
-      message: 'Your application title',
+      message: 'Application Title',
       default: this.config.get('name')
-    }])).then((props) => {
+    }]).then((props) => {
       this.config.set('app', props.app);
     });
   }
