@@ -1,7 +1,6 @@
 'use strict';
 var path = require('path');
 var generators = require('yeoman-generator');
-var askName = require('inquirer-npm-name');
 var _ = require('lodash');
 var extend = require('deep-extend');
 
@@ -34,8 +33,7 @@ class BasePluginGenerator extends generators.Base {
 
   initializing() {
     this.config.defaults({
-      type: this.type,
-      name: ''
+      type: this.type
     });
   }
 

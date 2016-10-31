@@ -17,7 +17,7 @@ class ChooseGenerator extends generators.Base {
     return this.prompt([{
         type: 'list',
         name: 'type',
-        message: 'Which type of plugin?',
+        message: 'Plugin Type',
         choices: knownPluginTypes,
         default: defaultPluginType
       }]).then((props) => {

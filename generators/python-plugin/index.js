@@ -27,7 +27,6 @@ class PluginGenerator extends Base {
 
   initializing() {
     this.config.defaults({
-      today: (new Date()).toUTCString(),
       slibraries: [],
       smodules: ['phovea_server'],
       sextensions: []

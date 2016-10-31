@@ -34,7 +34,6 @@
     "esprima-walk": "^0.1.0",
     "deep-extend": "^0.4.0",
     "parse-author": "^1.0.0",
-    "generator-node": "^1.7.0",
     "inquirer-npm-name": "^2.0.0",
     "lodash": "^4.6.1",
     "yeoman-generator": "^0.24.0"

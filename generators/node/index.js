@@ -1,12 +1,15 @@
 'use strict';
-var _ = require('lodash');
-var parseAuthor = require('parse-author');
-var generators = require('yeoman-generator');
-var patchPackageJSON = require('../../utils').patchPackageJSON;
+const _ = require('lodash');
+const askName = require('inquirer-npm-name');
+const basename = require('path').basename;
+const parseAuthor = require('parse-author');
+const Base = require('yeoman-generator').Base;
+const patchPackageJSON = require('../../utils').patchPackageJSON;
+const originUrl = require('git-remote-origin-url');
 
 //based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
 
-class PackageJSONGenerator extends generators.Base {
+class PackageJSONGenerator extends Base {
 
   constructor(args, options) {
     super(args, options);
@@ -36,11 +39,13 @@ class PackageJSONGenerator extends generators.Base {
     }
 
     this.config.defaults({
-      name: pkg.name || '',
+      name: pkg.name || basename(process.cwd()),
       author: authorName,
       today: (new Date()).toUTCString(),
       githubAccount: 'phovea',
     });
+
+    return originUrl(this.destinationPath()).then((url) => this.originUrl = url, () => this.originUrl = '');
   }
 
   _promptForName() {
@@ -96,23 +101,31 @@ class PackageJSONGenerator extends generators.Base {
     return this._promptForName().then(() => this._promptDescription());
   }
 
-  default() {
-    this.composeWith('node:git', {
-      options: {
-        name: this.config.get('name'),
-        githubAccount: this.config.get('githubAccount')
-      }
-    }, {
-      local: require('generator-node').git
-    });
-  }
-
   writing() {
     const config = _.extend({}, this.props, this.config.getAll());
+
+    if (this.originUrl) {
+      config.repository = this.originUrl;
+    } else {
+      config.repository = `https://github.com/${config.githubAccount}/${config.name}.git`;
+    }
     patchPackageJSON.call(this, config);
 
     config.content = this.options.readme || '';
     this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
+
+    const includeDot = {
+      globOptions: {
+        dot: true
+      }
+    };
+    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
+  }
+
+  end() {
+    this.spawnCommandSync('git', ['init'], {
+      cwd: this.destinationPath()
+    });
   }
 }
 
