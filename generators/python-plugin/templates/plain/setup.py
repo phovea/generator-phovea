@@ -3,9 +3,8 @@
 # Copyright (c) The Caleydo Team. All rights reserved.
 # Licensed under the new BSD license, available at http://caleydo.org/license
 ###############################################################################
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 from setuptools import setup
-from setuptools.command.test import test as testcommand
 from codecs import open
 from os import path
 
@@ -27,22 +26,6 @@ def packaged(*files):
   global pkg
   r[pkg['name'].encode('ascii')] = list(files)
   return r
-
-
-class PyTest(testcommand):
-  user_options = [('pytest-args=', 'a', 'Arguments to pass to pytest')]
-
-  def initialize_options(self):
-    testcommand.initialize_options(self)
-    self.pytest_args = []
-
-  def run_tests(self):
-    import shlex
-    import pytest
-    errno = pytest.main(shlex.split(self.pytest_args))
-    import sys
-    sys.exit(errno)
-
 
 setup(
   name=pkg['name'],
@@ -70,7 +53,6 @@ setup(
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.4'
   ],
-  cmdclass={'test': PyTest},
 
   # You can just specify the packages manually here if your project is
   # simple. Or you can use find_packages().
@@ -81,14 +63,7 @@ setup(
   # requirements files see:
   # https://packaging.python.org/en/latest/requirements.html
   install_requires=read_it('requirements.txt').split('\n'),
-
-  # List additional groups of dependencies here (e.g. development
-  # dependencies). You can install these using the following syntax,
-  # for example:
-  # $ pip install -e .[dev,test]
-  extras_require={
-    'dev': read_it('requirements_dev.txt').split('\n')
-  },
+  tests_require=read_it('requirements_dev.txt').split('\n'),
 
   # If there are data files included in your packages that need to be
   # installed, specify them here.  If using Python 2.6 or less, then these
