@@ -4,9 +4,26 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
+export const type = '<%-type%>';
+
+export const entries = [
+<%- Object.keys(entries).map((d) => `'  ${d}': '${entries[d]}'`).join(',\n') %>
+]
+
+export const ignores = [
+
+];
+
+export const libraries = [
+<%- Object.keys(libraryAliases).map((d) => `'  ${d}': '${libraryAliases[d]}'`).join(',\n') %>
+];
+
+export const modules = [
+<%- modules.map((d) => `  '${d}'`).join(',\n') %>
+];
+
 //register all extensions in the registry following the given pattern
-//see phovea_core/plugin.ts -> push
-module.exports = function(registry) {
+export function register(registry) {
   //registry.push('extension-type', 'extension-id', function() { return require('./src/extension_impl');}, {});
-  <%- extensions.map((d) => `registry.push('${d.type}', '${d.id}', function() { return require('./src/${d.module}');}, ${JSON.stringify(d.extras, null, ' ').replace('"','\'')});`).join(',\n') %>
-};
+<%- extensions.map((d) => `  registry.push('${d.type}', '${d.id}', () => System.import('./src/${d.module}'), ${JSON.stringify(d.extras, null, ' ').replace('"','\'')});`).join(',\n') %>
+}

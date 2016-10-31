@@ -4,16 +4,18 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-const path = require('path');
-const pkg = require('./package.json');
+import {libraries, modules, entries, ignores, type} from './phovea.js';
+import {resolve} from 'path';
+import * as pkg from './package.json';
+import * as webpack from 'webpack';
+import * as ExtractTextPlugin from 'extract-text-webpack-plugin';
+
 const year = (new Date()).getFullYear();
 const banner = '/*! ' + (pkg.title || pkg.name) + ' - v' + pkg.version + ' - ' + year + '\n' +
   (pkg.homepage ? '* ' + pkg.homepage + '\n' : '') +
   '* Copyright (c) ' + year + ' ' + pkg.author.name + ';' +
   ' Licensed ' + pkg.license + '*/\n';
 
-
-const webpack = require('webpack');
 
 //list of loaders and their mappings
 const webpackloaders = [
@@ -29,8 +31,8 @@ const webpackloaders = [
  * creates a shallow copy of an object
  *
  **/
-function simpleCopy(obj) {
-  var r = {};
+function simpleCopy(obj, r) {
+  r = r || {};
   Object.keys(obj).forEach(function (d) {
     r[d] = obj[d];
   });
@@ -56,9 +58,10 @@ function testPhoveaModule(moduleName, request) {
     amd: request + (subModule === '' ? '/main' : '')
   };
 }
+
 function testPhoveaModules(modules) {
-  return function (context, request, callback) {
-    for (var i = 0; i < modules.length; ++i) {
+  return (context, request, callback) => {
+    for (let i = 0; i < modules.length; ++i) {
       var r = testPhoveaModule(modules[i], request);
       if (r) {
         return callback(null, r);
@@ -71,16 +74,17 @@ function testPhoveaModules(modules) {
 /**
  * inject the registry to be included
  * @param entry
+ * @param basedir
  * @returns {*}
  */
-function injectRegistry(entry) {
+function injectRegistry(entry, basedir) {
   //build also the registry
   if (typeof entry === 'string') {
-    return ['./phovea_registry.js'].concat(entry);
+    return [basedir + '/phovea_registry.js'].concat(entry);
   } else {
     var transformed = {};
-    Object.keys(entry).forEach(function (eentry) {
-      transformed[eentry] = ['./phovea_registry.js'].concat(entry[eentry]);
+    Object.keys(entry).forEach((eentry) => {
+      transformed[eentry] = [basedir + '/phovea_registry.js'].concat(entry[eentry]);
     });
     return transformed;
   }
@@ -89,13 +93,11 @@ function injectRegistry(entry) {
 /**
  * generate a webpack configuration
  */
-function generateWebpack(options) {
-  const ExtractTextPlugin = require('extract-text-webpack-plugin');
-
+export function generateWebpack(options) {
   var base = {
-    entry: injectRegistry(options.entries || './index.js'),
+    entry: injectRegistry(options.entries, options.basedir),
     output: {
-      path: path.resolve('./build'),
+      path: resolve(options.basedir + '/build'),
       filename: (options.name || (pkg.name + (options.bundle ? '_bundle' : ''))) + (options.min ? '.min' : '') + '.js',
       publicPath: '/'
     },
@@ -106,7 +108,7 @@ function generateWebpack(options) {
       //fallback to the directory above if they are siblings
       modules: [
         'node_modules',
-        path.resolve('../')
+        resolve(options.basedir + '/../')
       ]
     },
     plugins: [
@@ -132,7 +134,7 @@ function generateWebpack(options) {
           secure: false
         }
       },
-      contentBase: path.resolve('./build')
+      contentBase: resolve(options.basedir + '/build')
     }
   };
   if (options.library) {
@@ -205,155 +207,48 @@ function generateWebpack(options) {
   return base;
 }
 
-module.exports.webpack = {};
-module.exports.webpack.lib = function (libraries, modules, ignores) {
-  const library = generateWebpack({
+export default function generateWebpackConfig(env) {
+  const isTest = env === 'test';
+  const isProduction = env === 'prod';
+  const isDev = !isProduction && !isTest;
+
+  const base = {
+    entries: entries,
     libs: libraries,
     modules: modules,
     ignore: ignores,
-    library: true,
-    bundle: false,
-    min: false
-  });
-  const library_min = generateWebpack({
-    libs: libraries,
-    modules: modules,
-    ignore: ignores,
-    library: true,
-    bundle: false,
-    min: true
-  });
-
-  return function(env) {
-    return env === 'prod' ? [library, library_min] : library;
-  };
-};
-
-module.exports.webpack.bundle = function (libraries, modules) {
-  const library = generateWebpack({
-    libs: libraries,
-    library: true,
-    bundle: false,
-    moduleBundle: true,
-    min: false
-  });
-  const library_min = generateWebpack({
-    libs: libraries,
-    library: true,
-    bundle: false,
-    moduleBundle: true,
-    min: true
-  });
-
-  const bundle = generateWebpack({
-    libs: libraries,
-    library: true,
-    bundle: true,
-    moduleBundle: true,
-    min: false
-  });
-  const bundle_min = generateWebpack({
-    libs: libraries,
-    library: true,
-    bundle: true,
-    moduleBundle: true,
-    min: true
-  });
-
-  return function(env) {
-    return env === 'prod' ? [library, library_min, bundle, bundle_min] : library;
-  };
-};
-module.exports.webpack.app = function (entries, libraries) {
-  const bundle = generateWebpack({
-    entries: entries,
-    libs: libraries,
-    bundle: true,
-    min: false,
-    commons: true,
-    name: '[name]'
-  });
-  const bundle_min = generateWebpack({
-    entries: entries,
-    libs: libraries,
-    bundle: true,
-    min: true,
-    commons: true,
-    name: '[name]'
-  });
-
-  return function(env) {
-    return env === 'prod' ? [bundle, bundle_min] : bundle;
-  };
-};
-
-/**
- * generate a karma webpack configuration
- * @param options
- **/
-function generateKarma(options) {
-  var base = {
-    // frameworks to use
-    // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine'],
-
-    // list of files / patterns to load in the browser
-    files: [
-      'tests.webpack.js' //just load this file
-    ],
-
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-      // add webpack as preprocessor
-      'tests.webpack.js': ['webpack', 'sourcemap']
-    },
-
-    webpack: {
-      // webpack configuration
-      devtool: 'inline-source-map',
-
-      resolve: {
-        //fallback to the directory above if they are siblings
-        modules: [
-          'node_modules',
-          path.resolve('../')
-        ],
-        // Add `.ts` and `.tsx` as a resolvable extension.
-        extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js'],
-        alias: options.libs || {}
-      },
-      module: {
-        loaders: webpackloaders.slice()
-      }
-    },
-
-	failOnEmptyTestSuite: false,
-
-    // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
-
-    // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: false,
-
-
-    browsers: [process.env.CONTINUOUS_INTEGRATION ? 'Firefox' : 'Chrome'],
-
-    // Continuous Integration mode
-    // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true
+    basedir: '.'
   };
 
-  return base;
-}
-
-module.exports.karma = {};
-module.exports.karma.lib = function (libraries) {
-  return function (config) {
-    config.set(generateKarma({
-      libs: libraries
+  if (isTest) {
+    return generateWebpack(simpleCopy(base, {
+      bundle: true
     }));
-  };
-};
+  }
+
+  if (type === 'app') {
+    base.bundle = true; //bundle everything together
+    base.name = '[name]'; //multiple entries case
+    base.commons = true; //extract commons module
+  } else if (type === 'bundle') {
+    base.library = true; //expose as library
+    base.moduleBundle = true; //expose as library 'phovea'
+    base.bundle = true;
+  } else { //type === 'lib'
+    base.library = true;
+  }
+
+  //single generation
+  if (isDev) {
+    return generateWebpack(base);
+  } else { //isProduction
+    return [
+      //plain
+      generateWebpack(base),
+      //minified
+      generateWebpack(simpleCopy(base, {
+        min: true
+      }))
+    ];
+  }
+}
