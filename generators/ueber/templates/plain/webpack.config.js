@@ -29,13 +29,14 @@ function patchEntries(plugin, entries) {
 }
 
 function patchConfig(plugin, config) {
-  config = Array.isArray(config) ? config: [config];
-  return config.map((c) => {
+  const patch = (c) => {
     c.output.path= path.resolve(__dirname, 'build', plugin);
     c.devServer.contentBase = path.resolve(__dirname, 'build');
     c.entry = patchEntries(plugin, c.entry);
+    // console.log(c);
     return c;
-  })
+  };
+  return Array.isArray(config) ? config.map(patch): patch(config);
 }
 
 function generateWebpackConfig(env) {
