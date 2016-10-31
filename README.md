@@ -30,7 +30,7 @@ MIT © [Samuel Gratzl]()
 
 [npm-image]: https://badge.fury.io/js/generator-phovea.svg
 [npm-url]: https://npmjs.org/package/generator-phovea
-[travis-image]: https://travis-ci.org/phovea/generator-phovea.svg?branch=master
-[travis-url]: https://travis-ci.org/phovea/generator-phovea
-[daviddm-image]: https://david-dm.org/phovea/generator-phovea.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/phovea/generator-phovea
+[travis-image]: https://travis-ci.org/sgratzl/generator-phovea.svg?branch=master
+[travis-url]: https://travis-ci.org/sgratzl/generator-phovea
+[daviddm-image]: https://david-dm.org/sgratzl/generator-phovea.svg?theme=shields.io
+[daviddm-url]: https://david-dm.org/sgratzl/generator-phovea
