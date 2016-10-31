@@ -1,6 +1,7 @@
 'use strict';
-var extend = require('deep-extend');
-var Base = require('../../utils').Base;
+const extend = require('deep-extend');
+const Base = require('yeoman-generator').Base;
+const {writeTemplates, patchPackageJSON} = require('../../utils');
 
 const knownPlugins = require('../../knownPhoveaPlugins.json');
 const knownPluginNames = knownPlugins.splugins.map((d) => d.name);
@@ -9,7 +10,7 @@ const knownLibraryNames = knownPlugins.slibraries.map((d) => d.name);
 class PluginGenerator extends Base {
 
   constructor(args, options) {
-    super('', args, options);
+    super(args, options);
 
     // readme content
     this.option('readme');
@@ -43,12 +44,12 @@ class PluginGenerator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:node', {
+    this.composeWith('phovea:_node', {
       options: {
         readme: this.options.readme
       }
     }, {
-      local: require.resolve('../node')
+      local: require.resolve('../_node')
     });
   }
 
@@ -82,8 +83,8 @@ class PluginGenerator extends Base {
 
   writing() {
     const config = this.config.getAll();
-    this._patchPackageJSON(config, ['devDependencies']);
-    this._writeTemplates(config);
+    patchPackageJSON.call(this, config, ['devDependencies']);
+    writeTemplates.call(this, config);
 
     const deps = this._generateDependencies();
     this.fs.write(this.destinationPath('requirements.txt'), deps.pip.join('\n'));

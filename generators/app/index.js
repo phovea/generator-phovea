@@ -26,12 +26,12 @@ class ChooseGenerator extends generators.Base {
 
   default() {
     const type = this.config.get('type');
-    this.composeWith(`phovea:${type}-plugin`, {
+    this.composeWith(`phovea:init-${type}`, {
       options: {
         install: this.options.install
       }
     }, {
-      local: require.resolve(`../${type}-plugin`)
+      local: require.resolve(`../init-${type}`)
     });
   }
 }

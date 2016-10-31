@@ -61,12 +61,12 @@ class PluginGenerator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:node', {
+    this.composeWith('phovea:_node', {
       options: {
         readme: this.options.readme
       }
     }, {
-      local: require.resolve('../node')
+      local: require.resolve('../_node')
     });
   }
 
