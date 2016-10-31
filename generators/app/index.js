@@ -1,5 +1,4 @@
 'use strict';
-var path = require('path');
 var generators = require('yeoman-generator');
 
 const knownPluginTypes = ['app', 'bundle', 'lib', 'server'];
@@ -15,13 +14,13 @@ class ChooseGenerator extends generators.Base {
 
   prompting() {
     return this.prompt([{
-        type: 'list',
-        name: 'type',
-        message: 'Plugin Type',
-        choices: knownPluginTypes,
-        default: defaultPluginType
-      }]).then((props) => {
-        this.config.set('type', props.type);
+      type: 'list',
+      name: 'type',
+      message: 'Plugin Type',
+      choices: knownPluginTypes,
+      default: defaultPluginType
+    }]).then((props) => {
+      this.config.set('type', props.type);
     });
   }
 

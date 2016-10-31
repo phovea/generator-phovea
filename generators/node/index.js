@@ -7,14 +7,14 @@ const Base = require('yeoman-generator').Base;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 const originUrl = require('git-remote-origin-url');
 
-//based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
+// based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
 
 class PackageJSONGenerator extends Base {
 
   constructor(args, options) {
     super(args, options);
 
-    //readme content
+    // readme content
     this.option('readme');
   }
 
@@ -42,10 +42,14 @@ class PackageJSONGenerator extends Base {
       name: pkg.name || basename(process.cwd()),
       author: authorName,
       today: (new Date()).toUTCString(),
-      githubAccount: 'phovea',
+      githubAccount: 'phovea'
     });
 
-    return originUrl(this.destinationPath()).then((url) => this.originUrl = url, () => this.originUrl = '');
+    return originUrl(this.destinationPath()).then((url) => {
+      this.originUrl = url;
+    }, () => {
+      this.originUrl = '';
+    });
   }
 
   _promptForName() {
@@ -67,7 +71,7 @@ class PackageJSONGenerator extends Base {
     }, {
       name: 'homepage',
       message: 'Project homepage url',
-      default: 'https://phovea.caleydo.org',
+      default: 'https://phovea.caleydo.org'
     }, {
       name: 'authorName',
       message: 'Author\'s Name',

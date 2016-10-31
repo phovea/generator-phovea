@@ -24,7 +24,7 @@ class PluginGenerator extends Base {
   constructor(args, options) {
     super('', args, options);
 
-    //readme content
+    // readme content
     this.option('readme');
   }
 
@@ -72,7 +72,7 @@ class PluginGenerator extends Base {
 
   _generateDependencies() {
     var r = {};
-    //merge dependencies
+    // merge dependencies
     this.config.get('modules').forEach((m) => {
       extend(r, knownPlugins.plugins[knownPluginNames.indexOf(m)].dependencies);
     });

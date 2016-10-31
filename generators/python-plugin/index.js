@@ -2,16 +2,6 @@
 var extend = require('deep-extend');
 var Base = require('../../utils').Base;
 
-function resolveRepo(repo) {
-  if (!repo) {
-    return '';
-  }
-  if (typeof repo === 'string') {
-    return repo;
-  }
-  return repo.url;
-}
-
 const knownPlugins = require('../../knownPhoveaPlugins.json');
 const knownPluginNames = knownPlugins.splugins.map((d) => d.name);
 const knownLibraryNames = knownPlugins.slibraries.map((d) => d.name);
@@ -21,7 +11,7 @@ class PluginGenerator extends Base {
   constructor(args, options) {
     super('', args, options);
 
-    //readme content
+    // readme content
     this.option('readme');
   }
 
@@ -62,14 +52,14 @@ class PluginGenerator extends Base {
     });
   }
 
-  _generateDependencies(config) {
-    const pip = {},
-      debian = {},
-      redhat = {};
+  _generateDependencies() {
+    const pip = {};
+    const debian = {};
+    const redhat = {};
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
-    //merge dependencies
+    // merge dependencies
     this.config.get('smodules').forEach((m) => {
       const p = knownPlugins.splugins[knownPluginNames.indexOf(m)];
       extend(pip, p.requirements);
@@ -95,7 +85,7 @@ class PluginGenerator extends Base {
     this._patchPackageJSON(config, ['devDependencies']);
     this._writeTemplates(config);
 
-    const deps = this._generateDependencies(config);
+    const deps = this._generateDependencies();
     this.fs.write(this.destinationPath('requirements.txt'), deps.pip.join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), deps.debian.join('\n'));
     this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhat.join('\n'));
@@ -103,7 +93,7 @@ class PluginGenerator extends Base {
 
   install() {
     if (!this.options.skipInstall) {
-      //TODO pip install
+      // TODO pip install
     }
   }
 }

@@ -3,22 +3,18 @@ var generators = require('yeoman-generator');
 
 class VagrantGenerator extends generators.Base {
 
-  constructor(args, options) {
-    super(args, options);
-  }
-
   initializing() {
     this.config.defaults({
       guestIp: '192.168.50.52',
-      hostPort: 9000,
+      hostPort: 9000
     });
   }
 
-  //prompting() {
+  // prompting() {
   //  return this.prompt([]).then((props) => {
   //
   //  });
-  //}
+  // }
 
   writing() {
     const config = this.config.getAll();

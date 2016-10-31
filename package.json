@@ -56,6 +56,10 @@
     "extends": "xo-space",
     "env": {
       "mocha": true
+    },
+    "rules": {
+      "linebreak-style": 0,
+      "arrow-parens": [2, "always"]
     }
   },
   "scripts": {

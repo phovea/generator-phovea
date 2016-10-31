@@ -8,7 +8,7 @@ class PluginGenerator extends BasePluginGenerator {
   }
 
   initializing() {
-    //since just last in the hierarchy used, need to do super calls
+    // since just last in the hierarchy used, need to do super calls
     super.initializing();
 
     this.config.defaults({

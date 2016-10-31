@@ -1,5 +1,4 @@
 'use strict';
-var path = require('path');
 var generators = require('yeoman-generator');
 var _ = require('lodash');
 var extend = require('deep-extend');
@@ -7,19 +6,18 @@ var extend = require('deep-extend');
 function patchPackageJSON(config, unset, extra) {
   var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
-  var pkg_patch;
+  var pkgPatch;
   if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
-    pkg_patch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
+    pkgPatch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
   } else {
-    pkg_patch = {}
+    pkgPatch = {};
   }
-  extend(pkg, pkg_patch, extra || {});
+  extend(pkg, pkgPatch, extra || {});
 
   (unset || []).forEach((d) => delete pkg[d]);
 
   this.fs.writeJSON(this.destinationPath('package.json'), pkg);
 }
-
 
 class BasePluginGenerator extends generators.Base {
 
@@ -53,13 +51,12 @@ class BasePluginGenerator extends generators.Base {
     this.composeWith('phovea:' + this.basetype + '-plugin', {
       options: {
         skipInstall: this.options.skipInstall,
-        readme: this.readmeAddon(),
+        readme: this.readmeAddon()
       }
     }, {
       local: require.resolve('../generators/' + this.basetype + '-plugin')
     });
   }
-
 
   writing() {
     const config = this.config.getAll();
