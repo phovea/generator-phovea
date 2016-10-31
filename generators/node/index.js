@@ -10,6 +10,9 @@ class PackageJSONGenerator extends generators.Base {
 
   constructor(args, options) {
     super(args, options);
+
+    //readme content
+    this.option('readme');
   }
 
   initializing() {
@@ -107,6 +110,9 @@ class PackageJSONGenerator extends generators.Base {
   writing() {
     const config = _.extend({}, this.props, this.config.getAll());
     patchPackageJSON.call(this, config);
+
+    config.content = this.options.readme || '';
+    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
   }
 }
 

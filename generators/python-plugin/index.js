@@ -54,7 +54,9 @@ class PluginGenerator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:node', {}, {
+    this.composeWith('phovea:node', {
+      readme: this.option.readme
+    }, {
       local: require.resolve('../node')
     });
   }
@@ -96,9 +98,6 @@ class PluginGenerator extends Base {
     this.fs.write(this.destinationPath('requirements.txt'), deps.pip.join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), deps.debian.join('\n'));
     this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhat.join('\n'));
-
-    config.content = this.options.readme || '';
-    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
   }
 
   install() {

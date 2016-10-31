@@ -61,7 +61,9 @@ class PluginGenerator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:node', {}, {
+    this.composeWith('phovea:node', {
+      readme: this.option.readme
+    }, {
       local: require.resolve('../node')
     });
   }
@@ -84,9 +86,6 @@ class PluginGenerator extends Base {
       dependencies: this._generateDependencies()
     });
     this._writeTemplates(config);
-
-    config.content = this.options.readme || '';
-    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
   }
 
   install() {
