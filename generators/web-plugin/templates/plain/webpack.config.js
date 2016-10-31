@@ -22,25 +22,28 @@ const webpackloaders = [
   {test: /\.scss$/, loader: 'style!css!sass'},
   {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
   {test: /\.json$/, loader: 'json-loader'},
-  { test: /\.(png|jpg)$/, 
-	loader: 'url-loader',
+  {
+    test: /\.(png|jpg)$/,
+    loader: 'url-loader',
     query: {
       limit: 10000, //inline <= 10kb
-	}
+    }
   },
-  { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
-	loader: 'url-loader',
+  {
+    test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+    loader: 'url-loader',
     query: {
       limit: 10000, //inline <= 10kb
       mimetype: 'application/font-woff'
-	}
+    }
   },
-  { test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
-	loader: 'url-loader',
+  {
+    test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+    loader: 'url-loader',
     query: {
       limit: 10000, //inline <= 10kb
       mimetype: 'image/svg+xml'
-	}
+    }
   },
   {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'}
 ];
@@ -139,7 +142,10 @@ function generateWebpack(options) {
         __VERSION__: JSON.stringify(pkg.version),
         __LICENSE__: JSON.stringify(pkg.license)
       }),
-	  new webpack.optimize.AggressiveMergingPlugin()
+      new webpack.optimize.MinChunkSizePlugin({
+        minChunkSize: 10000 //at least 10.000 characters
+      }),
+      new webpack.optimize.AggressiveMergingPlugin()
       //rest depends on type
     ],
     externals: [],
