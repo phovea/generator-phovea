@@ -8,10 +8,10 @@ const extend = require('lodash').extend;
 class VagrantGenerator extends Base {
 
   initializing() {
-    this.config.defaults({
+    this.props = {
       guestIp: '192.168.50.52',
       hostPort: 9000
-    });
+    };
   }
 
   // prompting() {
@@ -51,7 +51,7 @@ class VagrantGenerator extends Base {
   }
 
   writing() {
-    const config = this.config.getAll();
+    const config = this.props;
     const includeDot = {
       globOptions: {
         dot: true
