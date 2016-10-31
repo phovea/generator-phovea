@@ -4,7 +4,6 @@ const path = require('path');
 const glob = require('glob').sync;
 const Separator = require('inquirer').Separator;
 
-
 const registry = require('../../knownPhoveaPlugins.json');
 const knownPlugins = [].concat(registry.plugins, registry.splugins);
 const knownPluginNames = [].concat(
@@ -19,7 +18,7 @@ function toRepository(plugin) {
 
 function toSSH(repo) {
   if (/https:\/\/github.com/.test(repo)) {
-    return `git@github.com:${repo.substring('https://github.com'.length)}`
+    return `git@github.com:${repo.substring('https://github.com'.length)}`;
   }
   return repo;
 }
@@ -31,11 +30,11 @@ function resolveNeighbors(plugins, useSSH) {
     const modules = [].concat(config.modules || [], config.smodules || []);
     this.log(`${p} => ${modules.join(' ')}`);
     missing.push(...modules.filter((m) => plugins.indexOf(m) < 0));
-  }
+  };
 
   plugins.forEach(addMissing);
 
-  while(missing.length > 0) {
+  while (missing.length > 0) {
     let next = missing.shift();
     let repo = toRepository(next);
     if (useSSH) {

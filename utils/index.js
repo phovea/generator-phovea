@@ -37,7 +37,7 @@ class BaseInitPluginGenerator extends generators.Base {
 
   constructor(args, options, basetype) {
     super(args, options);
-    this.type = path.basename(path.dirname(this.resolved)).substring(5); //init-web ... web
+    this.type = path.basename(path.dirname(this.resolved)).substring(5); // init-web ... web
     this.basetype = basetype || 'web';
     // Make options available
     this.option('skipInstall');
