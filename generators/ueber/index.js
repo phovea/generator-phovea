@@ -25,6 +25,8 @@ class VagrantGenerator extends generators.Base {
     };
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
+
+
   }
 }
 
