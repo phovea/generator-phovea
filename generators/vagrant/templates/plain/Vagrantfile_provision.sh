@@ -75,9 +75,23 @@ done
 #start scripts
 echo "--- Start creating start scripts ---"
 
-for plugin in $(find ${basedir} -type f -name '__main__.py' -printf '%h\n' | sort -u); do
-  echo "#!/usr/bin/env bash\n\npython ${plugin}\n" > ${basedir}/start_${plugin}.sh
-  chmod +x ${basedir}/start_${plugin}.sh
+for plugin in $(find ${basedir} -maxdepth 2 -type f -name '__main__.py' -printf '%h\n' | sort -u); do
+  echo "#!/usr/bin/env bash
+if [ '\`whoami\`' != 'vagrant' ] ; then
+  #outside of vm
+  vagrant up
+  vagrant ssh --command 'cd ${basedir} ; python ${plugin}'
+else
+  #within vm
+  python ${plugin}
+fi
+" > ${basedir}start_${plugin##*/}.sh
+  chmod +x ${basedir}start_${plugin##*/}.sh
+
+  echo "
+vagrant up
+vagrant ssh --command 'cd ${basedir} ; python ${plugin}'
+" > ${basedir}start_${plugin##*/}.cmd
 done
 
 echo "--- Done, use 'vagrant ssh' for jumping into the VM ---"
