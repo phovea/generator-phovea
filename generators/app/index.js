@@ -15,17 +15,17 @@ class ChooseGenerator extends generators.Base {
 
   prompting() {
     return this.prompt([{
-      type: 'list',
-      name: 'type',
-      message: 'Which type of plugin?',
-      choices: knownPluginTypes,
-      default: defaultPluginType
-    }]).then((props) => {
-      this.config.set('type', props.type);
+        type: 'list',
+        name: 'type',
+        message: 'Which type of plugin?',
+        choices: knownPluginTypes,
+        default: defaultPluginType
+      }]).then((props) => {
+        this.config.set('type', props.type);
     });
   }
 
-  default () {
+  default() {
     const type = this.config.get('type');
     this.composeWith(`phovea:${type}-plugin`, {
       options: {

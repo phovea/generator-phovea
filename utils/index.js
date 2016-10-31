@@ -50,7 +50,7 @@ class BasePluginGenerator extends generators.Base {
     });
   }
 
-  default () {
+  default() {
     this.log(this.basetype);
     this.composeWith('phovea:' + this.basetype + '-plugin', {
       options: {

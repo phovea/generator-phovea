@@ -27,7 +27,7 @@ class PluginGenerator extends BasePluginGenerator {
     });
   }
 
-  default () {
+  default() {
     super.default();
   }
 

@@ -27,7 +27,7 @@ class PluginGenerator extends BasePluginGenerator {
     return super.prompting();
   }
 
-  default () {
+  default() {
     return super.default();
   }
 

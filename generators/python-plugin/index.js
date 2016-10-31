@@ -52,10 +52,11 @@ class PluginGenerator extends Base {
     }])).then((props) => {
       this.config.set('smodules', props.modules);
       this.config.set('slibraries', props.libraries);
-    });;
+    });
+    ;
   }
 
-  default () {
+  default() {
     this.composeWith('node:app', {
       options: {
         babel: false,
