@@ -4,12 +4,23 @@ var BasePluginGenerator = require('../../utils').Base;
 class PluginGenerator extends BasePluginGenerator {
 
   constructor(args, options) {
-    super('service', args, options, 'python');
+    super('server', args, options, 'python');
   }
 
   initializing() {
     // since just last in the hierarchy used, need to do super calls
     super.initializing();
+
+    this.config.defaults({
+      sextensions: [{
+        type: 'namespace',
+        id: 'hello_world_namespace',
+        module: 'hello_world',
+        extras: {
+          namespace: '/api/hello_world'
+        }
+      }]
+    });
   }
 
   prompting() {
