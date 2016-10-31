@@ -95,17 +95,16 @@ function testPhoveaModules(modules) {
 /**
  * inject the registry to be included
  * @param entry
- * @param basedir
  * @returns {*}
  */
-function injectRegistry(entry, basedir) {
+function injectRegistry(entry) {
   //build also the registry
   if (typeof entry === 'string') {
-    return [basedir + '/phovea_registry.js'].concat(entry);
+    return ['./phovea_registry.js'].concat(entry);
   } else {
     var transformed = {};
     Object.keys(entry).forEach((eentry) => {
-      transformed[eentry] = [basedir + '/phovea_registry.js'].concat(entry[eentry]);
+      transformed[eentry] = ['./phovea_registry.js'].concat(entry[eentry]);
     });
     return transformed;
   }
@@ -116,9 +115,9 @@ function injectRegistry(entry, basedir) {
  */
 function generateWebpack(options) {
   var base = {
-    entry: injectRegistry(options.entries, options.basedir),
+    entry: injectRegistry(options.entries),
     output: {
-      path: resolve(options.basedir + '/build'),
+      path: resolve(__dirname, 'build'),
       filename: (options.name || (pkg.name + (options.bundle ? '_bundle' : ''))) + (options.min ? '.min' : '') + '.js',
       publicPath: './'
     },
@@ -129,7 +128,7 @@ function generateWebpack(options) {
       //fallback to the directory above if they are siblings
       modules: [
         'node_modules',
-        resolve(options.basedir + '/../')
+        resolve(__dirname, '../')
       ]
     },
     plugins: [
@@ -159,7 +158,7 @@ function generateWebpack(options) {
           secure: false
         }
       },
-      contentBase: resolve(options.basedir + '/build')
+      contentBase: resolve(__dirname, 'build')
     }
   };
   if (options.library) {
@@ -241,8 +240,7 @@ function generateWebpackConfig(env) {
     entries: entries,
     libs: libraryAliases,
     modules: modules,
-    ignore: ignores,
-    basedir: '.'
+    ignore: ignores
   };
 
   if (isTest) {
