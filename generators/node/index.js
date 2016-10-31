@@ -41,7 +41,7 @@ class PackageJSONGenerator extends Base {
       name: pkg.name || this.determineAppname(),
       author: authorName,
       today: (new Date()).toUTCString(),
-      githubAccount: this.github ? this.github.username() || 'phovea'
+      githubAccount: this.github ? this.github.username() : 'phovea'
     });
 
     return originUrl(this.destinationPath()).then((url) => {
