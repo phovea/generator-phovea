@@ -38,6 +38,7 @@ class PluginGenerator extends Base {
   initializing() {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
     this.config.defaults({
+      type: 'lib',
       name: pkg.name || '',
       author: '',
       today: (new Date()).toUTCString(),

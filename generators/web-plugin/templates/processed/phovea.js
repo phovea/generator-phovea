@@ -7,7 +7,7 @@
 export const type = '<%-type%>';
 
 export const entries = [
-<%- Object.keys(entries).map((d) => `'  ${d}': '${entries[d]}'`).join(',\n') %>
+<%- Object.keys(entries).map((d) => `  '${d}': '${entries[d]}'`).join(',\n') %>
 ]
 
 export const ignores = [
@@ -15,7 +15,7 @@ export const ignores = [
 ];
 
 export const libraries = [
-<%- Object.keys(libraryAliases).map((d) => `'  ${d}': '${libraryAliases[d]}'`).join(',\n') %>
+<%- Object.keys(libraryAliases).map((d) => `  '${d}': '${libraryAliases[d]}'`).join(',\n') %>
 ];
 
 export const modules = [

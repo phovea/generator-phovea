@@ -24,13 +24,13 @@ class BasePluginGenerator extends generators.Base {
     super(args, options);
     this.type = type;
     this.basetype = basetype || 'web';
-    this.config.set('type', type);
     // Make options available
     this.option('skipInstall');
   }
 
   initializing() {
     this.config.defaults({
+      type: this.type,
       name: ''
     });
   }
