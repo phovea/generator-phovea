@@ -1,10 +1,12 @@
 language: python
-sudo: false
 
 env:
   - TOXENV=py27
   - TOXENV=py34
 
-install: pip install tox
+install:
+  - sudo apt-get install cython
+  - pip install -r requirements_dev.txt
+  - pip install -r requirements.txt
 
-script: tox
+script: npm run test
