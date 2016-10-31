@@ -4,26 +4,28 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-export const type = '<%-type%>';
 
-export const entries = [
+module.exports.type = '<%-type%>';
+
+module.exports.entries = {
 <%- Object.keys(entries).map((d) => `  '${d}': '${entries[d]}'`).join(',\n') %>
-]
+};
 
-export const ignores = [
+module.exports.ignores = [
 
 ];
 
-export const libraries = [
+module.exports.libraries = {
 <%- Object.keys(libraryAliases).map((d) => `  '${d}': '${libraryAliases[d]}'`).join(',\n') %>
-];
+};
 
-export const modules = [
+module.exports.modules = [
 <%- modules.map((d) => `  '${d}'`).join(',\n') %>
 ];
 
 //register all extensions in the registry following the given pattern
-export function register(registry) {
-  //registry.push('extension-type', 'extension-id', function() { return require('./src/extension_impl');}, {});
+module.exports.register = (registry) => {
+  //registry.push('extension-type', 'extension-id', () => System.import('./src/extension_impl'), {});
 <%- extensions.map((d) => `  registry.push('${d.type}', '${d.id}', () => System.import('./src/${d.module}'), ${JSON.stringify(d.extras, null, ' ').replace('"','\'')});`).join(',\n') %>
-}
+};
+

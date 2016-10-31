@@ -4,11 +4,11 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-import {libraries, modules, entries, ignores, type} from './phovea.js';
-import {resolve} from 'path';
-import * as pkg from './package.json';
-import * as webpack from 'webpack';
-import * as ExtractTextPlugin from 'extract-text-webpack-plugin';
+const {libraries, modules, entries, ignores, type} = require('./phovea.js');
+const resolve = require('path').resolve;
+const pkg = require('./package.json');
+const webpack = require('webpack');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 const year = (new Date()).getFullYear();
 const banner = '/*! ' + (pkg.title || pkg.name) + ' - v' + pkg.version + ' - ' + year + '\n' +
@@ -93,7 +93,7 @@ function injectRegistry(entry, basedir) {
 /**
  * generate a webpack configuration
  */
-export function generateWebpack(options) {
+function generateWebpack(options) {
   var base = {
     entry: injectRegistry(options.entries, options.basedir),
     output: {
@@ -207,7 +207,7 @@ export function generateWebpack(options) {
   return base;
 }
 
-export default function generateWebpackConfig(env) {
+function generateWebpackConfig(env) {
   const isTest = env === 'test';
   const isProduction = env === 'prod';
   const isDev = !isProduction && !isTest;
@@ -252,3 +252,6 @@ export default function generateWebpackConfig(env) {
     ];
   }
 }
+
+module.exports = generateWebpackConfig;
+module.exports.generateWebpack = generateWebpack;

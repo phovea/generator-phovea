@@ -4,9 +4,9 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-import webpack from './webpack.config.js';
+const webpack = require('./webpack.config.js');
 
-export default function (config) {
+module.exports = (config) => {
   config.set({
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -43,4 +43,4 @@ export default function (config) {
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true
   });
-}
+};
