@@ -30,7 +30,7 @@ function patchEntries(plugin, entries) {
 
 function patchConfig(plugin, config) {
   const patch = (c) => {
-    c.output.path= path.resolve(__dirname, 'build', plugin);
+    c.output.path= path.resolve(__dirname, plugin, 'build');
     c.devServer.contentBase = path.resolve(__dirname, 'build');
     c.entry = patchEntries(plugin, c.entry);
     // console.log(c);

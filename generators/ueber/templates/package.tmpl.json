@@ -19,7 +19,12 @@
     "lint": "tslint -c tslint.json */src/**.ts */tests/**.ts",
     "prebuild": "npm run test",
     "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "test": "karma start",
+    "posttest": "npm run lint",
+    "test:watch": "karma start --autoWatch=true --singleRun=false",
+    "build:dev": "webpack",
+    "build": "webpack --env prod",
+    "watch": "webpack --watch"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.35",
