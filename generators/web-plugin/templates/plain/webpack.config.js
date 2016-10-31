@@ -127,8 +127,8 @@ function generateWebpack(options) {
       alias: simpleCopy(options.libs || {}),
       //fallback to the directory above if they are siblings
       modules: [
-        'node_modules',
-        resolve(__dirname, '../')
+        resolve(__dirname, '../'),
+        'node_modules'
       ]
     },
     plugins: [
