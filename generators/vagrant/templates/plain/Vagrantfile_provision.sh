@@ -53,6 +53,13 @@ done
 sort -u requirements_t.txt -o requirements.txt
 sudo pip install -r requirements.txt
 
+#########################
+#bash
+echo "--- Start bash configuration ---"
+if ! grep -Fxq "cd ${basedir}" /home/vagrant/.bashrc ; then
+  echo "cd ${basedir}" >> /home/vagrant/.bashrc
+  chown vagrant:vagrant /home/vagrant/.bashrc
+fi
 
 #########################
 #custom
