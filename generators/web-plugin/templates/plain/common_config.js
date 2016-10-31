@@ -113,6 +113,11 @@ function generateWebpack(options) {
       new webpack.BannerPlugin({
         banner: banner,
         raw: true
+      }),
+      //define magic constants that are replaced
+      new webpack.DefinePlugin({
+        __VERSION__: JSON.stringify(pkg.version),
+        __LICENSE__: JSON.stringify(pkg.license)
       })
       //rest depends on type
     ],
