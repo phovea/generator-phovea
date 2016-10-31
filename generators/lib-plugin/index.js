@@ -4,7 +4,7 @@ var BasePluginGenerator = require('../../utils').Base;
 class PluginGenerator extends BasePluginGenerator {
 
   constructor(args, options) {
-    super('library', args, options);
+    super('lib', args, options);
   }
 
   initializing() {
