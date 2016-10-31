@@ -40,13 +40,22 @@ class BasePluginGenerator extends generators.Base {
   }
 
   prompting() {
-    
+
+  }
+
+  readmeAddon() {
+    const f = this.templatePath('README.partial.md');
+    if (this.fs.exists(f)) {
+      return this.fs.read(f);
+    }
+    return '';
   }
 
   default() {
     this.composeWith('phovea:' + this.basetype + '-plugin', {
       options: {
-        skipInstall: this.options.skipInstall
+        skipInstall: this.options.skipInstall,
+        readme: this.readmeAddon(),
       }
     }, {
       local: require.resolve('../generators/' + this.basetype + '-plugin')

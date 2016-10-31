@@ -20,6 +20,9 @@ class PluginGenerator extends Base {
 
   constructor(args, options) {
     super('', args, options);
+
+    //readme content
+    this.option('readme');
   }
 
   initializing() {
@@ -93,6 +96,9 @@ class PluginGenerator extends Base {
     this.fs.write(this.destinationPath('requirements.txt'), deps.pip.join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), deps.debian.join('\n'));
     this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhat.join('\n'));
+
+    config.content = this.options.readme || '';
+    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
   }
 
   install() {

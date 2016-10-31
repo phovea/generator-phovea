@@ -23,6 +23,9 @@ class PluginGenerator extends Base {
 
   constructor(args, options) {
     super('', args, options);
+
+    //readme content
+    this.option('readme');
   }
 
   initializing() {
@@ -81,6 +84,9 @@ class PluginGenerator extends Base {
       dependencies: this._generateDependencies()
     });
     this._writeTemplates(config);
+
+    config.content = this.options.readme || '';
+    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
   }
 
   install() {
