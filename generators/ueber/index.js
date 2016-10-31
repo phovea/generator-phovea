@@ -1,6 +1,9 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
+const path = require('path');
+const glob = require('glob');
+const extend = require('lodash').extend;
 
 class VagrantGenerator extends Base {
 
@@ -17,6 +20,39 @@ class VagrantGenerator extends Base {
   //  });
   // }
 
+  _generatePackage() {
+    return new Promise((resolve) => {
+      glob('*/package.json', {
+        cwd: this.destinationPath()
+      }, (err, files) => {
+        const plugins = files.map(path.dirname);
+
+        //generate dependencies
+        var dependencies = {};
+        var scripts = {};
+        plugins.forEach((p) => {
+          const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
+          extend(dependencies, pkg.dependencies);
+
+          //no pre post test tasks
+          Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
+            //generate scoped tasks
+            scripts[`${s}:${p}`] = `cd ${p} && npm run ${s}`;
+          });
+        });
+        //remove all plugins that are locally installed
+        plugins.forEach((p) => {
+          delete dependencies[p];
+        });
+
+        resolve({
+          dependencies: dependencies,
+          scripts: scripts
+        });
+      });
+    });
+  }
+
   writing() {
     const config = this.config.getAll();
     const includeDot = {
@@ -27,11 +63,8 @@ class VagrantGenerator extends Base {
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
-    patchPackageJSON.call(this, config, [], {
-      dependencies: [],
-      scripts: {
-
-      }
+    return this._generatePackage().then((deps) => {
+      patchPackageJSON.call(this, config, [], deps);
     });
   }
 }
