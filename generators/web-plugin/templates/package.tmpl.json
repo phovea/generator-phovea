@@ -7,6 +7,11 @@
     "build",
     "assets"
   ],
+  "engines": {
+    "npm" : ">= 3",
+    "node": ">= 6",
+    "iojs": ">= 3"
+  },
   "scripts": {
     "compile": "tsc",
     "lint": "tslint -c tslint.json src/**.ts tests/**.ts",
