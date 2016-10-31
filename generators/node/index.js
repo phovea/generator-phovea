@@ -1,7 +1,6 @@
 'use strict';
 const _ = require('lodash');
 const askName = require('inquirer-npm-name');
-const basename = require('path').basename;
 const parseAuthor = require('parse-author');
 const Base = require('yeoman-generator').Base;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
@@ -39,7 +38,7 @@ class PackageJSONGenerator extends Base {
     }
 
     this.config.defaults({
-      name: pkg.name || basename(process.cwd()),
+      name: pkg.name || this.determineAppname(),
       author: authorName,
       today: (new Date()).toUTCString(),
       githubAccount: 'phovea'
