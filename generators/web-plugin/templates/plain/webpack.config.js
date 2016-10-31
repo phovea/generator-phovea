@@ -4,7 +4,7 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-const {libraries, modules, entries, ignores, type} = require('./phovea.js');
+const {libraryAliases, modules, entries, ignores, type} = require('./.yo-rc.json')['generator-phovea'];
 const resolve = require('path').resolve;
 const pkg = require('./package.json');
 const webpack = require('webpack');
@@ -214,7 +214,7 @@ function generateWebpackConfig(env) {
 
   const base = {
     entries: entries,
-    libs: libraries,
+    libs: libraryAliases,
     modules: modules,
     ignore: ignores,
     basedir: '.'
