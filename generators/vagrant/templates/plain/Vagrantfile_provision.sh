@@ -34,7 +34,7 @@ done
 sort -u package_list_t.txt -o package_list.txt
 
 set -vx #to turn echoing on and
-sudo apt-get install -y `cat package_list.txt | tr '\n' ' '`
+sudo apt-get install -y `cat package_list.txt | tr '\r' ' ' | tr '\n' ' '`
 set +vx #to turn them both off
 rm package_list.txt
 
@@ -43,7 +43,7 @@ rm package_list.txt
 echo "--- Start python provisioning ---"
 
 #install python and some standard packages
-sudo apt-get install -y python-pip python-dev zlib1g-dev cython 
+sudo apt-get install -y python-pip python-dev zlib1g-dev cython
 
 rm -f requirements_t.txt
 touch requirements_t.txt
@@ -61,6 +61,16 @@ echo "--- Start custom provisioning ---"
 for line in $(find ${basedir} -maxdepth 2 -name 'vagrant*.sh'); do
   echo "--- execution provision script: $line"
   ( exec ${line} )
+done
+
+
+#########################
+#start scripts
+echo "--- Start creating start scripts ---"
+
+for plugin in $(find ${basedir} -type f -name '__main__.py' -printf '%h\n' | sort -u); do
+  echo "#!/usr/bin/env bash\n\npython ${plugin}\n" > ${basedir}/start_${plugin}.sh
+  chmod +x ${basedir}/start_${plugin}.sh
 done
 
 echo "--- Done, use 'vagrant ssh' for jumping into the VM ---"
