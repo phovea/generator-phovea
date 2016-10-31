@@ -1,7 +1,8 @@
 'use strict';
-var generators = require('yeoman-generator');
-var _ = require('lodash');
-var extend = require('deep-extend');
+const generators = require('yeoman-generator');
+const _ = require('lodash');
+const path = require('path');
+const extend = require('deep-extend');
 
 function patchPackageJSON(config, unset, extra) {
   var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
@@ -36,7 +37,7 @@ class BaseInitPluginGenerator extends generators.Base {
 
   constructor(args, options, basetype) {
     super(args, options);
-    this.type = path.basename(this.resolved).substring(5); //init-web ... web
+    this.type = path.basename(path.dirname(this.resolved)).substring(5); //init-web ... web
     this.basetype = basetype || 'web';
     // Make options available
     this.option('skipInstall');

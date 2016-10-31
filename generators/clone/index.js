@@ -153,3 +153,5 @@ class Generator extends Base {
 }
 
 module.exports = Generator;
+module.exports.resolveNeighbors = resolveNeighbors;
+module.exports.resolveAllNeighbors = resolveAllNeighbors;
