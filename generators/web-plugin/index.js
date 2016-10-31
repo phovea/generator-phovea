@@ -91,7 +91,7 @@ class PluginGenerator extends Base {
   }
 
   install() {
-    if (!this.options.skipInstall) {
+    if (this.options.install) {
       this.installDependencies({
         bower: false
       });

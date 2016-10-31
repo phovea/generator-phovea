@@ -9,7 +9,7 @@ class ChooseGenerator extends generators.Base {
   constructor(args, options) {
     super(args, options);
     // Make options available
-    this.option('skipInstall');
+    this.option('install');
   }
 
   prompting() {
@@ -28,7 +28,7 @@ class ChooseGenerator extends generators.Base {
     const type = this.config.get('type');
     this.composeWith(`phovea:${type}-plugin`, {
       options: {
-        skipInstall: this.options.skipInstall
+        install: this.options.install
       }
     }, {
       local: require.resolve(`../${type}-plugin`)
