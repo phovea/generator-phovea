@@ -1,7 +1,8 @@
 'use strict';
-var generators = require('yeoman-generator');
+const Base = require('yeoman-generator').Base;
+const patchPackageJSON = require('../../utils').patchPackageJSON;
 
-class VagrantGenerator extends generators.Base {
+class VagrantGenerator extends Base {
 
   initializing() {
     this.config.defaults({
@@ -26,7 +27,12 @@ class VagrantGenerator extends generators.Base {
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
+    patchPackageJSON.call(this, config, [], {
+      dependencies: [],
+      scripts: {
 
+      }
+    });
   }
 }
 
