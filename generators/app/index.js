@@ -17,7 +17,7 @@ class ChooseGenerator extends generators.Base {
       type: 'list',
       name: 'task',
       message: 'Task',
-      choices: ['init', 'ueber'],
+      choices: ['init', 'ueber', 'clone'],
       default: 'init'
     }, {
       type: 'list',

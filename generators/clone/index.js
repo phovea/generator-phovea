@@ -72,6 +72,11 @@ class Generator extends Base {
       defaults: false,
       type: Boolean
     });
+    this.option('ueber', {
+      alias: 'u',
+      defaults: false,
+      type: Boolean
+    });
     this.argument('name', {
       required: false
     });
@@ -80,7 +85,9 @@ class Generator extends Base {
   initializing() {
     this.props = {
       plugins: [],
-      recursive: false
+      recursive: false,
+      cloneSSH: false,
+      runUeber: false
     };
   }
 
@@ -105,14 +112,29 @@ class Generator extends Base {
       message: 'Recursive',
       default: this.options.recursive,
       when: !this.options.recursive
+    }, {
+      type: 'confirm',
+      name: 'runUeber',
+      message: 'Run Ueber',
+      default: this.options.ueber,
+      when: !this.options.ueber
     }]).then((props) => {
       this.props.plugins = props.plugins || this.args;
       this.props.cloneSSH = props.cloneSSH || this.options.ssh;
       this.props.recursive = props.recursive || this.options.recursive;
+      this.props.runUeber = props.runUeber || this.options.ueber;
     });
   }
 
-  install() {
+  default() {
+    if (this.props.runUeber) {
+      this.composeWith('phovea:ueber', {}, {
+        local: require.resolve('../ueber')
+      });
+    }
+  }
+
+  writing() {
     var repos = this.props.plugins.map(toRepository);
     if (this.props.cloneSSH) {
       repos = repos.map(toSSH);
