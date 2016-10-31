@@ -1,6 +1,7 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const path = require('path');
+const glob = require('glob').sync;
 const Separator = require('inquirer').Separator;
 
 
@@ -23,6 +24,40 @@ function toSSH(repo) {
   return repo;
 }
 
+function resolveNeighbors(plugins, useSSH) {
+  var missing = [];
+  const addMissing = (p) => {
+    const config = require(path.resolve(p, '.yo-rc.json'))['generator-phovea'];
+    const modules = [].concat(config.modules || [], config.smodules || []);
+    this.log(`${p} => ${modules.join(' ')}`);
+    missing.push(...modules.filter((m) => plugins.indexOf(m) < 0));
+  }
+
+  plugins.forEach(addMissing);
+
+  while(missing.length > 0) {
+    let next = missing.shift();
+    let repo = toRepository(next);
+    if (useSSH) {
+      repo = toSSH(repo);
+    }
+    this.log(`git clone ${repo}`);
+    this.spawnCommandSync('git', ['clone', repo], {
+      cwd: this.destinationPath()
+    });
+    plugins.push(next);
+    addMissing(next);
+  }
+}
+
+function resolveAllNeighbors(useSSH) {
+  const files = glob('*/.yo-rc.json', {
+    cwd: this.destinationPath()
+  });
+  const plugins = files.map(path.dirname);
+  return resolveNeighbors.call(this, plugins, useSSH);
+}
+
 class Generator extends Base {
   constructor(args, options) {
     super(args, options);
@@ -32,11 +67,21 @@ class Generator extends Base {
       defaults: false,
       type: Boolean
     });
-    this.argument('name');
+    this.option('recursive', {
+      alias: 'r',
+      defaults: false,
+      type: Boolean
+    });
+    this.argument('name', {
+      required: false
+    });
   }
 
   initializing() {
-    this.repos = [];
+    this.props = {
+      plugins: [],
+      recursive: false
+    };
   }
 
   prompting() {
@@ -54,24 +99,35 @@ class Generator extends Base {
       store: true,
       default: this.options.ssh,
       when: !this.options.ssh
+    }, {
+      type: 'confirm',
+      name: 'recursive',
+      message: 'Recursive',
+      default: this.options.recursive,
+      when: !this.options.recursive
     }]).then((props) => {
-      this.repos = (props.plugins || this.args).map(toRepository);
-      if (props.cloneSSH || this.options.ssh) {
-        this.repos = this.repos.map(toSSH);
-      }
+      this.props.plugins = props.plugins || this.args;
+      this.props.cloneSSH = props.cloneSSH || this.options.ssh;
+      this.props.recursive = props.recursive || this.options.recursive;
     });
   }
 
   install() {
-    this.repos.forEach((repo) => {
+    var repos = this.props.plugins.map(toRepository);
+    if (this.props.cloneSSH) {
+      repos = repos.map(toSSH);
+    }
+
+    repos.forEach((repo) => {
       this.log(`git clone ${repo}`);
       this.spawnCommandSync('git', ['clone', repo], {
         cwd: this.destinationPath()
       });
     });
+    if (this.props.recursive) {
+      resolveNeighbors.call(this, this.props.plugins, this.props.cloneSSH);
+    }
   }
-
-
 }
 
 module.exports = Generator;
