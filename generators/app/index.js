@@ -15,23 +15,35 @@ class ChooseGenerator extends generators.Base {
   prompting() {
     return this.prompt([{
       type: 'list',
+      name: 'task',
+      message: 'Task',
+      choices: ['init', 'ueber'],
+      default: 'init'
+    }, {
+      type: 'list',
       name: 'type',
       message: 'Plugin Type',
       choices: knownPluginTypes,
-      default: defaultPluginType
+      default: defaultPluginType,
+      when: (props) => props.task === 'init'
     }]).then((props) => {
-      this.config.set('type', props.type);
+      if (props.task === 'init') {
+        this.config.set('type', props.type);
+        this.gen = 'init-' + props.type;
+      } else {
+        this.gen = props.task;
+      }
     });
   }
 
   default() {
-    const type = this.config.get('type');
-    this.composeWith(`phovea:init-${type}`, {
+    const gen = this.gen;
+    this.composeWith(`phovea:${gen}`, {
       options: {
         install: this.options.install
       }
     }, {
-      local: require.resolve(`../init-${type}`)
+      local: require.resolve(`../${gen}`)
     });
   }
 }
