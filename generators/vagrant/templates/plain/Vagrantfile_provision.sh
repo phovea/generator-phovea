@@ -50,6 +50,9 @@ touch requirements_t.txt
 for line in $(find ${basedir} -maxdepth 2 -name 'requirements.txt'); do
   cat ${line} >> requirements_t.txt
 done
+for line in $(find ${basedir} -maxdepth 2 -name 'requirements_dev.txt'); do
+  cat ${line} >> requirements_t.txt
+done
 sort -u requirements_t.txt -o requirements.txt
 sudo pip install -r requirements.txt
 
