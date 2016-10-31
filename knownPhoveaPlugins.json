@@ -2,6 +2,7 @@
   "plugins": [{
     "name": "phovea_core",
     "description": "Phovea Core Plugin",
+    "repository": "https://github.com/sgratzl/phovea_core.git",
     "dependencies": {
       "phovea_core": "github:sgratzl/phovea_core"
     },
@@ -9,6 +10,7 @@
   }, {
     "name": "phovea_d3",
     "description": "Phovea D3 Plugin",
+    "repository": "https://github.com/sgratzl/phovea_d3.git",
     "dependencies": {
       "phovea_d3": "github:sgratzl/phovea_d3"
     },
@@ -16,6 +18,7 @@
   }, {
     "name": "phovea_vis",
     "description": "Phovea Vis Plugin",
+    "repository": "https://github.com/sgratzl/phovea_vis.git",
     "dependencies": {
       "phovea_vis": "github:sgratzl/phovea_vis"
     },
@@ -23,6 +26,7 @@
   }, {
     "name": "phovea_bootstrap_fontawesome",
     "description": "Phovea Common Style Plugin",
+    "repository": "https://github.com/sgratzl/phovea_bootstrap_fontawesome.git",
     "dependencies": {
       "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
     },
@@ -48,6 +52,7 @@
   "splugins": [{
     "name": "phovea_server",
     "description": "Phovea Server Plugin",
+    "repository": "https://github.com/sgratzl/phovea_server.git",
     "requirements": {
       "-e git+https://github.com/sgratzl/phovea_server.git": "#egg=phovea_server"
     },

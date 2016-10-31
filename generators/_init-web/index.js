@@ -1,6 +1,7 @@
 'use strict';
-var extend = require('deep-extend');
-var Base = require('../../utils').Base;
+const extend = require('deep-extend');
+const Base = require('yeoman-generator').Base;
+const {writeTemplates, patchPackageJSON} = require('../../utils');
 
 const knownPlugins = require('../../knownPhoveaPlugins.json');
 const knownPluginNames = knownPlugins.plugins.map((d) => d.name);
@@ -22,7 +23,7 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
 class PluginGenerator extends Base {
 
   constructor(args, options) {
-    super('', args, options);
+    super(args, options);
 
     // readme content
     this.option('readme');
@@ -61,12 +62,12 @@ class PluginGenerator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:node', {
+    this.composeWith('phovea:_node', {
       options: {
         readme: this.options.readme
       }
     }, {
-      local: require.resolve('../node')
+      local: require.resolve('../_node')
     });
   }
 
@@ -84,10 +85,10 @@ class PluginGenerator extends Base {
 
   writing() {
     const config = this.config.getAll();
-    this._patchPackageJSON(config, [], {
+    patchPackageJSON.call(this, config, [], {
       dependencies: this._generateDependencies()
     });
-    this._writeTemplates(config);
+    writeTemplates.call(this, config);
   }
 
   install() {
