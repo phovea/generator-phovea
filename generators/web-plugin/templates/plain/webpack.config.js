@@ -22,9 +22,27 @@ const webpackloaders = [
   {test: /\.scss$/, loader: 'style!css!sass'},
   {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
   {test: /\.json$/, loader: 'json-loader'},
-  {test: /\.png$/, loader: 'url-loader?mimetype=image/png'},
-  {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&mimetype=application/font-woff'},
-  {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'}
+  { test: /\.(png|jpg)$/, 
+	loader: 'url-loader',
+    query: {
+      limit: 10000, //inline <= 10kb
+	}
+  },
+  { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
+	loader: 'url-loader',
+    query: {
+      limit: 10000, //inline <= 10kb
+      mimetype: 'application/font-woff'
+	}
+  },
+  { test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
+	loader: 'url-loader',
+    query: {
+      limit: 10000, //inline <= 10kb
+      mimetype: 'image/svg+xml'
+	}
+  },
+  {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'}
 ];
 
 /**
@@ -99,7 +117,7 @@ function generateWebpack(options) {
     output: {
       path: resolve(options.basedir + '/build'),
       filename: (options.name || (pkg.name + (options.bundle ? '_bundle' : ''))) + (options.min ? '.min' : '') + '.js',
-      publicPath: '/'
+      publicPath: './'
     },
     resolve: {
       // Add `.ts` and `.tsx` as a resolvable extension.
@@ -120,7 +138,8 @@ function generateWebpack(options) {
       new webpack.DefinePlugin({
         __VERSION__: JSON.stringify(pkg.version),
         __LICENSE__: JSON.stringify(pkg.license)
-      })
+      }),
+	  new webpack.optimize.AggressiveMergingPlugin()
       //rest depends on type
     ],
     externals: [],
