@@ -116,7 +116,7 @@ class PackageJSONGenerator extends Base {
     patchPackageJSON.call(this, config);
 
     config.content = this.options.readme || '';
-    config.longDescription = tihs.options.longDescription || this.props.description || '';
+    config.longDescription = this.options.longDescription || this.props.description || '';
     this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
 
     const includeDot = {
