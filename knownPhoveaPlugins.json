@@ -31,6 +31,14 @@
       "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
     },
     "libraries": ["jquery"]
+  }, {
+    "name": "phovea_importer",
+    "description": "Phovea Importer Plugin",
+    "repository": "https://github.com/sgratzl/phovea_importer.git",
+    "dependencies": {
+      "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_importer"
+    },
+    "libraries": ["d3", "papaparse"]
   }],
   "libraries": [{
     "name": "d3",
