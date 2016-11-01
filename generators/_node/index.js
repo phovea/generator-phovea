@@ -23,10 +23,10 @@ class PackageJSONGenerator extends Base {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
     this.props = {
-      description: pkg.description || '',
-      homepage: pkg.homepage || 'https://phovea.caleydo.org',
-      authorEmail: this.user.git.email(),
-      authorUrl: ''
+      description: this.options.description || pkg.description || '',
+      homepage: this.options.homepage || pkg.homepage || 'https://phovea.caleydo.org',
+      authorEmail: this.options.authorEmail || this.user.git.email(),
+      authorUrl: this.options.authorUrl || ''
     };
 
     var authorName = this.user.git.name() || 'Caleydo Team';
@@ -47,12 +47,12 @@ class PackageJSONGenerator extends Base {
       today: (new Date()).toUTCString(),
       githubAccount: this.github ? this.github.username() : 'phovea'
     });
-
-    return originUrl(this.destinationPath()).then((url) => {
-      this.originUrl = url;
-    }, () => {
-      this.originUrl = '';
-    });
+    this.originUrl = '';
+    if (!this.options.useDefaults) {
+      return originUrl(this.destinationPath()).then((url) => {
+        this.originUrl = url;
+      });
+    }
   }
 
   _promptForName() {
@@ -105,12 +105,14 @@ class PackageJSONGenerator extends Base {
       store: true,
       when: !this.options.useDefaults
     }]).then((props) => {
-      this.props.description = props.description;
-      this.props.homepage = props.homepage;
-      this.config.set('author', props.authorName);
-      this.props.authorEmail = props.authorEmail;
-      this.props.authorUrl = props.authorUrl;
-      this.config.set('githubAccount', props.githubAccount);
+      if (!this.options.useDefaults) {
+        this.props.description = props.description;
+        this.props.homepage = props.homepage;
+        this.config.set('author', props.authorName);
+        this.props.authorEmail = props.authorEmail;
+        this.props.authorUrl = props.authorUrl;
+        this.config.set('githubAccount', props.githubAccount);
+      }
     });
   }
 

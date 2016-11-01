@@ -42,8 +42,10 @@ class PluginGenerator extends Base {
       default: this.config.get('slibraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
-      this.config.set('smodules', props.modules);
-      this.config.set('slibraries', props.libraries);
+      if (!this.options.useDefaults) {
+        this.config.set('smodules', props.modules);
+        this.config.set('slibraries', props.libraries);
+      }
     });
   }
 

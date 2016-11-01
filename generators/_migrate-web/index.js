@@ -3,11 +3,13 @@ const extend = require('deep-extend');
 const Base = require('yeoman-generator').Base;
 
 function extractFromReadme(content) {
+  const safe = (p) => p ? p[1] : '';
+  // between header and installation
+  const longDescription = safe(content.match(/=====$\s([\s\S]*)^Installation/m)).trim();
+  // usage till end line
+  const readme = safe(content.match(/(^Usage[\s\S]*)^\*\*\*$/m)).trim();
 
-  var longDescription = '';
-  var content = '';
-
-  return { longDescription, content};
+  return { longDescription, readme};
 }
 
 class Generator extends Base {
@@ -19,8 +21,20 @@ class Generator extends Base {
   initializing() {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'));
 
-    const {longDescription, content} = extractFromReadme(this.fs.read(this.destinationPath('README.md')));
-    /*this.config.defaults({
+    const {longDescription, readme} = extractFromReadme(this.fs.read(this.destinationPath('README.md')));
+
+    this.props = {
+      useDefaults: true,
+      description: (pkg.description || '').replace(/Caleydo Web/g, 'Phovea'),
+      longDescription: longDescription.replace(/Caleydo Web/g, 'Phovea'),
+      readme: readme.replace(/Caleydo Web/g, 'Phovea').replace(/\.\.\/caleydo_/g,'phovea_'),
+      authorEmail: 'contact@caleydo.org',
+      authorUrl: 'https://caleydo.org'
+    };
+    this.config.defaults({
+      name: pkg.name.replace(/^caleydo_/, 'phovea_'),
+      author: 'The Caleydo Team',
+      githubAccount: 'phovea',
       type: 'lib',
       libraries: [],
       libraryAliases: {},
@@ -28,11 +42,15 @@ class Generator extends Base {
       entries: './index.js',
       ignores: [],
       extensions: []
-    });*/
+    });
   }
 
   default() {
-
+    this.composeWith('phovea:_init-web', {
+      options: this.props
+    }, {
+      local: require.resolve('../_init-web')
+    });
   }
 
   writing() {
@@ -42,6 +60,8 @@ class Generator extends Base {
     this.fs.delete(this.destinationPath('.npmignore'));
     this.fs.delete(this.destinationPath('.gitattributes'));
     this.fs.delete(this.destinationPath('LICENSE'));
+
+    this.fs.delete(this.destinationPath('package.json'));
   }
 }
 

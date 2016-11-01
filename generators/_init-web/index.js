@@ -60,9 +60,11 @@ class PluginGenerator extends Base {
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
-      this.config.set('modules', props.modules);
-      this.config.set('libraries', props.libraries);
-      this.config.set('libraryAliases', toLibraryAliasMap(props.modules, props.libraries));
+      if (!this.options.useDefaults) {
+        this.config.set('modules', props.modules);
+        this.config.set('libraries', props.libraries);
+      }
+      this.config.set('libraryAliases', toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
