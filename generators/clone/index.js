@@ -5,7 +5,7 @@ const glob = require('glob').sync;
 const Separator = require('inquirer').Separator;
 
 const registry = require('../../knownPhoveaPlugins.json');
-const knownPlugins = [].concat(registry.plugins, registry.splugins);
+const knownPlugins = [].concat(registry.plugins, null, registry.splugins);
 const knownPluginNames = [].concat(
   registry.plugins.map((d) => d.name),
   new Separator(),
