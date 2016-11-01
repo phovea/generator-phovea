@@ -13,20 +13,39 @@ function byName(name) {
   return knownPlugins[knownPluginNames.indexOf(name)];
 }
 
-class VagrantGenerator extends Base {
+class Generator extends Base {
 
-  initializing() {
-    this.props = {
-      guestIp: '192.168.50.52',
-      hostPort: 9000
-    };
+  constructor(args, options) {
+    super(args, options);
+
+    this.option('venv', {
+      alias: 'v'
+    });
   }
 
-  // prompting() {
-  //  return this.prompt([]).then((props) => {
-  //
-  //  });
-  // }
+  prompting() {
+    return this.prompt({
+      type: 'list',
+      name: 'virtualEnvironment',
+      message: 'Virtual Environment',
+      store: true,
+      choices: ['none', 'vagrant', 'conda', 'virtualenv'],
+      default: 'vagrant',
+      when: !this.options.venv
+    }).then((props) => {
+      this.venv = props.virtualEnvironment || this.options.venv;
+    });
+  }
+
+  default() {
+    if (this.venv !== 'none') {
+      this.composeWith(`phovea:ueber-${this.venv}`, {
+        options: this.options
+      }, {
+        local: require.resolve(`../ueber-${this.venv}`)
+      });
+    }
+  }
 
   _generatePackage() {
     const files = glob('*/package.json', {
@@ -133,4 +152,4 @@ class VagrantGenerator extends Base {
   }
 }
 
-module.exports = VagrantGenerator;
+module.exports = Generator;

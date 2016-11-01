@@ -66,7 +66,7 @@ class Generator extends Base {
       defaults: false,
       type: Boolean
     });
-    this.option('recursive', {
+    this.option('resolve', {
       alias: 'r',
       defaults: false,
       type: Boolean
@@ -84,7 +84,7 @@ class Generator extends Base {
   initializing() {
     this.props = {
       plugins: [],
-      recursive: false,
+      resolve: false,
       cloneSSH: false,
       runUeber: false
     };
@@ -107,10 +107,10 @@ class Generator extends Base {
       when: !this.options.ssh
     }, {
       type: 'confirm',
-      name: 'recursive',
-      message: 'Recursive',
-      default: this.options.recursive,
-      when: !this.options.recursive
+      name: 'resolve',
+      message: 'Resolve',
+      default: this.options.resolve,
+      when: !this.options.resolve
     }, {
       type: 'confirm',
       name: 'runUeber',
@@ -120,7 +120,7 @@ class Generator extends Base {
     }]).then((props) => {
       this.props.plugins = props.plugins || this.args;
       this.props.cloneSSH = props.cloneSSH || this.options.ssh;
-      this.props.recursive = props.recursive || this.options.recursive;
+      this.props.resolve = props.resolve || this.options.resolve;
       this.props.runUeber = props.runUeber || this.options.ueber;
     });
   }
@@ -145,7 +145,7 @@ class Generator extends Base {
         cwd: this.destinationPath()
       });
     });
-    if (this.props.recursive) {
+    if (this.props.resolve) {
       resolveNeighbors.call(this, this.props.plugins, this.props.cloneSSH);
     }
   }
