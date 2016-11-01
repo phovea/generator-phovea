@@ -27,11 +27,11 @@ function writeTemplates(config, withSamples) {
     }
   };
   const copy = (prefix) => {
-    this.fs.copy(this.templatePath(prefix+'plain/**/*'), this.destinationPath(), includeDot);
-    this.fs.copyTpl(this.templatePath(prefix+'processed/**/*'), this.destinationPath(), config, includeDot);
+    this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+    this.fs.copyTpl(this.templatePath(prefix + 'processed/**/*'), this.destinationPath(), config, includeDot);
 
-    this.fs.copy(this.templatePath(prefix+'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
-    this.fs.copyTpl(this.templatePath(prefix+'pluginname_processed/**/*'), this.destinationPath(config.name + '/'), config, includeDot);
+    this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
+    this.fs.copyTpl(this.templatePath(prefix + 'pluginname_processed/**/*'), this.destinationPath(config.name + '/'), config, includeDot);
   };
   copy('');
   if (withSamples) {
@@ -68,7 +68,7 @@ class BaseInitPluginGenerator extends generators.Base {
   default() {
     this.composeWith('phovea:_init-' + this.basetype, {
       options: extend({}, this.options, {
-        readme: this.readmeAddon()+(this.options.readme ? `\n\n${this.options.readme}`: '')
+        readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
       })
     }, {
       local: require.resolve('../generators/_init-' + this.basetype)
