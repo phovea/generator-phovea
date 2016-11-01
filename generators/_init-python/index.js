@@ -15,6 +15,7 @@ class PluginGenerator extends Base {
     // readme content
     this.option('readme');
     this.option('longDescription');
+    this.option('useDefaults');
   }
 
   initializing() {
@@ -31,13 +32,15 @@ class PluginGenerator extends Base {
       name: 'modules',
       message: 'Included Modules',
       choices: knownPluginNames,
-      default: this.config.get('smodules')
+      default: this.config.get('smodules'),
+      when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
       choices: knownLibraryNames,
-      default: this.config.get('slibraries')
+      default: this.config.get('slibraries'),
+      when: !this.options.useDefaults
     }]).then((props) => {
       this.config.set('smodules', props.modules);
       this.config.set('slibraries', props.libraries);

@@ -16,17 +16,20 @@ class PackageJSONGenerator extends Base {
     // readme content
     this.option('readme');
     this.option('longDescription');
+    this.option('useDefaults');
   }
 
   initializing() {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
     this.props = {
-      description: pkg.description,
-      homepage: pkg.homepage
+      description: pkg.description || '',
+      homepage: pkg.homepage || 'https://phovea.caleydo.org',
+      authorEmail: this.user.git.email(),
+      authorUrl: ''
     };
 
-    var authorName = 'Caleydo Team';
+    var authorName = this.user.git.name() || 'Caleydo Team';
     if (_.isObject(pkg.author)) {
       authorName = pkg.author.name;
       this.props.authorEmail = pkg.author.email;
@@ -53,6 +56,9 @@ class PackageJSONGenerator extends Base {
   }
 
   _promptForName() {
+    if (this.options.useDefaults) {
+      return Promise.resolve(null);
+    }
     return askName({
       name: 'name',
       message: 'Plugin Name',
@@ -67,30 +73,37 @@ class PackageJSONGenerator extends Base {
     return this.prompt([{
       name: 'description',
       message: 'Description',
-      default: this.props.description
+      default: this.props.description,
+      when: !this.options.useDefaults
     }, {
       name: 'homepage',
       message: 'Project homepage url',
-      default: 'https://phovea.caleydo.org'
+      default: this.props.homepage,
+      when: !this.options.useDefaults
     }, {
       name: 'authorName',
       message: 'Author\'s Name',
-      default: this.user.git.name(),
-      store: true
+      default: this.config.get('author'),
+      store: true,
+      when: !this.options.useDefaults
     }, {
       name: 'authorEmail',
       message: 'Author\'s Email',
-      default: this.user.git.email(),
-      store: true
+      default: this.props.authorEmail,
+      store: true,
+      when: !this.options.useDefaults
     }, {
       name: 'authorUrl',
       message: 'Author\'s Homepage',
-      store: true
+      default: this.props.authorUrl,
+      store: true,
+      when: !this.options.useDefaults
     }, {
       name: 'githubAccount',
       message: 'GitHub username or organization',
       default: this.config.get('githubAccount'),
-      store: true
+      store: true,
+      when: !this.options.useDefaults
     }]).then((props) => {
       this.props.description = props.description;
       this.props.homepage = props.homepage;

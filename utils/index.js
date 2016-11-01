@@ -41,6 +41,7 @@ class BaseInitPluginGenerator extends generators.Base {
     this.basetype = basetype || 'web';
     // Make options available
     this.option('skipInstall');
+    this.option('useDefaults');
   }
 
   initializing() {
@@ -59,10 +60,9 @@ class BaseInitPluginGenerator extends generators.Base {
 
   default() {
     this.composeWith('phovea:_init-' + this.basetype, {
-      options: {
-        skipInstall: this.options.skipInstall,
-        readme: this.readmeAddon()
-      }
+      options: extend({}, this.options, {
+        readme: (this.options.readme || '') + this.readmeAddon()
+      })
     }, {
       local: require.resolve('../generators/_init-' + this.basetype)
     });

@@ -16,6 +16,9 @@ class PluginGenerator extends BasePluginGenerator {
   }
 
   prompting() {
+    if (this.options.useDefaults) {
+      return;
+    }
     return this.prompt([{
       type: 'input',
       name: 'app',
