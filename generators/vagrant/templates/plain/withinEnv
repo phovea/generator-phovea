@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+if [ '\`whoami\`' != 'vagrant' ] ; then
+  #outside of vm
+  vagrant up
+  vagrant ssh --command '$@'
+else
+  #within vm
+  ( exec $@ )
+fi
