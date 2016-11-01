@@ -1,6 +1,6 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
-const generateScripts = require('../vagrant').generateScripts;
+const generateScripts = require('../ueber-vagrant').generateScripts;
 
 class Generator extends Base {
 
