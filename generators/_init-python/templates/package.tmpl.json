@@ -5,6 +5,9 @@
     "__main__.py",
     "build",
     "requirements.txt",
+    "requirements_dev.txt",
+    "debian_packages.txt",
+    "redhat_packages.txt",
     "assets"
   ],
   "scripts": {
