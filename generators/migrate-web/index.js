@@ -12,6 +12,23 @@ function extractFromReadme(content) {
   return { longDescription, readme};
 }
 
+function toPhoveaName(name) {
+  return name.replace(/^caleydo_/, 'phovea_');
+}
+
+function toExtension(name, desc) {
+  const copy = extend({}, desc);
+  delete copy.type;
+  delete copy.id;
+  delete copy.file;
+  return {
+    type: desc.type,
+    id: desc.id || name,
+    module: desc.file || '',
+    extras: copy
+  };
+}
+
 class Generator extends Base {
 
   constructor(args, options) {
@@ -33,17 +50,15 @@ class Generator extends Base {
       authorEmail: 'contact@caleydo.org',
       authorUrl: 'https://caleydo.org'
     };
+    const name = toPhoveaName(pkg.name);
     this.config.defaults({
       type: this.args[0],
-      name: pkg.name.replace(/^caleydo_/, 'phovea_'),
+      name: name,
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
-      libraries: [],
-      libraryAliases: {},
-      modules: ['phovea_core'],
-      entries: './index.js',
-      ignores: [],
-      extensions: []
+      libraries: Object.keys(pkg.caleydo.dependencies.web),
+      modules: Object.keys(pkg.peerDependencies).map(toPhoveaName),
+      extensions: pkg.caleydo.plugins.web.map(toExtension.bind(this, name))
     });
   }
 
@@ -57,6 +72,9 @@ class Generator extends Base {
 
   writing() {
     this.fs.move(this.destinationPath('*.ts'), this.destinationPath('src/'));
+    if (this.fs.exists(this.destinationPath('src/main.ts'))) {
+      this.fs.move(this.destinationPath('src/main.ts'), this.destinationPath('src/index.ts'));
+    }
     this.fs.move(this.destinationPath('*.scss'), this.destinationPath('src/'));
     this.fs.delete(this.destinationPath('.gitignore'));
     this.fs.delete(this.destinationPath('.npmignore'));
