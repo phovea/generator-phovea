@@ -16,6 +16,8 @@ class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
+
+    this.argument('type');
   }
 
   initializing() {
@@ -32,10 +34,10 @@ class Generator extends Base {
       authorUrl: 'https://caleydo.org'
     };
     this.config.defaults({
+      type: this.args[0],
       name: pkg.name.replace(/^caleydo_/, 'phovea_'),
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
-      type: 'lib',
       libraries: [],
       libraryAliases: {},
       modules: ['phovea_core'],
@@ -46,10 +48,10 @@ class Generator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:_init-web', {
+    this.composeWith('phovea:init-'+this.args[0], {
       options: this.props
     }, {
-      local: require.resolve('../_init-web')
+      local: require.resolve('../init-'+this.args[0])
     });
   }
 
