@@ -76,7 +76,7 @@ class Generator extends Base {
   }
 
   writing() {
-    this.fs.delete(this.destinationPath('(__index__.py|.gitignore|.npmignore|.gitattributes|LICENSE|package.json'));
+    this.fs.delete(this.destinationPath('(__index__.py|.gitignore|.npmignore|.gitattributes|LICENSE|package.json)'));
     this.fs.move(this.destinationPath('*.py'), this.destinationPath(this.config.get('name') + '/'));
     if (this.destinationPath('config.json')) {
       this.fs.move(this.destinationPath('config.json'), this.destinationPath(this.config.get('name') + '/config.json'));
