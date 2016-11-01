@@ -27,6 +27,7 @@ class PluginGenerator extends Base {
 
     // readme content
     this.option('readme');
+    this.option('longDescription');
   }
 
   initializing() {
@@ -63,9 +64,7 @@ class PluginGenerator extends Base {
 
   default() {
     this.composeWith('phovea:_node', {
-      options: {
-        readme: this.options.readme
-      }
+      options: this.options
     }, {
       local: require.resolve('../_node')
     });

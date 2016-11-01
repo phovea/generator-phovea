@@ -15,6 +15,7 @@ class PackageJSONGenerator extends Base {
 
     // readme content
     this.option('readme');
+    this.option('longDescription');
   }
 
   initializing() {
@@ -66,7 +67,7 @@ class PackageJSONGenerator extends Base {
     return this.prompt([{
       name: 'description',
       message: 'Description',
-      default: this.config.get('description')
+      default: this.props.description
     }, {
       name: 'homepage',
       message: 'Project homepage url',
@@ -115,6 +116,7 @@ class PackageJSONGenerator extends Base {
     patchPackageJSON.call(this, config);
 
     config.content = this.options.readme || '';
+    config.longDescription = tihs.options.longDescription || this.props.description || '';
     this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
 
     const includeDot = {
