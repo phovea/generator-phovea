@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "check": "flake8",
-    "test_only": "python test_runner.py",
-    "test": "npm run check && npm run test_only"
+    "pretest": "npm run check",
+    "test": "python setup.py test"
   }
 }
