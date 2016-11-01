@@ -2,7 +2,7 @@
 const extend = require('deep-extend');
 const Base = require('yeoman-generator').Base;
 
-function fixSourceFile(content) {
+function fixTSSourceFile(content) {
   // REMOVE /// <reference path="../../tsd.d.ts" />
   content = content.replace(/\/\/\/ <reference path="\.\.\/\.\.\/tsd\.d\.ts" \/>\s/gm, '');
   // FROM /main to /index
@@ -19,13 +19,28 @@ function fixSourceFile(content) {
   return content;
 }
 
+
+function fixPythonSourceFile(content) {
+  // FROM caleydo_ to phovea_
+  content = content.replace(/caleydo_/gm, 'phovea_');
+
+  return content;
+}
+
 class Generator extends Base {
 
   writing() {
     this.fs.copy(this.destinationPath('src/*.ts'), this.destinationPath('src/'), {
       process: (contents) => {
         const ori = contents.toString();
-        return fixSourceFile(ori);
+        return fixTSSourceFile(ori);
+      }
+    });
+    const name = this.config.get('name');
+    this.fs.copy(this.destinationPath(name+'/**.py'), this.destinationPath(name+'/'), {
+      process: (contents) => {
+        const ori = contents.toString();
+        return fixPythonSourceFile(ori);
       }
     });
   }
