@@ -1,11 +1,12 @@
 'use strict';
 const extend = require('deep-extend');
 const Base = require('yeoman-generator').Base;
+const {extractFromReadme, toPhoveaName, toExtension} = require('../migrate-web');
 
 
 const knownPlugins = require('../../knownPhoveaPlugins.json');
-const knownPluginNames = knownPlugins.plugins.map((d) => d.name);
-const knownLibraryNames = knownPlugins.libraries.map((d) => d.name);
+const knownPluginNames = knownPlugins.splugins.map((d) => d.name);
+const knownLibraryNames = knownPlugins.slibraries.map((d) => d.name);
 
 function filterKnownPlugin(p) {
   const r = knownPluginNames.indexOf(p);
@@ -21,33 +22,6 @@ function filterKnownLibrary(l) {
     this.log('ERROR: cant find library: ',l);
   }
   return r >= 0;
-}
-
-function extractFromReadme(content) {
-  const safe = (p) => p ? p[1] : '';
-  // between header and installation
-  const longDescription = safe(content.match(/=====$\s([\s\S]*)^Installation/m)).trim();
-  // usage till end line
-  const readme = safe(content.match(/(^Usage[\s\S]*)^\*\*\*$/m)).trim();
-
-  return { longDescription, readme};
-}
-
-function toPhoveaName(name) {
-  return name.replace(/^caleydo_/, 'phovea_');
-}
-
-function toExtension(name, desc) {
-  const copy = extend({}, desc);
-  delete copy.type;
-  delete copy.id;
-  delete copy.file;
-  return {
-    type: desc.type,
-    id: desc.id || name,
-    module: desc.file || '',
-    extras: copy
-  };
 }
 
 class Generator extends Base {
@@ -89,9 +63,9 @@ class Generator extends Base {
       name: name,
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
-      libraries: Object.keys(safe(pkg.caleydo, 'dependencies.web', {})).filter(filterKnownLibrary.bind(this)),
-      modules: Object.keys(pkg.peerDependencies).map(toPhoveaName).filter(filterKnownPlugin.bind(this)),
-      extensions: safe(pkg.caleydo, 'plugins.web', []).map(toExtension.bind(this, name))
+      slibraries: Object.keys(safe(pkg.caleydo, 'dependencies.python', {})).filter(filterKnownLibrary.bind(this)),
+      smodules: Object.keys(pkg.peerDependencies).map(toPhoveaName).filter(filterKnownPlugin.bind(this)),
+      sextensions: safe(pkg.caleydo, 'plugins.python', []).map(toExtension.bind(this, name))
     });
   }
 
@@ -104,16 +78,13 @@ class Generator extends Base {
   }
 
   writing() {
-    this.fs.delete(this.destinationPath('(.gitignore|.npmignore|.gitattributes|LICENSE|package.json'));
-    this.fs.move(this.destinationPath('*.ts'), this.destinationPath('src/'));
-    if (this.fs.exists(this.destinationPath('src/main.ts'))) {
-      this.fs.move(this.destinationPath('src/main.ts'), this.destinationPath('src/index.ts'));
+    this.fs.delete(this.destinationPath('(__index__.py|.gitignore|.npmignore|.gitattributes|LICENSE|package.json'));
+    this.fs.move(this.destinationPath('*.py'), this.destinationPath(this.config.get('name')+'/'));
+    if (this.destinationPath('config.json')) {
+      this.fs.move(this.destinationPath('config.json'), this.destinationPath(this.config.get('name')+'/config.json'));
     }
-    this.fs.move(this.destinationPath('*.scss'), this.destinationPath('src/'));
   }
 }
 
 module.exports = Generator;
 module.exports.extractFromReadme = extractFromReadme;
-module.exports.toPhoveaName = toPhoveaName;
-module.exports.toExtension = toExtension;
