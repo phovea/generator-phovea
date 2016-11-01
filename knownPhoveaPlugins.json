@@ -48,6 +48,14 @@
       "@types/jquery": "^2.0.33",
       "jquery": "^3.1.1"
     }
+  }, {
+    "name": "papaparse",
+    "description": "PapaParse",
+    "alias": "papaparse",
+    "dependencies": {
+      "@types/papaparse": "^4.1.28",
+      "papaparse": "^4.1.2"
+    }
   }],
   "splugins": [{
     "name": "phovea_server",
