@@ -11,10 +11,18 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
   var r = {};
   moduleNames.forEach((m) => {
     const plugin = knownPlugins.plugins[knownPluginNames.indexOf(m)];
+    if (!plugin) {
+      this.log('cant find plugin: ', m);
+      return;
+    }
     libraryNames.push(...(plugin.libraries || []));
   });
   libraryNames.forEach((l) => {
     const lib = knownPlugins.libraries[knownLibraryNames.indexOf(l)];
+    if (!lib) {
+      this.log('cant find library: ', l);
+      return;
+    }
     r[lib.name] = lib.alias || lib.name;
   });
   return r;
@@ -64,7 +72,7 @@ class PluginGenerator extends Base {
         this.config.set('modules', props.modules);
         this.config.set('libraries', props.libraries);
       }
-      this.config.set('libraryAliases', toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryAliases', toLibraryAliasMap.call(this, this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
