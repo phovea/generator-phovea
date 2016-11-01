@@ -10,6 +10,6 @@ import {register} from 'phovea_core/src/plugin';
  * build a registry by registering all phovea modules
  */
 //other modules
-<%- modules.map((d) => `register(require('${d}/phovea.js'));`).join('\n') %>
+<%- modules.map((d) => `import '${d}/phovea_registry.js';`).join('\n') %>
 //self
-register(require('./phovea.js'));
+register('<%-name%>',require('./phovea.js'));

@@ -4,6 +4,7 @@
     "src",
     "index.js",
     "phovea.js",
+    "phovea_registry.js",
     "build",
     "assets"
   ],
