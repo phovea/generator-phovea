@@ -13,16 +13,9 @@ function byName(name) {
   return knownPlugins[knownPluginNames.indexOf(name)];
 }
 
-class VagrantGenerator extends Base {
+class Generator extends Base {
 
-  initializing() {
-    this.props = {
-      guestIp: '192.168.50.52',
-      hostPort: 9000
-    };
-  }
-
-  // prompting() {
+    // prompting() {
   //  return this.prompt([]).then((props) => {
   //
   //  });
@@ -133,4 +126,4 @@ class VagrantGenerator extends Base {
   }
 }
 
-module.exports = VagrantGenerator;
+module.exports = Generator;
