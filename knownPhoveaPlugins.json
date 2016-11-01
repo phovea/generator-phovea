@@ -39,7 +39,8 @@
         "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
       },
       "libraries": [
-        "jquery"
+        "jquery",
+        "font-awesome"
       ]
     },
     {
@@ -47,11 +48,23 @@
       "description": "Phovea Importer Plugin",
       "repository": "https://github.com/sgratzl/phovea_importer.git",
       "dependencies": {
-        "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_importer"
+        "phovea_importer": "github:sgratzl/phovea_importer"
       },
       "libraries": [
         "d3",
         "papaparse"
+      ]
+    },
+    {
+      "name": "phovea_vis_lineup",
+      "description": "Phovea LineUp Visualization",
+      "repository": "https://github.com/sgratzl/phovea_vis_lineup.git",
+      "dependencies": {
+        "phovea_vis_lineup": "github:sgratzl/phovea_vis_lineup"
+      },
+      "libraries": [
+        "lineupjs",
+        "font-awesome"
       ]
     }
   ],
