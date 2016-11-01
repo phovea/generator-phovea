@@ -1,5 +1,6 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
+const generateScripts = require('../vagrant').generateScripts;
 
 class Generator extends Base {
 
@@ -18,6 +19,9 @@ class Generator extends Base {
     };
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
+
+    const scripts = generateScripts.call(this, '.');
+    this.fs.extendJSON(this.destinationPath('package.json'), scripts);
   }
 }
 
