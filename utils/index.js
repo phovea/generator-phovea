@@ -20,17 +20,23 @@ function patchPackageJSON(config, unset, extra) {
   this.fs.writeJSON(this.destinationPath('package.json'), pkg);
 }
 
-function writeTemplates(config) {
+function writeTemplates(config, withSamples) {
   const includeDot = {
     globOptions: {
       dot: true
     }
   };
-  this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
-  this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
+  const copy = (prefix) => {
+    this.fs.copy(this.templatePath(prefix+'plain/**/*'), this.destinationPath(), includeDot);
+    this.fs.copyTpl(this.templatePath(prefix+'processed/**/*'), this.destinationPath(), config, includeDot);
 
-  this.fs.copy(this.templatePath('pluginname/plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
-  this.fs.copyTpl(this.templatePath('pluginname/processed/**/*'), this.destinationPath(config.name + '/'), config, includeDot);
+    this.fs.copy(this.templatePath(prefix+'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
+    this.fs.copyTpl(this.templatePath(prefix+'pluginname_processed/**/*'), this.destinationPath(config.name + '/'), config, includeDot);
+  };
+  copy('');
+  if (withSamples) {
+    copy('sample_');
+  }
 }
 
 class BaseInitPluginGenerator extends generators.Base {
@@ -41,6 +47,7 @@ class BaseInitPluginGenerator extends generators.Base {
     this.basetype = basetype || 'web';
     // Make options available
     this.option('skipInstall');
+    this.option('noSamples');
     this.option('useDefaults');
   }
 
@@ -61,7 +68,7 @@ class BaseInitPluginGenerator extends generators.Base {
   default() {
     this.composeWith('phovea:_init-' + this.basetype, {
       options: extend({}, this.options, {
-        readme: (this.options.readme || '') + this.readmeAddon()
+        readme: this.readmeAddon()+(this.options.readme ? `\n\n${this.options.readme}`: '')
       })
     }, {
       local: require.resolve('../generators/_init-' + this.basetype)
@@ -73,7 +80,7 @@ class BaseInitPluginGenerator extends generators.Base {
     if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
       this._patchPackageJSON(config);
     }
-    this._writeTemplates(config);
+    this._writeTemplates(config, !this.options.noSamples);
   }
 
   _patchPackageJSON(config, unset, extra) {
