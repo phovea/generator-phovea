@@ -21,7 +21,7 @@ function generateScripts(baseDir) {
       // generate scoped tasks
       let cmd = `.${path.sep}withinEnv "cd ${baseDir}/${p} && npm run ${s}"`;
       if (/^(start|watch)/g.test(s)) {
-        //special case for start to have the right working directory
+        // special case for start to have the right working directory
         let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
         cmd = `.${path.sep}withinEnv "cd ${baseDir} && ${fixedscript}"`;
       }

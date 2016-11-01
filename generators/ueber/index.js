@@ -20,7 +20,7 @@ class Generator extends Base {
 
     this.option('venv', {
       alias: 'v'
-    })
+    });
   }
 
   prompting() {
@@ -29,20 +29,22 @@ class Generator extends Base {
       name: 'virtualEnvironment',
       message: 'Virtual Environment',
       store: true,
-      choices: ['vagrant', 'conda', 'virtualenv'],
-      default: 'vagrant'
-      when: !this.optiosn.venv
+      choices: ['none', 'vagrant', 'conda', 'virtualenv'],
+      default: 'vagrant',
+      when: !this.options.venv
     }).then((props) => {
       this.venv = props.virtualEnvironment || this.options.venv;
     });
   }
 
   default() {
-    this.composeWith(`phovea:ueber-${this.venv}`, {
-      options: this.options
-    }, {
-      local: require.resolve(`../ueber-${this.venv}`)
-    });
+    if (this.venv !== 'none') {
+      this.composeWith(`phovea:ueber-${this.venv}`, {
+        options: this.options
+      }, {
+        local: require.resolve(`../ueber-${this.venv}`)
+      });
+    }
   }
 
   _generatePackage() {

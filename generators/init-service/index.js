@@ -25,8 +25,6 @@ class PluginGenerator extends BasePluginGenerator {
 
   writing() {
     return super.writing();
-
-
   }
 }
 
