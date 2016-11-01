@@ -12,6 +12,10 @@ function fixSourceFile(content) {
   // FROM import (.*) = require('(.*)') TO import * as $1 from '$2'
   content = content.replace(/import\s+(.*)\s+=\s+require\('(.*)'\)/gm, 'import * as \$1 from \'\$2\'');
 
+  // FROM /// <amd-dependency path='css!(.*)' /> TO import '$1';
+  content = content.replace(/\/\/\/ <amd-dependency path='css!(.*)' \/>/gm, 'import \'\$1.css\';');
+
+
   return content;
 }
 
@@ -21,8 +25,7 @@ class Generator extends Base {
     this.fs.copy(this.destinationPath('src/*.ts'), this.destinationPath('src/'), {
       process: (contents) => {
         const ori = contents.toString();
-        const processed = fixSourceFile(ori);
-        return processed;
+        return fixSourceFile(ori);
       }
     });
   }
