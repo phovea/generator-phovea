@@ -1,7 +1,7 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const glob = require('glob').sync;
-const resolve = require('path').resolve;
+const path = require('path');
 
 
 class Generator extends Base {
@@ -28,11 +28,11 @@ class Generator extends Base {
       // no pre post test tasks
       Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
         // generate scoped tasks
-        let cmd = `${resolve('./withinEnv')} 'cd /vagrant/${p} && npm run ${s}'`;
+        let cmd = `.${path.sep}withinEnv "cd /vagrant/${p} && npm run ${s}"`;
         if (/^(start|watch)/g.test(s)) {
           //special case for start to have the right working directory
           let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
-          cmd = `${resolve('./withinEnv')} 'cd /vagrant && ${fixedscript}'`;
+          cmd = `.${path.sep}withinEnv "cd /vagrant && ${fixedscript}"`;
         }
         scripts[`${s}:${p}`] = cmd;
       });

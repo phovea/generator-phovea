@@ -1,5 +1,5 @@
 @echo off
 
 shift
-vagrant up
-vagrant ssh --command '%*'
+echo vagrant ssh --command %*
+vagrant ssh --command %*

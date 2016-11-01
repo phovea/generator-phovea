@@ -3,8 +3,8 @@ set -e
 
 if [ '\`whoami\`' != 'vagrant' ] ; then
   #outside of vm
-  vagrant up
-  vagrant ssh --command '$@'
+  echo "vagrant ssh --command $@"
+  vagrant ssh --command "$@"
 else
   #within vm
   ( exec $@ )
