@@ -3,6 +3,8 @@
  */
 
 import 'file?name=index.html!./index.html';
+import 'file?name=404.html!./404.html';
+import 'file?name=robots.txt!./robots.txt';
 import 'phovea_bootstrap_fontawesome/src/_bootstrap';
 import './style.scss';
 import {create as createApp} from './app';
