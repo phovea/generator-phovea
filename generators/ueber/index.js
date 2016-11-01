@@ -15,11 +15,35 @@ function byName(name) {
 
 class Generator extends Base {
 
-    // prompting() {
-  //  return this.prompt([]).then((props) => {
-  //
-  //  });
-  // }
+  constructor(args, options) {
+    super(args, options);
+
+    this.option('venv', {
+      alias: 'v'
+    })
+  }
+
+  prompting() {
+    return this.prompt({
+      type: 'list',
+      name: 'virtualEnvironment',
+      message: 'Virtual Environment',
+      store: true,
+      choices: ['vagrant', 'conda', 'virtualenv'],
+      default: 'vagrant'
+      when: !this.optiosn.venv
+    }).then((props) => {
+      this.venv = props.virtualEnvironment || this.options.venv;
+    });
+  }
+
+  default() {
+    this.composeWith(`phovea:ueber-${this.venv}`, {
+      options: this.options
+    }, {
+      local: require.resolve(`../ueber-${this.venv}`)
+    });
+  }
 
   _generatePackage() {
     const files = glob('*/package.json', {
