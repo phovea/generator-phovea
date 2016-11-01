@@ -48,7 +48,7 @@ class Generator extends Base {
   }
 
   _generatePackage() {
-    const files = glob('*/package.json', {
+    const files = glob('*/phovea.js', { // web plugin
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
@@ -80,15 +80,11 @@ class Generator extends Base {
       }
     });
 
-    return {
-      dependencies: dependencies,
-      devDependencies: devDependencies,
-      scripts: scripts
-    };
+    return { plugins, dependencies, devDependencies, scripts };
   }
 
   _generateServerDependencies() {
-    const files = glob('*/requirements.txt', {
+    const files = glob('*/requirements.txt', { // server plugin
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
@@ -133,16 +129,19 @@ class Generator extends Base {
 
   writing() {
     const config = this.props;
+    const {plugins, dependencies, devDependencies, scripts} = this._generatePackage();
     const includeDot = {
       globOptions: {
         dot: true
       }
     };
+
+    config.modules = plugins;
+
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
-    const deps = this._generatePackage();
-    patchPackageJSON.call(this, config, [], deps);
+    patchPackageJSON.call(this, config, [], { devDependencies, dependencies, scripts});
 
     const sdeps = this._generateServerDependencies();
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));

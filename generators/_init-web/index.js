@@ -102,6 +102,10 @@ class PluginGenerator extends Base {
       dependencies: this._generateDependencies()
     });
     writeTemplates.call(this, config);
+    // don't overwrite existing registry file
+    if (!this.fs.exists(this.destinationPath('phovea.js'))) {
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), config);
+    }
   }
 
   install() {

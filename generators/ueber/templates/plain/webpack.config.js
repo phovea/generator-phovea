@@ -13,7 +13,7 @@ function findPlugins() {
 }
 
 function patchEntries(plugin, entries) {
-  const transform = (entry) => `./${plugin}/${entry.substring(2)}`;
+  const transform = (entry) => `./${plugin}/${entry}`;
   if (typeof entries === 'string') {
     return transform(entries);
   }
