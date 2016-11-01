@@ -26,17 +26,9 @@ fi
 #packages
 echo "--- Start package provisioning ---"
 
-rm -f package_list_t.txt
-touch package_list_t.txt
-for line in $(find ${basedir} -maxdepth 2 -name 'debian_packages.txt'); do
-  cat ${line} >> package_list_t.txt
-done
-sort -u package_list_t.txt -o package_list.txt
-
 set -vx #to turn echoing on and
-sudo apt-get install -y `cat package_list.txt | tr '\r' ' ' | tr '\n' ' '`
+sudo apt-get install -y `cat ${basedir}debian_packages.txt | tr '\r' ' ' | tr '\n' ' '`
 set +vx #to turn them both off
-rm package_list.txt
 
 #########################
 #python
@@ -45,16 +37,8 @@ echo "--- Start python provisioning ---"
 #install python and some standard packages
 sudo apt-get install -y python-pip python-dev zlib1g-dev cython
 
-rm -f requirements_t.txt
-touch requirements_t.txt
-for line in $(find ${basedir} -maxdepth 2 -name 'requirements.txt'); do
-  cat ${line} >> requirements_t.txt
-done
-for line in $(find ${basedir} -maxdepth 2 -name 'requirements_dev.txt'); do
-  cat ${line} >> requirements_t.txt
-done
-sort -u requirements_t.txt -o requirements.txt
-sudo pip install -r requirements.txt
+sudo pip install -r ${basedir}requirements.txt
+sudo pip install -r ${basedir}requirements_dev.txt
 
 #########################
 #bash

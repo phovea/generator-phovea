@@ -54,30 +54,30 @@ class PluginGenerator extends Base {
   }
 
   _generateDependencies() {
-    const pip = {};
-    const debian = {};
-    const redhat = {};
+    const requirements = {};
+    const debianPackages = {};
+    const redhatPackages = {};
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
     // merge dependencies
     this.config.get('smodules').forEach((m) => {
       const p = knownPlugins.splugins[knownPluginNames.indexOf(m)];
-      extend(pip, p.requirements);
-      extend(debian, p.debian_packages);
-      extend(debian, p.redhat_packages);
+      extend(requirements, p.requirements);
+      extend(debianPackages, p.debianPackages_packages);
+      extend(debianPackages, p.redhatPackages_packages);
     });
     this.config.get('slibraries').forEach((m) => {
       const p = knownPlugins.slibraries[knownLibraryNames.indexOf(m)];
-      extend(pip, p.requirements);
-      extend(debian, p.debian_packages);
-      extend(debian, p.redhat_packages);
+      extend(requirements, p.requirements);
+      extend(debianPackages, p.debianPackages_packages);
+      extend(debianPackages, p.redhatPackages_packages);
     });
 
     return {
-      pip: concat(pip),
-      debian: concat(debian),
-      redhat: concat(redhat)
+      requirements: concat(requirements),
+      debianPackages: concat(debianPackages),
+      redhatPackages: concat(redhatPackages)
     };
   }
 
@@ -87,14 +87,14 @@ class PluginGenerator extends Base {
     writeTemplates.call(this, config);
 
     const deps = this._generateDependencies();
-    this.fs.write(this.destinationPath('requirements.txt'), deps.pip.join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debian.join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhat.join('\n'));
+    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.join('\n'));
+    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.join('\n'));
+    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.join('\n'));
   }
 
   install() {
     if (this.options.install) {
-      // TODO pip install
+      // TODO requirements install
     }
   }
 }

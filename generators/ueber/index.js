@@ -5,9 +5,9 @@ const path = require('path');
 const glob = require('glob').sync;
 const extend = require('lodash').extend;
 
-const knownPlugins = require('../../knownPhoveaPlugins.json');
+const registry = require('../../knownPhoveaPlugins.json');
 const knownPlugins = [].concat(registry.plugins, registry.splugins);
-const knownPluginNames = [].concat(registry.plugins, registry.splugins).map((d) => d.name));
+const knownPluginNames = [].concat(registry.plugins, registry.splugins).map((d) => d.name);
 
 function byName(name) {
   return knownPlugins[knownPluginNames.indexOf(name)];
@@ -52,7 +52,7 @@ class VagrantGenerator extends Base {
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const known = byName(p);
-      if (known) {
+      if (known && known.dependencies) {
         Object.keys(known.dependencies).forEach((pi) => {
           delete dependencies[pi];
         });
@@ -68,6 +68,50 @@ class VagrantGenerator extends Base {
     };
   }
 
+  _generateServerDependencies() {
+    const files = glob('*/requirements.txt', {
+      cwd: this.destinationPath()
+    });
+    const plugins = files.map(path.dirname);
+
+    var requirements = new Set();
+    var devRequirements = new Set();
+    var debianPackages = new Set();
+    var redhatPackages = new Set();
+
+    plugins.forEach((p) => {
+      // generate dependencies
+      const addAll = (name, set) => {
+        const r = this.fs.read(this.destinationPath(`${p}/${name}`));
+        r.split('\n').forEach((ri) => {
+          set.add(ri);
+        });
+      };
+      addAll('requirements.txt', requirements);
+      addAll('requirements_dev.txt', devRequirements);
+      addAll('debian_packages.txt', debianPackages);
+      addAll('redhat_packages.txt', redhatPackages);
+    });
+    // remove all plugins that are locally installed
+    plugins.forEach((p) => {
+      const known = byName(p);
+      if (known && known.requirements) {
+        Object.keys(known.requirements).forEach((pi) => {
+          requirements.delete(pi + known.requirements[pi]);
+        });
+      } else {
+        requirements.delete(p);
+      }
+    });
+
+    return {
+      requirements: [...requirements.values()],
+      devRequirements: [...devRequirements.values()],
+      debianPackages: [...debianPackages.values()],
+      redhatPackages: [...redhatPackages.values()]
+    };
+  }
+
   writing() {
     const config = this.props;
     const includeDot = {
@@ -80,6 +124,12 @@ class VagrantGenerator extends Base {
 
     const deps = this._generatePackage();
     patchPackageJSON.call(this, config, [], deps);
+
+    const sdeps = this._generateServerDependencies();
+    this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
+    this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
+    this.fs.write(this.destinationPath('debian_packages.txt'), sdeps.debianPackages.join('\n'));
+    this.fs.write(this.destinationPath('redhat_packages.txt'), sdeps.redhatPackages.join('\n'));
   }
 }
 
