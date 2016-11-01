@@ -5,6 +5,14 @@ const path = require('path');
 const glob = require('glob').sync;
 const extend = require('lodash').extend;
 
+const knownPlugins = require('../../knownPhoveaPlugins.json');
+const knownPlugins = [].concat(registry.plugins, registry.splugins);
+const knownPluginNames = [].concat(registry.plugins, registry.splugins).map((d) => d.name));
+
+function byName(name) {
+  return knownPlugins[knownPluginNames.indexOf(name)];
+}
+
 class VagrantGenerator extends Base {
 
   initializing() {
@@ -28,10 +36,12 @@ class VagrantGenerator extends Base {
 
     // generate dependencies
     var dependencies = {};
+    var devDependencies = {};
     var scripts = {};
     plugins.forEach((p) => {
       const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
       extend(dependencies, pkg.dependencies);
+      extend(devDependencies, pkg.devDependencies);
 
       // no pre post test tasks
       Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
@@ -41,11 +51,19 @@ class VagrantGenerator extends Base {
     });
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
-      delete dependencies[p];
+      const known = byName(p);
+      if (known) {
+        Object.keys(known.dependencies).forEach((pi) => {
+          delete dependencies[pi];
+        });
+      } else {
+        delete dependencies[p];
+      }
     });
 
     return {
       dependencies: dependencies,
+      devDependencies: devDependencies,
       scripts: scripts
     };
   }
