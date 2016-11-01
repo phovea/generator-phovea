@@ -91,6 +91,22 @@
         "@types/jqueryui": "^1.11.31",
         "jqueryui": "^1.11.1"
       }
+    },
+    {
+      "name": "lineupjs",
+      "description": "LineUp.js",
+      "alias": "lineupjs",
+      "dependencies": {
+        "lineupjs": "github:Caleydo/lineup.js#feature_146_react"
+      }
+    },
+    {
+      "name": "font-awesome",
+      "description": "Font Awesome",
+      "alias": "font-awesome",
+      "dependencies": {
+        "font-awesome": "^4.6.3"
+      }
     }
   ],
   "splugins": [
