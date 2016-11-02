@@ -130,12 +130,25 @@
       "requirements": {
         "-e git+https://github.com/sgratzl/phovea_server.git": "#egg=phovea_server"
       },
-      "debian_packages": {
+      "debianPackages": {
       },
-      "redhat_packages": {
+      "redhatPackages": {
       }
     }
   ],
   "slibraries": [
+    {
+      "name": "redis",
+      "description": "Redis Server",
+      "requirements": {
+        "redis": "==2.10.5"
+      },
+      "debianPackages": {
+        "redis-server": ""
+      },
+      "redhatPackages": {
+        "redis": ""
+      }
+    }
   ]
 }
