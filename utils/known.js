@@ -42,6 +42,6 @@ function generate(items, typesWeb, typesServer, typesHybrid) {
   return r;
 }
 
-module.exports.plugin = generate(registry.plugins, ['app', 'bundle', 'lib'], ['server', 'service'], ['lib-service', 'app-service']);
+module.exports.plugin = generate(registry.plugins, ['app', 'bundle', 'lib'], ['server', 'service'], ['lib-server', 'app-serer', 'lib-service', 'app-service']);
 module.exports.lib = generate(registry.libraries, ['web'], ['python'], []);
 
