@@ -102,7 +102,11 @@ class Generator extends Base {
   }
 
   writing() {
-    this.fs.delete(this.destinationPath('(.gitignore|.npmignore|.gitattributes|LICENSE|package.json)'));
+    this.fs.delete(this.destinationPath('.gitignore'));
+    this.fs.delete(this.destinationPath('.npmignore'));
+    this.fs.delete(this.destinationPath('.gitattributes'));
+    this.fs.delete(this.destinationPath('LICENSE'));
+    this.fs.delete(this.destinationPath('package.json'));
     this.fs.move(this.destinationPath('**.ts'), this.destinationPath('src/'));
     if (this.fs.exists(this.destinationPath('src/main.ts'))) {
       this.fs.move(this.destinationPath('src/main.ts'), this.destinationPath('src/index.ts'));
