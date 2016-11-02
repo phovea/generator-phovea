@@ -31,7 +31,7 @@
     "release:minor": "npm version minor && npm publish && git push --follow-tags",
     "release:patch": "npm version patch && npm publish && git push --follow-tags",
     "predist": "npm run build",
-    "dist": "mkdir -p dist && tar cvzf dist/<%-name%>.tar.gz build/"
+     "dist": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.35",
@@ -50,6 +50,7 @@
     "karma-junit-reporter": "^1.1.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^1.8.0",
+    "mkdirp": "^0.5.1",
     "node-sass": "^3.10.0",
     "null-loader": "^0.1.1",
     "raw-loader": "^0.5.1",
