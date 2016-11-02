@@ -20,18 +20,38 @@ function patchPackageJSON(config, unset, extra) {
   this.fs.writeJSON(this.destinationPath('package.json'), pkg);
 }
 
+function stringifyInline(obj, space) {
+  var base = JSON.stringify(obj, null, ' ');
+  // common style
+  base = base.replace(/"/g, '\'');
+  // prefix with space
+  base = base.split('\n').map((l) => space + l).join('\n');
+  return base.substring(space.length); // skip the first space
+}
+
 function writeTemplates(config, withSamples) {
   const includeDot = {
     globOptions: {
       dot: true
     }
   };
+
+  const pattern = extend({
+    stringifyPython : (obj, space) => {
+      var base = stringifyInline(obj, space);
+      // python different true false
+      base = base.replace(/: true/g, ': True').replace(/: false/g, ': False');
+      return base;
+    },
+    stringify: stringifyInline
+  }, config);
+
   const copy = (prefix) => {
     this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
-    this.fs.copyTpl(this.templatePath(prefix + 'processed/**/*'), this.destinationPath(), config, includeDot);
+    this.fs.copyTpl(this.templatePath(prefix + 'processed/**/*'), this.destinationPath(), pattern, includeDot);
 
     this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
-    this.fs.copyTpl(this.templatePath(prefix + 'pluginname_processed/**/*'), this.destinationPath(config.name + '/'), config, includeDot);
+    this.fs.copyTpl(this.templatePath(prefix + 'pluginname_processed/**/*'), this.destinationPath(config.name + '/'), pattern, includeDot);
   };
   copy('');
   if (withSamples) {
