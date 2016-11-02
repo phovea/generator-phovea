@@ -35,10 +35,32 @@ class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
-    this.argument('type');
+    this.argument('type', {
+      required: false
+    });
   }
 
   initializing() {
+    if (this.args.length === 0) {
+      return this._promptForType().then(this._initializingImpl.bind(this));
+    }
+    this.type = this.args[0];
+    return this._initializingImpl();
+  }
+
+  _promptForType() {
+    return this.prompt({
+      type: 'list',
+      name: 'type',
+      message: 'Plugin Type',
+      choices: known.plugin.types,
+      default: 'lib'
+    }).then((props) => {
+      this.type = props.type;
+    });
+  }
+
+  _initializingImpl() {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'));
 
     const {longDescription, readme} = extractFromReadme(this.fs.read(this.destinationPath('README.md')));
@@ -99,7 +121,7 @@ class Generator extends Base {
     const redhatPackages = safe(pkg.caleydo, 'dependencies.redhat', {});
 
     this.config.defaults({
-      type: this.args[0],
+      type: this.type,
       name: name,
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
@@ -122,10 +144,10 @@ class Generator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:init-' + this.args[0], {
+    this.composeWith('phovea:init-' + this.type, {
       options: this.props
     }, {
-      local: require.resolve('../init-' + this.args[0])
+      local: require.resolve('../init-' + this.type)
     });
   }
 
