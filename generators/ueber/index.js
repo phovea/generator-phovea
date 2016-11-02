@@ -21,6 +21,8 @@ class Generator extends Base {
     this.option('venv', {
       alias: 'v'
     });
+
+    this.props = {};
   }
 
   prompting() {
@@ -99,7 +101,7 @@ class Generator extends Base {
       const addAll = (name, set) => {
         const r = this.fs.read(this.destinationPath(`${p}/${name}`));
         r.split('\n').forEach((ri) => {
-          set.add(ri);
+          set.add(ri.trim());
         });
       };
       addAll('requirements.txt', requirements);
@@ -115,6 +117,7 @@ class Generator extends Base {
           requirements.delete(pi + known.requirements[pi]);
         });
       } else {
+        this.log('unknown', p);
         requirements.delete(p);
       }
     });
