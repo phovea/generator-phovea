@@ -4,10 +4,14 @@ const patchPackageJSON = require('../../utils').patchPackageJSON;
 const path = require('path');
 const glob = require('glob').sync;
 const extend = require('lodash').extend;
+const Separator = require('inquirer').Separator;
 
 const registry = require('../../knownPhoveaPlugins.json');
-const knownPlugins = [].concat(registry.plugins, registry.splugins);
-const knownPluginNames = [].concat(registry.plugins, registry.splugins).map((d) => d.name);
+const knownPlugins = [].concat(registry.plugins,  null, registry.splugins);
+const knownPluginNames = [].concat(
+  registry.plugins.map((d) => d.name),
+  new Separator(),
+  registry.splugins.map((d) => d.name));
 
 function byName(name) {
   return knownPlugins[knownPluginNames.indexOf(name)];
@@ -21,11 +25,14 @@ class Generator extends Base {
     this.option('venv', {
       alias: 'v'
     });
+  }
 
-    this.props = {};
+  initializing() {
+    this.props = this.fs.readJSON(this.destinationPath('.yo-rc-ueber.json'), { modules: [] });
   }
 
   prompting() {
+    const isInstalled = glob('*/package.json', { cwd: this.destinationPath() }).map(path.dirname);
     return this.prompt({
       type: 'list',
       name: 'virtualEnvironment',
@@ -34,7 +41,14 @@ class Generator extends Base {
       choices: ['none', 'vagrant', 'conda', 'virtualenv'],
       default: 'vagrant',
       when: !this.options.venv
+    },{
+      type: 'checkbox',
+      name: 'modules',
+      message: 'Additional Plugins',
+      choices: knownPluginNames.filter((d) => isInstalled.indexOf(d) < 0),
+      default: this.props.modules,
     }).then((props) => {
+      this.props.modules = props.modules;
       this.venv = props.virtualEnvironment || this.options.venv;
     });
   }
@@ -49,7 +63,7 @@ class Generator extends Base {
     }
   }
 
-  _generatePackage() {
+  _generatePackage(additionalPlugins) {
     const files = glob('*/phovea.js', { // web plugin
       cwd: this.destinationPath()
     });
@@ -70,6 +84,15 @@ class Generator extends Base {
         scripts[`${s}:${p}`] = `cd ${p} && npm run ${s}`;
       });
     });
+
+    //add additional to install plugins
+    additionalPlugins.forEach((p) => {
+      const known = byName(p);
+      if (known && known.dependencies) {
+       extend(dependencies, known.dependencies);
+      }
+    });
+
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const known = byName(p);
@@ -85,7 +108,7 @@ class Generator extends Base {
     return { plugins, dependencies, devDependencies, scripts };
   }
 
-  _generateServerDependencies() {
+  _generateServerDependencies(additionalPlugins) {
     const files = glob('*/requirements.txt', { // server plugin
       cwd: this.destinationPath()
     });
@@ -109,6 +132,21 @@ class Generator extends Base {
       addAll('debian_packages.txt', debianPackages);
       addAll('redhat_packages.txt', redhatPackages);
     });
+
+    //add additional to install plugins
+    additionalPlugins.forEach((p) => {
+      const known = byName(p);
+      if (known && known.requirements) {
+        Object.keys(known.requirements).forEach((r) => requirements.add(r+known.requirements[ri]));
+      }
+      if (known && known.debianPackages) {
+        Object.keys(known.debianPackages).forEach((r) => debianPackages.add(r+known.debianPackages[ri]));
+      }
+      if (known && known.debianPackages) {
+        Object.keys(known.debianPackages).forEach((r) => redhatPackages.add(r+known.debianPackages[ri]));
+      }
+    });
+
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const known = byName(p);
@@ -117,7 +155,6 @@ class Generator extends Base {
           requirements.delete(pi + known.requirements[pi]);
         });
       } else {
-        this.log('unknown', p);
         requirements.delete(p);
       }
     });
@@ -131,22 +168,24 @@ class Generator extends Base {
   }
 
   writing() {
-    const config = this.props;
-    const {plugins, dependencies, devDependencies, scripts} = this._generatePackage();
+    this.fs.extendJSON(this.destinationPath('.yo-rc-ueber.json'), { modules: this.props.modules });
+
+    const config = {};
+    const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
     const includeDot = {
       globOptions: {
         dot: true
       }
     };
 
-    config.modules = plugins;
+    config.modules = this.props.modules.concat(plugins);
 
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
     patchPackageJSON.call(this, config, [], { devDependencies, dependencies, scripts});
 
-    const sdeps = this._generateServerDependencies();
+    const sdeps = this._generateServerDependencies(this.props.modules);
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), sdeps.debianPackages.join('\n'));
