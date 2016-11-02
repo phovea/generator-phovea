@@ -193,7 +193,7 @@ function generateWebpack(options) {
     });
     //ingore phovea module registry calls
     (options.modules || []).forEach(function (m) {
-      base.module.loaders.push({test: new RegExp('.*[\\\\/]' + m + '[\\\\/]phovea.js'), loader: 'null'}); //use null loader
+      base.module.loaders.push({test: new RegExp('.*[\\\\/]' + m + '[\\\\/]phovea_registry.js'), loader: 'null'}); //use null loader
     });
 
     //extract the included css file to own file
