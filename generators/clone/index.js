@@ -2,17 +2,10 @@
 const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
-const Separator = require('inquirer').Separator;
-
-const registry = require('../../knownPhoveaPlugins.json');
-const knownPlugins = [].concat(registry.plugins, null, registry.splugins);
-const knownPluginNames = [].concat(
-  registry.plugins.map((d) => d.name),
-  new Separator(),
-  registry.splugins.map((d) => d.name));
+const known = require('../../utils/known');
 
 function toRepository(plugin) {
-  const p = knownPlugins[knownPluginNames.indexOf(plugin)];
+  const p = known.plugin.byName(plugin);
   return p.repository;
 }
 
@@ -95,7 +88,7 @@ class Generator extends Base {
       type: 'checkbox',
       name: 'plugins',
       message: 'Modules to clone',
-      choices: knownPluginNames,
+      choices: known.plugin.listNames,
       default: this.args,
       when: !this.args.length
     }, {

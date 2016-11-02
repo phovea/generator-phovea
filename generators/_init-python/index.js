@@ -3,9 +3,7 @@ const extend = require('deep-extend');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 
-const knownPlugins = require('../../knownPhoveaPlugins.json');
-const knownPluginNames = knownPlugins.splugins.map((d) => d.name);
-const knownLibraryNames = knownPlugins.slibraries.map((d) => d.name);
+const known = require('../../utils/known');
 
 class PluginGenerator extends Base {
 
@@ -31,14 +29,14 @@ class PluginGenerator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: knownPluginNames,
+      choices: known.plugin.listServerNames,
       default: this.config.get('smodules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: knownLibraryNames,
+      choices: known.lib.listServerNames,
       default: this.config.get('slibraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
@@ -66,13 +64,13 @@ class PluginGenerator extends Base {
 
     // merge dependencies
     this.config.get('smodules').forEach((m) => {
-      const p = knownPlugins.splugins[knownPluginNames.indexOf(m)];
+      const p = known.plugin.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages_packages);
       extend(debianPackages, p.redhatPackages_packages);
     });
     this.config.get('slibraries').forEach((m) => {
-      const p = knownPlugins.slibraries[knownLibraryNames.indexOf(m)];
+      const p = known.lib.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages_packages);
       extend(debianPackages, p.redhatPackages_packages);

@@ -3,18 +3,8 @@ const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
 const extend = require('lodash').extend;
-const Separator = require('inquirer').Separator;
 
-const registry = require('../../knownPhoveaPlugins.json');
-const knownPlugins = [].concat(registry.plugins, null, registry.splugins);
-const knownPluginNames = [].concat(
-  registry.plugins.map((d) => d.name),
-  new Separator(),
-  registry.splugins.map((d) => d.name));
-
-function byName(name) {
-  return knownPlugins[knownPluginNames.indexOf(name)];
-}
+const known = require('../../utils/known');
 
 class Generator extends Base {
 
@@ -44,7 +34,7 @@ class Generator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Additional Plugins',
-      choices: knownPluginNames.filter((d) => isInstalled.indexOf(d) < 0),
+      choices: known.plugin.listNames.filter((d) => isInstalled.indexOf(d) < 0),
       default: this.props.modules
     }]).then((props) => {
       this.props.modules = props.modules;
@@ -86,17 +76,17 @@ class Generator extends Base {
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
-      const known = byName(p);
-      if (known && known.dependencies) {
-        extend(dependencies, known.dependencies);
+      const k = known.plugin.byName(p);
+      if (k && k.dependencies) {
+        extend(dependencies, k.dependencies);
       }
     });
 
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
-      const known = byName(p);
-      if (known && known.dependencies) {
-        Object.keys(known.dependencies).forEach((pi) => {
+      const k = known.plugin.byName(p);
+      if (k && k.dependencies) {
+        Object.keys(k.dependencies).forEach((pi) => {
           delete dependencies[pi];
         });
       } else {
@@ -134,24 +124,24 @@ class Generator extends Base {
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
-      const known = byName(p);
-      if (known && known.requirements) {
-        Object.keys(known.requirements).forEach((ri) => requirements.add(ri + known.requirements[ri]));
+      const k = known.plugin.byName(p);
+      if (k && k.requirements) {
+        Object.keys(k.requirements).forEach((ri) => requirements.add(ri + k.requirements[ri]));
       }
-      if (known && known.debianPackages) {
-        Object.keys(known.debianPackages).forEach((ri) => debianPackages.add(ri + known.debianPackages[ri]));
+      if (k && k.debianPackages) {
+        Object.keys(k.debianPackages).forEach((ri) => debianPackages.add(ri + known.debianPackages[ri]));
       }
-      if (known && known.debianPackages) {
-        Object.keys(known.debianPackages).forEach((ri) => redhatPackages.add(ri + known.debianPackages[ri]));
+      if (k && k.debianPackages) {
+        Object.keys(k.debianPackages).forEach((ri) => redhatPackages.add(ri + k.debianPackages[ri]));
       }
     });
 
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
-      const known = byName(p);
-      if (known && known.requirements) {
-        Object.keys(known.requirements).forEach((pi) => {
-          requirements.delete(pi + known.requirements[pi]);
+      const k = known.plugin.byName(p);
+      if (k && k.requirements) {
+        Object.keys(k.requirements).forEach((pi) => {
+          requirements.delete(pi + k.requirements[pi]);
         });
       } else {
         requirements.delete(p);

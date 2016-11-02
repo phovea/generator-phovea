@@ -2,24 +2,22 @@
 const Base = require('yeoman-generator').Base;
 const {extractFromReadme, toPhoveaName, toExtension} = require('../migrate-web');
 
-const knownPlugins = require('../../knownPhoveaPlugins.json');
-const knownPluginNames = knownPlugins.splugins.map((d) => d.name);
-const knownLibraryNames = knownPlugins.slibraries.map((d) => d.name);
+const known = require('../../utils/known');
 
 function filterKnownPlugin(p) {
-  const r = knownPluginNames.indexOf(p);
-  if (r < 0) {
+  const r = known.plugin.exists(p);
+  if (!r) {
     this.log('ERROR: cant find plugin: ', p);
   }
-  return r >= 0;
+  return r;
 }
 
 function filterKnownLibrary(l) {
-  const r = knownLibraryNames.indexOf(l);
-  if (r < 0) {
+  const r = known.lib.exists(l);
+  if (!r) {
     this.log('ERROR: cant find library: ', l);
   }
-  return r >= 0;
+  return r;
 }
 
 class Generator extends Base {

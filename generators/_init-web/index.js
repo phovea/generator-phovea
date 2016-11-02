@@ -3,14 +3,12 @@ const extend = require('deep-extend');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 
-const knownPlugins = require('../../knownPhoveaPlugins.json');
-const knownPluginNames = knownPlugins.plugins.map((d) => d.name);
-const knownLibraryNames = knownPlugins.libraries.map((d) => d.name);
+const known = require('../../utils/known');
 
 function toLibraryAliasMap(moduleNames, libraryNames) {
   var r = {};
   moduleNames.forEach((m) => {
-    const plugin = knownPlugins.plugins[knownPluginNames.indexOf(m)];
+    const plugin = known.plugin.byName(m);
     if (!plugin) {
       this.log('cant find plugin: ', m);
       return;
@@ -18,7 +16,7 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
     libraryNames.push(...(plugin.libraries || []));
   });
   libraryNames.forEach((l) => {
-    const lib = knownPlugins.libraries[knownLibraryNames.indexOf(l)];
+    const lib = known.lib.byName(l);
     if (!lib) {
       this.log('cant find library: ', l);
       return;
@@ -57,14 +55,14 @@ class PluginGenerator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: knownPluginNames,
+      choices: known.plugin.listWebNames,
       default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: knownLibraryNames,
+      choices: known.lib.listWebNames,
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
@@ -88,10 +86,10 @@ class PluginGenerator extends Base {
     var r = {};
     // merge dependencies
     this.config.get('modules').forEach((m) => {
-      extend(r, knownPlugins.plugins[knownPluginNames.indexOf(m)].dependencies);
+      extend(r, known.plugin.byName(m).dependencies);
     });
     this.config.get('libraries').forEach((m) => {
-      extend(r, knownPlugins.libraries[knownLibraryNames.indexOf(m)].dependencies);
+      extend(r, known.lib.byName(m).dependencies);
     });
     return r;
   }
