@@ -16,7 +16,8 @@ class Generator extends Base {
     });
   }
 
-  writing() {
+  end() {
+    // ensure later than the others
     return super.writing();
   }
 }
