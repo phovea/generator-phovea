@@ -166,7 +166,6 @@ class BaseInitHybridGenerator extends BaseInitPluginGenerator {
   }
 }
 
-
 module.exports = {
   Base: BaseInitPluginGenerator,
   BasePython: BaseInitServerGenerator,
