@@ -51,7 +51,7 @@ class PackageJSONGenerator extends Base {
     if (!this.options.useDefaults) {
       return originUrl(this.destinationPath()).then((url) => {
         this.originUrl = url;
-      });
+      }, () => {}); // ignore errors
     }
   }
 
