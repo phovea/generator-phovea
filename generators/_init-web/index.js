@@ -1,7 +1,7 @@
 'use strict';
 const extend = require('deep-extend');
 const Base = require('yeoman-generator').Base;
-const {writeTemplates, patchPackageJSON} = require('../../utils');
+const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 
 const known = require('../../utils/known');
 
@@ -102,7 +102,7 @@ class PluginGenerator extends Base {
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea.js'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), config);
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), stringifyAble(config));
     }
   }
 

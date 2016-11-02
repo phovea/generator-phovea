@@ -30,14 +30,8 @@ function stringifyInline(obj, space) {
   return base.substring(space.length); // skip the first space
 }
 
-function writeTemplates(config, withSamples) {
-  const includeDot = {
-    globOptions: {
-      dot: true
-    }
-  };
-
-  const pattern = extend({
+function stringifyAble(config) {
+  return extend({
     stringifyPython: (obj, space) => {
       var base = stringifyInline(obj, space);
       // python different true false
@@ -46,6 +40,16 @@ function writeTemplates(config, withSamples) {
     },
     stringify: stringifyInline
   }, config);
+}
+
+function writeTemplates(config, withSamples) {
+  const includeDot = {
+    globOptions: {
+      dot: true
+    }
+  };
+
+  const pattern = stringifyAble(config);
 
   const copy = (prefix) => {
     this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
@@ -168,5 +172,6 @@ module.exports = {
   BasePython: BaseInitServerGenerator,
   BaseHybrid: BaseInitHybridGenerator,
   patchPackageJSON: patchPackageJSON,
-  writeTemplates: writeTemplates
+  writeTemplates: writeTemplates,
+  stringifyAble: stringifyAble
 };
