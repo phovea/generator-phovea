@@ -87,8 +87,8 @@ class BaseInitPluginGenerator extends generators.Base {
     return patchPackageJSON.call(this, config, unset, extra);
   }
 
-  _writeTemplates(config) {
-    return writeTemplates.call(this, config);
+  _writeTemplates(config, withSamples) {
+    return writeTemplates.call(this, config, withSamples);
   }
 }
 

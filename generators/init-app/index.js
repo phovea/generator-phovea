@@ -36,7 +36,7 @@ class PluginGenerator extends BasePluginGenerator {
   writing() {
     const config = this.config.getAll();
     this._patchPackageJSON(config, ['main']);
-    this._writeTemplates(config);
+    this._writeTemplates(config, !this.options.noSamples);
   }
 }
 
