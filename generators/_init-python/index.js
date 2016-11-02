@@ -69,7 +69,7 @@ class PluginGenerator extends Base {
 
     // merge dependencies
     // support old notation, too (smodules, slibraries)
-    this.config.get('modules').concat(this.config.get('smodules') || []).filter(known.plugins.isTypeServer).forEach((m) => {
+    this.config.get('modules').concat(this.config.get('smodules') || []).filter(known.plugin.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
@@ -95,9 +95,9 @@ class PluginGenerator extends Base {
     writeTemplates.call(this, config);
 
     const deps = this._generateDependencies();
-    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown.requirements')).join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.concat(this.config.get('unknown.debianPackages')).join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.concat(this.config.get('unknown.redhatPackages')).join('\n'));
+    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown').requirements).join('\n'));
+    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.concat(this.config.get('unknown').debianPackages).join('\n'));
+    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.concat(this.config.get('unknown').redhatPackages).join('\n'));
   }
 
   install() {

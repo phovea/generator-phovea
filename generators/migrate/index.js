@@ -107,8 +107,10 @@ class Generator extends Base {
       extensions: safe(pkg.caleydo, 'plugins.web', []).map(toExtension.bind(this, name)),
       sextensions: safe(pkg.caleydo, 'plugins.python', []).map(toExtension.bind(this, name)),
 
-      libraries: Object.keys(libs).filter(validLib),
-      slibraries: Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) >= 0).map((d) => requirement2lib[d]),
+      // merge valid web libraries with valid looked up server libraries
+      libraries: Object.keys(libs)
+        .filter(validLib).concat(
+          Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) >= 0).map((d) => requirement2lib[d])),
 
       unknown: {
         // filter unknown and convert to the common format
