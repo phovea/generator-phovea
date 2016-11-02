@@ -62,6 +62,7 @@ class Generator extends Base {
 
     this.props = {
       useDefaults: true,
+      noSamples: true,
       description: (pkg.description || '').replace(/Caleydo Web/g, 'Phovea'),
       longDescription: longDescription.replace(/Caleydo Web/g, 'Phovea'),
       readme: readme.replace(/Caleydo Web/g, 'Phovea').replace(/\.\.\/caleydo_/g, 'phovea_'),
