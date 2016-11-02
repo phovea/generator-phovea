@@ -20,7 +20,12 @@ class PluginGenerator extends Base {
     this.config.defaults({
       slibraries: [],
       smodules: ['phovea_server'],
-      sextensions: []
+      sextensions: [],
+      unknown: {
+        requirements: [],
+        debianPackages: [],
+        redhatPackages: []
+      }
     });
   }
 
@@ -89,9 +94,9 @@ class PluginGenerator extends Base {
     writeTemplates.call(this, config);
 
     const deps = this._generateDependencies();
-    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.join('\n'));
+    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown.requirements')).join('\n'));
+    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.concat(this.config.get('unknown.debianPackages')).join('\n'));
+    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.concat(this.config.get('unknown.redhatPackages')).join('\n'));
   }
 
   install() {
