@@ -2,6 +2,7 @@
 const generators = require('yeoman-generator');
 const _ = require('lodash');
 const path = require('path');
+const glob = require('glob').sync;
 const extend = require('deep-extend');
 
 function patchPackageJSON(config, unset, extra) {
@@ -48,10 +49,19 @@ function writeTemplates(config, withSamples) {
 
   const copy = (prefix) => {
     this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
-    this.fs.copyTpl(this.templatePath(prefix + 'processed/**/*'), this.destinationPath(), pattern, includeDot);
+    // see https://github.com/SBoudrias/mem-fs-editor/issues/25
+    // copyTpl doesn't support glob options
+    var f = glob(this.templatePath(prefix + 'processed/**/*'), {dot: true});
+    if (f.length > 0) {
+      this.fs.copyTpl(f, this.destinationPath(), pattern);
+    }
 
     this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
-    this.fs.copyTpl(this.templatePath(prefix + 'pluginname_processed/**/*'), this.destinationPath(config.name + '/'), pattern, includeDot);
+
+    f = glob(this.templatePath(prefix + 'pluginname_processed/**/*'), {dot: true});
+    if (f.length > 0) {
+      this.fs.copyTpl(f, this.destinationPath(config.name + '/'), pattern);
+    }
   };
   copy('');
   if (withSamples) {
