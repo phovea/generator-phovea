@@ -123,7 +123,7 @@ function generateWebpack(options) {
     output: {
       path: resolve(__dirname, 'build'),
       filename: (options.name || (pkg.name + (options.bundle ? '_bundle' : ''))) + (options.min ? '.min' : '') + '.js',
-      publicPath: './'
+      publicPath: '' //no public path = relative
     },
     resolve: {
       // Add `.ts` and `.tsx` as a resolvable extension.
