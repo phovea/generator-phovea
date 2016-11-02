@@ -37,7 +37,7 @@ function writeTemplates(config, withSamples) {
   };
 
   const pattern = extend({
-    stringifyPython : (obj, space) => {
+    stringifyPython: (obj, space) => {
       var base = stringifyInline(obj, space);
       // python different true false
       base = base.replace(/: true/g, ': True').replace(/: false/g, ': False');
