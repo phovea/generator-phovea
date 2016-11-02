@@ -1,7 +1,7 @@
 'use strict';
-var generators = require('yeoman-generator');
+const generators = require('yeoman-generator');
 
-const knownPluginTypes = ['app', 'bundle', 'lib', 'server', 'service'];
+const knownPluginTypes = require('../../utils/known').plugin.types;
 const defaultPluginType = ['app'];
 
 class ChooseGenerator extends generators.Base {
