@@ -1,0 +1,27 @@
+{
+  "files": [
+    "src",
+    "index.js",
+    "phovea.js",
+    "phovea_registry.js",
+    "build",
+    "<%-name%>",
+    "__init__.py",
+    "__main__.py",
+    "requirements.txt",
+    "requirements_dev.txt",
+    "debian_packages.txt",
+    "redhat_packages.txt"
+  ],
+  "scripts": {
+    "check:python": "flake8",
+    "check:web": "flake8",
+    "check": "npm run check:web && npm run check:python",
+    "test:web": "karma start",
+    "test:python": "python setup.py test",
+    "test": "npm run test:web && npm run test:python",
+    "dist:web": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *",
+    "dist:python": "python setup.py bdist_egg",
+    "dist": "npm run dist:web && npm run dist:web"
+  }
+}

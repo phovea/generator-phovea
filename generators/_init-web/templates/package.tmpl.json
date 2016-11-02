@@ -5,8 +5,7 @@
     "index.js",
     "phovea.js",
     "phovea_registry.js",
-    "build",
-    "assets"
+    "build"
   ],
   "engines": {
     "npm": ">= 3",

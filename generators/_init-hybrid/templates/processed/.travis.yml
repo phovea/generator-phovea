@@ -1,0 +1,19 @@
+language: node_js
+
+node_js:
+- 6
+
+before_install:
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
+- if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
+
+script: npm run dist
+
+deploy:
+  provider: releases
+  api_key:
+    secure: W+OxNzA9SX1bmBsrrJxPffPD6o/jd70qpfFHK0OVnzCCzMKXZUJS8dEr/Y/ej+Ya4zuAus1FAFIrO7yS8QeGKvRdZJkGJ9RTVUK/GKISxdLBXscDgyFl4thPguh1358fnXrZoknnUq5kaE/WRG4LkZ+GxliMMT4e0Qre8f/3QfZ+uk91NulXoytmFKpjp5XCRhfRO1zxbSvUOMjWofWcCPIOdLTJSMyQ1A4wH2T2NE7rwqI8FX6CxE/D7RC9y8r1MaFfTMCJS6RN1Wldp7qUDGfKmoDaTg93zNpaJ4HNg1fdUtPL3k4mnercWVbo8rp97hcahumbxcZ+WMEfTxvfcKTMlOkuu5Wzw0Q8RQpQMsCkOAQ/mj/lnZGl5gvvhE5dusIuAODMjuHPlXVn14sVk7H0MJW1SlFNzi5RHwa0z5qSXbI3mM27yPkgkXppr4fMnqZ8g8kgJUAyrUZQHJleI9qhf1Eb40DohT1k5UuLvfClpTe4+12YIVU0j5q9jIaGWm7vrKaxQVF6NSrQ5m30oaF1kRLpmtuO9jFKQ4HB2/ri+LuaRc5kxVezdfxjCjnP0kkYh9d48sja1MsfhL9ZP37ZmPoJ/AXXMjtKwBYw1AXKw+yl7MfMpom/EWM8k4ZwkLn/2mOIuVago+diYEXdxpHF51zQnluzEDjO0BFUBlA=
+  file: dist/<%- name %>.tar.gz
+  on:
+    tags: true

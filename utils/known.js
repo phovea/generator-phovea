@@ -3,17 +3,22 @@
 const Separator = require('inquirer').Separator;
 const registry = require('../knownPhoveaPlugins.json');
 
-function generate(items, typesWeb, typesServer) {
+function generate(items, typesWeb, typesServer, typesHybrid) {
   const r = {};
 
-  r.typesWeb = typesWeb;
+  r.typesHybrid = typesHybrid;
+  r.isTypeHybrid = (d) => r.typesHybrid.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
+  r.typesWeb = typesWeb.concat(typesHybrid);
   r.isTypeWeb = (d) => r.typesWeb.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
-  r.typesServer = typesServer;
+  r.typesServer = typesServer.concat(typesHybrid);
   r.isTypeServer = (d) => r.typesServer.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
   r.types = [].concat(
-    r.typesWeb,
+    typesWeb,
     new Separator(),
-    r.typesServer);
+    typesServer);
+  if (typesHybrid.length > 0) {
+    r.types = r.types.push(new Separator(), typesHybrid);
+  }
 
   r.list = items;
   r.listWeb = r.list.filter(r.isTypeWeb);
@@ -37,6 +42,6 @@ function generate(items, typesWeb, typesServer) {
   return r;
 }
 
-module.exports.plugin = generate(registry.plugins, ['app', 'bundle', 'lib'], ['server', 'service']);
-module.exports.lib = generate(registry.libraries, ['web'], ['python']);
+module.exports.plugin = generate(registry.plugins, ['app', 'bundle', 'lib'], ['server', 'service'], ['lib-service', 'app-service']);
+module.exports.lib = generate(registry.libraries, ['web'], ['python'], []);
 
