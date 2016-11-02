@@ -7,9 +7,9 @@ function generate(items, typesWeb, typesServer) {
   const r = {};
 
   r.typesWeb = typesWeb;
-  r.isTypeWeb = (d) => r.typesWeb.indexOf(d.type) >= 0;
+  r.isTypeWeb = (d) => r.typesWeb.indexOf(typeof d === 'string' ? r[d].type : d.type) >= 0;
   r.typesServer = typesServer;
-  r.isTypeServer = (d) => r.typesServer.indexOf(d.type) >= 0;
+  r.isTypeServer = (d) => r.typesServer.indexOf(typeof d === 'string' ? r[d].type : d.type) >= 0;
   r.types = [].concat(
     r.typesWeb,
     new Separator(),

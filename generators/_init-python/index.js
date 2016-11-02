@@ -18,8 +18,8 @@ class PluginGenerator extends Base {
 
   initializing() {
     this.config.defaults({
-      slibraries: [],
-      smodules: ['phovea_server'],
+      modules: ['phovea_server'],
+      libraries: [],
       sextensions: [],
       unknown: {
         requirements: [],
@@ -35,19 +35,19 @@ class PluginGenerator extends Base {
       name: 'modules',
       message: 'Included Modules',
       choices: known.plugin.listServerNames,
-      default: this.config.get('smodules'),
+      default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
       choices: known.lib.listServerNames,
-      default: this.config.get('slibraries'),
+      default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
       if (!this.options.useDefaults) {
-        this.config.set('smodules', props.modules);
-        this.config.set('slibraries', props.libraries);
+        this.config.set('modules', props.modules);
+        this.config.set('libraries', props.libraries);
       }
     });
   }
@@ -68,13 +68,14 @@ class PluginGenerator extends Base {
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
     // merge dependencies
-    this.config.get('smodules').forEach((m) => {
+    // support old notation, too (smodules, slibraries)
+    this.config.get('modules').concat(this.config.get('smodules') || []).filter(known.plugins.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
       extend(redhatPackages, p.redhatPackages);
     });
-    this.config.get('slibraries').forEach((m) => {
+    this.config.get('libraries').concat(this.config.get('slibraries') || []).filter(known.lib.isTypeServer).forEach((m) => {
       const p = known.lib.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
