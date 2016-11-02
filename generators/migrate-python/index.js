@@ -89,4 +89,3 @@ class Generator extends Base {
 }
 
 module.exports = Generator;
-module.exports.extractFromReadme = extractFromReadme;
