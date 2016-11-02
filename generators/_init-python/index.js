@@ -18,9 +18,14 @@ class PluginGenerator extends Base {
 
   initializing() {
     this.config.defaults({
-      slibraries: [],
-      smodules: ['phovea_server'],
-      sextensions: []
+      modules: ['phovea_server'],
+      libraries: [],
+      sextensions: [],
+      unknown: {
+        requirements: [],
+        debianPackages: [],
+        redhatPackages: []
+      }
     });
   }
 
@@ -30,19 +35,19 @@ class PluginGenerator extends Base {
       name: 'modules',
       message: 'Included Modules',
       choices: known.plugin.listServerNames,
-      default: this.config.get('smodules'),
+      default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
       choices: known.lib.listServerNames,
-      default: this.config.get('slibraries'),
+      default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
       if (!this.options.useDefaults) {
-        this.config.set('smodules', props.modules);
-        this.config.set('slibraries', props.libraries);
+        this.config.set('modules', props.modules);
+        this.config.set('libraries', props.libraries);
       }
     });
   }
@@ -63,13 +68,14 @@ class PluginGenerator extends Base {
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
     // merge dependencies
-    this.config.get('smodules').forEach((m) => {
+    // support old notation, too (smodules, slibraries)
+    this.config.get('modules').concat(this.config.get('smodules') || []).filter(known.plugin.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
       extend(redhatPackages, p.redhatPackages);
     });
-    this.config.get('slibraries').forEach((m) => {
+    this.config.get('libraries').concat(this.config.get('slibraries') || []).filter(known.lib.isTypeServer).forEach((m) => {
       const p = known.lib.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
@@ -89,9 +95,9 @@ class PluginGenerator extends Base {
     writeTemplates.call(this, config);
 
     const deps = this._generateDependencies();
-    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.join('\n'));
+    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown').requirements).join('\n'));
+    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.concat(this.config.get('unknown').debianPackages).join('\n'));
+    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.concat(this.config.get('unknown').redhatPackages).join('\n'));
   }
 
   install() {
