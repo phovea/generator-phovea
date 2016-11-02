@@ -11,10 +11,18 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
   var r = {};
   moduleNames.forEach((m) => {
     const plugin = knownPlugins.plugins[knownPluginNames.indexOf(m)];
+    if (!plugin) {
+      this.log('cant find plugin: ', m);
+      return;
+    }
     libraryNames.push(...(plugin.libraries || []));
   });
   libraryNames.forEach((l) => {
     const lib = knownPlugins.libraries[knownLibraryNames.indexOf(l)];
+    if (!lib) {
+      this.log('cant find library: ', l);
+      return;
+    }
     r[lib.name] = lib.alias || lib.name;
   });
   return r;
@@ -26,8 +34,10 @@ class PluginGenerator extends Base {
     super(args, options);
 
     // readme content
+    this.option('install');
     this.option('readme');
     this.option('longDescription');
+    this.option('useDefaults');
   }
 
   initializing() {
@@ -48,17 +58,21 @@ class PluginGenerator extends Base {
       name: 'modules',
       message: 'Included Modules',
       choices: knownPluginNames,
-      default: this.config.get('modules')
+      default: this.config.get('modules'),
+      when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
       choices: knownLibraryNames,
-      default: this.config.get('libraries')
+      default: this.config.get('libraries'),
+      when: !this.options.useDefaults
     }]).then((props) => {
-      this.config.set('modules', props.modules);
-      this.config.set('libraries', props.libraries);
-      this.config.set('libraryAliases', toLibraryAliasMap(props.modules, props.libraries));
+      if (!this.options.useDefaults) {
+        this.config.set('modules', props.modules);
+        this.config.set('libraries', props.libraries);
+      }
+      this.config.set('libraryAliases', toLibraryAliasMap.call(this, this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
@@ -88,6 +102,10 @@ class PluginGenerator extends Base {
       dependencies: this._generateDependencies()
     });
     writeTemplates.call(this, config);
+    // don't overwrite existing registry file
+    if (!this.fs.exists(this.destinationPath('phovea.js'))) {
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), config);
+    }
   }
 
   install() {
@@ -100,3 +118,4 @@ class PluginGenerator extends Base {
 }
 
 module.exports = PluginGenerator;
+module.exports.toLibraryAliasMap = toLibraryAliasMap;

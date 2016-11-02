@@ -1,69 +1,141 @@
 {
-  "plugins": [{
-    "name": "phovea_core",
-    "description": "Phovea Core Plugin",
-    "repository": "https://github.com/sgratzl/phovea_core.git",
-    "dependencies": {
-      "phovea_core": "github:sgratzl/phovea_core"
+  "plugins": [
+    {
+      "name": "phovea_core",
+      "description": "Phovea Core Plugin",
+      "repository": "https://github.com/sgratzl/phovea_core.git",
+      "dependencies": {
+        "phovea_core": "github:sgratzl/phovea_core"
+      },
+      "libraries": []
     },
-    "libraries": []
-  }, {
-    "name": "phovea_d3",
-    "description": "Phovea D3 Plugin",
-    "repository": "https://github.com/sgratzl/phovea_d3.git",
-    "dependencies": {
-      "phovea_d3": "github:sgratzl/phovea_d3"
+    {
+      "name": "phovea_d3",
+      "description": "Phovea D3 Plugin",
+      "repository": "https://github.com/sgratzl/phovea_d3.git",
+      "dependencies": {
+        "phovea_d3": "github:sgratzl/phovea_d3"
+      },
+      "libraries": [
+        "d3"
+      ]
     },
-    "libraries": ["d3"]
-  }, {
-    "name": "phovea_vis",
-    "description": "Phovea Vis Plugin",
-    "repository": "https://github.com/sgratzl/phovea_vis.git",
-    "dependencies": {
-      "phovea_vis": "github:sgratzl/phovea_vis"
+    {
+      "name": "phovea_vis",
+      "description": "Phovea Vis Plugin",
+      "repository": "https://github.com/sgratzl/phovea_vis.git",
+      "dependencies": {
+        "phovea_vis": "github:sgratzl/phovea_vis"
+      },
+      "libraries": [
+        "d3"
+      ]
     },
-    "libraries": ["d3"]
-  }, {
-    "name": "phovea_bootstrap_fontawesome",
-    "description": "Phovea Common Style Plugin",
-    "repository": "https://github.com/sgratzl/phovea_bootstrap_fontawesome.git",
-    "dependencies": {
-      "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
+    {
+      "name": "phovea_bootstrap_fontawesome",
+      "description": "Phovea Common Style Plugin",
+      "repository": "https://github.com/sgratzl/phovea_bootstrap_fontawesome.git",
+      "dependencies": {
+        "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
+      },
+      "libraries": [
+        "jquery",
+        "font-awesome"
+      ]
     },
-    "libraries": ["jquery"]
-  }],
-  "libraries": [{
-    "name": "d3",
-    "description": "D3 v3 Library",
-    "alias": "d3/d3",
-    "dependencies": {
-      "@types/d3": "^3.5.36",
-      "d3": "^3.5.17"
+    {
+      "name": "phovea_importer",
+      "description": "Phovea Importer Plugin",
+      "repository": "https://github.com/sgratzl/phovea_importer.git",
+      "dependencies": {
+        "phovea_importer": "github:sgratzl/phovea_importer"
+      },
+      "libraries": [
+        "d3",
+        "papaparse"
+      ]
+    },
+    {
+      "name": "phovea_vis_lineup",
+      "description": "Phovea LineUp Visualization",
+      "repository": "https://github.com/sgratzl/phovea_vis_lineup.git",
+      "dependencies": {
+        "phovea_vis_lineup": "github:sgratzl/phovea_vis_lineup"
+      },
+      "libraries": [
+        "lineupjs",
+        "font-awesome"
+      ]
     }
-  }, {
-    "name": "jquery",
-    "description": "JQuery 3.1",
-    "alias": "jquery",
-    "dependencies": {
-      "@types/jquery": "^2.0.33",
-      "jquery": "^3.1.1"
-    }
-  }],
-  "splugins": [{
-    "name": "phovea_server",
-    "description": "Phovea Server Plugin",
-    "repository": "https://github.com/sgratzl/phovea_server.git",
-    "requirements": {
-      "-e git+https://github.com/sgratzl/phovea_server.git": "#egg=phovea_server"
+  ],
+  "libraries": [
+    {
+      "name": "d3",
+      "description": "D3 v3 Library",
+      "alias": "d3/d3",
+      "dependencies": {
+        "@types/d3": "^3.5.36",
+        "d3": "^3.5.17"
+      }
     },
-    "debian_packages": {
-
+    {
+      "name": "jquery",
+      "description": "JQuery 3.1",
+      "alias": "jquery",
+      "dependencies": {
+        "@types/jquery": "^2.0.33",
+        "jquery": "^3.1.1"
+      }
     },
-    "redhat_packages": {
-
+    {
+      "name": "papaparse",
+      "description": "PapaParse",
+      "alias": "papaparse",
+      "dependencies": {
+        "@types/papaparse": "^4.1.28",
+        "papaparse": "^4.1.2"
+      }
+    },
+    {
+      "name": "jqueryui",
+      "description": "JQuery UI",
+      "alias": "jqueryui",
+      "dependencies": {
+        "@types/jqueryui": "^1.11.31",
+        "jqueryui": "^1.11.1"
+      }
+    },
+    {
+      "name": "lineupjs",
+      "description": "LineUp.js",
+      "alias": "lineupjs",
+      "dependencies": {
+        "lineupjs": "github:Caleydo/lineup.js#feature_146_react"
+      }
+    },
+    {
+      "name": "font-awesome",
+      "description": "Font Awesome",
+      "alias": "font-awesome",
+      "dependencies": {
+        "font-awesome": "^4.6.3"
+      }
     }
-  }],
+  ],
+  "splugins": [
+    {
+      "name": "phovea_server",
+      "description": "Phovea Server Plugin",
+      "repository": "https://github.com/sgratzl/phovea_server.git",
+      "requirements": {
+        "-e git+https://github.com/sgratzl/phovea_server.git": "#egg=phovea_server"
+      },
+      "debian_packages": {
+      },
+      "redhat_packages": {
+      }
+    }
+  ],
   "slibraries": [
-
   ]
 }

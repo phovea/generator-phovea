@@ -10,7 +10,7 @@ def phovea(registry):
   register extension points
   :param registry:
   """
-  <%- sextensions.map((d) => `  registry.append('${d.type}','${d.id}','${name}.${d.module}', ${JSON.stringify(d.extras).replace('"','\'', null, ' ')})`).join('\n')%>
+<%- sextensions.map((d) => `  registry.append('${d.type}','${d.id}','${name}.${d.module}', ${JSON.stringify(d.extras).replace(/"/g,'\'', null, ' ')})`).join('\n')%>
   pass
 
 
