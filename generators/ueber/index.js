@@ -33,7 +33,7 @@ class Generator extends Base {
 
   prompting() {
     const isInstalled = glob('*/package.json', { cwd: this.destinationPath() }).map(path.dirname);
-    return this.prompt({
+    return this.prompt([{
       type: 'list',
       name: 'virtualEnvironment',
       message: 'Virtual Environment',
@@ -47,7 +47,7 @@ class Generator extends Base {
       message: 'Additional Plugins',
       choices: knownPluginNames.filter((d) => isInstalled.indexOf(d) < 0),
       default: this.props.modules,
-    }).then((props) => {
+    }]).then((props) => {
       this.props.modules = props.modules;
       this.venv = props.virtualEnvironment || this.options.venv;
     });
@@ -183,7 +183,8 @@ class Generator extends Base {
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
     this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
 
-    patchPackageJSON.call(this, config, [], { devDependencies, dependencies, scripts});
+    this.fs.copy(this.templatePath('package.tmpl.json'), this.destinationPath('package.json'));
+    this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});
 
     const sdeps = this._generateServerDependencies(this.props.modules);
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
