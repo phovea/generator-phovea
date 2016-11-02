@@ -21,6 +21,15 @@ function fixPythonSourceFile(content) {
   // FROM caleydo_ to phovea_
   content = content.replace(/caleydo_/gm, 'phovea_');
 
+  // FROM Flask TO Namespace
+  content = content.replace(/Flask/gm, 'Namespace');
+  // FROM from flask import TO from phovea_server.ns import
+  content = content.replace(/from\s+flask\s+import/gm, 'from phovea_server.ns import');
+  // FROM import flask TO from phovea_server import ns
+  content = content.replace(/import\s+flask/gm, 'from phovea_server import ns');
+  // FROM flask. TO ns.
+  content = content.replace(/flask\./gm, 'ns.');
+
   return content;
 }
 
