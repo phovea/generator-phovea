@@ -85,6 +85,58 @@
       },
       "redhatPackages": {
       }
+    },
+    {
+      "name": "phovea_data_redis",
+      "type": "service",
+      "description": "Phovea Redis Data Plugin",
+      "repository": "https://github.com/sgratzl/phovea_data_redis.git",
+      "requirements": {
+        "-e git+https://github.com/sgratzl/phovea_data_redis.git": "#egg=phovea_data_redis"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_mongodb",
+      "type": "service",
+      "description": "Phovea MongoDB Data Plugin",
+      "repository": "https://github.com/sgratzl/phovea_data_mongodb.git",
+      "requirements": {
+        "-e git+https://github.com/sgratzl/phovea_data_mongodb.git": "#egg=phovea_data_mongodb"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_sql",
+      "type": "service",
+      "description": "Phovea SQL Data Plugin",
+      "repository": "https://github.com/sgratzl/phovea_data_sql.git",
+      "requirements": {
+        "-e git+https://github.com/sgratzl/phovea_data_sql.git": "#egg=phovea_data_sql"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_hdf",
+      "type": "service",
+      "description": "Phovea HDF Data Plugin",
+      "repository": "https://github.com/sgratzl/phovea_data_hdf.git",
+      "requirements": {
+        "-e git+https://github.com/sgratzl/phovea_data_hdf.git": "#egg=phovea_data_hdf"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
     }
   ],
   "libraries": [
