@@ -29,7 +29,9 @@
     "watch": "webpack --watch",
     "release:major": "npm version major && npm publish && git push --follow-tags",
     "release:minor": "npm version minor && npm publish && git push --follow-tags",
-    "release:patch": "npm version patch && npm publish && git push --follow-tags"
+    "release:patch": "npm version patch && npm publish && git push --follow-tags",
+    "predist": "npm run build",
+    "dist": "mkdir -p dist && tar cvzf dist/<%-name%>.tar.gz build/"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.35",

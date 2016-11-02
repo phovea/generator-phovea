@@ -13,6 +13,8 @@
   "scripts": {
     "check": "flake8",
     "pretest": "npm run check",
-    "test": "python setup.py test"
+    "test": "python setup.py test",
+    "predist": "npm run test",
+    "dist": "python setup.py bdist_egg"
   }
 }
