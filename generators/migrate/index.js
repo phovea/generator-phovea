@@ -83,9 +83,20 @@ class Generator extends Base {
     };
 
     const libs = safe(pkg.caleydo, 'dependencies.web', {});
-    const slibs = Object.keys(safe(pkg.caleydo, 'dependencies.python', {}));
-    // const debianPackages = safe(pkg.caleydo, 'dependencies.debian', {});
-    // const redhatPackages = safe(pkg.caleydo, 'dependencies.redhat', {});
+
+    const requirement2lib = {};
+    known.lib.listServer.forEach((p) => {
+      Object.keys(p.requirements).forEach((r) => {
+        requirement2lib[r] = p;
+      });
+    });
+    const knownRequirements = [].concat(...known.lib.listServer.map((m) => Object.keys(m.requirements)));
+    const knownDebianPackages = [].concat(...known.lib.listServer.map((m) => Object.keys(m.debianPackages)));
+    const knownRedhatPackages = [].concat(...known.lib.listServer.map((m) => Object.keys(m.redhatPackages)));
+
+    const slibs = safe(pkg.caleydo, 'dependencies.python', {});
+    const debianPackages = safe(pkg.caleydo, 'dependencies.debian', {});
+    const redhatPackages = safe(pkg.caleydo, 'dependencies.redhat', {});
 
     this.config.defaults({
       type: this.args[0],
@@ -97,7 +108,14 @@ class Generator extends Base {
       sextensions: safe(pkg.caleydo, 'plugins.python', []).map(toExtension.bind(this, name)),
 
       libraries: Object.keys(libs).filter(validLib),
-      slibraries: slibs.filter(validLib)
+      slibraries: Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) >= 0).map((d) => requirement2lib[d]),
+
+      unknown: {
+        // filter unknown and convert to the common format
+        requirements: Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) < 0).map((d) => d + slibs[d]),
+        debianPackages: Object.keys(debianPackages).filter((d) => knownDebianPackages.indexOf(d) < 0).map((d) => d + debianPackages[d]),
+        redhatPackages: Object.keys(redhatPackages).filter((d) => knownRedhatPackages.indexOf(d) < 0).map((d) => d + redhatPackages[d])
+      }
     });
   }
 
