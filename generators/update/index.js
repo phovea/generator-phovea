@@ -1,6 +1,6 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
-const {extractFromReadme} = require('../migrate-web');
+const {extractFromReadme} = require('../migrate');
 
 class Generator extends Base {
 
