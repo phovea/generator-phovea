@@ -66,14 +66,14 @@ class PluginGenerator extends Base {
     this.config.get('smodules').forEach((m) => {
       const p = known.plugin.byName(m);
       extend(requirements, p.requirements);
-      extend(debianPackages, p.debianPackages_packages);
-      extend(debianPackages, p.redhatPackages_packages);
+      extend(debianPackages, p.debianPackages);
+      extend(redhatPackages, p.redhatPackages);
     });
     this.config.get('slibraries').forEach((m) => {
       const p = known.lib.byName(m);
       extend(requirements, p.requirements);
-      extend(debianPackages, p.debianPackages_packages);
-      extend(debianPackages, p.redhatPackages_packages);
+      extend(debianPackages, p.debianPackages);
+      extend(redhatPackages, p.redhatPackages);
     });
 
     return {
