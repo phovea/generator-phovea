@@ -65,18 +65,15 @@ class Generator extends Base {
     });
   }
 
-  _spawn(cmd, argline, shell) {
-    shell = shell || false;
-    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), {
-      cwd: this.cwd,
-      shell: shell
-    });
+  _spawn(cmd, argline, cwd) {
+    const options = cwd === false ? {}: { cwd: this.cwd };
+    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
-  _spawnOrAbort(next, cmd, argline, shell) {
-    const r = this._spawn(cmd, argline, shell);
+  _spawnOrAbort(next, cmd, argline, cwd) {
+    const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      this.log(r);
+      // this.log(r);
       return this._abort('failed: '+cmd);
     }
     return next;
@@ -84,7 +81,9 @@ class Generator extends Base {
 
   _yo(next, generator) {
     // call yo internally
-    const env = yeoman.createEnv();
+    const env = yeoman.createEnv([], {
+      cwd: this.cwd
+    }, this.env.adapter);
     env.register(require.resolve('../'+generator), 'phovea:'+generator);
     return new Promise((resolve) => {
       env.run('phovea:'+generator, (result) => {
@@ -99,28 +98,28 @@ class Generator extends Base {
   }
 
   _cloneRepo(step) {
-    // clone
     const repoUrl = this.cloneSSH ? `git@github.com:Caleydo/${this.repo}.git` : `https://github.com/Caleydo/${this.repo}.git`;
-    this.log(chalk.blue(`${step++}. clone repository: `), `git clone ${repoUrl} ${this.cwd}`);
-    if (failed(this.spawnCommandSync('git', ['clone', repoUrl, this.cwd]))) {
-      return this._abort('clone repository');
-    }
+    this.log(chalk.blue(`${step++}. clone repository:`), `git clone ${repoUrl} ${this.cwd}`);
+    return this._spawnOrAbort(step, 'git', ['clone', repoUrl, this.cwd], false);
+  }
+
+  _switchBranch(step) {
     this.log(chalk.blue(`${step++}. switch to migrate branch: `), `git checkout -b migrate`);
     return this._spawnOrAbort(step, 'git', 'checkout -b migrate');
   }
 
   _migrate(step) {
-    this.log(chalk.blue(`${step++}. migrate structure: `), 'yo phovea:migrate');
+    this.log(chalk.blue(`${step++}. migrate structure:`), 'yo phovea:migrate');
     return this._yo(step, 'migrate');
   }
 
   _migrateSource(step) {
-    this.log(chalk.blue(`${step++}. migrate source code: `), 'yo phovea:migrate-source');
+    this.log(chalk.blue(`${step++}. migrate source code:`), 'yo phovea:migrate-source');
     return this._yo(step, 'migrate-source');
   }
 
   _commit(message, step) {
-    this.log(chalk.blue(`${step++}. commit all changes: `), `git add --all && git commit -m "${message}"`);
+    this.log(chalk.blue(`${step++}. commit all changes:`), `git add --all && git commit -m "${message}"`);
     if (failed(this._spawn('git', 'add --all'))) {
       return this._abort();
     }
@@ -128,12 +127,12 @@ class Generator extends Base {
   }
 
   _installNPM(step) {
-    this.log(chalk.blue(`${step++}. run npm install: `), `npm install`);
+    this.log(chalk.blue(`${step++}. run npm install:`), `npm install`);
     return this._spawnOrAbort(step, 'npm', 'install');
   }
 
   _runScript(script, step) {
-    this.log(chalk.blue(`${step++}. ${script} plugin: `), `npm run ${script}`);
+    this.log(chalk.blue(`${step++}. ${script} plugin:`), `npm run ${script}`);
     return this._spawnOrAbort(step, 'npm', ['run', script]);
   }
 
@@ -147,11 +146,6 @@ class Generator extends Base {
 
   _lint(step) {
     return this._runScript('lint', step);
-  }
-
-  _(step) {
-    this.log(chalk.blue(`${step++}. build plugin: `), `npm run build`);
-    return this._spawnOrAbort(step, 'npm', 'run install');
   }
 
   _resolveType() {
@@ -189,15 +183,31 @@ class Generator extends Base {
     return Promise.resolve(step);
   }
 
+  _skipDone(task, step) {
+    const current = this.config.get(this.cwd);
+    if (current > step) {
+      this.log(chalk.blue(`${step++}. skip`));
+      return Promise.resolve(step++);
+    }
+    return Promise.resolve(task(step)).then((nstep) => {
+      this.config.set(this.cwd, nstep);
+      return nstep;
+    });
+  }
+
   writing() {
+    //first step
+    this.config.defaults({ [ this.cwd ]: 1 });
+    const skipDone = (task) => this._skipDone.bind(this, task);
     return Promise.resolve(1)
-      .then(this._cloneRepo.bind(this))
-      .then(this._migrate.bind(this))
-      .then(this._promptLoop.bind(this, chalk.red('Have you checked migration made sense?')))
-      .then(this._commit.bind(this, 'yo phovea:migrate'))
-      .then(this._migrateSource.bind(this))
-      .then(this._promptLoop.bind(this, chalk.red('Have you checked source code migration made sense?')))
-      .then(this._commit.bind(this, 'yo phovea:migrate-source'))
+      .then(skipDone(this._cloneRepo.bind(this)))
+      .then(skipDone(this._switchBranch.bind(this)))
+      .then(skipDone(this._migrate.bind(this)))
+      .then(skipDone(this._promptLoop.bind(this, chalk.red('Have you checked migration made sense?'))))
+      .then(skipDone(this._commit.bind(this, 'yo phovea:migrate')))
+      .then(skipDone(this._migrateSource.bind(this)))
+      .then(skipDone(this._promptLoop.bind(this, chalk.red('Have you checked source code migration made sense?'))))
+      .then(skipDone(this._commit.bind(this, 'yo phovea:migrate-source')))
       .then((step) => {
         const type = this._resolveType();
         if (known.plugin.isTypeHybrid(type)) {
