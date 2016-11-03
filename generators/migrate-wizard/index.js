@@ -35,7 +35,7 @@ class Generator extends Base {
 
   end() {
     this.fs.extendJSON(this.destinationPath('migrate-state.json'), {
-      [this.cwd] : this.lastStep
+      [this.cwd]: this.lastStep
     });
   }
 
@@ -44,8 +44,9 @@ class Generator extends Base {
       type: 'input',
       name: 'repo',
       message: 'Repository',
-      default: this.args.length > 0 ? this.args[0] : 'caleydo_core',
-      when: this.args.length === 0
+      default: this.args.length > 0 ? this.args[0] : undefined,
+      when: this.args.length === 0,
+      validate: (d) => d.length > 0
     }, {
       type: 'confirm',
       name: 'cloneSSH',
@@ -74,20 +75,20 @@ class Generator extends Base {
       message: message,
       default: false
     }).then((props) => {
-      return props.confirm ? step : (task ? task(step): this._promptLoop(message, step));
+      return props.confirm ? step : (task ? task(step) : this._promptLoop(message, step));
     });
   }
 
   _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {}: { cwd: this.cwd };
+    const options = cwd === false ? {} : {cwd: this.cwd};
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
   _spawnOrAbort(next, cmd, argline, cwd) {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      // this.log(r);
-      return this._abort('failed: '+cmd);
+      this.log(r);
+      return this._abort('failed: ' + cmd);
     }
     return next;
   }
@@ -97,15 +98,16 @@ class Generator extends Base {
     const env = yeoman.createEnv([], {
       cwd: this.cwd
     }, this.env.adapter);
-    env.register(require.resolve('../'+generator), 'phovea:'+generator);
+    env.register(require.resolve('../' + generator), 'phovea:' + generator);
     return new Promise((resolve, reject) => {
       try {
+        this.log('running yo phovea:' + generator);
         env.run('phovea:' + generator, (result) => {
           this.log(result);
           resolve(next);
         });
-      } catch(e) {
-        this.log(e);
+      } catch (e) {
+        console.error('error', e, e.stack);
         reject(e);
       }
     });
@@ -136,15 +138,23 @@ class Generator extends Base {
     return this._yo(step, 'migrate-source');
   }
 
-  _commit(message, step) {
-    this.log(chalk.blue(`${step++}. commit all changes:`), `git add --all && git commit -m "${message}"`);
-    if (failed(this._spawn('git', 'add --all'))) {
-      return this._abort();
-    }
-    return this._spawnOrAbort(step, 'git', ['commit', '-m', message]);
+  _add(step) {
+    this.log(chalk.blue(`${step++}. add all changes:`), `git add --all`);
+    return this._spawnOrAbort(step, 'git', 'add --all');
   }
 
-  _installNPM(step) {
+  _commit(message, step) {
+    this.log(chalk.blue(`${step++}. commit all changes:`), `git commit -m "${message}"`);
+    // http://stackoverflow.com/questions/5139290/how-to-check-if-theres-nothing-to-be-committed-in-the-current-branch
+    if (failed(this._spawn('git', 'diff --cached --exit-code'))) {
+      return this._spawnOrAbort(step, 'git', ['commit', '-m', message]);
+    } else {
+      this.log('nothing to commit');
+      return step;
+    }
+  }
+
+  _installNPMPackages(step) {
     this.log(chalk.blue(`${step++}. run npm install:`), `npm install`);
     return this._spawnOrAbort(step, 'npm', 'install');
   }
@@ -167,35 +177,36 @@ class Generator extends Base {
   }
 
   _resolveType() {
-    const options = this.fs.readJSON(this.destinationPath(`${this.cwd}/.yo-rc.json`), { })['generator-phovea'];
+    const options = this.fs.readJSON(this.destinationPath(`${this.cwd}/.yo-rc.json`), {})['generator-phovea'];
     return options ? options.type : 'unknown';
   }
 
   _retry(task, step) {
     return new Promise((resolve, reject) => {
-      task(step)
+      Promise.resolve(task(step))
         .then(resolve)
         .catch(() => {
           this.prompt({
-          type: 'confirm',
-          name: 'retry',
-          message: chalk.red('Last Step Failed')+' Retry',
-          default: true
-        }).then((props) => {
-          return props.retry ? this._retry(task, step) : reject('No Retry');
-        });
-      })
+            type: 'confirm',
+            name: 'retry',
+            message: chalk.red('Last Step Failed') + ' Retry',
+            default: true
+          }).then((props) => {
+            return props.retry ? this._retry(task, step) : reject('No Retry');
+          });
+        })
     });
   }
 
   _testWeb(step) {
     //first step
     const skipDone = (task) => this._skipDone.bind(this, task);
+    const retry = (task) => this._retry.bind(this, task);
     return Promise.resolve(step)
-      .then(skipDone(this._installNPM.bind(this)))
-      .then(skipDone(this._retry(this._compile.bind(this))))
-      .then(skipDone(this._retry(this._lint.bind(this))))
-      .then(this._retry(this._build.bind(this)));
+      .then(skipDone(this._installNPMPackages.bind(this)))
+      .then(skipDone(retry(this._compile.bind(this))))
+      .then(skipDone(retry(this._lint.bind(this))))
+      .then(retry(this._build.bind(this)));
   }
 
   _testServer(step) {
@@ -204,7 +215,7 @@ class Generator extends Base {
   }
 
   _skipDone(task, step) {
-    if (this.lastStep > step) {
+    if (this.lastStep >= step) {
       this.log(chalk.blue(`${step++}. skip`));
       return Promise.resolve(step++);
     }
@@ -222,17 +233,20 @@ class Generator extends Base {
       .then(skipDone(this._switchBranch.bind(this)))
       .then(skipDone(this._migrate.bind(this)))
       .then(skipDone(this._promptLoop.bind(this, chalk.red('Have you checked migration made sense?'))))
+      .then(skipDone(this._add.bind(this)))
       .then(skipDone(this._commit.bind(this, 'yo phovea:migrate')))
       .then(skipDone(this._migrateSource.bind(this)))
       .then(skipDone(this._promptLoop.bind(this, chalk.red('Have you checked source code migration made sense?'))))
+      .then(skipDone(this._add.bind(this)))
       .then(skipDone(this._commit.bind(this, 'yo phovea:migrate-source')))
       .then((step) => {
         const type = this._resolveType();
-        if (known.plugin.isTypeHybrid(type)) {
+        // need to wrap since it guesses it is a module
+        if (known.plugin.isTypeHybrid({type})) {
           return this._testWeb.then(this._testServer.bind(this));
-        } else if (known.plugin.isTypeWeb(type)) {
+        } else if (known.plugin.isTypeWeb({type})) {
           return this._testWeb(step);
-        } else if (known.plugin.isTypeServer(type)) {
+        } else if (known.plugin.isTypeServer({type})) {
           return this._testServer(step);
         }
         return Promise.reject(`Unknown type: ${type} - Aborting`);
