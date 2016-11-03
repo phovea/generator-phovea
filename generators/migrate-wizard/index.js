@@ -2,6 +2,7 @@
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const known = require('../../utils/known');
+const yeoman = require('yeoman-environment');
 
 function toPhoveaName(name) {
   return name.replace(/^caleydo_/, 'phovea_');
@@ -64,19 +65,33 @@ class Generator extends Base {
     });
   }
 
-  _spawn(cmd, argline) {
+  _spawn(cmd, argline, shell) {
+    shell = shell || false;
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), {
-      cwd: this.cwd
+      cwd: this.cwd,
+      shell: shell
     });
   }
 
-  _spawnOrAbort(next, cmd, argline) {
-    const r = this._spawn(cmd, argline);
+  _spawnOrAbort(next, cmd, argline, shell) {
+    const r = this._spawn(cmd, argline, shell);
     if (failed(r)) {
       this.log(r);
       return this._abort('failed: '+cmd);
     }
     return next;
+  }
+
+  _yo(next, generator) {
+    // call yo internally
+    const env = yeoman.createEnv();
+    env.register(require.resolve('../'+generator), 'phovea:'+generator);
+    return new Promise((resolve) => {
+      env.run('phovea:'+generator, (result) => {
+        this.log(result);
+        resolve(next);
+      });
+    });
   }
 
   _abort(msg) {
@@ -96,12 +111,12 @@ class Generator extends Base {
 
   _migrate(step) {
     this.log(chalk.blue(`${step++}. migrate structure: `), 'yo phovea:migrate');
-    return this._spawnOrAbort(step, 'yo', 'phovea:migrate');
+    return this._yo(step, 'migrate');
   }
 
   _migrateSource(step) {
     this.log(chalk.blue(`${step++}. migrate source code: `), 'yo phovea:migrate-source');
-    return this._spawnOrAbort(step, 'yo', 'phovea:migrate-source');
+    return this._yo(step, 'migrate-source');
   }
 
   _commit(message, step) {
