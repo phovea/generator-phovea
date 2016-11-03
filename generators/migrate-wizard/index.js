@@ -104,8 +104,8 @@ class Generator extends Base {
       try {
         this.log('running yo phovea:' + generator);
         env.run('phovea:' + generator, (result) => {
-          this.log(result);
-          resolve(next);
+          // wait a second after running yo to commit the files correctly
+          setTimeout(() => resolve(next), 500);
         });
       } catch (e) {
         console.error('error', e, e.stack);
