@@ -15,24 +15,13 @@ class ChooseGenerator extends generators.Base {
   prompting() {
     return this.prompt([{
       type: 'list',
-      name: 'task',
-      message: 'Task',
-      choices: ['init', 'ueber', 'clone', 'resolve'],
-      default: 'init'
-    }, {
-      type: 'list',
       name: 'type',
       message: 'Plugin Type',
       choices: knownPluginTypes,
-      default: defaultPluginType,
-      when: (props) => props.task === 'init'
+      default: defaultPluginType
     }]).then((props) => {
-      if (props.task === 'init') {
-        this.config.set('type', props.type);
-        this.gen = 'init-' + props.type;
-      } else {
-        this.gen = props.task;
-      }
+      this.config.set('type', props.type);
+      this.gen = 'init-' + props.type;
     });
   }
 
