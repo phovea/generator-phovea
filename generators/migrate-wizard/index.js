@@ -23,6 +23,12 @@ class Generator extends Base {
       type: Boolean
     });
 
+    this.option('reset', {
+      alias: 'r',
+      defaults: false,
+      type: Boolean
+    });
+
     this.argument('repo', {
       required: false
     });
@@ -58,7 +64,7 @@ class Generator extends Base {
       this.cwd = toPhoveaName(this.repo);
       this.cloneSSH = props.cloneSSH || this.options.ssh;
 
-      this.lastStep = this.state[this.cwd] || 0;
+      this.lastStep = this.options.reset ? 0 : (this.state[this.cwd] || 0);
     });
   }
 
