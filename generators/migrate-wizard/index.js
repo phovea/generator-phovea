@@ -65,70 +65,61 @@ class Generator extends Base {
   }
 
   _spawn(cmd, argline) {
-    return failed(this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), {
+    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), {
       cwd: this.cwd
-    }));
+    });
   }
 
-  _abort() {
-    return Promise.reject('Step Failed: Aborting')
+  _spawnOrAbort(next, cmd, argline) {
+    const r = this._spawn(cmd, argline);
+    if (failed(r)) {
+      this.log(r);
+      return this._abort('failed: '+cmd);
+    }
+    return next;
+  }
+
+  _abort(msg) {
+    return Promise.reject(msg ? msg : 'Step Failed: Aborting');
   }
 
   _cloneRepo(step) {
     // clone
-    const repoUrl = this.cloneSSH ? `git@github.com/Caleydo/${this.repo}.git` : `https://github.com/Caleydo/${this.repo}.git`;
+    const repoUrl = this.cloneSSH ? `git@github.com:Caleydo/${this.repo}.git` : `https://github.com/Caleydo/${this.repo}.git`;
     this.log(chalk.blue(`${step++}. clone repository: `), `git clone ${repoUrl} ${this.cwd}`);
     if (failed(this.spawnCommandSync('git', ['clone', repoUrl, this.cwd]))) {
-      return this._abort();
+      return this._abort('clone repository');
     }
     this.log(chalk.blue(`${step++}. switch to migrate branch: `), `git checkout -b migrate`);
-    if (!this._spawn('git', 'checkout -b migrate')) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'git', 'checkout -b migrate');
   }
 
   _migrate(step) {
     this.log(chalk.blue(`${step++}. migrate structure: `), 'yo phovea:migrate');
-    if (!this._spawn('yo', 'phovea:migrate')) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'yo', 'phovea:migrate');
   }
 
   _migrateSource(step) {
     this.log(chalk.blue(`${step++}. migrate source code: `), 'yo phovea:migrate-source');
-    if (!this._spawn('yo', 'phovea:migrate-source')) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'yo', 'phovea:migrate-source');
   }
 
   _commit(message, step) {
     this.log(chalk.blue(`${step++}. commit all changes: `), `git add --all && git commit -m "${message}"`);
-    if (!this._spawn('git', 'add --all')) {
+    if (failed(this._spawn('git', 'add --all'))) {
       return this._abort();
     }
-    if (!this._spawn('git', ['commit', '-m', message])) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'git', ['commit', '-m', message]);
   }
 
   _installNPM(step) {
     this.log(chalk.blue(`${step++}. run npm install: `), `npm install`);
-    if (!this._spawn('npm', 'install')) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'npm', 'install');
   }
 
   _runScript(script, step) {
     this.log(chalk.blue(`${step++}. ${script} plugin: `), `npm run ${script}`);
-    if (!this._spawn('npm', ['run', script])) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'npm', ['run', script]);
   }
 
   _build(step) {
@@ -145,10 +136,7 @@ class Generator extends Base {
 
   _(step) {
     this.log(chalk.blue(`${step++}. build plugin: `), `npm run build`);
-    if (!this._spawn('npm', 'run install')) {
-      return this._abort();
-    }
-    return step;
+    return this._spawnOrAbort(step, 'npm', 'run install');
   }
 
   _resolveType() {
