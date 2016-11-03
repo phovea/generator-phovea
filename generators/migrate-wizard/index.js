@@ -76,7 +76,7 @@ class Generator extends Base {
       message: message,
       default: false
     }).then((props) => {
-      return props.confirm ? step+1 : this._promptLoop(message, step);
+      return props.confirm ? (step + 1) : this._promptLoop(message, step);
     });
   }
 
