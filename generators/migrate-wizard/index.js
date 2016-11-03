@@ -62,19 +62,15 @@ class Generator extends Base {
     });
   }
 
-  _promptLoop(message, task, step) {
+  _promptLoop(message, step) {
     // repeats the message till yes was selected
-    if (typeof task === 'number') {
-      step = task;
-      task = null;
-    }
     return this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: message,
       default: false
     }).then((props) => {
-      return props.confirm ? step : (task ? task(step) : this._promptLoop(message, step));
+      return props.confirm ? step+1 : this._promptLoop(message, step);
     });
   }
 
