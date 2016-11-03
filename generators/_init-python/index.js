@@ -69,13 +69,19 @@ class PluginGenerator extends Base {
 
     // merge dependencies
     // support old notation, too (smodules, slibraries)
-    this.config.get('modules').concat(this.config.get('smodules') || []).filter(known.plugin.isTypeServer).forEach((m) => {
+    const modules = this.config.get('modules').concat(this.config.get('smodules') || []);
+    this.config.delete('smodules');
+    this.config.set('modules', modules);
+    modules.filter(known.plugin.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
       extend(redhatPackages, p.redhatPackages);
     });
-    this.config.get('libraries').concat(this.config.get('slibraries') || []).filter(known.lib.isTypeServer).forEach((m) => {
+    const libraries = this.config.get('libraries').concat(this.config.get('slibraries') || []);
+    this.config.delete('slibraries');
+    this.config.set('libraries', libraries);
+    libraries.filter(known.lib.isTypeServer).forEach((m) => {
       const p = known.lib.byName(m);
       extend(requirements, p.requirements);
       extend(debianPackages, p.debianPackages);
