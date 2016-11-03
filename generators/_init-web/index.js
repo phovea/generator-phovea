@@ -86,7 +86,7 @@ class PluginGenerator extends Base {
     var r = {};
     // merge dependencies
     this.config.get('modules').filter(known.plugin.isTypeWeb).forEach((m) => {
-     _.assign(r, known.plugin.byName(m).dependencies);
+      _.assign(r, known.plugin.byName(m).dependencies);
     });
     this.config.get('libraries').filter(known.lib.isTypeWeb).forEach((m) => {
       _.assign(r, known.lib.byName(m).dependencies);

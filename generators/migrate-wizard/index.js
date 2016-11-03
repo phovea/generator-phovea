@@ -3,7 +3,6 @@ const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const known = require('../../utils/known');
 const yeoman = require('yeoman-environment');
-const fs = require('fs');
 
 function toPhoveaName(name) {
   return name.replace(/^caleydo_/, 'phovea_');
@@ -148,10 +147,9 @@ class Generator extends Base {
     // http://stackoverflow.com/questions/5139290/how-to-check-if-theres-nothing-to-be-committed-in-the-current-branch
     if (failed(this._spawn('git', 'diff --cached --exit-code'))) {
       return this._spawnOrAbort(step, 'git', ['commit', '-m', message]);
-    } else {
-      this.log('nothing to commit');
-      return step;
     }
+    this.log('nothing to commit');
+    return step;
   }
 
   _installNPMPackages(step) {
@@ -194,14 +192,14 @@ class Generator extends Base {
           }).then((props) => {
             return props.retry ? this._retry(task, step) : reject('No Retry');
           });
-        })
+        });
     });
   }
 
   _testWeb(step) {
-    //first step
     const skipDone = (task) => this._skipDone.bind(this, task);
     const retry = (task) => this._retry.bind(this, task);
+
     return Promise.resolve(step)
       .then(skipDone(this._installNPMPackages.bind(this)))
       .then(skipDone(retry(this._compile.bind(this))))
@@ -226,8 +224,8 @@ class Generator extends Base {
   }
 
   writing() {
-    //first step
     const skipDone = (task) => this._skipDone.bind(this, task);
+
     return Promise.resolve(1)
       .then(skipDone(this._cloneRepo.bind(this)))
       .then(skipDone(this._switchBranch.bind(this)))
@@ -251,7 +249,7 @@ class Generator extends Base {
         }
         return Promise.reject(`Unknown type: ${type} - Aborting`);
       })
-      .catch((msg) => this.log(chalk.red(`Error: ${msg}`)))
+      .catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
   }
 }
 
