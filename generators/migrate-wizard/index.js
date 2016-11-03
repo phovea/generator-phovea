@@ -183,18 +183,21 @@ class Generator extends Base {
 
   _retry(task, step) {
     return new Promise((resolve, reject) => {
-      Promise.resolve(task(step))
-        .then(resolve)
-        .catch(() => {
-          this.prompt({
-            type: 'confirm',
-            name: 'retry',
-            message: chalk.red('Last Step Failed') + ' Retry',
-            default: true
-          }).then((props) => {
-            return props.retry ? this._retry(task, step) : reject('No Retry');
+      const runTask = ()=> {
+        Promise.resolve(task(step))
+          .then(resolve)
+          .catch(() => {
+            this.prompt({
+              type: 'confirm',
+              name: 'retry',
+              message: chalk.red('Last Step Failed') + ' Retry',
+              default: true
+            }).then((props) => {
+              return props.retry ? runTask() : reject('No Retry');
+            });
           });
-        });
+      };
+      runTask();
     });
   }
 
