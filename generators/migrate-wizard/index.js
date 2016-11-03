@@ -147,7 +147,7 @@ class Generator extends Base {
   _commit(message, step) {
     this.log(chalk.blue(`${step++}. commit all changes:`), `git commit -m "${message}"`);
     // http://stackoverflow.com/questions/5139290/how-to-check-if-theres-nothing-to-be-committed-in-the-current-branch
-    if (failed(this._spawn('git', 'diff --cached --exit-code'))) {
+    if (failed(this._spawn('git', 'diff --cached --quiet'))) {
       return this._spawnOrAbort(step, 'git', ['commit', '-m', message]);
     }
     this.log('nothing to commit');
