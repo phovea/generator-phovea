@@ -199,6 +199,16 @@
       }
     },
     {
+      "name": "bootstrap",
+      "type": "web",
+      "description": "Bootstrap 3",
+      "alias": "bootstrap",
+      "dependencies": {
+        "@types/bootstrap": "^3.3.32",
+        "bootstrap-sass": "^3.3.7"
+      }
+    },
+    {
       "name": "redis",
       "type": "python",
       "description": "Redis Server",
