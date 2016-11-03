@@ -1,5 +1,6 @@
-# generator-phovea [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
-> helper generator for phovea
+# generator-phovea [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+
+helper generator for phovea
 
 ## Installation
 
@@ -23,11 +24,14 @@ yo phovea
  * Yeoman can be too opinionated at times but is easily convinced not to be.
  * Feel free to [learn more about Yeoman](http://yeoman.io/).
 
-## License
+***
 
-MIT © [Samuel Gratzl]()
+<a href="https://caleydo.org"><img src="http://caleydo.org/assets/images/logos/caleydo.svg" align="left" width="200px" hspace="10" vspace="6"></a>
+This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform for developing web-based visualization applications. For tutorials, API docs, and more information about the build and deployment process, see the [documentation page](http://caleydo.org/documentation/).
 
 
+[phovea-image]: https://img.shields.io/badge/Phovea-Utils-lightgrey.svg
+[phovea-url]: https://phovea.caleydo.org
 [npm-image]: https://badge.fury.io/js/generator-phovea.svg
 [npm-url]: https://npmjs.org/package/generator-phovea
 [travis-image]: https://travis-ci.org/sgratzl/generator-phovea.svg?branch=master
