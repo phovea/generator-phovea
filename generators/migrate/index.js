@@ -87,6 +87,8 @@ class Generator extends Base {
       return act ? act : default_;
     };
 
+    const single = (obj) => Array.isArray(obj) ? obj : [obj];
+
     const validLib = (p) => {
       const r = known.lib.exists(p);
       if (!r) {
@@ -126,8 +128,8 @@ class Generator extends Base {
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
       modules: Object.keys(pkg.peerDependencies || {}).map(toPhoveaName).filter(validPlugin),
-      extensions: safe(pkg.caleydo, 'plugins.web', []).map(toExtension.bind(this, name)),
-      sextensions: safe(pkg.caleydo, 'plugins.python', []).map(toExtension.bind(this, name)),
+      extensions: single(safe(pkg.caleydo, 'plugins.web', [])).map(toExtension.bind(this, name)),
+      sextensions: single(safe(pkg.caleydo, 'plugins.python', [])).map(toExtension.bind(this, name)),
 
       // merge valid web libraries with valid looked up server libraries
       libraries: Object.keys(libs)

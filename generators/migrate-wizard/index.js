@@ -23,6 +23,12 @@ class Generator extends Base {
       type: Boolean
     });
 
+    this.option('reset', {
+      alias: 'r',
+      defaults: false,
+      type: Boolean
+    });
+
     this.argument('repo', {
       required: false
     });
@@ -58,23 +64,19 @@ class Generator extends Base {
       this.cwd = toPhoveaName(this.repo);
       this.cloneSSH = props.cloneSSH || this.options.ssh;
 
-      this.lastStep = this.state[this.cwd] || 0;
+      this.lastStep = this.options.reset ? 0 : (this.state[this.cwd] || 0);
     });
   }
 
-  _promptLoop(message, task, step) {
+  _promptLoop(message, step) {
     // repeats the message till yes was selected
-    if (typeof task === 'number') {
-      step = task;
-      task = null;
-    }
     return this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: message,
       default: false
     }).then((props) => {
-      return props.confirm ? step : (task ? task(step) : this._promptLoop(message, step));
+      return props.confirm ? (step + 1) : this._promptLoop(message, step);
     });
   }
 
@@ -86,8 +88,8 @@ class Generator extends Base {
   _spawnOrAbort(next, cmd, argline, cwd) {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      this.log(r);
-      return this._abort('failed: ' + cmd);
+      // this.log(r);
+      return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
     }
     return next;
   }
@@ -101,9 +103,9 @@ class Generator extends Base {
     return new Promise((resolve, reject) => {
       try {
         this.log('running yo phovea:' + generator);
-        env.run('phovea:' + generator, (result) => {
-          this.log(result);
-          resolve(next);
+        env.run('phovea:' + generator, () => {
+          // wait a second after running yo to commit the files correctly
+          setTimeout(() => resolve(next), 500);
         });
       } catch (e) {
         console.error('error', e, e.stack);
@@ -145,7 +147,7 @@ class Generator extends Base {
   _commit(message, step) {
     this.log(chalk.blue(`${step++}. commit all changes:`), `git commit -m "${message}"`);
     // http://stackoverflow.com/questions/5139290/how-to-check-if-theres-nothing-to-be-committed-in-the-current-branch
-    if (failed(this._spawn('git', 'diff --cached --exit-code'))) {
+    if (failed(this._spawn('git', 'diff --cached --quiet'))) {
       return this._spawnOrAbort(step, 'git', ['commit', '-m', message]);
     }
     this.log('nothing to commit');
@@ -181,18 +183,21 @@ class Generator extends Base {
 
   _retry(task, step) {
     return new Promise((resolve, reject) => {
-      Promise.resolve(task(step))
-        .then(resolve)
-        .catch(() => {
-          this.prompt({
-            type: 'confirm',
-            name: 'retry',
-            message: chalk.red('Last Step Failed') + ' Retry',
-            default: true
-          }).then((props) => {
-            return props.retry ? this._retry(task, step) : reject('No Retry');
+      const runTask = () => {
+        Promise.resolve(task(step))
+          .then(resolve)
+          .catch(() => {
+            this.prompt({
+              type: 'confirm',
+              name: 'retry',
+              message: chalk.red('Last Step Failed') + ' Retry',
+              default: true
+            }).then((props) => {
+              return props.retry ? runTask() : reject('No Retry');
+            });
           });
-        });
+      };
+      runTask();
     });
   }
 
