@@ -246,7 +246,7 @@ class Generator extends Base {
         const type = this._resolveType();
         // need to wrap since it guesses it is a module
         if (known.plugin.isTypeHybrid({type})) {
-          return this._testWeb.then(this._testServer.bind(this));
+          return Promise.resolve(this._testWeb(step)).then(this._testServer.bind(this));
         } else if (known.plugin.isTypeWeb({type})) {
           return this._testWeb(step);
         } else if (known.plugin.isTypeServer({type})) {
