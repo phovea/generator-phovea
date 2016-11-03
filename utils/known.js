@@ -17,7 +17,7 @@ function generate(items, typesWeb, typesServer, typesHybrid) {
     new Separator(),
     typesServer);
   if (typesHybrid.length > 0) {
-    r.types = r.types.push(new Separator(), typesHybrid);
+    r.types.push(new Separator(), typesHybrid);
   }
 
   r.list = items;
