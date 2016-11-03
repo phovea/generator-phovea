@@ -88,8 +88,8 @@ class Generator extends Base {
   _spawnOrAbort(next, cmd, argline, cwd) {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      this.log(r);
-      return this._abort('failed: ' + cmd);
+      //this.log(r);
+      return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
     }
     return next;
   }
