@@ -1,5 +1,5 @@
 'use strict';
-const extend = require('deep-extend');
+const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 
@@ -74,18 +74,18 @@ class PluginGenerator extends Base {
     this.config.set('modules', modules);
     modules.filter(known.plugin.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
-      extend(requirements, p.requirements);
-      extend(debianPackages, p.debianPackages);
-      extend(redhatPackages, p.redhatPackages);
+      _.assign(requirements, p.requirements);
+      _.assign(debianPackages, p.debianPackages);
+      _.assign(redhatPackages, p.redhatPackages);
     });
     const libraries = this.config.get('libraries').concat(this.config.get('slibraries') || []);
     this.config.delete('slibraries');
     this.config.set('libraries', libraries);
     libraries.filter(known.lib.isTypeServer).forEach((m) => {
       const p = known.lib.byName(m);
-      extend(requirements, p.requirements);
-      extend(debianPackages, p.debianPackages);
-      extend(redhatPackages, p.redhatPackages);
+      _.assign(requirements, p.requirements);
+      _.assign(debianPackages, p.debianPackages);
+      _.assign(redhatPackages, p.redhatPackages);
     });
 
     return {

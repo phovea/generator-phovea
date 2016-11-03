@@ -3,7 +3,6 @@ const generators = require('yeoman-generator');
 const _ = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
-const extend = require('deep-extend');
 
 function patchPackageJSON(config, unset, extra) {
   var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
@@ -14,7 +13,8 @@ function patchPackageJSON(config, unset, extra) {
   } else {
     pkgPatch = {};
   }
-  extend(pkg, pkgPatch, extra || {});
+  _.merge(pkg, pkgPatch);
+  _.merge(pkg, extra || {});
 
   (unset || []).forEach((d) => delete pkg[d]);
 
@@ -31,7 +31,7 @@ function stringifyInline(obj, space) {
 }
 
 function stringifyAble(config) {
-  return extend({
+  return _.assign({
     stringifyPython: (obj, space) => {
       var base = stringifyInline(obj, space);
       // python different true false
@@ -101,9 +101,9 @@ class BaseInitPluginGenerator extends generators.Base {
 
   default() {
     this.composeWith('phovea:_init-' + this.basetype, {
-      options: extend({}, this.options, {
+      options: _.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
-      })
+      }, this.options)
     }, {
       local: require.resolve('../generators/_init-' + this.basetype)
     });
