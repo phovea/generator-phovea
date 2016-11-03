@@ -1,5 +1,5 @@
 'use strict';
-const extend = require('deep-extend');
+const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 
@@ -86,10 +86,10 @@ class PluginGenerator extends Base {
     var r = {};
     // merge dependencies
     this.config.get('modules').filter(known.plugin.isTypeWeb).forEach((m) => {
-      extend(r, known.plugin.byName(m).dependencies);
+      _.assign(r, known.plugin.byName(m).dependencies);
     });
     this.config.get('libraries').filter(known.lib.isTypeWeb).forEach((m) => {
-      extend(r, known.lib.byName(m).dependencies);
+      _.assign(r, known.lib.byName(m).dependencies);
     });
     return r;
   }

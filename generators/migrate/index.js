@@ -1,5 +1,5 @@
 'use strict';
-const extend = require('deep-extend');
+const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const known = require('../../utils/known');
 
@@ -18,7 +18,7 @@ function toPhoveaName(name) {
 }
 
 function toExtension(name, desc) {
-  const copy = extend({}, desc);
+  const copy = _.merge({}, desc);
   delete copy.type;
   delete copy.id;
   delete copy.file;
@@ -125,7 +125,7 @@ class Generator extends Base {
       name: name,
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
-      modules: Object.keys(pkg.peerDependencies).map(toPhoveaName).filter(validPlugin),
+      modules: Object.keys(pkg.peerDependencies || {}).map(toPhoveaName).filter(validPlugin),
       extensions: safe(pkg.caleydo, 'plugins.web', []).map(toExtension.bind(this, name)),
       sextensions: safe(pkg.caleydo, 'plugins.python', []).map(toExtension.bind(this, name)),
 
