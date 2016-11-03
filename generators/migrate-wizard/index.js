@@ -3,6 +3,7 @@ const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const known = require('../../utils/known');
 const yeoman = require('yeoman-environment');
+const fs = require('fs');
 
 function toPhoveaName(name) {
   return name.replace(/^caleydo_/, 'phovea_');
@@ -28,6 +29,16 @@ class Generator extends Base {
     });
   }
 
+  initializing() {
+    this.state = this.fs.readJSON(this.destinationPath('migrate-state.json'), {});
+  }
+
+  end() {
+    this.fs.extendJSON(this.destinationPath('migrate-state.json'), {
+      [this.cwd] : this.lastStep
+    });
+  }
+
   prompting() {
     return this.prompt([{
       type: 'input',
@@ -46,6 +57,8 @@ class Generator extends Base {
       this.repo = props.repo || this.args[0];
       this.cwd = toPhoveaName(this.repo);
       this.cloneSSH = props.cloneSSH || this.options.ssh;
+
+      this.lastStep = this.state[this.cwd] || 0;
     });
   }
 
@@ -85,11 +98,16 @@ class Generator extends Base {
       cwd: this.cwd
     }, this.env.adapter);
     env.register(require.resolve('../'+generator), 'phovea:'+generator);
-    return new Promise((resolve) => {
-      env.run('phovea:'+generator, (result) => {
-        this.log(result);
-        resolve(next);
-      });
+    return new Promise((resolve, reject) => {
+      try {
+        env.run('phovea:' + generator, (result) => {
+          this.log(result);
+          resolve(next);
+        });
+      } catch(e) {
+        this.log(e);
+        reject(e);
+      }
     });
   }
 
@@ -171,10 +189,12 @@ class Generator extends Base {
   }
 
   _testWeb(step) {
+    //first step
+    const skipDone = (task) => this._skipDone.bind(this, task);
     return Promise.resolve(step)
-      .then(this._installNPM.bind(this))
-      .then(this._retry(this._compile.bind(this)))
-      .then(this._retry(this._lint.bind(this)))
+      .then(skipDone(this._installNPM.bind(this)))
+      .then(skipDone(this._retry(this._compile.bind(this))))
+      .then(skipDone(this._retry(this._lint.bind(this))))
       .then(this._retry(this._build.bind(this)));
   }
 
@@ -184,20 +204,18 @@ class Generator extends Base {
   }
 
   _skipDone(task, step) {
-    const current = this.config.get(this.cwd);
-    if (current > step) {
+    if (this.lastStep > step) {
       this.log(chalk.blue(`${step++}. skip`));
       return Promise.resolve(step++);
     }
     return Promise.resolve(task(step)).then((nstep) => {
-      this.config.set(this.cwd, nstep);
+      this.lastStep = step;
       return nstep;
     });
   }
 
   writing() {
     //first step
-    this.config.defaults({ [ this.cwd ]: 1 });
     const skipDone = (task) => this._skipDone.bind(this, task);
     return Promise.resolve(1)
       .then(skipDone(this._cloneRepo.bind(this)))
