@@ -125,7 +125,7 @@ class Generator extends Base {
       name: name,
       author: 'The Caleydo Team',
       githubAccount: 'phovea',
-      modules: Object.keys(pkg.peerDependencies).map(toPhoveaName).filter(validPlugin),
+      modules: Object.keys(pkg.peerDependencies || {}).map(toPhoveaName).filter(validPlugin),
       extensions: safe(pkg.caleydo, 'plugins.web', []).map(toExtension.bind(this, name)),
       sextensions: safe(pkg.caleydo, 'plugins.python', []).map(toExtension.bind(this, name)),
 
