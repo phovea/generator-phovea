@@ -88,7 +88,7 @@ class Generator extends Base {
   _spawnOrAbort(next, cmd, argline, cwd) {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      //this.log(r);
+      // this.log(r);
       return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
     }
     return next;
@@ -103,7 +103,7 @@ class Generator extends Base {
     return new Promise((resolve, reject) => {
       try {
         this.log('running yo phovea:' + generator);
-        env.run('phovea:' + generator, (result) => {
+        env.run('phovea:' + generator, () => {
           // wait a second after running yo to commit the files correctly
           setTimeout(() => resolve(next), 500);
         });
@@ -183,7 +183,7 @@ class Generator extends Base {
 
   _retry(task, step) {
     return new Promise((resolve, reject) => {
-      const runTask = ()=> {
+      const runTask = () => {
         Promise.resolve(task(step))
           .then(resolve)
           .catch(() => {

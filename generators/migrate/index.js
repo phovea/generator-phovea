@@ -87,9 +87,7 @@ class Generator extends Base {
       return act ? act : default_;
     };
 
-    const single = (obj) => {
-      return Array.isArray(obj) ? obj : [obj];
-    };
+    const single = (obj) => Array.isArray(obj) ? obj : [obj];
 
     const validLib = (p) => {
       const r = known.lib.exists(p);
