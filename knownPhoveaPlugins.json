@@ -4,9 +4,9 @@
       "name": "phovea_core",
       "type": "lib",
       "description": "Phovea Core Plugin",
-      "repository": "https://github.com/sgratzl/phovea_core.git",
+      "repository": "https://github.com/phovea/phovea_core.git",
       "dependencies": {
-        "phovea_core": "github:sgratzl/phovea_core"
+        "phovea_core": "github:phovea/phovea_core"
       },
       "libraries": []
     },
@@ -14,9 +14,9 @@
       "name": "phovea_d3",
       "type": "lib",
       "description": "Phovea D3 Plugin",
-      "repository": "https://github.com/sgratzl/phovea_d3.git",
+      "repository": "https://github.com/phovea/phovea_d3.git",
       "dependencies": {
-        "phovea_d3": "github:sgratzl/phovea_d3"
+        "phovea_d3": "github:phovea/phovea_d3"
       },
       "libraries": [
         "d3"
@@ -26,9 +26,9 @@
       "name": "phovea_vis",
       "type": "lib",
       "description": "Phovea Vis Plugin",
-      "repository": "https://github.com/sgratzl/phovea_vis.git",
+      "repository": "https://github.com/phovea/phovea_vis.git",
       "dependencies": {
-        "phovea_vis": "github:sgratzl/phovea_vis"
+        "phovea_vis": "github:phovea/phovea_vis"
       },
       "libraries": [
         "d3"
@@ -38,9 +38,9 @@
       "name": "phovea_bootstrap_fontawesome",
       "type": "lib",
       "description": "Phovea Common Style Plugin",
-      "repository": "https://github.com/sgratzl/phovea_bootstrap_fontawesome.git",
+      "repository": "https://github.com/phovea/phovea_bootstrap_fontawesome.git",
       "dependencies": {
-        "phovea_bootstrap_fontawesome": "github:sgratzl/phovea_bootstrap_fontawesome"
+        "phovea_bootstrap_fontawesome": "github:phovea/phovea_bootstrap_fontawesome"
       },
       "libraries": [
         "jquery",
@@ -51,9 +51,9 @@
       "name": "phovea_importer",
       "type": "lib",
       "description": "Phovea Importer Plugin",
-      "repository": "https://github.com/sgratzl/phovea_importer.git",
+      "repository": "https://github.com/phovea/phovea_importer.git",
       "dependencies": {
-        "phovea_importer": "github:sgratzl/phovea_importer"
+        "phovea_importer": "github:phovea/phovea_importer"
       },
       "libraries": [
         "d3",
@@ -64,9 +64,9 @@
       "name": "phovea_vis_lineup",
       "type": "lib",
       "description": "Phovea LineUp Visualization",
-      "repository": "https://github.com/sgratzl/phovea_vis_lineup.git",
+      "repository": "https://github.com/phovea/phovea_vis_lineup.git",
       "dependencies": {
-        "phovea_vis_lineup": "github:sgratzl/phovea_vis_lineup"
+        "phovea_vis_lineup": "github:phovea/phovea_vis_lineup"
       },
       "libraries": [
         "lineupjs",
@@ -77,61 +77,9 @@
       "name": "phovea_server",
       "type": "service",
       "description": "Phovea Server Plugin",
-      "repository": "https://github.com/sgratzl/phovea_server.git",
+      "repository": "https://github.com/phovea/phovea_server.git",
       "requirements": {
-        "-e git+https://github.com/sgratzl/phovea_server.git": "#egg=phovea_server"
-      },
-      "debianPackages": {
-      },
-      "redhatPackages": {
-      }
-    },
-    {
-      "name": "phovea_data_redis",
-      "type": "service",
-      "description": "Phovea Redis Data Plugin",
-      "repository": "https://github.com/sgratzl/phovea_data_redis.git",
-      "requirements": {
-        "-e git+https://github.com/sgratzl/phovea_data_redis.git": "#egg=phovea_data_redis"
-      },
-      "debianPackages": {
-      },
-      "redhatPackages": {
-      }
-    },
-    {
-      "name": "phovea_data_mongodb",
-      "type": "service",
-      "description": "Phovea MongoDB Data Plugin",
-      "repository": "https://github.com/sgratzl/phovea_data_mongodb.git",
-      "requirements": {
-        "-e git+https://github.com/sgratzl/phovea_data_mongodb.git": "#egg=phovea_data_mongodb"
-      },
-      "debianPackages": {
-      },
-      "redhatPackages": {
-      }
-    },
-    {
-      "name": "phovea_data_sql",
-      "type": "service",
-      "description": "Phovea SQL Data Plugin",
-      "repository": "https://github.com/sgratzl/phovea_data_sql.git",
-      "requirements": {
-        "-e git+https://github.com/sgratzl/phovea_data_sql.git": "#egg=phovea_data_sql"
-      },
-      "debianPackages": {
-      },
-      "redhatPackages": {
-      }
-    },
-    {
-      "name": "phovea_data_hdf",
-      "type": "service",
-      "description": "Phovea HDF Data Plugin",
-      "repository": "https://github.com/sgratzl/phovea_data_hdf.git",
-      "requirements": {
-        "-e git+https://github.com/sgratzl/phovea_data_hdf.git": "#egg=phovea_data_hdf"
+        "-e git+https://github.com/phovea/phovea_server.git": "#egg=phovea_server"
       },
       "debianPackages": {
       },
