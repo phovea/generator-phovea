@@ -70,6 +70,7 @@
       },
       "libraries": [
         "lineupjs",
+        "d3",
         "font-awesome"
       ]
     },
