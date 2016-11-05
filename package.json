@@ -71,6 +71,7 @@
     }
   },
   "scripts": {
+    "lint": "gulp static",
     "prepublish": "gulp prepublish",
     "test": "gulp"
   }
