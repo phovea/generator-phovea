@@ -36,6 +36,11 @@ module.exports = (config) => {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
 
+    middleware: ['polyfill'],
+    polyfill: {
+      // features: '<feature-set>', // feature set, see polyfill-service docs for details, defaults to `{default: {}}`
+      // path: '<path>' // path to serve the polyfill script under, defaults to '/polyfill.js'
+    },
 
     browsers: [process.env.CONTINUOUS_INTEGRATION ? 'Firefox' : 'Chrome'],
 
