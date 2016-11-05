@@ -4,7 +4,7 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-const {libraryAliases, modules, entries, ignores, type} = require('./.yo-rc.json')['generator-phovea'];
+const {libraryAliases, libraryExternals, modules, entries, ignores, type} = require('./.yo-rc.json')['generator-phovea'];
 const resolve = require('path').resolve;
 const pkg = require('./package.json');
 const webpack = require('webpack');
@@ -169,7 +169,7 @@ function generateWebpack(options) {
 
   if (!options.bundle) {
     //if we don't bundle don't include external libraries and other phovea modules
-    base.externals.push.apply(base.externals, Object.keys(options.libs || {}));
+    base.externals.push(...(options.externals || Object.keys(options.libs || {})));
 
     //ignore all phovea modules
     if (options.modules) {
@@ -232,6 +232,7 @@ function generateWebpackConfig(env) {
   const base = {
     entries: entries,
     libs: libraryAliases,
+    externals: libraryExternals,
     modules: modules,
     ignore: ignores
   };

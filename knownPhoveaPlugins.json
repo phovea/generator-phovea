@@ -93,7 +93,9 @@
       "name": "d3",
       "type": "web",
       "description": "D3 v3 Library",
-      "alias": "d3/d3",
+      "aliases": {
+        "d3": "d3/d3"
+      },
       "dependencies": {
         "@types/d3": "^3.5.36",
         "d3": "^3.5.17"
@@ -103,7 +105,7 @@
       "name": "jquery",
       "type": "web",
       "description": "JQuery 3.1",
-      "alias": "jquery",
+      "aliases": {},
       "dependencies": {
         "@types/jquery": "^2.0.33",
         "jquery": "^3.1.1"
@@ -113,7 +115,7 @@
       "name": "papaparse",
       "type": "web",
       "description": "PapaParse",
-      "alias": "papaparse",
+      "aliases": {},
       "dependencies": {
         "@types/papaparse": "^4.1.28",
         "papaparse": "^4.1.2"
@@ -123,7 +125,7 @@
       "name": "jqueryui",
       "type": "web",
       "description": "JQuery UI",
-      "alias": "jqueryui",
+      "aliases": {},
       "dependencies": {
         "@types/jqueryui": "^1.11.31",
         "jqueryui": "^1.11.1"
@@ -133,7 +135,7 @@
       "name": "lineupjs",
       "type": "web",
       "description": "LineUp.js",
-      "alias": "lineupjs",
+      "aliases": {},
       "dependencies": {
         "lineupjs": "github:Caleydo/lineup.js#feature_146_react"
       }
@@ -142,7 +144,7 @@
       "name": "font-awesome",
       "type": "web",
       "description": "Font Awesome",
-      "alias": "font-awesome",
+      "aliases": {},
       "dependencies": {
         "font-awesome": "^4.6.3"
       }
@@ -151,7 +153,8 @@
       "name": "bootstrap",
       "type": "web",
       "description": "Bootstrap 3",
-      "alias": "bootstrap",
+      "aliases": {},
+      "externals": ["bootstrap-sass"],
       "dependencies": {
         "@types/bootstrap": "^3.3.32",
         "bootstrap-sass": "^3.3.7"
