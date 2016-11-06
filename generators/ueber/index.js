@@ -162,11 +162,6 @@ class Generator extends Base {
 
     const config = {};
     const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
-    const includeDot = {
-      globOptions: {
-        dot: true
-      }
-    };
 
     config.modules = this.props.modules.concat(plugins);
     config.webmodules = plugins;
