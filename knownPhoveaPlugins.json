@@ -75,6 +75,16 @@
       ]
     },
     {
+      "name": "phovea_security_flask",
+      "type": "lib",
+      "description": "Phovea Security",
+      "repository": "https://github.com/phovea/phovea_security_flask.git",
+      "dependencies": {
+        "phovea_vis_lineup": "github:phovea/phovea_security_flask"
+      },
+      "libraries": []
+    },
+    {
       "name": "phovea_server",
       "type": "service",
       "description": "Phovea Server Plugin",
@@ -82,6 +92,74 @@
       "requirements": {
         "-e git+https://github.com/phovea/phovea_server.git": "#egg=phovea_server"
       },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_redis",
+      "type": "server",
+      "description": "Phovea Server RedisDB Plugin",
+      "repository": "https://github.com/phovea/phovea_data_redis.git",
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_data_redis.git": "#egg=phovea_data_redis"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_mongo",
+      "type": "server",
+      "description": "Phovea Server MongoDB Plugin",
+      "repository": "https://github.com/phovea/phovea_data_mongo.git",
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_data_mongo.git": "#egg=phovea_data_mongo"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_sql",
+      "type": "server",
+      "description": "Phovea Server SQL Plugin",
+      "repository": "https://github.com/phovea/phovea_data_sql.git",
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_data_sql.git": "#egg=phovea_data_sql"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_data_hdf",
+      "type": "server",
+      "description": "Phovea Server HDF5 Plugin",
+      "repository": "https://github.com/phovea/phovea_data_hdf.git",
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_data_hdf.git": "#egg=phovea_data_hdf"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "phovea_clue",
+      "type": "lib-server",
+      "description": "Phovea CLUE Plugin",
+      "repository": "https://github.com/phovea/phovea_clue.git",
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_clue.git": "#egg=phovea_clue"
+      },
+      "libraries": [
+        "marked"
+      ],
       "debianPackages": {
       },
       "redhatPackages": {
@@ -158,6 +236,17 @@
       "dependencies": {
         "@types/bootstrap": "^3.3.32",
         "bootstrap-sass": "^3.3.7"
+      }
+    },
+    {
+      "name": "marked",
+      "type": "web",
+      "description": "Marked",
+      "aliases": {},
+      "externals": ["marked"],
+      "dependencies": {
+        "@types/marked": "0.0.28",
+        "marked": "^0.3.6"
       }
     },
     {
