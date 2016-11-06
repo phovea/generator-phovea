@@ -5,6 +5,7 @@ const glob = require('glob').sync;
 const extend = require('lodash').extend;
 
 const known = require('../../utils/known');
+const writeTemplates = require('../../utils').writeTemplates;
 
 class Generator extends Base {
 
@@ -168,9 +169,9 @@ class Generator extends Base {
     };
 
     config.modules = this.props.modules.concat(plugins);
+    config.webmodules = plugins;
 
-    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
-    this.fs.copyTpl(this.templatePath('processed/**/*'), this.destinationPath(), config, includeDot);
+    writeTemplates.call(this, config, false);
 
     this.fs.copy(this.templatePath('package.tmpl.json'), this.destinationPath('package.json'));
     this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});

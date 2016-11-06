@@ -8,4 +8,4 @@
  * build a registry by registering all phovea modules
  */
 //other modules
-<%- modules.map((d) => `import '${d}/phovea_registry.js';`).join('\n') %>
+<%- webmodules.map((d) => `import '${d}/phovea_registry.js';`).join('\n') %>
