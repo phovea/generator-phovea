@@ -51,21 +51,22 @@ function writeTemplates(config, withSamples) {
 
   const pattern = stringifyAble(config);
 
-  const copy = (prefix) => {
-    this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+  const copyTpl = (base, dbase) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
     // copyTpl doesn't support glob options
-    var f = glob(this.templatePath(prefix + 'processed/**/*'), {dot: true});
-    if (f.length > 0) {
-      this.fs.copyTpl(f, this.destinationPath(), pattern);
-    }
+    const f = glob(base + '/**/*.*', {dot: true});
+    f.forEach((fi) => {
+      const rel = path.relative(base, fi);
+      this.fs.copyTpl(fi, this.destinationPath(dbase + rel), pattern);
+    });
+  };
 
-    this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
+  const copy = (prefix) => {
+    this.fs.copy(this.templatePath(prefix + 'plain/**/*.*'), this.destinationPath(), includeDot);
+    copyTpl(this.templatePath(prefix + 'processed'), '');
 
-    f = glob(this.templatePath(prefix + 'pluginname_processed/**/*'), {dot: true});
-    if (f.length > 0) {
-      this.fs.copyTpl(f, this.destinationPath(config.name + '/'), pattern);
-    }
+    this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*.*'), this.destinationPath(config.name + '/'), includeDot);
+    copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name + '/');
   };
   copy('');
   if (withSamples) {
