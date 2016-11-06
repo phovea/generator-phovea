@@ -154,6 +154,9 @@
       "type": "lib-server",
       "description": "Phovea CLUE Plugin",
       "repository": "https://github.com/phovea/phovea_clue.git",
+      "dependencies": {
+        "phovea_clue": "github:phovea/phovea_clue"
+      },
       "requirements": {
         "-e git+https://github.com/phovea/phovea_clue.git": "#egg=phovea_clue"
       },
