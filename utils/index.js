@@ -2,6 +2,7 @@
 const generators = require('yeoman-generator');
 const _ = require('lodash');
 const path = require('path');
+const known = require('./known');
 const glob = require('glob').sync;
 
 function patchPackageJSON(config, unset, extra) {
@@ -38,7 +39,8 @@ function stringifyAble(config) {
       base = base.replace(/: true/g, ': True').replace(/: false/g, ': False');
       return base;
     },
-    stringify: stringifyInline
+    stringify: stringifyInline,
+    isWeb: known.plugin.isTypeWeb
   }, config);
 }
 
