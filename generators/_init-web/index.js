@@ -21,7 +21,30 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
       this.log('cant find library: ', l);
       return;
     }
-    r[lib.name] = lib.alias || lib.name;
+    _.merge(r, lib.aliases);
+  });
+  return r;
+}
+
+function toLibraryExternals(moduleNames, libraryNames) {
+  var r = [];
+  moduleNames.forEach((m) => {
+    const plugin = known.plugin.byName(m);
+    if (!plugin) {
+      this.log('cant find plugin: ', m);
+      return;
+    }
+    r.push(...(plugin.externals || []));
+    libraryNames.push(...(plugin.libraries || []));
+  });
+  libraryNames.forEach((l) => {
+    const lib = known.lib.byName(l);
+    if (!lib) {
+      this.log('cant find library: ', l);
+      return;
+    }
+    r.push(lib.name);
+    r.push(...(lib.externals || []));
   });
   return r;
 }
@@ -43,6 +66,7 @@ class PluginGenerator extends Base {
       type: 'lib',
       libraries: [],
       libraryAliases: {},
+      libraryExternals: [],
       modules: ['phovea_core'],
       entries: './index.js',
       ignores: [],
@@ -71,6 +95,7 @@ class PluginGenerator extends Base {
         this.config.set('libraries', props.libraries);
       }
       this.config.set('libraryAliases', toLibraryAliasMap.call(this, this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryExternals', toLibraryExternals.call(this, this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
@@ -117,3 +142,4 @@ class PluginGenerator extends Base {
 
 module.exports = PluginGenerator;
 module.exports.toLibraryAliasMap = toLibraryAliasMap;
+module.exports.toLibraryExternals = toLibraryExternals;
