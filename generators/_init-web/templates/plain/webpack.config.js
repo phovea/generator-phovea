@@ -149,6 +149,18 @@ function generateWebpack(options) {
         '/api/*': {
           target: 'http://localhost:9000',
           secure: false
+        },
+        '/login': {
+          target: 'http://localhost:9000',
+          secure: false
+        },
+        '/logout': {
+          target: 'http://localhost:9000',
+          secure: false
+        },
+        '/loggedinas': {
+          target: 'http://localhost:9000',
+          secure: false
         }
       },
       contentBase: resolve(__dirname, 'build')
@@ -243,7 +255,7 @@ function generateWebpackConfig(env) {
     }));
   }
 
-  if (type === 'app') {
+  if (type.startsWith('app')) {
     base.bundle = true; //bundle everything together
     base.name = '[name]'; //multiple entries case
     base.commons = true; //extract commons module
