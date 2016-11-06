@@ -167,6 +167,25 @@
       },
       "redhatPackages": {
       }
+    },
+    {
+      "name": "phovea_processing_queue",
+      "type": "lib-service",
+      "description": "Phovea Processing Queue Plugin",
+      "repository": "https://github.com/phovea/phovea_processing_queue.git",
+      "dependencies": {
+        "phovea_clue": "github:phovea/phovea_processing_queue"
+      },
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_processing_queue.git": "#egg=phovea_processing_queue"
+      },
+      "libraries": [
+
+      ],
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
     }
   ],
   "libraries": [
