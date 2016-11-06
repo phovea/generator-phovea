@@ -10,7 +10,9 @@ def phovea(registry):
   register extension points
   :param registry:
   """
+  # generator-phovea:begin
 <%- sextensions.map((d) => `  registry.append('${d.type}','${d.id}','${name}.${d.module}', ${stringifyPython(d.extras, '  ')})`).join('\n\n')%>
+  # generator-phovea:end
   pass
 
 
