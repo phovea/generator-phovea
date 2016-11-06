@@ -47,6 +47,7 @@
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
     "karma-junit-reporter": "^1.1.0",
+    "karma-polyfill-service": "github:sgratzl/karma-polyfill-service",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^1.8.0",
     "mkdirp": "^0.5.1",
