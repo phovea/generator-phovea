@@ -180,7 +180,24 @@
         "-e git+https://github.com/phovea/phovea_processing_queue.git": "#egg=phovea_processing_queue"
       },
       "libraries": [
-
+      ],
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
+    },
+    {
+      "name": "targid2",
+      "type": "lib-service",
+      "description": "Targid Discovery Platform",
+      "repository": "https://github.com/phovea/targid2.git",
+      "dependencies": {
+        "phovea_clue": "github:phovea/targid2"
+      },
+      "requirements": {
+        "-e git+https://github.com/phovea/targid2.git": "#egg=targid2"
+      },
+      "libraries": [
       ],
       "debianPackages": {
       },
@@ -258,6 +275,30 @@
       "dependencies": {
         "@types/bootstrap": "^3.3.32",
         "bootstrap-sass": "^3.3.7"
+      }
+    },
+    {
+      "name": "select2",
+      "type": "web",
+      "description": "select2 JQuery Plugin",
+      "aliases": {},
+      "externals": [],
+      "dependencies": {
+        "@types/select2": "^4.0.30",
+        "select2": "^4.0.3"
+      }
+    },
+    {
+      "name": "scrollTo",
+      "type": "web",
+      "description": "select2 JQuery Plugin",
+      "aliases": {
+        "scrollTo": "jquery.scrollto/jquery.scrollTo.js"
+      },
+      "externals": [],
+      "dependencies": {
+        "@types/jquery.scrollto": "^1.4.27",
+        "jquery.scrollto": "^2.1.2"
       }
     },
     {
