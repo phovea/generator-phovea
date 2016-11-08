@@ -76,13 +76,20 @@
     },
     {
       "name": "phovea_security_flask",
-      "type": "lib",
+      "type": "lib-server",
       "description": "Phovea Security",
       "repository": "https://github.com/phovea/phovea_security_flask.git",
       "dependencies": {
-        "phovea_vis_lineup": "github:phovea/phovea_security_flask"
+        "phovea_security_flask": "github:phovea/phovea_security_flask"
       },
-      "libraries": []
+      "libraries": [],
+      "requirements": {
+        "-e git+https://github.com/phovea/phovea_security_flask.git": "#egg=phovea_security_flask"
+      },
+      "debianPackages": {
+      },
+      "redhatPackages": {
+      }
     },
     {
       "name": "phovea_server",
