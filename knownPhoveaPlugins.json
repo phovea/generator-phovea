@@ -289,6 +289,17 @@
       }
     },
     {
+      "name": "moment",
+      "type": "web",
+      "description": "Moment.js",
+      "aliases": {},
+      "externals": [],
+      "dependencies": {
+        "@types/moment": "^2.13.0",
+        "moment": "^2.15.2"
+      }
+    },
+    {
       "name": "scrollTo",
       "type": "web",
       "description": "select2 JQuery Plugin",
