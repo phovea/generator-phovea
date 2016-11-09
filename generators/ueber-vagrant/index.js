@@ -19,10 +19,10 @@ function generateScripts(baseDir) {
     const cmds = Object.keys(pkg.scripts);
 
     var toPatch;
-    if (cmds.includes('test:python')) { //hybrid
-      toPatch = /^(check|(test|dist|start|watch):python)$/
-    } else { //regular server
-      toPatch = /^(check|test|dist|start|watch)$/
+    if (cmds.includes('test:python')) { // hybrid
+      toPatch = /^(check|(test|dist|start|watch):python)$/;
+    } else { // regular server
+      toPatch = /^(check|test|dist|start|watch)$/;
     }
 
     // no pre post test tasks

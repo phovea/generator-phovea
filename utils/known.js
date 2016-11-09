@@ -15,22 +15,21 @@ function generate(items, typesWeb, typesServer, typesHybrid) {
     r.typesServer);
 
   r.typesWithDescription = [].concat(
-    Object.keys(typesWeb).map((t) => ({ value: t, name: `${t}: ${typesWeb[t]}`, short: t})),
+    Object.keys(typesWeb).map((t) => ({value: t, name: `${t}: ${typesWeb[t]}`, short: t})),
     new Separator(),
-    Object.keys(typesServer).map((t) => ({ value: t, name: `${t}: ${typesServer[t]}`, short: t}))
+    Object.keys(typesServer).map((t) => ({value: t, name: `${t}: ${typesServer[t]}`, short: t}))
   );
   if (r.typesHybrid.length > 0) {
     r.types = r.types.concat(new Separator(), r.typesHybrid, new Separator());
     r.typesWithDescription = r.typesWithDescription.concat(
       new Separator(),
-      r.typesHybrid.map((t) => ({ value: t, name: `${t}: ${typesHybrid[t]}`, short: t})),
+      r.typesHybrid.map((t) => ({value: t, name: `${t}: ${typesHybrid[t]}`, short: t})),
       new Separator());
   }
 
   r.isTypeHybrid = (d) => r.typesHybrid.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
   r.isTypeWeb = (d) => r.typesWeb.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
   r.isTypeServer = (d) => r.typesServer.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
-
 
   r.list = items;
   r.listWeb = r.list.filter(r.isTypeWeb);

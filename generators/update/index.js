@@ -9,7 +9,7 @@ class Generator extends Base {
 
     const {longDescription, readme} = extractFromReadme(this.fs.read(this.destinationPath('README.md')));
 
-    //migrate type
+    // migrate type
     const type = this.config.get('type');
     if (type === 'server') {
       this.config.set('type', 'slib');
