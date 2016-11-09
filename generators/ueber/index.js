@@ -35,7 +35,7 @@ class Generator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Additional Plugins',
-      choices: known.plugin.listNames.filter((d) => isInstalled.indexOf(d) < 0),
+      choices: known.plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
       default: this.props.modules
     }]).then((props) => {
       this.props.modules = props.modules;

@@ -76,7 +76,7 @@
     },
     {
       "name": "phovea_security_flask",
-      "type": "lib-server",
+      "type": "lib-slib",
       "description": "Phovea Security",
       "repository": "https://github.com/phovea/phovea_security_flask.git",
       "dependencies": {
@@ -106,7 +106,7 @@
     },
     {
       "name": "phovea_data_redis",
-      "type": "server",
+      "type": "slib",
       "description": "Phovea Server RedisDB Plugin",
       "repository": "https://github.com/phovea/phovea_data_redis.git",
       "requirements": {
@@ -119,7 +119,7 @@
     },
     {
       "name": "phovea_data_mongo",
-      "type": "server",
+      "type": "slib",
       "description": "Phovea Server MongoDB Plugin",
       "repository": "https://github.com/phovea/phovea_data_mongo.git",
       "requirements": {
@@ -132,7 +132,7 @@
     },
     {
       "name": "phovea_data_sql",
-      "type": "server",
+      "type": "slib",
       "description": "Phovea Server SQL Plugin",
       "repository": "https://github.com/phovea/phovea_data_sql.git",
       "requirements": {
@@ -145,7 +145,7 @@
     },
     {
       "name": "phovea_data_hdf",
-      "type": "server",
+      "type": "slib",
       "description": "Phovea Server HDF5 Plugin",
       "repository": "https://github.com/phovea/phovea_data_hdf.git",
       "requirements": {
@@ -158,7 +158,7 @@
     },
     {
       "name": "phovea_clue",
-      "type": "lib-server",
+      "type": "lib-slib",
       "description": "Phovea CLUE Plugin",
       "repository": "https://github.com/phovea/phovea_clue.git",
       "dependencies": {
@@ -195,7 +195,7 @@
     },
     {
       "name": "targid2",
-      "type": "lib-service",
+      "type": "lib-slib",
       "description": "Targid Discovery Platform",
       "repository": "https://github.com/phovea/targid2.git",
       "dependencies": {

@@ -34,14 +34,14 @@ class PluginGenerator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: known.plugin.listServerNames,
+      choices: known.plugin.listServerNamesWithDescription,
       default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: known.lib.listServerNames,
+      choices: known.lib.listServerNamesWithDescription,
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {

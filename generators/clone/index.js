@@ -88,7 +88,7 @@ class Generator extends Base {
       type: 'checkbox',
       name: 'plugins',
       message: 'Modules to clone',
-      choices: known.plugin.listNames,
+      choices: known.plugin.listNamesWithDescription,
       default: this.args,
       when: !this.args.length
     }, {

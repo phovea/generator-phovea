@@ -53,7 +53,7 @@ class Generator extends Base {
       type: 'list',
       name: 'type',
       message: 'Plugin Type',
-      choices: known.plugin.types,
+      choices: known.plugin.typesWithDescription,
       default: 'lib'
     }).then((props) => {
       this.type = props.type;

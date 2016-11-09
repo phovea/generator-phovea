@@ -6,42 +6,69 @@ const registry = require('../knownPhoveaPlugins.json');
 function generate(items, typesWeb, typesServer, typesHybrid) {
   const r = {};
 
-  r.typesHybrid = typesHybrid;
-  r.isTypeHybrid = (d) => r.typesHybrid.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
-  r.typesWeb = typesWeb.concat(typesHybrid);
-  r.isTypeWeb = (d) => r.typesWeb.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
-  r.typesServer = typesServer.concat(typesHybrid);
-  r.isTypeServer = (d) => r.typesServer.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
+  r.typesHybrid = Object.keys(typesHybrid);
+  r.typesWeb = Object.keys(typesWeb).concat(r.typesHybrid);
+  r.typesServer = Object.keys(typesServer).concat(r.typesHybrid);
   r.types = [].concat(
-    typesWeb,
+    r.typesWeb,
     new Separator(),
-    typesServer);
-  if (typesHybrid.length > 0) {
-    r.types = r.types.concat(new Separator(), typesHybrid);
+    r.typesServer);
+
+  r.typesWithDescription = [].concat(
+    Object.keys(typesWeb).map((t) => ({ value: t, name: `${t}: ${typesWeb[t]}`, short: t})),
+    new Separator(),
+    Object.keys(typesServer).map((t) => ({ value: t, name: `${t}: ${typesServer[t]}`, short: t}))
+  );
+  if (r.typesHybrid.length > 0) {
+    r.types = r.types.concat(new Separator(), r.typesHybrid, new Separator());
+    r.typesWithDescription = r.typesWithDescription.concat(
+      new Separator(),
+      r.typesHybrid.map((t) => ({ value: t, name: `${t}: ${typesHybrid[t]}`, short: t})),
+      new Separator());
   }
+
+  r.isTypeHybrid = (d) => r.typesHybrid.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
+  r.isTypeWeb = (d) => r.typesWeb.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
+  r.isTypeServer = (d) => r.typesServer.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
+
 
   r.list = items;
   r.listWeb = r.list.filter(r.isTypeWeb);
   r.listServer = r.list.filter(r.isTypeServer);
 
-  r.map = {};
+  r.map = new Map();
   r.list.forEach((p) => {
-    r.map[p.name] = p;
+    r.map.set(p.name, p);
   });
 
-  r.exists = (name) => name in r.map;
-  r.byName = (name) => r.map[name];
+  r.exists = (name) => r.map.has(name);
+  r.byName = (name) => r.map.get(name);
 
   r.listWebNames = r.listWeb.map((d) => d.name);
+  const toDescription = (d) => ({value: d.name, name: `${d.name}: ${d.description}`, short: d.name});
+  r.listWebNamesWithDescription = r.listWeb.map(toDescription);
   r.listServerNames = r.listServer.map((d) => d.name);
+  r.listServerNamesWithDescription = r.listServer.map(toDescription);
   r.listNames = [].concat(
     r.listWebNames,
     new Separator(),
     r.listServerNames);
+  r.listNamesWithDescription = [].concat(
+    r.listWebNamesWithDescription,
+    new Separator(),
+    r.listServerNamesWithDescription);
 
   return r;
 }
 
-module.exports.plugin = generate(registry.plugins, ['app', 'bundle', 'lib'], ['server', 'service'], ['lib-server', 'app-server', 'lib-service', 'app-service']);
-module.exports.lib = generate(registry.libraries, ['web'], ['python'], []);
+module.exports.plugin = generate(registry.plugins, {
+  app: 'web application',
+  bundle: 'library bundle',
+  lib: 'web library'
+}, {slib: 'server library', service: 'server application service'}, {
+  'lib-slib': 'web library with server counterpart',
+  'app-slib': 'web application with server counterpart',
+  'lib-service': 'web library with server application service'
+});
+module.exports.lib = generate(registry.libraries, {web: 'Web Library'}, {python: 'Python Libary'}, {});
 

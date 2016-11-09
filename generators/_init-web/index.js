@@ -79,14 +79,14 @@ class PluginGenerator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: known.plugin.listWebNames,
+      choices: known.plugin.listWebNamesWithDescription,
       default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: known.lib.listWebNames,
+      choices: known.lib.listWebNamesWithDescription,
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {

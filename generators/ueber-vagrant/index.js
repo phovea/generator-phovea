@@ -14,10 +14,19 @@ function generateScripts(baseDir) {
 
   plugins.forEach((p) => {
     const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
+
     // vagrantify commands
+    const cmds = Object.keys(pkg.scripts);
+
+    var toPatch;
+    if (cmds.includes('test:python')) { //hybrid
+      toPatch = /^(check|(test|dist|start|watch):python)$/
+    } else { //regular server
+      toPatch = /^(check|test|dist|start|watch)$/
+    }
 
     // no pre post test tasks
-    Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
+    cmds.filter((s) => toPatch.test(s)).forEach((s) => {
       // generate scoped tasks
       let cmd = `.${path.sep}withinEnv "cd ${baseDir}/${p} && npm run ${s}"`;
       if (/^(start|watch)/g.test(s)) {
