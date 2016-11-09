@@ -1,7 +1,7 @@
 'use strict';
 const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
-const {writeTemplates, patchPackageJSON} = require('../../utils');
+const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 
 const known = require('../../utils/known');
 
@@ -104,6 +104,11 @@ class PluginGenerator extends Base {
     this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown').requirements).join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.concat(this.config.get('unknown').debianPackages).join('\n'));
     this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.concat(this.config.get('unknown').redhatPackages).join('\n'));
+
+    // don't overwrite existing registry file
+    if (!this.fs.exists(this.destinationPath(config.name + '/__init__.py'))) {
+      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(config.name + '/__init__.py'), stringifyAble(config));
+    }
   }
 
   install() {
