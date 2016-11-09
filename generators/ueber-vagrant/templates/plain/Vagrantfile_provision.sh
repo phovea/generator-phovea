@@ -37,8 +37,9 @@ echo "--- Start python provisioning ---"
 #install python and some standard packages
 sudo apt-get install -y python-pip python-dev zlib1g-dev cython
 
-sudo -u vagrant pip install --user -r ${basedir}requirements.txt
-sudo -u vagrant pip install --user -r ${basedir}requirements_dev.txt
+# install as vagrant user locally
+sudo -i -u vagrant pip install --user -r ${basedir}requirements.txt
+sudo -i -u vagrant pip install --user -r ${basedir}requirements_dev.txt
 
 #########################
 #bash
