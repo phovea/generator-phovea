@@ -11,6 +11,10 @@ const webpack = require('webpack');
 const exists = require('fs').existsSync;
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
+const now = new Date();
+const buildId = `${now.getUTCFullYear()}${now.getUTCMonth()}${now.getUTCDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
+pkg.version = pkg.version.replace('SNAPSHOT', buildId);
+
 const year = (new Date()).getFullYear();
 const banner = '/*! ' + (pkg.title || pkg.name) + ' - v' + pkg.version + ' - ' + year + '\n' +
   (pkg.homepage ? '* ' + pkg.homepage + '\n' : '') +
@@ -133,7 +137,11 @@ function generateWebpack(options) {
       //define magic constants that are replaced
       new webpack.DefinePlugin({
         __VERSION__: JSON.stringify(pkg.version),
-        __LICENSE__: JSON.stringify(pkg.license)
+        __LICENSE__: JSON.stringify(pkg.license),
+        __BUILD_ID__: buildId,
+        __DEBUG__: options.isDev || options.isTest,
+        __TEST__: options.isTest,
+        __PRODUCTION__: options.isProduction
       }),
       new webpack.optimize.MinChunkSizePlugin({
         minChunkSize: 10000 //at least 10.000 characters
@@ -198,7 +206,7 @@ function generateWebpack(options) {
       base.module.loaders.push({test: new RegExp('.*[\\\\/]' + m + '[\\\\/]phovea_registry.js'), loader: 'null'}); //use null loader
     });
   }
-  if (!options.bundle || options.extractCss) {
+  if (!options.bundle || options.isApp) {
     //extract the included css file to own file
     var p = new ExtractTextPlugin('style' + (options.min && !options.nosuffix ? '.min' : '') + '.css');
     base.plugins.push(p);
@@ -206,6 +214,10 @@ function generateWebpack(options) {
       test: /\.scss$/,
       loader: p.extract(['css', 'sass'])
     };
+  }
+  if (options.isApp) {
+    // create manifest
+    base.plugins.push(new webpack.optimize.AppCachePlugin());
   }
   if (options.commons) {
     //build a commons plugin
@@ -248,7 +260,10 @@ function generateWebpackConfig(env) {
     libs: libraryAliases,
     externals: libraryExternals,
     modules: modules,
-    ignore: ignores
+    ignore: ignores,
+    isProduction: isProduction,
+    isDev: isDev,
+    isTest: isTest
   };
 
   if (isTest) {
@@ -258,7 +273,7 @@ function generateWebpackConfig(env) {
   }
 
   if (type.startsWith('app')) {
-    base.extractCss = true;
+    base.isApp = true;
     base.bundle = true; //bundle everything together
     base.name = '[name]'; //multiple entries case
     base.commons = true; //extract commons module

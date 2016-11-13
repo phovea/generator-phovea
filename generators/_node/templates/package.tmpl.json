@@ -2,7 +2,7 @@
   "name": "<%-name%>",
   "description": "<%-description%>",
   "homepage": "<%-homepage%>",
-  "version": "0.0.1",
+  "version": "0.0.1-SNAPSHOT",
   "author": {
     "name": "<%-author%>",
     "email": "<%-authorEmail%>",
