@@ -2,8 +2,7 @@
 const Base = require('yeoman-generator').Base;
 
 const known = require('../../utils/known');
-const plugins = known.plugins;
-const libs = known.libs;
+const plugins = known.plugin;
 const stringifyAble = require('../../utils').stringifyAble;
 
 function toJSONFromText(text) {
@@ -12,7 +11,10 @@ function toJSONFromText(text) {
     var [key, value] = line.split('=');
     value = value.trim();
     try {
-      value = parseFloat(value);
+      let n = parseFloat(value);
+      value = n;
+    } finally {
+      // ignore parsing error
     }
     var obj = r;
     const keys = key.trim().split('.');
@@ -33,7 +35,7 @@ class Generator extends Base {
 
   prompting() {
     const type = this.config.get('type');
-    const isHybridType = known.plugins.isTypeHybrid({type});
+    const isHybridType = plugins.isTypeHybrid({type});
 
     return this.prompt([{
       type: 'list',
@@ -60,7 +62,7 @@ class Generator extends Base {
       message: 'Extras (key=value)'
     }]).then((props) => {
       this.basetype = 'web';
-      if ((isHybridType && props.basetype === 'server') || (!isHybridType && known.plugins.isTypeServer({type}))) {
+      if ((isHybridType && props.basetype === 'server') || (!isHybridType && plugins.isTypeServer({type}))) {
         this.basetype = 'server';
       }
       this.new_ = {
@@ -95,14 +97,23 @@ class Generator extends Base {
     const text = `\n\n  registry.push('${d.type}', '${d.id}', function() { return System.import('./src/${d.module}'); }, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
     const new_ = old.replace('  // generator-phovea:end', text);
     this.fs.write(file, new_);
+
+    if (!this.fs.exists(this.destinationPath(`src/${d.module}.ts`))) {
+      this.fs.copy(this.templatePath('template.tmpl.ts'), this.destinationPath(`src/${d.module}.ts`))
+    }
   }
 
   _injectServerExtension(d) {
-    const file = this.destinationPath(`${this.config.get('name')}/__init__.py`);
+    const name = this.config.get('name');
+    const file = this.destinationPath(`${name}/__init__.py`);
     const old = this.fs.read(file);
-    const text = `\n\n  registry.append('${d.type}', '${d.id}', '${this.config.get('name')}.${d.module}', ${d.stringifyPython(d.extras, '  ')})\n  # generator-phovea:end`;
+    const text = `\n\n  registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, '  ')})\n  # generator-phovea:end`;
     const new_ = old.replace('  # generator-phovea:end', text);
     this.fs.write(file, new_);
+
+    if (!this.fs.exists(this.destinationPath(`${name}/${d.module}.py`))) {
+      this.fs.copy(this.templatePath(`${d.type === 'namespace' ? 'namespace' : 'template'}.tmpl.py`), this.destinationPath(`${name}/${d.module}.py`))
+    }
   }
 }
 
