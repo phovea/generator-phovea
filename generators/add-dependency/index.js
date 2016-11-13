@@ -2,8 +2,8 @@
 const Base = require('yeoman-generator').Base;
 
 const known = require('../../utils/known');
-const plugins = known.plugins;
-const libs = known.libs;
+const plugins = known.plugin;
+const libs = known.lib;
 
 class Generator extends Base {
 
