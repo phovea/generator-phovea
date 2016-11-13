@@ -22,7 +22,7 @@ class Generator extends Base {
       libraryChoices = libs.listServerNamesWithDescription;
     }
 
-    //remove self
+    // remove self
     const name = this.config.get('name');
     moduleChoices = moduleChoices.filter((d) => d.value !== name);
 
@@ -32,7 +32,7 @@ class Generator extends Base {
       message: 'Additional Modules',
       choices: moduleChoices,
       default: this.config.get('modules')
-    },{
+    }, {
       type: 'list',
       name: 'libraries',
       message: 'Additional Libraries',
@@ -45,7 +45,6 @@ class Generator extends Base {
   }
 
   default() {
-    const type = this.config.get('type');
     this.composeWith(`phovea:update`, {}, {
       local: require.resolve(`../update`)
     });

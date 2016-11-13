@@ -99,7 +99,7 @@ class Generator extends Base {
     this.fs.write(file, new_);
 
     if (!this.fs.exists(this.destinationPath(`src/${d.module}.ts`))) {
-      this.fs.copy(this.templatePath('template.tmpl.ts'), this.destinationPath(`src/${d.module}.ts`))
+      this.fs.copy(this.templatePath('template.tmpl.ts'), this.destinationPath(`src/${d.module}.ts`));
     }
   }
 
@@ -112,7 +112,7 @@ class Generator extends Base {
     this.fs.write(file, new_);
 
     if (!this.fs.exists(this.destinationPath(`${name}/${d.module}.py`))) {
-      this.fs.copy(this.templatePath(`${d.type === 'namespace' ? 'namespace' : 'template'}.tmpl.py`), this.destinationPath(`${name}/${d.module}.py`))
+      this.fs.copy(this.templatePath(`${d.type === 'namespace' ? 'namespace' : 'template'}.tmpl.py`), this.destinationPath(`${name}/${d.module}.py`));
     }
   }
 }
