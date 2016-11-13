@@ -10,16 +10,16 @@ function toJSONFromText(text) {
   text.split('\n').forEach((line) => {
     var [key, value] = line.split('=');
     value = value.trim();
-    try {
-      let n = parseFloat(value);
-      value = n;
-    } finally {
-      // ignore parsing error
+    if (!isNaN(parseFloat(value))) {
+      value = parseFloat(value);
     }
     var obj = r;
     const keys = key.trim().split('.');
     keys.slice(0, keys.length - 1).forEach((k) => {
-      obj = obj[k] || {};
+      if (!(k in obj)) {
+        obj[k] = {};
+      }
+      obj = obj[k];
     });
     obj[keys[keys.length - 1]] = value;
   });
