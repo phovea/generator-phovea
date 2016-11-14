@@ -124,7 +124,25 @@ function generate() {
   }
 }
 
-module.exports = generate;
+
+const IS_WINDOWS = process.platform === 'win32';
+
+function tmpdir() {
+  if (IS_WINDOWS) {
+    return process.env.TEMP || process.env.TMP ||
+           (process.env.SystemRoot || process.env.windir) + '\\temp';
+  } else {
+    return process.env.TMPDIR || process.env.TMP || process.env.TEMP || '/tmp';
+  }
+}
+
+module.exports.generate = generate;
+module.exports.tmpFile = function() {
+  const s = generate();
+  const file = `${tmpdir()}/buildInfo${Math.random().toString(36).slice(-8)}.json`;
+  fs.writeFileSync(file, JSON.stringify(s, null, ' '));
+  return file;
+}
 
 
 if (require.main === module) {
