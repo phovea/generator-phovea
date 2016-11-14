@@ -219,7 +219,7 @@ function generateWebpack(options) {
   }
   if (options.isApp) {
     // create manifest
-    base.plugins.push(new webpack.optimize.AppCachePlugin());
+    // base.plugins.push(new webpack.optimize.AppCachePlugin());
   }
   if (options.commons) {
     //build a commons plugin
