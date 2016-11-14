@@ -64,10 +64,10 @@ function writeTemplates(config, withSamples) {
   };
 
   const copy = (prefix) => {
-    this.fs.copy(this.templatePath(prefix + 'plain/**/*.*'), this.destinationPath(), includeDot);
+    this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
     copyTpl(this.templatePath(prefix + 'processed'), '');
 
-    this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*.*'), this.destinationPath(config.name + '/'), includeDot);
+    this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
     copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name + '/');
   };
   copy('');

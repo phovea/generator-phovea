@@ -18,10 +18,10 @@ declare module "*.html" {
 //allow json dependencies
 declare module "*.json";
 //allow file dependencies
-declare module "file!*";
+declare module "file-loader*";
 //allow file dependencies
-declare module "raw!*";
+declare module "raw-loader*";
 //allow url dependencies
-declare module "url!*";
+declare module "url-loader*";
 //allow html dependencies
-declare module "import!*";
+declare module "imports-loader*";

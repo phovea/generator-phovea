@@ -46,7 +46,7 @@ function toLibraryExternals(moduleNames, libraryNames) {
     r.push(lib.name);
     r.push(...(lib.externals || []));
   });
-  return r;
+  return Array.from(new Set(r));
 }
 
 class PluginGenerator extends Base {
