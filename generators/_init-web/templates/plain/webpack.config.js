@@ -10,6 +10,7 @@ const pkg = require('./package.json');
 const webpack = require('webpack');
 const exists = require('fs').existsSync;
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const buildInfo = require('./buildInfo.js');
 
 const now = new Date();
 const buildId = `${now.getUTCFullYear()}${now.getUTCMonth()}${now.getUTCDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
@@ -89,6 +90,7 @@ function testPhoveaModules(modules) {
 // use ueber registry file if available
 const isUeberContext = exists(resolve(__dirname, '..', 'phovea_registry.js'));
 const registryFile = isUeberContext ? '../phovea_registry.js' : './phovea_registry.js';
+const actBuildInfo = buildInfo();
 
 /**
  * inject the registry to be included
@@ -141,7 +143,8 @@ function generateWebpack(options) {
         __BUILD_ID__: buildId,
         __DEBUG__: options.isDev || options.isTest,
         __TEST__: options.isTest,
-        __PRODUCTION__: options.isProduction
+        __PRODUCTION__: options.isProduction,
+        __BUILD_INFO__: JSON.stringify(actBuildInfo)
       }),
       new webpack.optimize.MinChunkSizePlugin({
         minChunkSize: 10000 //at least 10.000 characters
