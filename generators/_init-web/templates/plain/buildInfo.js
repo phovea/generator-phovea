@@ -116,6 +116,7 @@ function resolveSingle() {
 }
 
 function generate() {
+  console.log('building buildInfo');
   const isUeberContext = fs.existsSync('../phovea_registry.js');
   if (isUeberContext) {
     return resolveUeber();
@@ -139,7 +140,7 @@ function tmpdir() {
 module.exports.generate = generate;
 module.exports.tmpFile = function() {
   const s = generate();
-  const file = `${tmpdir()}/buildInfo${Math.random().toString(36).slice(-8)}.json`;
+  const file = `${tmpdir()}/buildInfo${Math.random().toString(36).slice(-8)}.txt`;
   fs.writeFileSync(file, JSON.stringify(s, null, ' '));
   return file;
 }

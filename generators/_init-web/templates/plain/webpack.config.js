@@ -90,7 +90,7 @@ function testPhoveaModules(modules) {
 // use ueber registry file if available
 const isUeberContext = fs.existsSync(resolve(__dirname, '..', 'phovea_registry.js'));
 const registryFile = isUeberContext ? '../phovea_registry.js' : './phovea_registry.js';
-const actBuildInfoFile = `file-loader?name=./buildInfo.json!${buildInfo.tmpFile()}`;
+const actBuildInfoFile = `file-loader?name=buildInfo.json!${buildInfo.tmpFile()}`;
 
 /**
  * inject the registry to be included
