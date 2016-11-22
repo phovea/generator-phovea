@@ -14,7 +14,9 @@ class PluginGenerator extends BasePluginGenerator {
 
   writing() {
     super.writing();
-    this.fs.extendJSON(this.destinationPath(this.config.get('name') + '/config.json'), {});
+    if (!this.fs.exists(this.destinationPath(this.config.get('name') + '/config.json'))) {
+      this.fs.writeJSON(this.destinationPath(this.config.get('name') + '/config.json'), {});
+    }
   }
 }
 
