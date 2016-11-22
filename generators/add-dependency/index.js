@@ -27,13 +27,13 @@ class Generator extends Base {
     moduleChoices = moduleChoices.filter((d) => d.value !== name);
 
     return this.prompt([{
-      type: 'list',
+      type: 'checkbox',
       name: 'modules',
       message: 'Additional Modules',
       choices: moduleChoices,
       default: this.config.get('modules')
     }, {
-      type: 'list',
+      type: 'checkbox',
       name: 'libraries',
       message: 'Additional Libraries',
       choices: libraryChoices,
