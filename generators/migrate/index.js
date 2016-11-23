@@ -134,7 +134,7 @@ class Generator extends Base {
       // merge valid web libraries with valid looked up server libraries
       libraries: Object.keys(libs)
         .filter(validLib).concat(
-          Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) >= 0).map((d) => requirement2lib[d])),
+          Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) >= 0).map((d) => requirement2lib[d].name)),
 
       unknown: {
         // filter unknown and convert to the common format
