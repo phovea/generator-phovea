@@ -373,6 +373,17 @@
       }
     },
     {
+      "name": "colorbrewer",
+      "type": "web",
+      "description": "Colorbrewer scales (https://github.com/sgratzl/colorbrewer)",
+      "aliases": {},
+      "externals": ["colorbrewer"],
+      "dependencies": {
+        "@types/colorbrewer": "^1.0.29",
+        "colorbrewer": "github:sgratzl/colorbrewer"
+      }
+    },
+    {
       "name": "redis",
       "type": "python",
       "description": "Redis Server",
