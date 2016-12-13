@@ -5,7 +5,7 @@ services:
     ports:
     - "9000:9000"
     volumes: #need the full path on my window machine . doesn't work
-    - D:\w\docker:/phovea
+    - <%-destinationPath%>:/phovea
     links:
     - mongo
     - redis

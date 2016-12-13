@@ -47,7 +47,7 @@ function generateScripts() {
 class Generator extends Base {
 
   initializing() {
-    this.config.defaults({
+    this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {
       containerName: 'phovea-' + path.basename(this.destinationPath())
     });
   }
@@ -56,14 +56,17 @@ class Generator extends Base {
     return this.prompt({
       name: 'containerName',
       message: 'Container Name',
-      default: this.config.get('containerName')
+      default: this.props.containerName || 'phovea-' + path.basename(this.destinationPath())
     }).then((args) => {
-      this.config.set('containerName', args.containerName);
+      this.props.containerName = args.containerName;
     });
   }
 
   writing() {
-    const config = this.config.getAll();
+    const config = this.props;
+    config.destinationPath = this.destinationPath();
+    this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), this.props);
+
     const includeDot = {
       globOptions: {
         dot: true
