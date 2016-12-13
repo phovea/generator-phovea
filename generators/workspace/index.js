@@ -18,7 +18,7 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.props = this.fs.readJSON(this.destinationPath('.yo-rc-ueber.json'), {modules: []});
+    this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: []});
   }
 
   prompting() {
@@ -45,10 +45,10 @@ class Generator extends Base {
 
   default() {
     if (this.venv !== 'none') {
-      this.composeWith(`phovea:ueber-${this.venv}`, {
+      this.composeWith(`phovea:workspace-${this.venv}`, {
         options: this.options
       }, {
-        local: require.resolve(`../ueber-${this.venv}`)
+        local: require.resolve(`../workspace-${this.venv}`)
       });
     }
   }
@@ -158,7 +158,7 @@ class Generator extends Base {
   }
 
   writing() {
-    this.fs.extendJSON(this.destinationPath('.yo-rc-ueber.json'), {modules: this.props.modules});
+    this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules});
 
     const config = {};
     const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
