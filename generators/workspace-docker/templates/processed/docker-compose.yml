@@ -1,0 +1,15 @@
+version: '2'
+services:
+  web:
+    build: .
+    ports:
+    - "9000:9000"
+    volumes: #need the full path on my window machine . doesn't work
+    - D:\w\docker:/phovea
+    links:
+    - mongo
+    - redis
+  mongo:
+    image: mongo
+  redis:
+    image: redis
