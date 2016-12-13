@@ -7,9 +7,9 @@ const chalk = require('chalk');
 class Generator extends Base {
 
   initializing() {
-    this.props = {
+    this.config.defaults({
       containerName: path.dirname(this.destinationPath())
-    };
+    });
   }
 
   prompting() {
