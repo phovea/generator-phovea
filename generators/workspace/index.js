@@ -28,7 +28,7 @@ class Generator extends Base {
       name: 'virtualEnvironment',
       message: 'Virtual Environment',
       store: true,
-      choices: ['none', 'vagrant', 'conda', 'virtualenv'],
+      choices: ['none', 'vagrant', 'docker', 'conda', 'virtualenv'],
       default: 'vagrant',
       when: !this.options.venv
     }, {
