@@ -169,6 +169,10 @@ class Generator extends Base {
     writeTemplates.call(this, config, false);
 
     this.fs.copy(this.templatePath('package.tmpl.json'), this.destinationPath('package.json'));
+
+    if (!this.fs.exists(this.destinationPath('config.json'))) {
+      this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
+    }
     this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});
 
     const sdeps = this._generateServerDependencies(this.props.modules);
