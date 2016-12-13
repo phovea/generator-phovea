@@ -40,7 +40,7 @@
     "lodash": "4.6.1",
     "parse-author": "1.0.0",
     "yeoman-environment": "1.6.5",
-    "yeoman-generator": "0.24.0"
+    "yeoman-generator": "0.24.1"
   },
   "devDependencies": {
     "yeoman-test": "1.0.0",
