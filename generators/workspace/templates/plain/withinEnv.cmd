@@ -1,5 +1,5 @@
 @echo off
 
 shift
-echo docker-compose run --service-ports web %*
-docker-compose run --service-ports web %*
+echo docker-compose run --service-ports api %*
+docker-compose run --service-ports api %*
