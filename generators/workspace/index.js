@@ -6,53 +6,10 @@ const extend = require('lodash').extend;
 
 const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
-
-
-function generateScripts() {
-  const files = glob('*/requirements.txt', {
-    cwd: this.destinationPath()
-  });
-  const plugins = files.map(path.dirname);
-
-  var scripts = {};
-
-  plugins.forEach((p) => {
-    const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
-
-    // vagrantify commands
-    const cmds = Object.keys(pkg.scripts);
-
-    var toPatch;
-    if (cmds.includes('test:python')) { // hybrid
-      toPatch = /^(check|(test|dist|start|watch):python)$/;
-    } else { // regular server
-      toPatch = /^(check|test|dist|start|watch)$/;
-    }
-
-    // no pre post test tasks
-    cmds.filter((s) => toPatch.test(s)).forEach((s) => {
-      // generate scoped tasks
-      let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
-      if (/^(start|watch)/g.test(s)) {
-        // special case for start to have the right working directory
-        let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
-        cmd = `.${path.sep}withinEnv "${fixedscript}"`;
-      }
-      scripts[`${s}:${p}`] = cmd;
-    });
-  });
-
-  return {
-    scripts: scripts
-  };
-}
+const patchPackageJSON = require('../../utils').patchPackageJSON;
 
 
 class Generator extends Base {
-
-  constructor(args, options) {
-    super(args, options);
-  }
 
   initializing() {
     this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: []});
@@ -71,7 +28,7 @@ class Generator extends Base {
     });
   }
 
-  _generatePackage(additionalPlugins) {
+  _generateWebDependencies(additionalPlugins) {
     const files = glob('*/phovea.js', { // web plugin
       cwd: this.destinationPath()
     });
@@ -124,8 +81,9 @@ class Generator extends Base {
 
     const requirements = new Set();
     const devRequirements = new Set();
-    const debianPackages = new Set();
-    const redhatPackages = new Set();
+    const dockerPackages = new Set();
+    let scripts = {};
+
 
     plugins.forEach((p) => {
       // generate dependencies
@@ -137,8 +95,31 @@ class Generator extends Base {
       };
       addAll('requirements.txt', requirements);
       addAll('requirements_dev.txt', devRequirements);
-      addAll('debian_packages.txt', debianPackages);
-      addAll('redhat_packages.txt', redhatPackages);
+      addAll('docker_packages.txt', dockerPackages);
+
+      const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
+
+      // vagrantify commands
+      const cmds = Object.keys(pkg.scripts);
+
+      let toPatch;
+      if (cmds.includes('test:python')) { // hybrid
+        toPatch = /^(check|(test|dist|start|watch):python)$/;
+      } else { // regular server
+        toPatch = /^(check|test|dist|start|watch)$/;
+      }
+
+      // no pre post test tasks
+      cmds.filter((s) => toPatch.test(s)).forEach((s) => {
+        // generate scoped tasks
+        let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
+        if (/^(start|watch)/g.test(s)) {
+          // special case for start to have the right working directory
+          let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
+          cmd = `.${path.sep}withinEnv "${fixedscript}"`;
+        }
+        scripts[`${s}:${p}`] = cmd;
+      });
     });
 
     // add additional to install plugins
@@ -147,11 +128,8 @@ class Generator extends Base {
       if (k && k.requirements) {
         Object.keys(k.requirements).forEach((ri) => requirements.add(ri + k.requirements[ri]));
       }
-      if (k && k.debianPackages) {
-        Object.keys(k.debianPackages).forEach((ri) => debianPackages.add(ri + known.debianPackages[ri]));
-      }
-      if (k && k.debianPackages) {
-        Object.keys(k.debianPackages).forEach((ri) => redhatPackages.add(ri + k.debianPackages[ri]));
+      if (k && k.dockerPackages) {
+        Object.keys(k.dockerPackages).forEach((ri) => dockerPackages.add(ri + known.dockerPackages[ri]));
       }
     });
 
@@ -170,33 +148,35 @@ class Generator extends Base {
     return {
       requirements: [...requirements.values()],
       devRequirements: [...devRequirements.values()],
-      debianPackages: [...debianPackages.values()],
-      redhatPackages: [...redhatPackages.values()]
+      dockerPackages: [...dockerPackages.values()],
+      scripts: scripts
     };
   }
 
   writing() {
+    // save config
     this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules});
 
-    const config = {};
-    const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
+    const {plugins, dependencies, devDependencies, scripts} = this._generateWebDependencies(this.props.modules);
+    const sdeps = this._generateServerDependencies(this.props.modules);
 
+    //merge scripts together server wins
+    extend(scripts, sdeps.scripts);
+
+    const config = {};
     config.modules = this.props.modules.concat(plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
-
-    this.fs.copy(this.templatePath('package.tmpl.json'), this.destinationPath('package.json'));
+    patchPackageJSON.call(this, [], {devDependencies, dependencies, scripts});
 
     if (!this.fs.exists(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
     }
-    extend(scripts, generateScripts.call(this));
-    this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});
 
-    const sdeps = this._generateServerDependencies(this.props.modules);
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
+    this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
   }
 }
 
