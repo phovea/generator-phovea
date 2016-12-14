@@ -7,14 +7,51 @@ const extend = require('lodash').extend;
 const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 
+
+function generateScripts() {
+  const files = glob('*/requirements.txt', {
+    cwd: this.destinationPath()
+  });
+  const plugins = files.map(path.dirname);
+
+  var scripts = {};
+
+  plugins.forEach((p) => {
+    const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
+
+    // vagrantify commands
+    const cmds = Object.keys(pkg.scripts);
+
+    var toPatch;
+    if (cmds.includes('test:python')) { // hybrid
+      toPatch = /^(check|(test|dist|start|watch):python)$/;
+    } else { // regular server
+      toPatch = /^(check|test|dist|start|watch)$/;
+    }
+
+    // no pre post test tasks
+    cmds.filter((s) => toPatch.test(s)).forEach((s) => {
+      // generate scoped tasks
+      let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
+      if (/^(start|watch)/g.test(s)) {
+        // special case for start to have the right working directory
+        let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
+        cmd = `.${path.sep}withinEnv "${fixedscript}"`;
+      }
+      scripts[`${s}:${p}`] = cmd;
+    });
+  });
+
+  return {
+    scripts: scripts
+  };
+}
+
+
 class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
-
-    this.option('venv', {
-      alias: 'v'
-    });
   }
 
   initializing() {
@@ -24,14 +61,6 @@ class Generator extends Base {
   prompting() {
     const isInstalled = glob('*/package.json', {cwd: this.destinationPath()}).map(path.dirname);
     return this.prompt([{
-      type: 'list',
-      name: 'virtualEnvironment',
-      message: 'Virtual Environment',
-      store: true,
-      choices: ['none', 'vagrant', 'docker', 'conda', 'virtualenv'],
-      default: 'vagrant',
-      when: !this.options.venv
-    }, {
       type: 'checkbox',
       name: 'modules',
       message: 'Additional Plugins',
@@ -39,18 +68,7 @@ class Generator extends Base {
       default: this.props.modules
     }]).then((props) => {
       this.props.modules = props.modules;
-      this.venv = props.virtualEnvironment || this.options.venv;
     });
-  }
-
-  default() {
-    if (this.venv !== 'none') {
-      this.composeWith(`phovea:workspace-${this.venv}`, {
-        options: this.options
-      }, {
-        local: require.resolve(`../workspace-${this.venv}`)
-      });
-    }
   }
 
   _generatePackage(additionalPlugins) {
@@ -60,9 +78,9 @@ class Generator extends Base {
     const plugins = files.map(path.dirname);
 
     // generate dependencies
-    var dependencies = {};
-    var devDependencies = {};
-    var scripts = {};
+    let dependencies = {};
+    let devDependencies = {};
+    let scripts = {};
     plugins.forEach((p) => {
       const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
       extend(dependencies, pkg.dependencies);
@@ -104,10 +122,10 @@ class Generator extends Base {
     });
     const plugins = files.map(path.dirname);
 
-    var requirements = new Set();
-    var devRequirements = new Set();
-    var debianPackages = new Set();
-    var redhatPackages = new Set();
+    const requirements = new Set();
+    const devRequirements = new Set();
+    const debianPackages = new Set();
+    const redhatPackages = new Set();
 
     plugins.forEach((p) => {
       // generate dependencies
@@ -173,13 +191,12 @@ class Generator extends Base {
     if (!this.fs.exists(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
     }
+    extend(scripts, generateScripts.call(this));
     this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});
 
     const sdeps = this._generateServerDependencies(this.props.modules);
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), sdeps.debianPackages.join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), sdeps.redhatPackages.join('\n'));
   }
 }
 
