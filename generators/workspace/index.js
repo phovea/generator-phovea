@@ -9,7 +9,6 @@ const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 
-
 class Generator extends Base {
 
   initializing() {
@@ -86,11 +85,10 @@ class Generator extends Base {
     let dockerCompose = {};
     let scripts = {};
 
-
     plugins.forEach((p) => {
       // generate dependencies
       const addAll = (name, set) => {
-        const r = this.fs.read(this.destinationPath(`${p}/${name}`), { defaults: '' });
+        const r = this.fs.read(this.destinationPath(`${p}/${name}`), {defaults: ''});
         r.split('\n').filter((d) => d.trim().length > 0).forEach((ri) => {
           set.add(ri.trim());
         });
@@ -130,7 +128,6 @@ class Generator extends Base {
         const yaml = require('yamljs');
         const text = this.fs.read(this.destinationPath(p + '/docker-compose.partial.yml'));
         const localCompose = yaml.parse(text);
-        console.log(localCompose);
 
         if (this.fs.exists(this.destinationPath(p + '/Dockerfile'))) {
           // inject to use right docker file
@@ -140,7 +137,7 @@ class Generator extends Base {
               service.build = {
                 context: '.',
                 dockerfile: `${p}/Dockerfile`
-              }
+              };
             }
           });
         }
@@ -188,7 +185,7 @@ class Generator extends Base {
     const {plugins, dependencies, devDependencies, scripts} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
 
-    //merge scripts together server wins
+    // merge scripts together server wins
     extend(scripts, sdeps.scripts);
 
     const config = {};

@@ -8,16 +8,11 @@ const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils')
 
 class PluginGenerator extends Base {
 
-  constructor(args, options) {
-    super(args, options);
-  }
-
   initializing() {
     this.config.defaults({
       type: 'product'
     });
   }
-
 
   default() {
     this.composeWith('phovea:_node', {
@@ -26,7 +21,6 @@ class PluginGenerator extends Base {
       local: require.resolve('../_node')
     });
   }
-
 
   writing() {
     const config = this.config.getAll();
