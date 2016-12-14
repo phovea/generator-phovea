@@ -2,6 +2,7 @@
 const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
+const chalk = require('chalk');
 const extend = require('lodash').extend;
 const _ = require('lodash');
 
@@ -201,12 +202,26 @@ class Generator extends Base {
 
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
-    this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
+    if (sdeps.dockerPackages.length > 0) {
+      this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
+    }
 
     {
       const yaml = require('yamljs');
       this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
     }
+  }
+
+  install() {
+    this.log('\n\nuseful commands: ');
+    this.log(chalk.red(' docker-compose up'), '        ... starts the system');
+    this.log(chalk.red(' docker-compose restart'), '   ... restart');
+    this.log(chalk.red(' docker-compose stop'), '      ... stop');
+    this.log(chalk.red(' docker-compose build api'), ' ... rebuild api (in case of new dependencies)');
+
+    this.log('\n\nnext steps: ');
+    this.log(chalk.red(' npm install'));
+    this.log(chalk.red(' docker-compose up'));
   }
 }
 
