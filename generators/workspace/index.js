@@ -82,14 +82,15 @@ class Generator extends Base {
     const requirements = new Set();
     const devRequirements = new Set();
     const dockerPackages = new Set();
+    let dockerCompose = {};
     let scripts = {};
 
 
     plugins.forEach((p) => {
       // generate dependencies
       const addAll = (name, set) => {
-        const r = this.fs.read(this.destinationPath(`${p}/${name}`));
-        r.split('\n').forEach((ri) => {
+        const r = this.fs.read(this.destinationPath(`${p}/${name}`), '');
+        r.split('\n').filter((d) => d.trim().length > 0).forEach((ri) => {
           set.add(ri.trim());
         });
       };
@@ -97,29 +98,48 @@ class Generator extends Base {
       addAll('requirements_dev.txt', devRequirements);
       addAll('docker_packages.txt', dockerPackages);
 
-      const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
+      {
+        const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
 
-      // vagrantify commands
-      const cmds = Object.keys(pkg.scripts);
+        // vagrantify commands
+        const cmds = Object.keys(pkg.scripts);
 
-      let toPatch;
-      if (cmds.includes('test:python')) { // hybrid
-        toPatch = /^(check|(test|dist|start|watch):python)$/;
-      } else { // regular server
-        toPatch = /^(check|test|dist|start|watch)$/;
+        let toPatch;
+        if (cmds.includes('test:python')) { // hybrid
+          toPatch = /^(check|(test|dist|start|watch):python)$/;
+        } else { // regular server
+          toPatch = /^(check|test|dist|start|watch)$/;
+        }
+
+        // no pre post test tasks
+        cmds.filter((s) => toPatch.test(s)).forEach((s) => {
+          // generate scoped tasks
+          let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
+          if (/^(start|watch)/g.test(s)) {
+            // special case for start to have the right working directory
+            let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
+            cmd = `.${path.sep}withinEnv "${fixedscript}"`;
+          }
+          scripts[`${s}:${p}`] = cmd;
+        });
       }
 
-      // no pre post test tasks
-      cmds.filter((s) => toPatch.test(s)).forEach((s) => {
-        // generate scoped tasks
-        let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
-        if (/^(start|watch)/g.test(s)) {
-          // special case for start to have the right working directory
-          let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
-          cmd = `.${path.sep}withinEnv "${fixedscript}"`;
+      // merge docker-compose
+      {
+        const yaml2json = require('yaml2json');
+        const localCompose = yaml2json(this.fs.read(this.destinationPath(p + 'docker-compose.partial.yml'), ''));
+        console.log(localCompose);
+
+        if (this.fs.exists(this.destinationPath(p + 'Dockerfile'))) {
+          // TODO inject the right Dockerfile to be used in the subdirectory
+          // build: '.' ->
+          //build:
+          //  context: '.'
+          //  dockerfile: '${p}/Dockerfile'
         }
-        scripts[`${s}:${p}`] = cmd;
-      });
+
+        extend(dockerCompose, localCompose);
+      }
     });
 
     // add additional to install plugins
@@ -149,7 +169,8 @@ class Generator extends Base {
       requirements: [...requirements.values()],
       devRequirements: [...devRequirements.values()],
       dockerPackages: [...dockerPackages.values()],
-      scripts: scripts
+      scripts: scripts,
+      dockerCompose: dockerCompose
     };
   }
 
@@ -177,6 +198,11 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
+
+    {
+      const json2yaml = require('json2yaml');
+      this.fs.write(this.destinationPath('docker-compose.yml'), json2yaml(sdeps.dockerCompose));
+    }
   }
 }
 
