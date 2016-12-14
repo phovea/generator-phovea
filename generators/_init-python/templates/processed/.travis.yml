@@ -6,7 +6,7 @@ env:
 
 install:
   - sudo apt-get install -y cython
-  - sudo apt-get install -y `cat debian_packages.txt | tr '\r' ' ' | tr '\n' ' '`
+  - xargs -a <(awk '/^\s*[^#]/' docker_packages.txt) -r -- sudo apt-get install -y
   - pip install -r requirements_dev.txt
   - pip install -r requirements.txt
 
