@@ -132,12 +132,17 @@ class Generator extends Base {
         const localCompose = yaml.parse(text);
         console.log(localCompose);
 
-        if (this.fs.exists(this.destinationPath(p + 'Dockerfile'))) {
-          // TODO inject the right Dockerfile to be used in the subdirectory
-          // build: '.' ->
-          //build:
-          //  context: '.'
-          //  dockerfile: '${p}/Dockerfile'
+        if (this.fs.exists(this.destinationPath(p + '/Dockerfile'))) {
+          // inject to use right docker file
+          Object.keys(localCompose.services || {}).forEach((key) => {
+            const service = localCompose.services[key];
+            if (service.build === '.') {
+              service.build = {
+                context: '.',
+                dockerfile: `${p}/Dockerfile`
+              }
+            }
+          });
         }
 
         _.mergeWith(dockerCompose, localCompose, (a, b) => Array.isArray(a) ? _.union(a, b) : undefined);
