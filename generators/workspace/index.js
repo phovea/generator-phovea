@@ -3,6 +3,7 @@ const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
 const extend = require('lodash').extend;
+const _ = require('lodash');
 
 const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
@@ -89,7 +90,7 @@ class Generator extends Base {
     plugins.forEach((p) => {
       // generate dependencies
       const addAll = (name, set) => {
-        const r = this.fs.read(this.destinationPath(`${p}/${name}`), '');
+        const r = this.fs.read(this.destinationPath(`${p}/${name}`), { defaults: '' });
         r.split('\n').filter((d) => d.trim().length > 0).forEach((ri) => {
           set.add(ri.trim());
         });
@@ -125,9 +126,10 @@ class Generator extends Base {
       }
 
       // merge docker-compose
-      {
-        const yaml2json = require('yaml2json');
-        const localCompose = yaml2json(this.fs.read(this.destinationPath(p + 'docker-compose.partial.yml'), ''));
+      if (this.fs.exists(this.destinationPath(p + '/docker-compose.partial.yml'))) {
+        const yaml = require('yamljs');
+        const text = this.fs.read(this.destinationPath(p + '/docker-compose.partial.yml'));
+        const localCompose = yaml.parse(text);
         console.log(localCompose);
 
         if (this.fs.exists(this.destinationPath(p + 'Dockerfile'))) {
@@ -138,7 +140,7 @@ class Generator extends Base {
           //  dockerfile: '${p}/Dockerfile'
         }
 
-        extend(dockerCompose, localCompose);
+        _.mergeWith(dockerCompose, localCompose, (a, b) => Array.isArray(a) ? _.union(a, b) : undefined);
       }
     });
 
@@ -189,7 +191,7 @@ class Generator extends Base {
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
-    patchPackageJSON.call(this, [], {devDependencies, dependencies, scripts});
+    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts});
 
     if (!this.fs.exists(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
@@ -200,8 +202,8 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
 
     {
-      const json2yaml = require('json2yaml');
-      this.fs.write(this.destinationPath('docker-compose.yml'), json2yaml(sdeps.dockerCompose));
+      const yaml = require('yamljs');
+      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
     }
   }
 }
