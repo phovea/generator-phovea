@@ -10,6 +10,29 @@ const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 
+function mergeArrayUnion(a, b) {
+  return Array.isArray(a) ? _.union(a, b) : undefined;
+}
+
+/**
+ * rewrite the compose by inlining _host to all services not containing a dash, such that both api and celery have the same entry
+ * @param compose
+ */
+function rewriteDockerCompose(compose) {
+  const services = compose.services;
+  if (!services) {
+    return compose;
+  }
+  const host = services._host;
+  delete services._host;
+  Object.keys(services).forEach((k) => {
+    if (!k.includes('_')) {
+      _.mergeWith(services[k], host, mergeArrayUnion);
+    }
+  });
+  return compose;
+}
+
 class Generator extends Base {
 
   initializing() {
@@ -143,7 +166,7 @@ class Generator extends Base {
           });
         }
 
-        _.mergeWith(dockerCompose, localCompose, (a, b) => Array.isArray(a) ? _.union(a, b) : undefined);
+        _.mergeWith(dockerCompose, localCompose, mergeArrayUnion);
       }
     });
 
@@ -175,7 +198,7 @@ class Generator extends Base {
       devRequirements: [...devRequirements.values()],
       dockerPackages: [...dockerPackages.values()],
       scripts: scripts,
-      dockerCompose: dockerCompose
+      dockerCompose: rewriteDockerCompose(dockerCompose)
     };
   }
 
