@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "start": "python __main__.py"
+    "start": "python phovea_server --use_reloader --env dev <%-serviceName%>"
   }
 }

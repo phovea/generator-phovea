@@ -1,14 +1,13 @@
-###############################################################################
-# Caleydo - Visualization for Molecular Biology - http://caleydo.org
-# Copyright (c) The Caleydo Team. All rights reserved.
-# Licensed under the new BSD license, available at http://caleydo.org/license
-###############################################################################
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
+__author__ = 'Samuel Gratzl'
 
-def main():
-  import argparse
-  parser = argparse.ArgumentParser(description='<%-name%>')
-  args = parser.parse_args()
+def run(args):
+  """
+  starts the server internally
+  """
+  print('hello world')
 
-  print('Hello World', args)
+def create(parser):
+  # no custom arguments needed
+  return run
