@@ -28,12 +28,12 @@ yo phovea
 
 | Command                    | Description  |
 |----------------------------|--------------|
-| `yo phovea` or `yo phovea:app` | Initialize a new web application, library bundle, web library, server library, or service |
-| `yo phovea:add-dependency` | Adds an additional Phovea plugins or external libraries to the current Phovea plugins |
-| `yo phovea:add-extension`  | Adds an additional web or server extension to the current Phovea plugins |
-| `yo phovea:clone`          | Clones a given Git repository and resolves the dependencies |
-| `yo phovea:resolve`        | Resolves dependencies of plugins or workspace |
-| `yo phovea:update`         | Updates plugin or workspace files  |
+| `yo phovea`                | Initialize a new web application, library bundle, web library, server library, or service |
+| `yo phovea:add-dependency` | Add an additional plugin or external libraries to the current plugin |
+| `yo phovea:add-extension`  | Add an additional web or server extension to the current plugin |
+| `yo phovea:clone`          | Clone a plugin (by plugin name) and resolve the dependencies |
+| `yo phovea:resolve`        | Clone dependent plugins of the current workspace into the workspace |
+| `yo phovea:update`         | Update the current plugin (*does not work for workspaces*) |
 | `yo phovea:workspace`      | Create a workspace of multiple containing plugins |
 
 
