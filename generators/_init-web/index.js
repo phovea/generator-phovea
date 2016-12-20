@@ -6,7 +6,7 @@ const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils')
 const known = require('../../utils/known');
 
 function toLibraryAliasMap(moduleNames, libraryNames) {
-  var r = {};
+  let r = {};
   moduleNames.forEach((m) => {
     const plugin = known.plugin.byName(m);
     if (!plugin) {
@@ -27,7 +27,7 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
 }
 
 function toLibraryExternals(moduleNames, libraryNames) {
-  var r = [];
+  let r = [];
   moduleNames.forEach((m) => {
     const plugin = known.plugin.byName(m);
     if (!plugin) {
@@ -108,7 +108,7 @@ class PluginGenerator extends Base {
   }
 
   _generateDependencies() {
-    var r = {};
+    let r = {};
     // merge dependencies
     this.config.get('modules').filter(known.plugin.isTypeWeb).forEach((m) => {
       _.assign(r, known.plugin.byName(m).dependencies);
