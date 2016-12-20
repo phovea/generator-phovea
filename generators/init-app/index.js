@@ -25,7 +25,7 @@ class PluginGenerator extends BasePluginGenerator {
       name: 'app',
       message: 'Application Title',
       default: this.config.get('name')
-    },{
+    }, {
       type: 'checkbox',
       name: 'clientOnly',
       message: 'Client Only (no communication to the server)',
