@@ -148,23 +148,18 @@ class Generator extends Base {
       }
 
       // merge docker-compose
-      if (this.fs.exists(this.destinationPath(p + '/docker-compose.partial.yml'))) {
+      if (this.fs.exists(this.destinationPath(p + '/deploy/docker-compose.partial.yml'))) {
         const yaml = require('yamljs');
-        const text = this.fs.read(this.destinationPath(p + '/docker-compose.partial.yml'));
+        const text = this.fs.read(this.destinationPath(p + '/deploy/docker-compose.partial.yml'));
         const localCompose = yaml.parse(text);
 
-        if (this.fs.exists(this.destinationPath(p + '/Dockerfile'))) {
-          // inject to use right docker file
-          Object.keys(localCompose.services || {}).forEach((key) => {
-            const service = localCompose.services[key];
-            if (service.build === '.') {
-              service.build = {
-                context: '.',
-                dockerfile: `${p}/Dockerfile`
-              };
-            }
-          });
-        }
+        // inject to use right docker file
+        Object.keys(localCompose.services || {}).forEach((key) => {
+          const service = localCompose.services[key];
+          if (service.build && service.build.context === '.') {
+            service.build.dockerfile = `${p}/${service.build.dockerfile}`;
+          }
+        });
 
         _.mergeWith(dockerCompose, localCompose, mergeArrayUnion);
       }
