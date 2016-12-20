@@ -1,4 +1,4 @@
 'use strict';
-var BaseHybrid = require('../../utils').BaseHybrid;
+const BaseHybrid = require('../../utils').BaseHybrid;
 
 module.exports = BaseHybrid;
