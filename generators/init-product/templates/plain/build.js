@@ -77,13 +77,13 @@ function buildWebApp(p, dir) {
   let act = buildCommon(p, dir);
   if (hasAdditional) {
     act = act
-        .then(() => yo('ueber', dir))
+        .then(() => yo('workspace', dir))
         .then(() => npm(dir, 'install'))
-        .then(() => npm(dir, `run dist:${p.name}`));
+        .then(() => npm(dir, `run docker:${p.name}`));
   } else {
     act = act
         .then(() => npm(dir + '/' + name, 'install'))
-        .then(() => npm(dir + '/' + name, 'run dist'));
+        .then(() => npm(dir + '/' + name, 'run docker'));
   }
   act = act.then(() => moveToBuild(p, dir));
   act.catch((error) => {
