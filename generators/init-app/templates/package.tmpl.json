@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {
+    "docker": "docker build -t <%-name%> -f deploy/Dockerfile ."
+  }
+}
