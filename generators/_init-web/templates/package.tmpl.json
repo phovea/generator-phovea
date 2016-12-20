@@ -30,7 +30,8 @@
     "release:minor": "npm version minor && npm publish && git push --follow-tags",
     "release:patch": "npm version patch && npm publish && git push --follow-tags",
     "predist": "npm run build",
-    "dist": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
+    "dist": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.35",
