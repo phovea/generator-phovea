@@ -24,6 +24,20 @@ yo phovea
  * Yeoman can be too opinionated at times but is easily convinced not to be.
  * Feel free to [learn more about Yeoman](http://yeoman.io/).
 
+## Commands
+
+| Command                    | Description  |
+|----------------------------|--------------|
+| `yo phovea`                | Initialize a new web application, library bundle, web library, server library, or service |
+| `yo phovea:add-dependency` | Add an additional plugin or external libraries to the current plugin |
+| `yo phovea:add-extension`  | Add an additional web or server extension to the current plugin |
+| `yo phovea:clone`          | Clone a plugin (by plugin name) and resolve the dependencies |
+| `yo phovea:resolve`        | Clone dependent plugins of the current workspace into the workspace |
+| `yo phovea:workspace`      | Create a workspace of multiple containing plugins |
+| `yo phovea:update`         | Update the current plugin or workspace |
+| `yo phovea:migrate-wizard` | Migration wizward from Caleydo Web to phovea |
+
+
 ***
 
 <a href="https://caleydo.org"><img src="http://caleydo.org/assets/images/logos/caleydo.svg" align="left" width="200px" hspace="10" vspace="6"></a>

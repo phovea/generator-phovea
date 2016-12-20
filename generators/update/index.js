@@ -5,6 +5,14 @@ const {extractFromReadme} = require('../migrate');
 class Generator extends Base {
 
   initializing() {
+    this.isWorkspace = this.fs.exists(this.destinationPath('.yo-rc-workspace.json'));
+
+    if (!this.isWorkspace) {
+      this._initializingPlugin();
+    }
+  }
+
+  _initializingPlugin() {
     const pkg = this.fs.readJSON(this.destinationPath('package.json'));
 
     const {longDescription, readme} = extractFromReadme(this.fs.read(this.destinationPath('README.md')));
@@ -29,12 +37,18 @@ class Generator extends Base {
   }
 
   default() {
-    const type = this.config.get('type');
-    this.composeWith(`phovea:init-${type}`, {
-      options: this.props
-    }, {
-      local: require.resolve(`../init-${type}`)
-    });
+    if (this.isWorkspace) {
+      this.composeWith(`phovea:workspace`, {}, {
+        local: require.resolve(`../workspace`)
+      });
+    } else {
+      const type = this.config.get('type');
+      this.composeWith(`phovea:init-${type}`, {
+        options: this.props
+      }, {
+        local: require.resolve(`../init-${type}`)
+      });
+    }
   }
 }
 
