@@ -11,7 +11,7 @@ class Generator extends Base {
       defaults: false,
       type: Boolean
     });
-    this.option('ueber', {
+    this.option('workspace', {
       alias: 'u',
       defaults: false,
       type: Boolean
@@ -21,7 +21,7 @@ class Generator extends Base {
   initializing() {
     this.props = {
       cloneSSH: false,
-      runUeber: false
+      runWorkspace: false
     };
   }
 
@@ -35,20 +35,20 @@ class Generator extends Base {
       when: !this.options.ssh
     }, {
       type: 'confirm',
-      name: 'runUeber',
-      message: 'Run Ueber',
-      default: this.options.ueber,
-      when: !this.options.ueber
+      name: 'runWorkspace',
+      message: 'Update Workspace',
+      default: this.options.workspace,
+      when: !this.options.workspace
     }]).then((props) => {
       this.props.cloneSSH = props.cloneSSH || this.options.ssh;
-      this.props.runUeber = props.runUeber || this.options.ueber;
+      this.props.runWorkspace = props.runWorkspace || this.options.workspace;
     });
   }
 
   default() {
-    if (this.props.runUeber) {
-      this.composeWith('phovea:ueber', {}, {
-        local: require.resolve('../ueber')
+    if (this.props.runWorkspace) {
+      this.composeWith('phovea:workspace', {}, {
+        local: require.resolve('../workspace')
       });
     }
   }
