@@ -56,7 +56,9 @@ class Generator extends Base {
       default: this.props.modules,
       when: !this.option('noAdditionals')
     }]).then((props) => {
-      this.props.modules = props.modules;
+      if (props.modules !== undefined) {
+        this.props.modules = props.modules;
+      }
     });
   }
 

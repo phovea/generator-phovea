@@ -16,12 +16,18 @@ function toSSH(repo) {
   return repo;
 }
 
-function resolveNeighbors(plugins, useSSH) {
-  var missing = [];
+function resolveNeighbors(plugins, useSSH, types, shallow) {
+  let missing = [];
   const addMissing = (p) => {
-    const config = require(path.resolve(p, '.yo-rc.json'))['generator-phovea'];
-    const modules = [].concat(config.modules || [], config.smodules || []);
+    this.log(this.destinationPath(p+'/.yo-rc.json'));
+    const config = this.fs.readJSON(this.destinationPath(p+'/.yo-rc.json'), { 'generator-phovea': {}} )['generator-phovea'];
+    let modules = [].concat(config.modules || [], config.smodules || []);
     this.log(`${p} => ${modules.join(' ')}`);
+    if (types && types !== 'both') {
+      // filter to just certain sub types
+      const filter = types === 'web' ? known.plugin.isTypeWeb : known.plugin.isTypeServer;
+      modules = modules.filter((m) => known.plugin.isTypeHybrid(m) || filter(m));
+    }
     missing.push(...modules.filter((m) => plugins.indexOf(m) < 0));
   };
 
@@ -33,8 +39,12 @@ function resolveNeighbors(plugins, useSSH) {
     if (useSSH) {
       repo = toSSH(repo);
     }
-    this.log(`git clone ${repo}`);
-    this.spawnCommandSync('git', ['clone', repo], {
+    let args = ['clone', repo];
+    if (shallow) {
+      args.splice(1, 0, '--depth', '1');
+    }
+    this.log(`git clone ${args.join(' ')}`);
+    this.spawnCommandSync('git', args, {
       cwd: this.destinationPath()
     });
     plugins.push(next);
@@ -42,12 +52,12 @@ function resolveNeighbors(plugins, useSSH) {
   }
 }
 
-function resolveAllNeighbors(useSSH) {
+function resolveAllNeighbors(useSSH, types) {
   const files = glob('*/.yo-rc.json', {
     cwd: this.destinationPath()
   });
   const plugins = files.map(path.dirname);
-  return resolveNeighbors.call(this, plugins, useSSH);
+  return resolveNeighbors.call(this, plugins, useSSH, types);
 }
 
 class Generator extends Base {
@@ -127,7 +137,7 @@ class Generator extends Base {
   }
 
   writing() {
-    var repos = this.props.plugins.map(toRepository);
+    let repos = this.props.plugins.map(toRepository);
     if (this.props.cloneSSH) {
       repos = repos.map(toSSH);
     }
