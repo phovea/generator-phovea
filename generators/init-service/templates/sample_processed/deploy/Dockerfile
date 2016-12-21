@@ -11,4 +11,4 @@ COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/phovea_service.conf
 COPY requirements*.txt docker_packages.txt ./
 RUN (!(test -f docker_packages.txt) || (cat docker_packages.txt | xargs apt-get install -y)) && pip install --no-cache-dir -r requirements.txt
 
-COPY . ./app/
+COPY ./build/source ./app/
