@@ -155,21 +155,21 @@ function buildServerApp(p, dir) {
   const hasAdditional = p.additional.length > 0;
 
   // let act = buildCommon(p, dir);
-  // act = act
-  //   .then(() => yo('workspace', {noAdditionals: true}, dir));
-  //
-  // act = act
-  //   .then(() => console.log(chalk.yellow('create test environment')))
-  //   .then(() => npm(dir + '/' + name, 'run build'))
-  //   .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build`))));
-  //
-  // //copy all together
-  // act = act
-  //   .then(() => spawn('mkdir', ['-p', `${dir}/build`]))
-  //   .then(() => spawn('cp', ['-r', `${dir}/${name}/build/source`, `${dir}/build/`]))
-  //   .then(() => Promise.all(p.additional.map((pi) => spawn('cp', ['-r', `${dir}/${pi.name}/build/source/*`, `${dir}/build/source/`]))));
+  act = act
+    .then(() => yo('workspace', {noAdditionals: true}, dir));
 
-  let act = Promise.resolve([]);
+  act = act
+    .then(() => console.log(chalk.yellow('create test environment')))
+    .then(() => npm(dir + '/' + name, 'run build'))
+    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build`))));
+
+  //copy all together
+  act = act
+    .then(() => spawn('mkdir', ['-p', `${dir}/build`]))
+    .then(() => spawn('cp', ['-r', `${dir}/${name}/build/source`, `${dir}/build/`]))
+    .then(() => Promise.all(p.additional.map((pi) => spawn('cp', ['-r', `${dir}/${pi.name}/build/source/*`, `${dir}/build/source/`]))));
+
+  //let act = Promise.resolve([]);
 
   //copy main deploy thing and create a docker out of it
   act = act
