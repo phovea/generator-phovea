@@ -1,9 +1,11 @@
-FROM skiftcreative/supervisor:2.7
+FROM python:2.7
 
 MAINTAINER Samuel Gratzl <samuel.gratzl@datavisyn.io>
-
-RUN mkdir -p /phovea/app /phovea/run
 WORKDIR /phovea
+
+# create dirs and install supervisor
+RUN mkdir -p /phovea/app /phovea/run && apt-get install -y supervisor
+CMD ["supervisord", "-n"]
 
 COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/phovea_service.conf
 
