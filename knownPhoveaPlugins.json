@@ -221,8 +221,8 @@
         "d3": "d3/d3"
       },
       "dependencies": {
-        "@types/d3": "^3.5.36",
-        "d3": "^3.5.17"
+        "@types/d3": "3.5.36",
+        "d3": "3.5.17"
       }
     },
     {
@@ -231,8 +231,8 @@
       "description": "JQuery 3.1",
       "aliases": {},
       "dependencies": {
-        "@types/jquery": "^2.0.33",
-        "jquery": "^3.1.1"
+        "@types/jquery": "2.0.33",
+        "jquery": "3.1.1"
       }
     },
     {
@@ -241,8 +241,8 @@
       "description": "PapaParse",
       "aliases": {},
       "dependencies": {
-        "@types/papaparse": "^4.1.28",
-        "papaparse": "^4.1.2"
+        "@types/papaparse": "4.1.28",
+        "papaparse": "4.1.2"
       }
     },
     {
@@ -251,8 +251,8 @@
       "description": "JQuery UI",
       "aliases": {},
       "dependencies": {
-        "@types/jqueryui": "^1.11.31",
-        "jqueryui": "^1.11.1"
+        "@types/jqueryui": "1.11.31",
+        "jqueryui": "1.11.1"
       }
     },
     {
@@ -270,7 +270,7 @@
       "description": "Font Awesome",
       "aliases": {},
       "dependencies": {
-        "font-awesome": "^4.6.3"
+        "font-awesome": "4.6.3"
       }
     },
     {
@@ -280,8 +280,8 @@
       "aliases": {},
       "externals": ["bootstrap-sass"],
       "dependencies": {
-        "@types/bootstrap": "^3.3.32",
-        "bootstrap-sass": "^3.3.7"
+        "@types/bootstrap": "3.3.32",
+        "bootstrap-sass": "3.3.7"
       }
     },
     {
@@ -291,8 +291,8 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "@types/select2": "^4.0.30",
-        "select2": "^4.0.3"
+        "@types/select2": "4.0.30",
+        "select2": "4.0.3"
       }
     },
     {
@@ -302,8 +302,8 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "@types/moment": "^2.13.0",
-        "moment": "^2.15.2"
+        "@types/moment": "2.13.0",
+        "moment": "2.15.2"
       }
     },
     {
@@ -315,8 +315,8 @@
       },
       "externals": [],
       "dependencies": {
-        "@types/jquery.scrollto": "^1.4.27",
-        "jquery.scrollto": "^2.1.2"
+        "@types/jquery.scrollto": "1.4.27",
+        "jquery.scrollto": "2.1.2"
       }
     },
     {
@@ -336,7 +336,7 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "selectivity": "^3.0.0"
+        "selectivity": "3.0.0"
       }
     },
     {
@@ -346,8 +346,8 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "@types/lodash": "^4.14.38",
-        "lodash": "^4.16.6"
+        "@types/lodash": "4.14.38",
+        "lodash": "4.16.6"
       }
     },
     {
@@ -358,7 +358,7 @@
       "externals": ["marked"],
       "dependencies": {
         "@types/marked": "0.0.28",
-        "marked": "^0.3.6"
+        "marked": "0.3.6"
       }
     },
     {
@@ -369,7 +369,7 @@
       "externals": ["file-saver"],
       "dependencies": {
         "@types/file-saver": "0.0.0",
-        "file-saver": "^1.3.3"
+        "file-saver": "1.3.3"
       }
     },
     {
@@ -379,7 +379,7 @@
       "aliases": {},
       "externals": ["colorbrewer"],
       "dependencies": {
-        "@types/colorbrewer": "^1.0.29",
+        "@types/colorbrewer": "1.0.29",
         "colorbrewer": "github:sgratzl/colorbrewer"
       }
     },
