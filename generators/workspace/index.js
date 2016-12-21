@@ -35,6 +35,13 @@ function rewriteDockerCompose(compose) {
 
 class Generator extends Base {
 
+  constructor(args, options) {
+    super(args, options);
+
+    // readme content
+    this.option('noAdditionals');
+  }
+
   initializing() {
     this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: []});
   }
@@ -46,7 +53,8 @@ class Generator extends Base {
       name: 'modules',
       message: 'Additional Plugins',
       choices: known.plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
-      default: this.props.modules
+      default: this.props.modules,
+      when: !this.option('noAdditionals')
     }]).then((props) => {
       this.props.modules = props.modules;
     });
