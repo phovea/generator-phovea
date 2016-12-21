@@ -7,130 +7,198 @@ const path = require('path');
 const fs = require('fs');
 const mkdirp = Promise.promisifyAll(require('mkdirp'));
 const chalk = require('chalk');
+const pkg = require('./package.json');
+const argv = require('yargs-parser')(process.argv.slice(2));
+const quiet = argv.quiet !== undefined;
+
+const now = new Date();
+const buildId = `${now.getUTCFullYear()}${now.getUTCMonth()}${now.getUTCDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
+pkg.version = pkg.version.replace('SNAPSHOT', buildId);
+const env = Object.assign({}, process.env);
 
 function toRepoUrl(url) {
   return url.startsWith('http') ? url : `https://github.com/${url}`;
 }
 
+
+/**
+ * spawns a child process
+ * @param cmd command as array
+ * @param args arguments
+ * @param opts options
+ */
 function spawn(cmd, args, opts) {
   const spawn = require('child_process').spawn;
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, opts);
-    p.stdout.on('data', (data) => console.log(data.toString()));
-    p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
-
+    if (!quiet) {
+      p.stdout.on('data', (data) => console.log(data.toString()));
+      p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+    }
     p.on('close', (code) => code == 0 ? resolve() : reject(code));
   });
 }
 
+/**
+ * run npm with the given args
+ * @param cwd working directory
+ * @param cmd the command to execute as a string
+ * @return {*}
+ */
 function npm(cwd, cmd) {
-  console.log(chalk.blue('running npm', cmd));
+  console.log(cwd, chalk.blue('running npm', cmd));
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  return spawn(npm, (cmd || 'install').split(' '), {cwd});
+  return spawn(npm, (cmd || 'install').split(' '), {cwd, env});
 }
 
-function yo(generator, cwd) {
+/**
+ * runs docker command
+ * @param cwd
+ * @param cmd
+ * @return {*}
+ */
+function docker(cwd, cmd) {
+  console.log(cwd, chalk.blue('running docker', cmd));
+  return spawn('docker', (cmd || 'build .').split(' '), {cwd, env});
+}
+
+/**
+ * runs yo internally
+ * @param generator
+ * @param options
+ * @param cwd
+ */
+function yo(generator, options, cwd) {
   const yeoman = require('yeoman-environment');
   // call yo internally
-  const env = yeoman.createEnv([], {
-    cwd: cwd
-  });
-  env.register(require.resolve('geneator-phovea/generators/' + generator), 'phovea:' + generator);
-  return new Promise((resolve, reject) => {
+  const yeomanEnv = yeoman.createEnv([], {cwd, env});
+  yeomanEnv.register(require.resolve('generator-phovea/generators/' + generator), 'phovea:' + generator);
+  const runYo = () => new Promise((resolve, reject) => {
     try {
-      console.log('running yo phovea:' + generator);
-      env.run('phovea:' + generator, resolve);
+      console.log(cwd, chalk.blue('running yo phovea:' + generator));
+      yeomanEnv.run('phovea:' + generator, options, resolve);
     } catch (e) {
       console.error('error', e, e.stack);
       reject(e);
     }
   });
+  // move my own .yo-rc.json to avoid a conflict
+  return spawn('mv', ['.yo-rc.json', '.yo-rc_tmp.json'])
+    .then(runYo)
+    .then(() => spawn('mv', ['.yo-rc_tmp.json', '.yo-rc.json']));
 }
 
 function cloneRepo(p, cwd) {
+  p.repo = p.repo || `phovea/${p.name}`;
   p.branch = p.branch || 'master';
-  console.log(chalk.blue(`running git clone -b ${p.branch} ${toRepoUrl(p.repo)}`));
-  return spawn('git', ['clone', '-b', p.branch, toRepoUrl(p.repo)], {cwd});
+  console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
+  return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrl(p.repo), p.name], {cwd});
 }
 
 function moveToBuild(p, cwd) {
   return mkdirp.mkdirpAsync('build')
-      .then(() => spawn('mv', [`${p.name}/dist/*.tar.gz`, '../build/'], {cwd}));
+    .then(() => spawn('mv', [`${p.name}/dist/${p.name}.tar.gz`, `../build/${p.label}.tar.gz`], {cwd}));
 }
 
 function buildCommon(p, dir) {
   const hasAdditional = p.additional.length > 0;
   let act = spawn('rm', ['-rf', dir])
-      .then(() => mkdirp.mkdirpAsync(dir))
-      .then(() => cloneRepo(p, dir));
+    .then(() => mkdirp.mkdirpAsync(dir))
+    .then(() => cloneRepo(p, dir));
   if (hasAdditional) {
     act = act
-        .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir))));
+      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir))));
   }
   return act;
 }
 
 function buildWebApp(p, dir) {
+  console.log(chalk.blue('Building web application:'), p.label);
   const name = p.name;
   const hasAdditional = p.additional.length > 0;
-  console.log(chalk.blue('Building web application:'), p.name);
   let act = buildCommon(p, dir);
+  //let act = Promise.resolve(null);
   if (hasAdditional) {
     act = act
-        .then(() => yo('workspace', dir))
-        .then(() => npm(dir, 'install'))
-        .then(() => npm(dir, `run docker:${p.name}`));
+      .then(() => yo('workspace', {noAdditionals: true}, dir))
+      .then(() => npm(dir, 'install'));
+    //test all modules
+    if (hasAdditional && !argv.skipTests) {
+      act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test:${pi.name}`))));
+    }
+    act = act
+      .then(() => npm(dir, `run dist:${p.name}`));
   } else {
     act = act
-        .then(() => npm(dir + '/' + name, 'install'))
-        .then(() => npm(dir + '/' + name, 'run docker'));
+      .then(() => npm(dir + '/' + name, 'install'))
+      .then(() => npm(dir + '/' + name, 'run dist'));
   }
-  act = act.then(() => moveToBuild(p, dir));
+  act = act
+    .then(() => docker(dir + '/' + name, `build -t ${p.label}:${pkg.version} -f deploy/Dockerfile .`))
+    .then(() => moveToBuild(p, dir));
   act.catch((error) => {
     console.error('ERROR', error);
   });
-  return act;
+  return act.then(() => `${p.label}:${pkg.version}`);
 }
 
-function buildApiApp(p, dir) {
-  console.log(chalk.blue('Building api package:'), p.name);
+function buildServerApp(p, dir) {
+  console.log(chalk.blue('Building server package:'), p.label);
+  const name = p.name;
   const hasAdditional = p.additional.length > 0;
 
   let act = buildCommon(p, dir);
-  act = act.then(() => cloneRepo({repo: 'phovea/phovea_server', branch: 'master'}, dir));
+  act = act
+    .then(() => yo('workspace', {noAdditionals: true}, dir));
 
-  console.error(chalk.red.bold('TODO building', p.name));
+  act = act
+    .then(() => console.log(chalk.yellow('create test environment')))
+    .then(() => npm(dir + '/' + name, 'run build'))
+    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build`))));
+
+  //copy all together
+  act = act
+    .then(() => spawn('mkdir', ['-p', `${dir}/build`]))
+    .then(() => spawn('cp', ['-r', `${dir}/${name}/build/source`, `${dir}/build/`]))
+    .then(() => Promise.all(p.additional.map((pi) => spawn('cp', ['-r', `${dir}/${pi.name}/build/source/*`, `${dir}/build/source/`]))));
+
+  //let act = Promise.resolve([]);
+
+  //copy main deploy thing and create a docker out of it
+  act = act
+    .then(() => spawn('cp', ['-r', `${dir}/${name}/deploy`, `${dir}/`]))
+    .then(() => docker(dir, `build -t ${p.label}:${pkg.version} -f deploy/Dockerfile .`));
+
   act.catch((error) => {
     console.error('ERROR', error);
   });
-  return act;
-}
-
-function buildServiceApp(p, dir) {
-  console.log(chalk.blue('Building api package:'), p.name);
-  const hasAdditional = p.additional.length > 0;
-
-  let act = buildCommon(p, dir);
-  console.error(chalk.red.bold('TODO building', p.name));
-  act.catch((error) => {
-    console.error('ERROR', error);
-  });
-  return act;
+  return act.then(() => `${p.label}:${pkg.version}`);
 }
 
 if (require.main === module) {
+  if (argv.skipTests) {
+    // if skipTest option is set, skip tests
+    console.log(chalk.blue('skipping tests'));
+    env.PHOVEA_SKIP_TESTS = true;
+  }
   const descs = require('./phovea_product');
-  descs.forEach((d, i) => {
+  const all = Promise.all(descs.map((d, i) => {
     d.additional = d.additional || []; //default values
+    d.label = d.label || d.name;
     switch (d.type) {
       case 'web':
         return buildWebApp(d, './tmp' + i);
-      case 'api':
-        return buildApiApp(d, './tmp' + i);
-      case 'service':
-        return buildServiceApp(d, './tmp' + i);
+      case 'server':
+        return buildServerApp(d, './tmp' + i);
       default:
         console.error(chalk.red('unknown product type: ' + d.type));
+        return Promise.resolve(null);
     }
+  }));
+
+  all.then((images) => {
+    console.log('done');
+    console.log('docker images');
+    console.log('  ',chalk.blue(images.join('\n  ')));
   });
 }
