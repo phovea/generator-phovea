@@ -12,7 +12,8 @@ const argv = require('yargs-parser')(process.argv.slice(2));
 const quiet = argv.quiet !== undefined;
 
 const now = new Date();
-const buildId = `${now.getUTCFullYear()}${now.getUTCMonth()}${now.getUTCDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
+const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
+const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth())}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
 pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 
@@ -62,6 +63,12 @@ function docker(cwd, cmd) {
   return spawn('docker', (cmd || 'build .').split(' '), {cwd, env});
 }
 
+function createQuietTerminalAdapter() {
+  const impl = new require('yeoman-environment/adapter');
+  impl.log = () => undefined;
+  return impl;
+}
+
 /**
  * runs yo internally
  * @param generator
@@ -71,7 +78,7 @@ function docker(cwd, cmd) {
 function yo(generator, options, cwd) {
   const yeoman = require('yeoman-environment');
   // call yo internally
-  const yeomanEnv = yeoman.createEnv([], {cwd, env});
+  const yeomanEnv = yeoman.createEnv([], {cwd, env}, quiet ? createQuietTerminalAdapter() : undefined);
   yeomanEnv.register(require.resolve('generator-phovea/generators/' + generator), 'phovea:' + generator);
   const runYo = () => new Promise((resolve, reject) => {
     try {
@@ -113,7 +120,7 @@ function buildCommon(p, dir) {
 }
 
 function buildWebApp(p, dir) {
-  console.log(chalk.blue('Building web application:'), p.label);
+  console.log(dir, chalk.blue('building web application:'), p.label);
   const name = p.name;
   const hasAdditional = p.additional.length > 0;
   let act = buildCommon(p, dir);
@@ -143,26 +150,26 @@ function buildWebApp(p, dir) {
 }
 
 function buildServerApp(p, dir) {
-  console.log(chalk.blue('Building server package:'), p.label);
+  console.log(dir, chalk.blue('building server package:'), p.label);
   const name = p.name;
   const hasAdditional = p.additional.length > 0;
 
-  let act = buildCommon(p, dir);
-  act = act
-    .then(() => yo('workspace', {noAdditionals: true}, dir));
+  // let act = buildCommon(p, dir);
+  // act = act
+  //   .then(() => yo('workspace', {noAdditionals: true}, dir));
+  //
+  // act = act
+  //   .then(() => console.log(chalk.yellow('create test environment')))
+  //   .then(() => npm(dir + '/' + name, 'run build'))
+  //   .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build`))));
+  //
+  // //copy all together
+  // act = act
+  //   .then(() => spawn('mkdir', ['-p', `${dir}/build`]))
+  //   .then(() => spawn('cp', ['-r', `${dir}/${name}/build/source`, `${dir}/build/`]))
+  //   .then(() => Promise.all(p.additional.map((pi) => spawn('cp', ['-r', `${dir}/${pi.name}/build/source/*`, `${dir}/build/source/`]))));
 
-  act = act
-    .then(() => console.log(chalk.yellow('create test environment')))
-    .then(() => npm(dir + '/' + name, 'run build'))
-    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build`))));
-
-  //copy all together
-  act = act
-    .then(() => spawn('mkdir', ['-p', `${dir}/build`]))
-    .then(() => spawn('cp', ['-r', `${dir}/${name}/build/source`, `${dir}/build/`]))
-    .then(() => Promise.all(p.additional.map((pi) => spawn('cp', ['-r', `${dir}/${pi.name}/build/source/*`, `${dir}/build/source/`]))));
-
-  //let act = Promise.resolve([]);
+  let act = Promise.resolve([]);
 
   //copy main deploy thing and create a docker out of it
   act = act
@@ -199,6 +206,6 @@ if (require.main === module) {
   all.then((images) => {
     console.log('done');
     console.log('docker images');
-    console.log('  ',chalk.blue(images.join('\n  ')));
+    console.log(' ', chalk.blue(images.join('\n  ')));
   });
 }
