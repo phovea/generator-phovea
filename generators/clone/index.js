@@ -19,8 +19,8 @@ function toSSH(repo) {
 function resolveNeighbors(plugins, useSSH, types, shallow) {
   let missing = [];
   const addMissing = (p) => {
-    this.log(this.destinationPath(p+'/.yo-rc.json'));
-    const config = this.fs.readJSON(this.destinationPath(p+'/.yo-rc.json'), { 'generator-phovea': {}} )['generator-phovea'];
+    this.log(this.destinationPath(p + '/.yo-rc.json'));
+    const config = this.fs.readJSON(this.destinationPath(p + '/.yo-rc.json'), {'generator-phovea': {}})['generator-phovea'];
     let modules = [].concat(config.modules || [], config.smodules || []);
     this.log(`${p} => ${modules.join(' ')}`);
     if (types && types !== 'both') {
