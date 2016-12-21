@@ -4,7 +4,7 @@ MAINTAINER Samuel Gratzl <samuel.gratzl@datavisyn.io>
 WORKDIR /phovea
 
 # create dirs and install supervisor
-RUN mkdir -p /phovea/app /phovea/run && apt-get install -y supervisor
+RUN mkdir -p /phovea/app /phovea/run && apt-get update && apt-get install -y supervisor
 CMD ["supervisord", "-n"]
 
 COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/phovea_service.conf
