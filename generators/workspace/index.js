@@ -169,6 +169,13 @@ class Generator extends Base {
           if (service.build && service.build.context === '.') {
             service.build.dockerfile = `${p}/${service.build.dockerfile}`;
           }
+          // change local volumes
+          service.volumes = (service.volumes || []).map((volume) => {
+            if (volume.startsWith('.')) {
+              return `./${p}/${volume.slice(1)}`;
+            }
+            return volume;
+          });
         });
 
         _.mergeWith(dockerCompose, localCompose, mergeArrayUnion);
@@ -240,7 +247,7 @@ class Generator extends Base {
     }
   }
 
-  install() {
+  end() {
     this.log('\n\nuseful commands: ');
     this.log(chalk.red(' docker-compose up'), '        ... starts the system');
     this.log(chalk.red(' docker-compose restart'), '   ... restart');
