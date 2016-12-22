@@ -1,16 +1,17 @@
-FROM python:2.7
+FROM python:2.7-slim
 
 MAINTAINER Samuel Gratzl <samuel.gratzl@datavisyn.io>
 WORKDIR /phovea
 
-# create dirs and install supervisor
-RUN mkdir -p /phovea/app /phovea/run && apt-get update && apt-get install -y supervisor
-CMD ["supervisord", "-n"]
-
-COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/phovea_service.conf
+RUN apt-get update
 
 # install dependencies last step such that everything before can be cached
 COPY requirements*.txt docker_packages.txt ./
 RUN (!(test -f docker_packages.txt) || (cat docker_packages.txt | xargs apt-get install -y)) && pip install --no-cache-dir -r requirements.txt
 
-COPY ./build/source ./app/
+COPY ./build/source ./phovea/
+
+ARG env=production
+ARG service=<%-servicename%>
+CMD ["python", "phovea_server", "--env", $env, $service]
+EXPOSE 80

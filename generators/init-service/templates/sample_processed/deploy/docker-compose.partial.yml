@@ -1,9 +1,8 @@
 version: '2.0'
 services:
-  <%-serviceName%>:
+  <%-servicename%>:
     build:
       context: .
       dockerfile: deploy/Dockerfile_dev
     volumes:
     - .:/phovea
-    - ./_logs:/var/log/phovea
