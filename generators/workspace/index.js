@@ -14,6 +14,10 @@ function mergeArrayUnion(a, b) {
   return Array.isArray(a) ? _.union(a, b) : undefined;
 }
 
+function isHelperContainer(name) {
+  return name.includes('_');
+}
+
 /**
  * rewrite the compose by inlining _host to all services not containing a dash, such that both api and celery have the same entry
  * @param compose
@@ -26,7 +30,7 @@ function rewriteDockerCompose(compose) {
   const host = services._host;
   delete services._host;
   Object.keys(services).forEach((k) => {
-    if (!k.includes('_')) {
+    if (!isHelperContainer(k)) {
       _.mergeWith(services[k], host, mergeArrayUnion);
     }
   });
@@ -169,13 +173,15 @@ class Generator extends Base {
           if (service.build && service.build.context === '.') {
             service.build.dockerfile = `${p}/${service.build.dockerfile}`;
           }
-          // change local volumes
-          service.volumes = (service.volumes || []).map((volume) => {
-            if (volume.startsWith('.')) {
-              return `./${p}/${volume.slice(1)}`;
-            }
-            return volume;
-          });
+          if (isHelperContainer(key)) {
+            // change local volumes
+            service.volumes = (service.volumes || []).map((volume) => {
+              if (volume.startsWith('.')) {
+                return `./${p}${volume.slice(1)}`;
+              }
+              return volume;
+            });
+          }
         });
 
         _.mergeWith(dockerCompose, localCompose, mergeArrayUnion);
