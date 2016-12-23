@@ -13,7 +13,8 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const buildInfo = require('./buildInfo.js');
 
 const now = new Date();
-const buildId = `${now.getUTCFullYear()}${now.getUTCMonth()}${now.getUTCDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
+const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
+const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth())}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
 pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 
 const year = (new Date()).getFullYear();
