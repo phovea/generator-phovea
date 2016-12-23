@@ -4,11 +4,9 @@
 
 const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
-const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
+const {writeTemplates, patchPackageJSON} = require('../../utils');
 const plugins = require('../../utils/known').plugin;
-const Separator = require('inquirer').Separator;
 const chalk = require('chalk');
-
 
 const isRequired = (v) => v.toString().length > 0;
 
@@ -19,7 +17,7 @@ function simplifyRepoUrl(httpsUrl) {
   return httpsUrl;
 }
 
-function buildPossibleAdditionalPlugins(type, primaryName) {
+function buildPossibleAdditionalPlugins(type) {
   const toDescription = (d) => ({
     value: {name: d.name, repo: simplifyRepoUrl(d.repository)},
     name: `${d.name}: ${d.description}`,
@@ -34,7 +32,7 @@ class PluginGenerator extends Base {
   initializing() {
     this.services = [];
 
-    //for the update
+    // for the update
     this.config.defaults({
       type: 'product'
     });
@@ -46,12 +44,11 @@ class PluginGenerator extends Base {
     });
   }
 
-
   _addCustomAdditional(service) {
     return this.prompt([{
       name: 'name',
       message: 'plugin name:',
-      validate: isRequired,
+      validate: isRequired
     }, {
       name: 'repo',
       message: 'repository (<githubAccount>/<repo>):',
@@ -70,7 +67,7 @@ class PluginGenerator extends Base {
       service.additional.push(extra);
       const custom = extra.custom === true;
       delete extra.custom;
-      return custom ? this._addCustomAdditional(service) : Promise.resolve(service)
+      return custom ? this._addCustomAdditional(service) : Promise.resolve(service);
     });
   }
 
@@ -103,7 +100,7 @@ class PluginGenerator extends Base {
       name: 'additional',
       type: 'checkbox',
       message: 'additional plugins: ',
-      choices: (act) => buildPossibleAdditionalPlugins(act.type, act.name)
+      choices: (act) => buildPossibleAdditionalPlugins(act.type)
     }, {
       name: 'custom',
       type: 'confirm',
@@ -113,8 +110,8 @@ class PluginGenerator extends Base {
       this.services.push(service);
       const custom = service.custom === true;
       delete service.custom;
-      return custom ? this._addCustomAdditional(service) : Promise.resolve(service)
-    }).then((service) => this.prompt({
+      return custom ? this._addCustomAdditional(service) : Promise.resolve(service);
+    }).then(() => this.prompt({
       name: 'custom',
       type: 'confirm',
       message: 'add another service?: ',
@@ -144,7 +141,6 @@ class PluginGenerator extends Base {
     this.log(chalk.red(' npm run build'), '             ... regular build');
     this.log(chalk.red(' node build.js --skipTests'), ' ... skip tests');
     this.log(chalk.red(' node build.js --quiet'), '     ... reduce log output');
-
 
     this.log('\n\nnext steps: ');
     this.log(chalk.red(' npm install'));

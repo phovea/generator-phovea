@@ -115,7 +115,7 @@ class Generator extends Base {
       });
     });
     const knownRequirements = [].concat(...known.lib.listServer.map((m) => Object.keys(m.requirements)));
-    const knownDockerPackages = []; //.concat(...known.lib.listServer.map((m) => Object.keys(m.dockerPackages)));
+    const knownDockerPackages = []; // .concat(...known.lib.listServer.map((m) => Object.keys(m.dockerPackages)));
 
     const slibs = safe(pkg.caleydo, 'dependencies.python', {});
     const dockerPackages = safe(pkg.caleydo, 'dependencies.debian', {});
