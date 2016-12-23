@@ -12,7 +12,7 @@ const Separator = require('inquirer').Separator;
 const isRequired = (v) => v.toString().length > 0;
 
 function simplifyRepoUrl(httpsUrl) {
-  if (httpsUrl.startsWith('https://github.com/') && httpsUrl.endsWidth('.git')) {
+  if (httpsUrl.startsWith('https://github.com/') && httpsUrl.endsWith('.git')) {
     return httpsUrl.slice('https://github.com/'.length, -'.git'.length);
   }
   return httpsUrl;
@@ -37,15 +37,14 @@ class PluginGenerator extends Base {
     this.config.defaults({
       type: 'product'
     });
-  }
 
-  default() {
     this.composeWith('phovea:_node', {
       options: this.options
     }, {
       local: require.resolve('../_node')
     });
   }
+
 
   _addCustomAdditional(service) {
     return this.prompt([{
@@ -88,20 +87,11 @@ class PluginGenerator extends Base {
     }, {
       name: 'label',
       message: 'service name:',
-      default: (act) => act.type === 'api' ? 'phovea_server' : '',
       validate: isRequired
-    }, {
-      name: 'name',
-      message: 'primary plugin name:',
-      default: (act) => act.type === 'api' ? 'phovea_server' : null,
-      validate: isRequired,
     }, {
       name: 'repo',
       message: 'primary repository (<githubAccount>/<repo>):',
-      default: (act) => {
-        const r = plugins.byName(act.name);
-        return r ? simplifyRepoUrl(r.repository) : null
-      },
+      default: (act) => act.type === 'api' ? 'phovea/phovea_server' : null,
       validate: isRequired
     }, {
       name: 'branch',
@@ -131,7 +121,7 @@ class PluginGenerator extends Base {
     })).then((sel) => sel.custom ? this._addService() : Promise.resolve(this.services));
   }
 
-  prompting() {
+  default() {
     return this._addService();
   }
 
@@ -145,12 +135,16 @@ class PluginGenerator extends Base {
     }
   }
 
-  install() {
-    if (this.options.install) {
-      this.installDependencies({
-        bower: false
-      });
-    }
+  end() {
+    this.log('\n\nuseful commands: ');
+    this.log(chalk.red(' npm run build'), '             ... regular build');
+    this.log(chalk.red(' node build.js --skipTests'), ' ... skip tests');
+    this.log(chalk.red(' node build.js --quiet'), '     ... reduce log output');
+
+
+    this.log('\n\nnext steps: ');
+    this.log(chalk.red(' npm install'));
+    this.log(chalk.red(' npm run build'));
   }
 }
 
