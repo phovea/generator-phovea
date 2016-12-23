@@ -79,7 +79,7 @@ function testPhoveaModule(moduleName, request) {
 function testPhoveaModules(modules) {
   return (context, request, callback) => {
     for (let i = 0; i < modules.length; ++i) {
-      var r = testPhoveaModule(modules[i], request);
+      const r = testPhoveaModule(modules[i], request);
       if (r) {
         return callback(null, r);
       }
@@ -103,7 +103,7 @@ function injectRegistry(entry) {
   if (typeof entry === 'string') {
     return [registryFile, actBuildInfoFile].concat(entry);
   } else {
-    var transformed = {};
+    const transformed = {};
     Object.keys(entry).forEach((eentry) => {
       transformed[eentry] = [registryFile, actBuildInfoFile].concat(entry[eentry]);
     });
@@ -115,7 +115,7 @@ function injectRegistry(entry) {
  * generate a webpack configuration
  */
 function generateWebpack(options) {
-  var base = {
+  let base = {
     entry: injectRegistry(options.entries),
     output: {
       path: resolve(__dirname, 'build'),
@@ -178,10 +178,11 @@ function generateWebpack(options) {
       contentBase: resolve(__dirname, 'build')
     }
   };
+
   if (options.library) {
+    let libName = /phovea_.*/.test(pkg.name) ? ['phovea', pkg.name.slice(7)] : pkg.name;
     //generate a library, i.e. output the last entry element
     //create library name
-    var libName = /phovea_.*/.test(pkg.name) ? ['phovea', pkg.name.slice(7)] : pkg.name;
     if (options.moduleBundle) {
       libName = 'phovea';
     }
@@ -211,8 +212,8 @@ function generateWebpack(options) {
   }
   if (!options.bundle || options.isApp) {
     //extract the included css file to own file
-    var p = new ExtractTextPlugin({
-      filename: 'style' + (options.min && !options.nosuffix ? '.min' : '') + '.css',
+    let p = new ExtractTextPlugin({
+      filename: (options.isApp || options.moduleBundle ? 'style' : pkg.name)  + (options.min && !options.nosuffix ? '.min' : '') + '.css',
       allChunks: true // there seems to be a bug in dynamically loaded chunk styles are not loaded, workaround: extract all styles from all chunks
     });
     base.plugins.push(p);
