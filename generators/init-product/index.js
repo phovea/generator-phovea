@@ -7,6 +7,7 @@ const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 const plugins = require('../../utils/known').plugin;
 const Separator = require('inquirer').Separator;
+const chalk = require('chalk');
 
 
 const isRequired = (v) => v.toString().length > 0;
@@ -122,6 +123,9 @@ class PluginGenerator extends Base {
   }
 
   default() {
+    if (this.options.useDefaults) {
+      return;
+    }
     return this._addService();
   }
 
