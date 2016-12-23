@@ -40,6 +40,7 @@ function spawn(cmd, args, opts) {
   });
 }
 
+
 /**
  * run npm with the given args
  * @param cwd working directory
@@ -61,6 +62,23 @@ function npm(cwd, cmd) {
 function docker(cwd, cmd) {
   console.log(cwd, chalk.blue('running docker', cmd));
   return spawn('docker', (cmd || 'build .').split(' '), {cwd, env});
+}
+
+function dockerSave(image, target) {
+  console.log(chalk.blue(`running docker save ${image} | gzip > ${target}`));
+  const spawn = require('child_process').spawn;
+  const opts = {env};
+  return new Promise((resolve, reject) => {
+    const p = spawn('docker', ['save', image], opts);
+    const p2 = spawn('gzip', [], opts);
+    p.stdout.pipe(p2.stdin);
+    p2.stdout.pipe(fs.createWriteStream(target));
+    if (!quiet) {
+      p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+      p2.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+    }
+    p2.on('close', (code) => code == 0 ? resolve() : reject(code));
+  });
 }
 
 function createQuietTerminalAdapter() {
@@ -147,7 +165,7 @@ function patchComposeFile(p, composeTemplate) {
   const r = {
     version: '2.0',
     services: {}
-  }
+  };
   r.services[p.label] = service;
   return r;
 }
@@ -155,7 +173,8 @@ function patchComposeFile(p, composeTemplate) {
 function postBuild(p, dir, buildInSubDir) {
   const hasAdditional = p.additional.length > 0;
   return Promise.resolve(null)
-    //.then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    .then(() => dockerSave(p.image, `build/${p.label}_image.tar.gz`))
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
     .then(mergeCompose);
 }
@@ -215,13 +234,13 @@ function buildServerApp(p, dir) {
 }
 
 function buildImpl(d, dir) {
-  return postBuild(d, dir);
   switch (d.type) {
     case 'static':
     case 'web':
       return buildWebApp(d, dir);
     case 'api':
       d.name = d.name || 'phovea_server';
+      return buildServerApp(d, dir);
     case 'server':
       return buildServerApp(d, dir);
     default:
@@ -265,6 +284,10 @@ if (require.main === module) {
     // if skipTest option is set, skip tests
     console.log(chalk.blue('skipping tests'));
     env.PHOVEA_SKIP_TESTS = true;
+  }
+  if (argv.quiet) {
+    // if skipTest option is set, skip tests
+    console.log(chalk.blue('will try to keep my mouth shut...'));
   }
   const descs = require('./phovea_product');
   const all = Promise.all(descs.map((d, i) => {
