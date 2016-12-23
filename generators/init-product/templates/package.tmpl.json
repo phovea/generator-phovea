@@ -1,12 +1,8 @@
 {
-  "files": [
-    "phovea_product.js",
-    "build"
-  ],
   "scripts": {
     "build": "node build.js",
     "predist": "npm run build",
-    "dist": "mkdirp dist && cd build && tar cvzf ../dist/taco_product.tar.gz *"
+    "dist": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
   },
   "dependencies": {
     "bluebird": "3.4.6",

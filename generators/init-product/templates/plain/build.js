@@ -206,7 +206,7 @@ function buildWebApp(p, dir) {
 }
 
 function buildServerApp(p, dir) {
-  console.log(dir, chalk.blue('building server package:'), p.label);
+  console.log(dir, chalk.blue('building service package:'), p.label);
   const name = p.name;
   const hasAdditional = p.additional.length > 0;
 
@@ -241,7 +241,7 @@ function buildImpl(d, dir) {
     case 'api':
       d.name = d.name || 'phovea_server';
       return buildServerApp(d, dir);
-    case 'server':
+    case 'service':
       return buildServerApp(d, dir);
     default:
       console.error(chalk.red('unknown product type: ' + d.type));
@@ -269,7 +269,7 @@ function buildCompose(descs, composePartials) {
       services[w].links.push(`${s}:api`);
     });
   });
-  descs.filter((d) => d.type === 'server').forEach((s) => {
+  descs.filter((d) => d.type === 'service').forEach((s) => {
     api.forEach((w) => {
       services[w].links = services[w].links || [];
       services[w].links.push(`${s.label}:${s.name}`);
@@ -289,7 +289,7 @@ if (require.main === module) {
     // if skipTest option is set, skip tests
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
-  const descs = require('./phovea_product');
+  const descs = require('./phovea_product.json');
   const all = Promise.all(descs.map((d, i) => {
     d.additional = d.additional || []; //default values
     d.label = d.label || d.name;
