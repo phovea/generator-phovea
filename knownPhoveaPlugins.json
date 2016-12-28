@@ -6,7 +6,7 @@
       "description": "Phovea Core Plugin",
       "repository": "https://github.com/phovea/phovea_core.git",
       "dependencies": {
-        "phovea_core": "github:phovea/phovea_core"
+        "phovea_core": "github:phovea/phovea_core#v0.0.3"
       },
       "libraries": []
     },
@@ -16,7 +16,7 @@
       "description": "Phovea D3 Plugin",
       "repository": "https://github.com/phovea/phovea_d3.git",
       "dependencies": {
-        "phovea_d3": "github:phovea/phovea_d3"
+        "phovea_d3": "github:phovea/phovea_d3#v0.0.3"
       },
       "libraries": [
         "d3"
@@ -28,7 +28,7 @@
       "description": "Phovea Vis Plugin",
       "repository": "https://github.com/phovea/phovea_vis.git",
       "dependencies": {
-        "phovea_vis": "github:phovea/phovea_vis"
+        "phovea_vis": "github:phovea/phovea_vis#v0.0.3"
       },
       "libraries": [
         "d3"
@@ -40,7 +40,7 @@
       "description": "Phovea Common Style Plugin",
       "repository": "https://github.com/phovea/phovea_bootstrap_fontawesome.git",
       "dependencies": {
-        "phovea_bootstrap_fontawesome": "github:phovea/phovea_bootstrap_fontawesome"
+        "phovea_bootstrap_fontawesome": "github:phovea/phovea_bootstrap_fontawesome#v0.0.3"
       },
       "libraries": [
         "jquery",
