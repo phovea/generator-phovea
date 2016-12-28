@@ -212,6 +212,7 @@ class Generator extends Base {
     });
 
     return {
+      plugins: plugins,
       requirements: [...requirements.values()],
       devRequirements: [...devRequirements.values()],
       dockerPackages: [...dockerPackages.values()],
@@ -231,8 +232,8 @@ class Generator extends Base {
     extend(scripts, sdeps.scripts);
 
     const config = {};
-    config.workspace = path.dirname(this.destinationPath());
-    config.modules = this.props.modules.concat(plugins);
+    config.workspace = path.basename(this.destinationPath());
+    config.modules = _.union(this.props.modules,plugins, sdeps.plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
@@ -251,7 +252,10 @@ class Generator extends Base {
       this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
     }
 
-    this.fs.copy(this.templatePath('project.tmpl.json'), this.destinationPath(`.idea/${config.workspace}.iml`));
+    this.fs.copy(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`));
+    if (!this.fs.exists(this.destinationPath(`.idea/workspace.xml`))) {
+      this.fs.copy(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`.idea/workspace.xml`));
+    }
   }
 
   end() {
