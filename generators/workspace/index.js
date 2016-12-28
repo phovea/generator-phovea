@@ -162,7 +162,7 @@ class Generator extends Base {
 
     const config = {};
     const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
-
+    config.workspace = path.dirname(this.destinationPath());
     config.modules = this.props.modules.concat(plugins);
     config.webmodules = plugins;
 
@@ -176,6 +176,8 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), sdeps.debianPackages.join('\n'));
     this.fs.write(this.destinationPath('redhat_packages.txt'), sdeps.redhatPackages.join('\n'));
+
+    this.fs.copy(this.templatePath('project.tmpl.json'), this.destinationPath(`.idea/${config.workspace}.iml`));
   }
 }
 
