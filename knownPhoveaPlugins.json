@@ -337,6 +337,16 @@
       }
     },
     {
+      "name": "datavisyn-scatterplot",
+      "type": "web",
+      "description": "Datavisyn Canvas Scatterplot",
+      "aliases": {},
+      "externals": ["datavisyn-scatterplot"],
+      "dependencies": {
+        "datavisyn-scatterplot": "github:datavisyn/datavisyn-scatterplot"
+      }
+    },
+    {
       "name": "colorbrewer",
       "type": "web",
       "description": "Colorbrewer scales (https://github.com/sgratzl/colorbrewer)",

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <%-modules.map((m) => `<mapping directory="$PROJECT_DIR$/${m]" vcs="Git" />`)).join('\n    ')%>
+  </component>
+</project>

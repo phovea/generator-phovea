@@ -231,6 +231,7 @@ class Generator extends Base {
     extend(scripts, sdeps.scripts);
 
     const config = {};
+    config.workspace = path.dirname(this.destinationPath());
     config.modules = this.props.modules.concat(plugins);
     config.webmodules = plugins;
 
@@ -249,6 +250,8 @@ class Generator extends Base {
       const yaml = require('yamljs');
       this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
     }
+
+    this.fs.copy(this.templatePath('project.tmpl.json'), this.destinationPath(`.idea/${config.workspace}.iml`));
   }
 
   end() {
