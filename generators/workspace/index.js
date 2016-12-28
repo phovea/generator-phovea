@@ -233,7 +233,7 @@ class Generator extends Base {
 
     const config = {};
     config.workspace = path.basename(this.destinationPath());
-    config.modules = _.union(this.props.modules,plugins, sdeps.plugins);
+    config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
