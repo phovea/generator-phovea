@@ -243,9 +243,7 @@ class Generator extends Base {
 
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
-    if (sdeps.dockerPackages.length > 0) {
-      this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
-    }
+    this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
 
     {
       const yaml = require('yamljs');
