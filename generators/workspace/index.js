@@ -2,6 +2,7 @@
 const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
+const _ = require('lodash');
 const extend = require('lodash').extend;
 
 const known = require('../../utils/known');
@@ -150,6 +151,7 @@ class Generator extends Base {
     });
 
     return {
+      plugins: plugins,
       requirements: [...requirements.values()],
       devRequirements: [...devRequirements.values()],
       debianPackages: [...debianPackages.values()],
@@ -162,8 +164,11 @@ class Generator extends Base {
 
     const config = {};
     const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
-    config.workspace = path.dirname(this.destinationPath());
-    config.modules = this.props.modules.concat(plugins);
+
+    const sdeps = this._generateServerDependencies(this.props.modules);
+
+    config.workspace = path.basename(this.destinationPath());
+    config.modules = _.union(this.props.modules,plugins, sdeps.plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
@@ -171,13 +176,15 @@ class Generator extends Base {
     this.fs.copy(this.templatePath('package.tmpl.json'), this.destinationPath('package.json'));
     this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});
 
-    const sdeps = this._generateServerDependencies(this.props.modules);
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
     this.fs.write(this.destinationPath('debian_packages.txt'), sdeps.debianPackages.join('\n'));
     this.fs.write(this.destinationPath('redhat_packages.txt'), sdeps.redhatPackages.join('\n'));
 
-    this.fs.copy(this.templatePath('project.tmpl.json'), this.destinationPath(`.idea/${config.workspace}.iml`));
+    this.fs.copy(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`));
+    if (!this.fs.exists(this.destinationPath(`.idea/workspace.xml`))) {
+      this.fs.copy(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`.idea/workspace.xml`));
+    }
   }
 }
 
