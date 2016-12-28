@@ -168,7 +168,7 @@ class Generator extends Base {
     const sdeps = this._generateServerDependencies(this.props.modules);
 
     config.workspace = path.basename(this.destinationPath());
-    config.modules = _.union(this.props.modules,plugins, sdeps.plugins);
+    config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
