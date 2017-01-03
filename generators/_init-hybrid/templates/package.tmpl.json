@@ -20,7 +20,7 @@
     "posttest:web": "npm run lint",
     "posttest": "echo hybrid",
     "test:web": "karma start",
-    "test:python": "python setup.py test",
+    "test:python": "test ! -d tests || python setup.py test",
     "test": "npm run test:web && npm run test:python",
     "predist:web": "npm run build",
     "predist": "echo hybrid",
