@@ -1,5 +1,4 @@
 {
-  "main": "build/<%=name%>.js",
   "files": [
     "src",
     "index.js",
