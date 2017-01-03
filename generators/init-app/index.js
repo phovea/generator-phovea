@@ -12,7 +12,7 @@ class PluginGenerator extends BasePluginGenerator {
         app: './src/index.ts'
       },
       libraries: ['d3'],
-      modules: ['phovea_core', 'phovea_bootstrap_fontawesome']
+      modules: ['phovea_core', 'phovea_ui']
     });
   }
 
