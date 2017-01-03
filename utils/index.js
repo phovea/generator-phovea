@@ -77,7 +77,7 @@ function writeTemplates(config, withSamples) {
 }
 
 function useDevVersion() {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), { version: '1.0.0'});
+  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {version: '1.0.0'});
   // assumption having a suffix like -SNAPSHOT use the dev version
   return pkg.version.includes('-');
 }
