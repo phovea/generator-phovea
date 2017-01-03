@@ -8,6 +8,11 @@
       "dependencies": {
         "phovea_core": "github:phovea/phovea_core#v0.0.5"
       },
+      "develop": {
+        "dependencies": {
+          "phovea_core": "github:phovea/phovea_core#develop"
+        }
+      },
       "libraries": []
     },
     {
@@ -17,6 +22,11 @@
       "repository": "https://github.com/phovea/phovea_d3.git",
       "dependencies": {
         "phovea_d3": "github:phovea/phovea_d3#v0.0.5"
+      },
+      "develop": {
+        "dependencies": {
+          "phovea_core": "github:phovea/phovea_core#develop"
+        }
       },
       "libraries": [
         "d3"
@@ -30,6 +40,11 @@
       "dependencies": {
         "phovea_vis": "github:phovea/phovea_vis#v0.0.5"
       },
+      "develop": {
+        "dependencies": {
+          "phovea_vis": "github:phovea/phovea_vis#develop"
+        }
+      },
       "libraries": [
         "d3"
       ]
@@ -41,6 +56,11 @@
       "repository": "https://github.com/phovea/phovea_ui.git",
       "dependencies": {
         "phovea_ui": "github:phovea/phovea_ui#v0.0.5"
+      },
+      "develop": {
+        "dependencies": {
+          "phovea_ui": "github:phovea/phovea_ui#develop"
+        }
       },
       "libraries": [
         "jquery",
@@ -55,6 +75,11 @@
       "dependencies": {
         "phovea_importer": "github:phovea/phovea_importer#v0.0.5"
       },
+      "develop": {
+        "dependencies": {
+          "phovea_importer": "github:phovea/phovea_importer#importer"
+        }
+      },
       "libraries": [
         "d3",
         "papaparse"
@@ -67,6 +92,11 @@
       "repository": "https://github.com/phovea/phovea_vis_lineup.git",
       "dependencies": {
         "phovea_vis_lineup": "github:phovea/phovea_vis_lineup#v0.0.5"
+      },
+      "develop": {
+        "dependencies": {
+          "phovea_vis_lineup": "github:phovea/phovea_vis_lineup#develop"
+        }
       },
       "libraries": [
         "lineupjs",
@@ -82,6 +112,14 @@
       "dependencies": {
         "phovea_security_flask": "github:phovea/phovea_security_flask#v0.0.5"
       },
+      "develop": {
+        "dependencies": {
+          "phovea_security_flask": "github:phovea/phovea_security_flask#develop"
+        },
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_security_flask.git": "@develop#egg=phovea_security_flask"
+        }
+      },
       "libraries": [],
       "requirements": {
         "-e git+https://github.com/phovea/phovea_security_flask.git": "@v0.0.5#egg=phovea_security_flask"
@@ -94,6 +132,11 @@
       "repository": "https://github.com/phovea/phovea_server.git",
       "requirements": {
         "-e git+https://github.com/phovea/phovea_server.git": "@v0.0.5#egg=phovea_server"
+      },
+      "develop": {
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_server.git": "@develop#egg=phovea_server"
+        }
       }
     },
     {
@@ -103,6 +146,11 @@
       "repository": "https://github.com/phovea/phovea_data_redis.git",
       "requirements": {
         "-e git+https://github.com/phovea/phovea_data_redis.git": "@v0.0.5#egg=phovea_data_redis"
+      },
+      "develop": {
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_data_redis.git": "@develop#egg=phovea_data_redis"
+        }
       }
     },
     {
@@ -112,6 +160,11 @@
       "repository": "https://github.com/phovea/phovea_data_mongo.git",
       "requirements": {
         "-e git+https://github.com/phovea/phovea_data_mongo.git": "@v0.0.5#egg=phovea_data_mongo"
+      },
+      "develop": {
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_data_mongo.git": "@develop#egg=phovea_data_mongo"
+        }
       }
     },
     {
@@ -121,6 +174,11 @@
       "repository": "https://github.com/phovea/phovea_data_sql.git",
       "requirements": {
         "-e git+https://github.com/phovea/phovea_data_sql.git": "@v0.0.5#egg=phovea_data_sql"
+      },
+      "develop": {
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_data_sql.git": "@develop#egg=phovea_data_sql"
+        }
       }
     },
     {
@@ -130,6 +188,11 @@
       "repository": "https://github.com/phovea/phovea_data_hdf.git",
       "requirements": {
         "-e git+https://github.com/phovea/phovea_data_hdf.git": "@v0.0.5#egg=phovea_data_hdf"
+      },
+      "develop": {
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_data_hdf.git": "@develop#egg=phovea_data_hdf"
+        }
       }
     },
     {
@@ -143,6 +206,14 @@
       "requirements": {
         "-e git+https://github.com/phovea/phovea_clue.git": "@v0.0.5#egg=phovea_clue"
       },
+      "develop": {
+        "dependencies": {
+          "phovea_clue": "github:phovea/phovea_clue#develop"
+        },
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_clue.git": "@develop#egg=phovea_clue"
+        }
+      },
       "libraries": [
         "marked"
       ]
@@ -153,10 +224,18 @@
       "description": "Phovea Processing Queue Plugin",
       "repository": "https://github.com/phovea/phovea_processing_queue.git",
       "dependencies": {
-        "phovea_clue": "github:phovea/phovea_processing_queue#v0.0.5"
+        "phovea_processing_queue": "github:phovea/phovea_processing_queue#v0.0.5"
       },
       "requirements": {
         "-e git+https://github.com/phovea/phovea_processing_queue.git": "@v0.0.5#egg=phovea_processing_queue"
+      },
+      "develop": {
+        "dependencies": {
+          "phovea_processing_queue": "github:phovea/phovea_processing_queue#develop"
+        },
+        "requirements": {
+          "-e git+https://github.com/phovea/phovea_processing_queue.git": "@develop#egg=phovea_processing_queue"
+        }
       },
       "libraries": [
       ]
@@ -228,7 +307,9 @@
       "type": "web",
       "description": "Bootstrap 3",
       "aliases": {},
-      "externals": ["bootstrap-sass"],
+      "externals": [
+        "bootstrap-sass"
+      ],
       "dependencies": {
         "@types/bootstrap": "3.3.32",
         "bootstrap-sass": "3.3.7"
@@ -305,7 +386,9 @@
       "type": "web",
       "description": "Marked",
       "aliases": {},
-      "externals": ["marked"],
+      "externals": [
+        "marked"
+      ],
       "dependencies": {
         "@types/marked": "0.0.28",
         "marked": "0.3.6"
@@ -316,7 +399,9 @@
       "type": "web",
       "description": "File Saver.js https://github.com/eligrey/FileSaver.js/",
       "aliases": {},
-      "externals": ["file-saver"],
+      "externals": [
+        "file-saver"
+      ],
       "dependencies": {
         "@types/file-saver": "0.0.0",
         "file-saver": "1.3.3"
@@ -327,7 +412,9 @@
       "type": "web",
       "description": "Datavisyn Canvas Scatterplot",
       "aliases": {},
-      "externals": ["datavisyn-scatterplot"],
+      "externals": [
+        "datavisyn-scatterplot"
+      ],
       "dependencies": {
         "datavisyn-scatterplot": "github:datavisyn/datavisyn-scatterplot"
       }
@@ -337,7 +424,9 @@
       "type": "web",
       "description": "Colorbrewer scales (https://github.com/sgratzl/colorbrewer)",
       "aliases": {},
-      "externals": ["colorbrewer"],
+      "externals": [
+        "colorbrewer"
+      ],
       "dependencies": {
         "@types/colorbrewer": "1.0.29",
         "colorbrewer": "github:sgratzl/colorbrewer"
