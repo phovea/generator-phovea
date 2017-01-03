@@ -27,7 +27,7 @@ class PackageJSONGenerator extends Base {
       homepage: this.options.homepage || pkg.homepage || 'https://phovea.caleydo.org',
       authorEmail: this.options.authorEmail || this.user.git.email(),
       authorUrl: this.options.authorUrl || '',
-      version: pkg.version || '0.0.1-SNAPSHOT'
+      version: pkg.version || '1.0.0-SNAPSHOT'
     };
 
     let authorName = this.user.git.name() || 'Caleydo Team';
