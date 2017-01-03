@@ -1,5 +1,5 @@
 'use strict';
-var BasePluginGenerator = require('../../utils').Base;
+const BasePluginGenerator = require('../../utils').Base;
 
 class PluginGenerator extends BasePluginGenerator {
 
@@ -7,6 +7,7 @@ class PluginGenerator extends BasePluginGenerator {
     super.initializing();
     this.config.defaults({
       app: '',
+      clientOnly: false,
       entries: {
         app: './src/index.ts'
       },
@@ -24,8 +25,14 @@ class PluginGenerator extends BasePluginGenerator {
       name: 'app',
       message: 'Application Title',
       default: this.config.get('name')
+    }, {
+      type: 'confirm',
+      name: 'clientOnly',
+      message: 'Client Only (no communication to the server)',
+      default: this.config.get('clientOnly')
     }]).then((props) => {
       this.config.set('app', props.app);
+      this.config.set('clientOnly', props.clientOnly);
     });
   }
 

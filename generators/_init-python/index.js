@@ -23,8 +23,7 @@ class PluginGenerator extends Base {
       sextensions: [],
       unknown: {
         requirements: [],
-        debianPackages: [],
-        redhatPackages: []
+        dockerPackages: []
       }
     });
   }
@@ -62,8 +61,7 @@ class PluginGenerator extends Base {
 
   _generateDependencies() {
     const requirements = {};
-    const debianPackages = {};
-    const redhatPackages = {};
+    const dockerPackages = {};
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
@@ -75,8 +73,7 @@ class PluginGenerator extends Base {
     modules.filter(known.plugin.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
       _.assign(requirements, p.requirements);
-      _.assign(debianPackages, p.debianPackages);
-      _.assign(redhatPackages, p.redhatPackages);
+      _.assign(dockerPackages, p.dockerPackages);
     });
     const libraries = this.config.get('libraries').concat(this.config.get('slibraries') || []);
     this.config.delete('slibraries');
@@ -84,14 +81,12 @@ class PluginGenerator extends Base {
     libraries.filter(known.lib.isTypeServer).forEach((m) => {
       const p = known.lib.byName(m);
       _.assign(requirements, p.requirements);
-      _.assign(debianPackages, p.debianPackages);
-      _.assign(redhatPackages, p.redhatPackages);
+      _.assign(dockerPackages, p.dockerPackages);
     });
 
     return {
       requirements: concat(requirements),
-      debianPackages: concat(debianPackages),
-      redhatPackages: concat(redhatPackages)
+      dockerPackages: concat(dockerPackages)
     };
   }
 
@@ -102,8 +97,7 @@ class PluginGenerator extends Base {
 
     const deps = this._generateDependencies();
     this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown').requirements).join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), deps.debianPackages.concat(this.config.get('unknown').debianPackages).join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), deps.redhatPackages.concat(this.config.get('unknown').redhatPackages).join('\n'));
+    this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.concat(this.config.get('unknown').dockerPackages).join('\n'));
 
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath(config.name + '/__init__.py'))) {

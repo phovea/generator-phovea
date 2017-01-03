@@ -115,12 +115,10 @@ class Generator extends Base {
       });
     });
     const knownRequirements = [].concat(...known.lib.listServer.map((m) => Object.keys(m.requirements)));
-    const knownDebianPackages = [].concat(...known.lib.listServer.map((m) => Object.keys(m.debianPackages)));
-    const knownRedhatPackages = [].concat(...known.lib.listServer.map((m) => Object.keys(m.redhatPackages)));
+    const knownDockerPackages = []; // .concat(...known.lib.listServer.map((m) => Object.keys(m.dockerPackages)));
 
     const slibs = safe(pkg.caleydo, 'dependencies.python', {});
-    const debianPackages = safe(pkg.caleydo, 'dependencies.debian', {});
-    const redhatPackages = safe(pkg.caleydo, 'dependencies.redhat', {});
+    const dockerPackages = safe(pkg.caleydo, 'dependencies.debian', {});
 
     this.config.defaults({
       type: this.type,
@@ -139,8 +137,7 @@ class Generator extends Base {
       unknown: {
         // filter unknown and convert to the common format
         requirements: Object.keys(slibs).filter((d) => knownRequirements.indexOf(d) < 0).map((d) => d + slibs[d]),
-        debianPackages: Object.keys(debianPackages).filter((d) => knownDebianPackages.indexOf(d) < 0).map((d) => d + debianPackages[d]),
-        redhatPackages: Object.keys(redhatPackages).filter((d) => knownRedhatPackages.indexOf(d) < 0).map((d) => d + redhatPackages[d])
+        dockerPackages: Object.keys(dockerPackages).filter((d) => knownDockerPackages.indexOf(d) < 0).map((d) => d + dockerPackages[d])
       }
     });
   }

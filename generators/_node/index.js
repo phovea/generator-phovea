@@ -26,10 +26,11 @@ class PackageJSONGenerator extends Base {
       description: this.options.description || pkg.description || '',
       homepage: this.options.homepage || pkg.homepage || 'https://phovea.caleydo.org',
       authorEmail: this.options.authorEmail || this.user.git.email(),
-      authorUrl: this.options.authorUrl || ''
+      authorUrl: this.options.authorUrl || '',
+      version: pkg.version || '0.0.1-SNAPSHOT'
     };
 
-    var authorName = this.user.git.name() || 'Caleydo Team';
+    let authorName = this.user.git.name() || 'Caleydo Team';
     if (_.isObject(pkg.author)) {
       authorName = pkg.author.name;
       this.props.authorEmail = pkg.author.email;

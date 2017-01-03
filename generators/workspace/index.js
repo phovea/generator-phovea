@@ -2,20 +2,48 @@
 const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
-const _ = require('lodash');
+const chalk = require('chalk');
 const extend = require('lodash').extend;
+const _ = require('lodash');
 
 const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
+const patchPackageJSON = require('../../utils').patchPackageJSON;
+
+function mergeArrayUnion(a, b) {
+  return Array.isArray(a) ? _.union(a, b) : undefined;
+}
+
+function isHelperContainer(name) {
+  return name.includes('_');
+}
+
+/**
+ * rewrite the compose by inlining _host to all services not containing a dash, such that both api and celery have the same entry
+ * @param compose
+ */
+function rewriteDockerCompose(compose) {
+  const services = compose.services;
+  if (!services) {
+    return compose;
+  }
+  const host = services._host;
+  delete services._host;
+  Object.keys(services).forEach((k) => {
+    if (!isHelperContainer(k)) {
+      _.mergeWith(services[k], host, mergeArrayUnion);
+    }
+  });
+  return compose;
+}
 
 class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
 
-    this.option('venv', {
-      alias: 'v'
-    });
+    // readme content
+    this.option('noAdditionals');
   }
 
   initializing() {
@@ -25,45 +53,29 @@ class Generator extends Base {
   prompting() {
     const isInstalled = glob('*/package.json', {cwd: this.destinationPath()}).map(path.dirname);
     return this.prompt([{
-      type: 'list',
-      name: 'virtualEnvironment',
-      message: 'Virtual Environment',
-      store: true,
-      choices: ['none', 'vagrant', 'conda', 'virtualenv'],
-      default: 'vagrant',
-      when: !this.options.venv
-    }, {
       type: 'checkbox',
       name: 'modules',
       message: 'Additional Plugins',
       choices: known.plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
-      default: this.props.modules
+      default: this.props.modules,
+      when: !this.option('noAdditionals')
     }]).then((props) => {
-      this.props.modules = props.modules;
-      this.venv = props.virtualEnvironment || this.options.venv;
+      if (props.modules !== undefined) {
+        this.props.modules = props.modules;
+      }
     });
   }
 
-  default() {
-    if (this.venv !== 'none') {
-      this.composeWith(`phovea:workspace-${this.venv}`, {
-        options: this.options
-      }, {
-        local: require.resolve(`../workspace-${this.venv}`)
-      });
-    }
-  }
-
-  _generatePackage(additionalPlugins) {
+  _generateWebDependencies(additionalPlugins) {
     const files = glob('*/phovea.js', { // web plugin
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
 
     // generate dependencies
-    var dependencies = {};
-    var devDependencies = {};
-    var scripts = {};
+    let dependencies = {};
+    let devDependencies = {};
+    let scripts = {};
     plugins.forEach((p) => {
       const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
       extend(dependencies, pkg.dependencies);
@@ -105,23 +117,81 @@ class Generator extends Base {
     });
     const plugins = files.map(path.dirname);
 
-    var requirements = new Set();
-    var devRequirements = new Set();
-    var debianPackages = new Set();
-    var redhatPackages = new Set();
+    const requirements = new Set();
+    const devRequirements = new Set();
+    const dockerPackages = new Set();
+    let dockerCompose = {};
+    let dockerComposeDebug = {};
+    let scripts = {};
 
     plugins.forEach((p) => {
       // generate dependencies
       const addAll = (name, set) => {
-        const r = this.fs.read(this.destinationPath(`${p}/${name}`));
-        r.split('\n').forEach((ri) => {
+        const r = this.fs.read(this.destinationPath(`${p}/${name}`), {defaults: ''});
+        r.split('\n').filter((d) => d.trim().length > 0).forEach((ri) => {
           set.add(ri.trim());
         });
       };
       addAll('requirements.txt', requirements);
       addAll('requirements_dev.txt', devRequirements);
-      addAll('debian_packages.txt', debianPackages);
-      addAll('redhat_packages.txt', redhatPackages);
+      addAll('docker_packages.txt', dockerPackages);
+
+      {
+        const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
+
+        // vagrantify commands
+        const cmds = Object.keys(pkg.scripts);
+
+        let toPatch;
+        if (cmds.includes('test:python')) { // hybrid
+          toPatch = /^(check|(test|dist|start|watch):python)$/;
+        } else { // regular server
+          toPatch = /^(check|test|dist|start|watch)$/;
+        }
+
+        // no pre post test tasks
+        cmds.filter((s) => toPatch.test(s)).forEach((s) => {
+          // generate scoped tasks
+          let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
+          if (/^(start|watch)/g.test(s)) {
+            // special case for start to have the right working directory
+            let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
+            cmd = `.${path.sep}withinEnv "${fixedscript}"`;
+          }
+          scripts[`${s}:${p}`] = cmd;
+        });
+      }
+
+      // merge docker-compose
+      const dockerFile = (fileName) => {
+        if (!this.fs.exists(this.destinationPath(fileName))) {
+          return {};
+        }
+        const yaml = require('yamljs');
+        const text = this.fs.read(this.destinationPath(fileName));
+        const localCompose = yaml.parse(text);
+
+        // inject to use right docker file
+        Object.keys(localCompose.services || {}).forEach((key) => {
+          const service = localCompose.services[key];
+          if (service.build && service.build.context === '.') {
+            service.build.dockerfile = `${p}/${service.build.dockerfile}`;
+          }
+          if (isHelperContainer(key)) {
+            // change local volumes
+            service.volumes = (service.volumes || []).map((volume) => {
+              if (volume.startsWith('.')) {
+                return `./${p}${volume.slice(1)}`;
+              }
+              return volume;
+            });
+          }
+        });
+
+        return localCompose;
+      };
+      _.mergeWith(dockerCompose, dockerFile(p + '/deploy/docker-compose.partial.yml'), mergeArrayUnion);
+      _.mergeWith(dockerComposeDebug, dockerFile(p + '/deploy/docker-compose-debug.partial.yml'), mergeArrayUnion);
     });
 
     // add additional to install plugins
@@ -130,11 +200,8 @@ class Generator extends Base {
       if (k && k.requirements) {
         Object.keys(k.requirements).forEach((ri) => requirements.add(ri + k.requirements[ri]));
       }
-      if (k && k.debianPackages) {
-        Object.keys(k.debianPackages).forEach((ri) => debianPackages.add(ri + known.debianPackages[ri]));
-      }
-      if (k && k.debianPackages) {
-        Object.keys(k.debianPackages).forEach((ri) => redhatPackages.add(ri + k.debianPackages[ri]));
+      if (k && k.dockerPackages) {
+        Object.keys(k.dockerPackages).forEach((ri) => dockerPackages.add(ri + known.dockerPackages[ri]));
       }
     });
 
@@ -154,37 +221,61 @@ class Generator extends Base {
       plugins: plugins,
       requirements: [...requirements.values()],
       devRequirements: [...devRequirements.values()],
-      debianPackages: [...debianPackages.values()],
-      redhatPackages: [...redhatPackages.values()]
+      dockerPackages: [...dockerPackages.values()],
+      scripts: scripts,
+      dockerCompose: rewriteDockerCompose(dockerCompose),
+      dockerComposeDebug: rewriteDockerCompose(dockerComposeDebug)
     };
   }
 
   writing() {
+    // save config
     this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules});
 
-    const config = {};
-    const {plugins, dependencies, devDependencies, scripts} = this._generatePackage(this.props.modules);
-
+    const {plugins, dependencies, devDependencies, scripts} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
 
+    // merge scripts together server wins
+    extend(scripts, sdeps.scripts);
+
+    const config = {};
     config.workspace = path.basename(this.destinationPath());
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
+    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts});
 
-    this.fs.copy(this.templatePath('package.tmpl.json'), this.destinationPath('package.json'));
-    this.fs.extendJSON(this.destinationPath('package.json'), {devDependencies, dependencies, scripts});
+    if (!this.fs.exists(this.destinationPath('config.json'))) {
+      this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
+    }
 
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
-    this.fs.write(this.destinationPath('debian_packages.txt'), sdeps.debianPackages.join('\n'));
-    this.fs.write(this.destinationPath('redhat_packages.txt'), sdeps.redhatPackages.join('\n'));
+    this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
+
+    {
+      const yaml = require('yamljs');
+      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
+      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2));
+    }
 
     this.fs.copy(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`));
     if (!this.fs.exists(this.destinationPath(`.idea/workspace.xml`))) {
       this.fs.copy(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`.idea/workspace.xml`));
     }
+  }
+
+  end() {
+    this.log('\n\nuseful commands: ');
+    this.log(chalk.red(' docker-compose up'), '        ... starts the system');
+    this.log(chalk.red(' docker-compose restart'), '   ... restart');
+    this.log(chalk.red(' docker-compose stop'), '      ... stop');
+    this.log(chalk.red(' docker-compose build api'), ' ... rebuild api (in case of new dependencies)');
+
+    this.log('\n\nnext steps: ');
+    this.log(chalk.red(' npm install'));
+    this.log(chalk.red(' docker-compose up'));
   }
 }
 
