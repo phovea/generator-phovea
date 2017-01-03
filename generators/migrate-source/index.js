@@ -6,6 +6,8 @@ function fixTSSourceFile(content) {
   content = content.replace(/\/\/\/ <reference path="\.\.\/\.\.\/tsd\.d\.ts" \/>\s/gm, '');
   // FROM /main to /index
   content = content.replace(/\/main/gm, '/index');
+  // FROM ../caleydo_bootstrap_fontawesome/(.*)' to phovea_ui/src/$2'
+  content = content.replace(/\.\.\/caleydo_bootstrap_fontawesome\/(.*)/gm, 'phovea_ui/src/$2');
   // FROM ../caleydo_(.*)/(.*)' to phovea_$1/src/$2'
   content = content.replace(/\.\.\/caleydo_(.*)\/(.*)/gm, 'phovea_$1/src/$2');
   // FROM import (.*) = require('(.*)') TO import * as $1 from '$2'
