@@ -121,6 +121,7 @@ class Generator extends Base {
     const devRequirements = new Set();
     const dockerPackages = new Set();
     let dockerCompose = {};
+    let dockerComposeDebug = {};
     let scripts = {};
 
     plugins.forEach((p) => {
@@ -162,9 +163,12 @@ class Generator extends Base {
       }
 
       // merge docker-compose
-      if (this.fs.exists(this.destinationPath(p + '/deploy/docker-compose.partial.yml'))) {
+      const dockerFile = (fileName) => {
+        if (!this.fs.exists(this.destinationPath(fileName))) {
+          return {};
+        }
         const yaml = require('yamljs');
-        const text = this.fs.read(this.destinationPath(p + '/deploy/docker-compose.partial.yml'));
+        const text = this.fs.read(this.destinationPath(fileName));
         const localCompose = yaml.parse(text);
 
         // inject to use right docker file
@@ -184,8 +188,10 @@ class Generator extends Base {
           }
         });
 
-        _.mergeWith(dockerCompose, localCompose, mergeArrayUnion);
-      }
+        return localCompose;
+      };
+      _.mergeWith(dockerCompose, dockerFile(p + '/deploy/docker-compose.partial.yml'), mergeArrayUnion);
+      _.mergeWith(dockerComposeDebug, dockerFile(p + '/deploy/docker-compose-debug.partial.yml'), mergeArrayUnion);
     });
 
     // add additional to install plugins
@@ -217,7 +223,8 @@ class Generator extends Base {
       devRequirements: [...devRequirements.values()],
       dockerPackages: [...dockerPackages.values()],
       scripts: scripts,
-      dockerCompose: rewriteDockerCompose(dockerCompose)
+      dockerCompose: rewriteDockerCompose(dockerCompose),
+      dockerComposeDebug: rewriteDockerCompose(dockerComposeDebug)
     };
   }
 
@@ -233,7 +240,7 @@ class Generator extends Base {
 
     const config = {};
     config.workspace = path.basename(this.destinationPath());
-    config.modules = _.union(this.props.modules,plugins, sdeps.plugins);
+    config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins;
 
     writeTemplates.call(this, config, false);
@@ -250,6 +257,7 @@ class Generator extends Base {
     {
       const yaml = require('yamljs');
       this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
+      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2));
     }
 
     this.fs.copy(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`));
