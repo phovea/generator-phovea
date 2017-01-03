@@ -76,6 +76,12 @@ function writeTemplates(config, withSamples) {
   }
 }
 
+function useDevVersion() {
+  const pkg = this.fs.readJSON(this.destinationPath('package.json'), { version: '1.0.0'});
+  // assumption having a suffix like -SNAPSHOT use the dev version
+  return pkg.version.includes('-');
+}
+
 class BaseInitPluginGenerator extends generators.Base {
 
   constructor(args, options, basetype) {
@@ -175,5 +181,6 @@ module.exports = {
   BaseHybrid: BaseInitHybridGenerator,
   patchPackageJSON: patchPackageJSON,
   writeTemplates: writeTemplates,
-  stringifyAble: stringifyAble
+  stringifyAble: stringifyAble,
+  useDevVersion: useDevVersion
 };

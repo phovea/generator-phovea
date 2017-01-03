@@ -1,7 +1,7 @@
 'use strict';
 const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
-const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
+const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
 const known = require('../../utils/known');
 
@@ -59,7 +59,7 @@ class PluginGenerator extends Base {
     });
   }
 
-  _generateDependencies() {
+  _generateDependencies(useDevelopDependencies) {
     const requirements = {};
     const dockerPackages = {};
 
@@ -72,8 +72,8 @@ class PluginGenerator extends Base {
     this.config.set('modules', modules);
     modules.filter(known.plugin.isTypeServer).forEach((m) => {
       const p = known.plugin.byName(m);
-      _.assign(requirements, p.requirements);
-      _.assign(dockerPackages, p.dockerPackages);
+      _.assign(requirements, (useDevelopDependencies ? p.develop : p).requirements);
+      _.assign(dockerPackages, (useDevelopDependencies ? p.develop : p).dockerPackages);
     });
     const libraries = this.config.get('libraries').concat(this.config.get('slibraries') || []);
     this.config.delete('slibraries');
@@ -95,7 +95,7 @@ class PluginGenerator extends Base {
     patchPackageJSON.call(this, config, ['devDependencies']);
     writeTemplates.call(this, config);
 
-    const deps = this._generateDependencies();
+    const deps = this._generateDependencies(useDevVersion.call(this));
     this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown').requirements).join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.concat(this.config.get('unknown').dockerPackages).join('\n'));
 
