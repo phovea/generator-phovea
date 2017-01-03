@@ -6,7 +6,7 @@
       "description": "Phovea Core Plugin",
       "repository": "https://github.com/phovea/phovea_core.git",
       "dependencies": {
-        "phovea_core": "github:phovea/phovea_core#v0.0.3"
+        "phovea_core": "github:phovea/phovea_core#v0.0.5"
       },
       "libraries": []
     },
@@ -16,7 +16,7 @@
       "description": "Phovea D3 Plugin",
       "repository": "https://github.com/phovea/phovea_d3.git",
       "dependencies": {
-        "phovea_d3": "github:phovea/phovea_d3#v0.0.3"
+        "phovea_d3": "github:phovea/phovea_d3#v0.0.5"
       },
       "libraries": [
         "d3"
@@ -28,7 +28,7 @@
       "description": "Phovea Vis Plugin",
       "repository": "https://github.com/phovea/phovea_vis.git",
       "dependencies": {
-        "phovea_vis": "github:phovea/phovea_vis#v0.0.3"
+        "phovea_vis": "github:phovea/phovea_vis#v0.0.5"
       },
       "libraries": [
         "d3"
@@ -40,7 +40,7 @@
       "description": "Phovea Common Style Plugin",
       "repository": "https://github.com/phovea/phovea_bootstrap_fontawesome.git",
       "dependencies": {
-        "phovea_bootstrap_fontawesome": "github:phovea/phovea_bootstrap_fontawesome#v0.0.3"
+        "phovea_bootstrap_fontawesome": "github:phovea/phovea_bootstrap_fontawesome#v0.0.5"
       },
       "libraries": [
         "jquery",
@@ -53,7 +53,7 @@
       "description": "Phovea Importer Plugin",
       "repository": "https://github.com/phovea/phovea_importer.git",
       "dependencies": {
-        "phovea_importer": "github:phovea/phovea_importer"
+        "phovea_importer": "github:phovea/phovea_importer#v0.0.5"
       },
       "libraries": [
         "d3",
@@ -66,7 +66,7 @@
       "description": "Phovea LineUp Visualization",
       "repository": "https://github.com/phovea/phovea_vis_lineup.git",
       "dependencies": {
-        "phovea_vis_lineup": "github:phovea/phovea_vis_lineup"
+        "phovea_vis_lineup": "github:phovea/phovea_vis_lineup#v0.0.5"
       },
       "libraries": [
         "lineupjs",
@@ -80,11 +80,11 @@
       "description": "Phovea Security",
       "repository": "https://github.com/phovea/phovea_security_flask.git",
       "dependencies": {
-        "phovea_security_flask": "github:phovea/phovea_security_flask"
+        "phovea_security_flask": "github:phovea/phovea_security_flask#v0.0.5"
       },
       "libraries": [],
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_security_flask.git": "#egg=phovea_security_flask"
+        "-e git+https://github.com/phovea/phovea_security_flask.git": "@v0.0.5#egg=phovea_security_flask"
       }
     },
     {
@@ -93,7 +93,7 @@
       "description": "Phovea Server Plugin",
       "repository": "https://github.com/phovea/phovea_server.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_server.git": "#egg=phovea_server"
+        "-e git+https://github.com/phovea/phovea_server.git": "@v0.0.5#egg=phovea_server"
       }
     },
     {
@@ -102,7 +102,7 @@
       "description": "Phovea Server RedisDB Plugin",
       "repository": "https://github.com/phovea/phovea_data_redis.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_redis.git": "#egg=phovea_data_redis"
+        "-e git+https://github.com/phovea/phovea_data_redis.git": "@v0.0.5#egg=phovea_data_redis"
       }
     },
     {
@@ -111,7 +111,7 @@
       "description": "Phovea Server MongoDB Plugin",
       "repository": "https://github.com/phovea/phovea_data_mongo.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_mongo.git": "#egg=phovea_data_mongo"
+        "-e git+https://github.com/phovea/phovea_data_mongo.git": "@v0.0.5#egg=phovea_data_mongo"
       }
     },
     {
@@ -120,7 +120,7 @@
       "description": "Phovea Server SQL Plugin",
       "repository": "https://github.com/phovea/phovea_data_sql.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_sql.git": "#egg=phovea_data_sql"
+        "-e git+https://github.com/phovea/phovea_data_sql.git": "@v0.0.5#egg=phovea_data_sql"
       }
     },
     {
@@ -129,7 +129,7 @@
       "description": "Phovea Server HDF5 Plugin",
       "repository": "https://github.com/phovea/phovea_data_hdf.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_hdf.git": "#egg=phovea_data_hdf"
+        "-e git+https://github.com/phovea/phovea_data_hdf.git": "@v0.0.5#egg=phovea_data_hdf"
       }
     },
     {
@@ -138,10 +138,10 @@
       "description": "Phovea CLUE Plugin",
       "repository": "https://github.com/phovea/phovea_clue.git",
       "dependencies": {
-        "phovea_clue": "github:phovea/phovea_clue"
+        "phovea_clue": "github:phovea/phovea_clue#v0.0.5"
       },
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_clue.git": "#egg=phovea_clue"
+        "-e git+https://github.com/phovea/phovea_clue.git": "@v0.0.5#egg=phovea_clue"
       },
       "libraries": [
         "marked"
@@ -153,24 +153,10 @@
       "description": "Phovea Processing Queue Plugin",
       "repository": "https://github.com/phovea/phovea_processing_queue.git",
       "dependencies": {
-        "phovea_clue": "github:phovea/phovea_processing_queue"
+        "phovea_clue": "github:phovea/phovea_processing_queue#v0.0.5"
       },
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_processing_queue.git": "#egg=phovea_processing_queue"
-      },
-      "libraries": [
-      ]
-    },
-    {
-      "name": "targid2",
-      "type": "lib-slib",
-      "description": "Targid Discovery Platform",
-      "repository": "https://github.com/phovea/targid2.git",
-      "dependencies": {
-        "phovea_clue": "github:phovea/targid2"
-      },
-      "requirements": {
-        "-e git+https://github.com/phovea/targid2.git": "#egg=targid2"
+        "-e git+https://github.com/phovea/phovea_processing_queue.git": "@v0.0.5#egg=phovea_processing_queue"
       },
       "libraries": [
       ]
