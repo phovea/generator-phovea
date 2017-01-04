@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "predist": "npm run build",
     "predocker": "npm run build",
     "docker": "docker build -t <%-name%> -f deploy/Dockerfile ."
   }
