@@ -208,10 +208,17 @@ class Generator extends Base {
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const k = known.plugin.byName(p);
-      if (k && k.requirements) {
-        Object.keys(k.requirements).forEach((pi) => {
-          requirements.delete(pi + k.requirements[pi]);
-        });
+      if (k) {
+        if (k.requirements) {
+          Object.keys(k.requirements).forEach((pi) => {
+            requirements.delete(pi + k.requirements[pi]);
+          });
+        }
+        if (k.develop && k.develop.requirements) {
+          Object.keys(k.develop.requirements).forEach((pi) => {
+            requirements.delete(pi + k.develop.requirements[pi]);
+          });
+        }
       } else {
         requirements.delete(p);
       }
