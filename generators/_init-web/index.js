@@ -1,7 +1,7 @@
 'use strict';
 const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
-const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
+const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
 const known = require('../../utils/known');
 
@@ -107,11 +107,12 @@ class PluginGenerator extends Base {
     });
   }
 
-  _generateDependencies() {
+  _generateDependencies(useDevelopDependencies) {
     let r = {};
     // merge dependencies
     this.config.get('modules').filter(known.plugin.isTypeWeb).forEach((m) => {
-      _.assign(r, known.plugin.byName(m).dependencies);
+      const d = known.plugin.byName(m);
+      _.assign(r, (useDevelopDependencies ? d.develop : d).dependencies);
     });
     this.config.get('libraries').filter(known.lib.isTypeWeb).forEach((m) => {
       _.assign(r, known.lib.byName(m).dependencies);
@@ -122,7 +123,7 @@ class PluginGenerator extends Base {
   writing() {
     const config = this.config.getAll();
     patchPackageJSON.call(this, config, [], {
-      dependencies: this._generateDependencies()
+      dependencies: this._generateDependencies(useDevVersion.call(this))
     });
     writeTemplates.call(this, config);
     // don't overwrite existing registry file

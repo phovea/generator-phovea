@@ -14,6 +14,9 @@
   ],
   "scripts": {
     "check": "flake8",
+    "docs:web": "typedoc --options typedoc.json src/**.ts",
+    "docs:python": "echo todo creating docs...",
+    "docs": "npm run docs:web && npm run docs:python",
     "pretest:web": "npm run compile",
     "pretest:python": "npm run check",
     "pretest": "echo hybrid",
@@ -22,10 +25,13 @@
     "test:web": "karma start",
     "test:python": "test ! -d tests || python setup.py test",
     "test": "npm run test:web && npm run test:python",
+    "build:python": "python -c \"from distutils.dir_util import mkpath ; mkpath('./build/source')\" && (tar -c ./<%-name%> --exclude '*.pyc' | tar -xC build/source)",
+    "build:web": "webpack --env prod",
+    "build": "npm run build:web && npm run build:python",
     "predist:web": "npm run build",
     "predist": "echo hybrid",
     "dist:web": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *",
     "dist:python": "python setup.py bdist_egg",
-    "dist": "npm run dist:web && npm run dist:web"
+    "dist": "npm run dist:web && npm run dist:python"
   }
 }
