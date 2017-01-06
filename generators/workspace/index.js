@@ -257,9 +257,9 @@ class Generator extends Base {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
     }
 
-    this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.join('\n'));
-    this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.join('\n'));
-    this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.join('\n'));
+    this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.sort().join('\n'));
+    this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
+    this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
 
     {
       const yaml = require('yamljs');
