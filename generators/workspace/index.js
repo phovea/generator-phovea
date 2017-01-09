@@ -67,7 +67,7 @@ class Generator extends Base {
   }
 
   _generateWebDependencies(additionalPlugins) {
-    const files = glob('*/phovea.js', { // web plugin
+    const files = glob('*/webpack.config.js', { // web plugin
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
