@@ -86,7 +86,7 @@ class Generator extends Base {
   _spawnOrAbort(cmd, argline, cwd) {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      // this.log(r);
+      this.log(r);
       return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
     }
     return Promise.resolve(cmd);
@@ -134,6 +134,9 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind('workspace'))
+      .then(() => Promise.all([new Promise((resolve) => {
+        this.npmInstall([], {cwd: this.cwd}, resolve);
+      }), this._spawn('docker-compose', 'build')]))
       .catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
   }
 }
