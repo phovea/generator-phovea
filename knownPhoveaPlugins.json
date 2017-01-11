@@ -239,6 +239,28 @@
       },
       "libraries": [
       ]
+    },
+    {
+      "name": "targid2",
+      "type": "lib-slib",
+      "description": "Targid Discovery Platform",
+      "repository": "https://github.com/Caleydo/targid2.git",
+      "dependencies": {
+        "targid2": "github:Caleydo/targid2#master"
+      },
+      "requirements": {
+        "-e git+https://github.com/Caleydo/targid2.git": "@migrate#egg=targid2"
+      },
+      "develop": {
+        "dependencies": {
+          "targid2": "github:Caleydo/targid2#develop"
+        },
+        "requirements": {
+          "-e git+https://github.com/Caleydo/targid2.git": "@develop#egg=targid2"
+        }
+      },
+      "libraries": [
+      ]
     }
   ],
   "libraries": [
