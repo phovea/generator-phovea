@@ -22,6 +22,18 @@ function toCWD(basename) {
   return match;
 }
 
+function findDefaultApp(product) {
+  if (!product) {
+    return '???';
+  }
+  for (let p of product) {
+    if (p.type === 'web') {
+      return p.repo.slice(p.repo.lastIndexOf('/')+1);
+    }
+  }
+  return '???';
+}
+
 class Generator extends Base {
 
   constructor(args, options) {
@@ -142,17 +154,19 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace'))
+      .then(this._spawn.bind(this,'npm', 'install'))
+      .then(this._spawn.bind(this,'docker-compose', 'build'))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);
       });
   }
 
-  install() {
-    return Promise.all([
-      this._spawn('npm', 'install'),
-      this._spawn('docker-compose', 'build')
-    ]).catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
+  end() {
+    this.log('\n\nnext steps: ');
+    this.log(chalk.blue(' Open PyCharm and select:'), this.destinationPath(this.cwd));
+    this.log(chalk.red(' docker-compose up -d'));
+    this.log(chalk.red(` npm run start:${findDefaultApp(this.product)}`));
   }
 }
 
