@@ -141,8 +141,11 @@ class Generator extends Base {
         return repos;
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
-      .then(this._yo.bind('workspace'))
-      .catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
+      .then(this._yo.bind(this, 'workspace'))
+      .catch((msg) => {
+        this.log(chalk.red(`Error: ${msg}`));
+        return Promise.reject(msg);
+      });
   }
 
   install() {
