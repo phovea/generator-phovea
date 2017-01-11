@@ -116,28 +116,40 @@ class Generator extends Base {
       .then(this._mkdir.bind(this))
       .then(this._getProduct.bind(this))
       .then((product) => {
-        const repos = new Set();
+        const names = new Set();
+        const repos = [];
         product.forEach((p) => {
-          repos.add({
-            repo: p.repo || 'phovea/' + p.name,
-            branch: p.branch || 'master'
-          });
-          (p.additional || []).forEach((pi) => {
-            repos.add({
-              repo: pi.repo || 'phovea/' + pi.name,
-              branch: pi.branch || 'master'
+          const repo = p.repo || 'phovea/' + p.name;
+          if (!names.has(repo)) {
+            names.add(repo);
+            repos.push({
+              repo,
+              branch: p.branch || 'master'
             });
+          }
+          (p.additional || []).forEach((pi) => {
+            const repo = pi.repo || 'phovea/' + pi.name;
+            if (!names.has(repo)) {
+              names.add(repo);
+              repos.push({
+                repo,
+                branch: pi.branch || 'master'
+              });
+            }
           });
         });
-
-        return Array.from(repos);
+        return repos;
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind('workspace'))
-      .then(() => Promise.all([new Promise((resolve) => {
-        this.npmInstall([], {cwd: this.cwd}, resolve);
-      }), this._spawn('docker-compose', 'build')]))
       .catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
+  }
+
+  install() {
+    return Promise.all([new Promise((resolve) => {
+        this.npmInstall([], {cwd: this.cwd}, resolve);
+      }), this._spawn('docker-compose', 'build')])
+    .catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
   }
 }
 
