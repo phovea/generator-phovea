@@ -28,7 +28,7 @@ function findDefaultApp(product) {
   }
   for (let p of product) {
     if (p.type === 'web') {
-      return p.repo.slice(p.repo.lastIndexOf('/')+1);
+      return p.repo.slice(p.repo.lastIndexOf('/') + 1);
     }
   }
   return '???';
@@ -154,8 +154,8 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace'))
-      .then(this._spawn.bind(this,'npm', 'install'))
-      .then(this._spawn.bind(this,'docker-compose', 'build'))
+      .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
+      .then(this._spawnOrAbort.bind(this, 'docker-compose', 'build'))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);
