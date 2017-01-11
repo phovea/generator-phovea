@@ -164,9 +164,9 @@ class Generator extends Base {
 
   end() {
     this.log('\n\nnext steps: ');
-    this.log(chalk.blue(' Open PyCharm and select:'), this.destinationPath(this.cwd));
-    this.log(chalk.red(' docker-compose up -d'));
-    this.log(chalk.red(` npm run start:${findDefaultApp(this.product)}`));
+    this.log(chalk.green(' Open PyCharm and select:'), this.destinationPath(this.cwd));
+    this.log(chalk.yellow(' docker-compose up -d'));
+    this.log(chalk.yellow(` npm run start:${findDefaultApp(this.product)}`));
   }
 }
 
