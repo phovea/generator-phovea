@@ -149,10 +149,10 @@ class Generator extends Base {
   }
 
   install() {
-    return Promise.all([new Promise((resolve) => {
-        this.npmInstall([], {cwd: this.cwd}, resolve);
-      }), this._spawn('docker-compose', 'build')])
-    .catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
+    return Promise.all([
+      this._spawn('npm', 'install'),
+      this._spawn('docker-compose', 'build')
+    ]).catch((msg) => this.log(chalk.red(`Error: ${msg}`)));
   }
 }
 
