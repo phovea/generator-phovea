@@ -33,7 +33,9 @@ yo phovea
 | `yo phovea:add-extension`  | Add an additional web or server extension to the current plugin |
 | `yo phovea:clone`          | Clone a plugin (by plugin name) and resolve the dependencies |
 | `yo phovea:resolve`        | Clone dependent plugins of the current workspace into the workspace |
+| `yo phovea:init-product`   | Create product files and repos |
 | `yo phovea:workspace`      | Create a workspace of multiple containing plugins |
+| `yo phovea:setup-workspace` | Clone a product repository as new workspace and resolve dependencies |
 | `yo phovea:update`         | Update the current plugin or workspace |
 | `yo phovea:migrate-wizard` | Migration wizward from Caleydo Web to phovea |
 
