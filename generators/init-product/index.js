@@ -52,6 +52,7 @@ class PluginGenerator extends Base {
     }, {
       name: 'repo',
       message: 'repository (<githubAccount>/<repo>):',
+      default: (act) => `Caleydo/${act.name}`,
       validate: isRequired
     }, {
       name: 'branch',
