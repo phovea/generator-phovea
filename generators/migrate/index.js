@@ -77,7 +77,7 @@ class Generator extends Base {
     const name = toPhoveaName(pkg.name);
 
     const safe = (obj, p, default_) => {
-      var act = obj;
+      let act = obj;
       for (let pi of p.split('.')) {
         if (!act) {
           return default_;

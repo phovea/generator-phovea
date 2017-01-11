@@ -6,9 +6,9 @@ const known = require('./known');
 const glob = require('glob').sync;
 
 function patchPackageJSON(config, unset, extra) {
-  var pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
+  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
-  var pkgPatch;
+  let pkgPatch;
   if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
     pkgPatch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
   } else {
@@ -23,7 +23,7 @@ function patchPackageJSON(config, unset, extra) {
 }
 
 function stringifyInline(obj, space) {
-  var base = JSON.stringify(obj, null, ' ');
+  let base = JSON.stringify(obj, null, ' ');
   // common style
   base = base.replace(/"/g, '\'');
   // prefix with space
@@ -34,7 +34,7 @@ function stringifyInline(obj, space) {
 function stringifyAble(config) {
   return _.assign({
     stringifyPython: (obj, space) => {
-      var base = stringifyInline(obj, space);
+      let base = stringifyInline(obj, space);
       // python different true false
       base = base.replace(/: true/g, ': True').replace(/: false/g, ': False');
       return base;
@@ -79,7 +79,7 @@ function writeTemplates(config, withSamples) {
 function useDevVersion() {
   const pkg = this.fs.readJSON(this.destinationPath('package.json'), {version: '1.0.0'});
   // assumption having a suffix like -SNAPSHOT use the dev version
-  return pkg.version.includes('-');
+  return (pkg.version || '').includes('-');
 }
 
 class BaseInitPluginGenerator extends generators.Base {
