@@ -4,7 +4,7 @@ set -e
 for plugin in */; do
   if [ -f "${plugin}/package.json" ]; then
     echo "on ${plugin} execute: $@"
-    echo "#####################"
+    echo "#######################################"
     cd ${plugin}
     ( exec $@ )
 	cd ..
