@@ -122,6 +122,12 @@ class Generator extends Base {
   _mkdir() {
     return this._spawn('mkdir', this.cwd, false);
   }
+  
+  _customizeWorkspace() {
+    this.fs.copyTpl(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/workspace.xml`), {
+	  defaultApp: findDefaultApp(this.product)
+	});
+  }
 
   writing() {
     return Promise.resolve(1)
@@ -154,6 +160,7 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace'))
+	  .then(this._customizeWorkspace.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
       .then(this._spawnOrAbort.bind(this, 'docker-compose', 'build'))
       .catch((msg) => {
