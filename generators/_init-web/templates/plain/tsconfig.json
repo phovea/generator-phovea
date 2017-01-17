@@ -5,6 +5,8 @@
     "noImplicitAny": false,
     "sourceMap": true,
     "moduleResolution": "node",
+    "jsx": "react",
+    "experimentalDecorators": true,
     "lib": [
       "dom",
       "es2015"

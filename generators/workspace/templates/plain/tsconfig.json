@@ -4,8 +4,8 @@
     "target": "es5",
     "noImplicitAny": false,
     "sourceMap": true,
-    "jsx": "react",
     "moduleResolution": "node",
+    "jsx": "react",
     "experimentalDecorators": true,
     "lib": [
       "dom",
@@ -15,6 +15,7 @@
   },
   "include": [
     "*/src/**/*.ts",
+    "*/src/**/*.tsx",
     "*/tests/**/*.ts",
     "*/index.ts",
     "tsd.d.ts"
