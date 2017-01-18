@@ -187,7 +187,7 @@ function patchComposeFile(p, composeTemplate) {
 function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
     .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
-    .then(() => dockerSave(p.image, `build/${p.label}_image.tar.gz`))
+    .then(() => args.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
     .then(mergeCompose);
 }
@@ -288,22 +288,35 @@ function buildCompose(descs, composePartials) {
     });
   });
   const yaml = require('yamljs');
-  return Promise.all([
-    fs.writeFileAsync('build/docker-compose.yml', yaml.stringify(dockerCompose, 100, 2)),
-    buildImageHelperFile(dockerCompose)
-  ]);
+  return fs.writeFileAsync('build/docker-compose.yml', yaml.stringify(dockerCompose, 100, 2))
+    .then(() => dockerCompose);
 }
 
-function buildImageHelperFile(dockerCompose) {
+function pushImages(dockerCompose) {
+  const dockerRepository = argv.pushTo;
+  if (!dockerRepository) {
+    return null;
+  }
   const services = dockerCompose.services;
-  const content = [];
-  Object.keys(services).forEach((s) => {
+
+  //collect all images
+  const images = [];
+  Object.keys(services).map((s) => {
     const service = services[s];
     if (service.image) {
-      content.push(`${s}\t${service.image}`);
+      images.push(service.image);
     }
   });
-  return fs.writeFileAsync('build/docker-images.csv', content.join('\n'));
+
+  const tags = images.map((image) => ({image, tag: `{dockerRepository}/${image}`}));
+  if (argv.pushExtra) { //push additional custom prefix without the version
+    tags.push(...images.map((image) => ({
+      image,
+      tag: `${dockerRepository}/${image.substring(0, image.lastIndexOf(':'))}:${argv.pushExtra}`
+    })));
+  }
+  return Promise.all(tags.map((tag) => docker('.', `tag ${tag.image} ${tag.tag}`)))
+    .then(() => Promise.all(tags.map((tag) => docker('.', `push ${tag.tag}`))));
 }
 
 if (require.main === module) {
@@ -338,6 +351,7 @@ if (require.main === module) {
       return wait;
     })))
     .then((composeFiles) => buildCompose(descs, composeFiles.filter((d) => !!d)))
+    .then(pushImages.bind(this))
     .then(() => {
       console.log(chalk.bold('summary: '));
       const maxLength = Math.max(...descs.map((d) => d.name.length));
