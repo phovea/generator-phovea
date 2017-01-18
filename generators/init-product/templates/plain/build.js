@@ -20,6 +20,19 @@ function toRepoUrl(url) {
   return url.startsWith('https://github.com/') ? url : `https://github.com/${url}`;
 }
 
+
+function toRepoUrlWithUser(url) {
+  const repo = toRepoUrl(url);
+  const username = process.env.PHOVEA_GITHUB_USER || 'CaleydoJenkins';
+  const password = process.env.PHOVEA_GITHUB_PASSWORD;
+  if (repo.includes(':') || !password) {
+    return repo;
+  }
+  return repo.replace('://',`://${username}:${password}@`);
+}
+
+
+
 function fromRepoUrl(url) {
   if (url.includes('.git')) {
     return url.match(/\/(.*)\.git/)[0]
@@ -128,7 +141,7 @@ function cloneRepo(p, cwd) {
   p.repo = p.repo || `phovea/${p.name}`;
   p.branch = p.branch || 'master';
   console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
-  return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrl(p.repo), p.name], {cwd});
+  return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
 }
 
 function preBuild(p, dir) {
@@ -276,7 +289,22 @@ function buildCompose(descs, composePartials) {
     });
   });
   const yaml = require('yamljs');
-  return fs.writeFileAsync('build/docker-compose.yml', yaml.stringify(dockerCompose, 100, 2));
+  return Promise.all([
+    fs.writeFileAsync('build/docker-compose.yml', yaml.stringify(dockerCompose, 100, 2)),
+    buildImageHelperFile(dockerCompose)
+  ]);
+}
+
+function buildImageHelperFile(dockerCompose) {
+  const services = dockerCompose.services;
+  const content = [];
+  Object.keys(services).forEach((s) => {
+    const service = services[s];
+    if (service.image) {
+      content.push(`${s}\t${service.image}`);
+    }
+  });
+  return fs.writeFileAsync('build/docker-images.csv', content.join('\n'));
 }
 
 if (require.main === module) {
@@ -290,13 +318,19 @@ if (require.main === module) {
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
   const descs = require('./phovea_product.json');
+  const singleService = descs.length === 1;
+  const productName = pkg.name;
 
   fs.emptyDirAsync('build')
     .then(() => Promise.all(descs.map((d, i) => {
       d.additional = d.additional || []; //default values
       d.name = d.name || fromRepoUrl(d.repo);
       d.label = d.label || d.name;
-      d.image = `${d.label}:${pkg.version}`;
+      if (singleService) {
+        d.image = `${productName}:${pkg.version}`;
+      } else {
+        d.image = `${productName}/${d.label}:${pkg.version}`;
+      }
       let wait = buildImpl(d, './tmp' + i);
       wait.catch((error) => {
         d.error = error;
