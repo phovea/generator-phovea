@@ -28,9 +28,8 @@ function toRepoUrlWithUser(url) {
   if (repo.includes(':') || !password) {
     return repo;
   }
-  return repo.replace('://',`://${username}:${password}@`);
+  return repo.replace('://', `://${username}:${password}@`);
 }
-
 
 
 function fromRepoUrl(url) {

@@ -18,7 +18,7 @@ node {
    try {
      wrap([$class: 'Xvfb']) {
 	    sshagent(['8d0d3e70-a5ee-4180-b3b8-65a75d31eae8']) {
-       sh 'node build.js --quiet'
+       sh 'node build.js --skipTests'
 	    }
      }
      currentBuild.result = "SUCCESS"
