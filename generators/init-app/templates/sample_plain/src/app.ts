@@ -38,7 +38,7 @@ export class App {
    * Show or hide the application loading indicator
    * @param isBusy
    */
-  setBusy(isBusy) {
+  setBusy(isBusy: boolean) {
     this.$node.select('.busy').classed('hidden', !isBusy);
   }
 
