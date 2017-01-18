@@ -14,9 +14,12 @@ before_install:
 before_script:
 - pip install --user awscli
 - export PATH=$PATH:$HOME/.local/bin
-- $(aws ecr get-login --region eu-central-1)
 
-script: node build.js --skipTests --skipSaveImage --pushTo=$AWS_ECR_PREFIX --pushLatest --pushDaily
+# build and push
+#- $(aws ecr get-login --region eu-central-1)
+#script: node build.js --skipTests --skipSaveImage --pushTo=$AWS_ECR_PREFIX --pushLatest --pushDaily
+
+script: node build.js --skipSaveImage
 
 deploy:
   provider: releases

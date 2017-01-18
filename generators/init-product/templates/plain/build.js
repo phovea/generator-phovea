@@ -23,12 +23,11 @@ function toRepoUrl(url) {
 
 function toRepoUrlWithUser(url) {
   const repo = toRepoUrl(url);
-  const username = process.env.PHOVEA_GITHUB_USER || 'CaleydoJenkins';
-  const password = process.env.PHOVEA_GITHUB_PASSWORD;
-  if (repo.includes(':') || !password) {
+  const username_and_password = process.env.PHOVEA_GITHUB_CREDENTIALS;
+  if (repo.includes(':') || !username_and_password) {
     return repo;
   }
-  return repo.replace('://', `://${username}:${password}@`);
+  return repo.replace('://', `://${username_and_password}@`);
 }
 
 
@@ -308,7 +307,7 @@ function pushImages(dockerCompose) {
     }
   });
 
-  const tags = images.map((image) => ({image, tag: `{dockerRepository}/${image}`}));
+  const tags = images.map((image) => ({image, tag: `${dockerRepository}/${image}`}));
   if (argv.pushExtra) { //push additional custom prefix without the version
     tags.push(...images.map((image) => ({
       image,
@@ -331,7 +330,7 @@ if (require.main === module) {
   }
   const descs = require('./phovea_product.json');
   const singleService = descs.length === 1;
-  const productName = pkg.name;
+  const productName = pkg.name.replace('_product', '');
 
   fs.emptyDirAsync('build')
     .then(() => Promise.all(descs.map((d, i) => {
