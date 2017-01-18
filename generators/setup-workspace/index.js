@@ -119,7 +119,7 @@ class Generator extends Base {
         return this.product;
       }).then((product) => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        //clean up again
+        // clean up again
         this.fs.delete(this.destinationPath(`${this.cwd}/${name}`));
         return product;
       });
