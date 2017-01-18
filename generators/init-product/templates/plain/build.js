@@ -187,7 +187,7 @@ function patchComposeFile(p, composeTemplate) {
 function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
     .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
-    .then(() => args.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
+    .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
     .then(mergeCompose);
 }
