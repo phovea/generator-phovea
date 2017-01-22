@@ -45,5 +45,5 @@ This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform 
 [npm-url]: https://npmjs.org/package/<%= name %>
 [travis-image]: https://travis-ci.org/<%-githubAccount%>/<%-name%>.svg?branch=master
 [travis-url]: https://travis-ci.org/<%-githubAccount%>/<%-name%>
-[daviddm-image]: https://david-dm.org/<%-githubAccount%>/<%-name%>.svg?theme=shields.io
+[daviddm-image]: https://david-dm.org/<%-githubAccount%>/<%-name%>/status.svg
 [daviddm-url]: https://david-dm.org/<%-githubAccount%>/<%-name%>
