@@ -22,7 +22,7 @@
     "pretest": "echo hybrid",
     "posttest:web": "npm run lint",
     "posttest": "echo hybrid",
-    "test:web": "karma start",
+    "test:web": "test ! -d tests || karma start",
     "test:python": "test ! -d tests || python setup.py test",
     "test": "npm run test:web && npm run test:python",
     "build:python": "python -c \"from distutils.dir_util import mkpath ; mkpath('./build/source')\" && (tar -c ./<%-name%> --exclude '*.pyc' | tar -xC build/source)",
