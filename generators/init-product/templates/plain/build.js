@@ -24,7 +24,7 @@ function toRepoUrl(url) {
 function toRepoUrlWithUser(url) {
   const repo = toRepoUrl(url);
   const username_and_password = process.env.PHOVEA_GITHUB_CREDENTIALS;
-  if (repo.includes(':') || !username_and_password) {
+  if (repo.includes('git@github.com') || !username_and_password) {
     return repo;
   }
   return repo.replace('://', `://${username_and_password}@`);
