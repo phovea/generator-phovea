@@ -315,12 +315,18 @@ function pushImages(dockerCompose) {
     }
   });
 
-  const tags = images.map((image) => ({image, tag: `${dockerRepository}/${image}`}));
+  const tags = [];
+  if (!argv.noDefaultTags) {
+    tags.push(...images.map((image) => ({image, tag: `${dockerRepository}/${image}`})));
+  }
   if (argv.pushExtra) { //push additional custom prefix without the version
     tags.push(...images.map((image) => ({
       image,
       tag: `${dockerRepository}/${image.substring(0, image.lastIndexOf(':'))}:${argv.pushExtra}`
     })));
+  }
+  if (tags.length === 0) {
+    return Promise.resolve([]);
   }
   return Promise.all(tags.map((tag) => docker('.', `tag ${tag.image} ${tag.tag}`)))
     .then(() => Promise.all(tags.map((tag) => docker('.', `push ${tag.tag}`))));
