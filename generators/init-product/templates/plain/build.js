@@ -103,6 +103,28 @@ function dockerSave(image, target) {
   });
 }
 
+function dockerRemoveImages(productName) {
+  console.log(chalk.blue(`docker images | grep ${productName} | awk '{print $1":"$2}') | xargs docker rmi`));
+  const spawn = require('child_process').spawn;
+  const opts = {env};
+  return new Promise((resolve, reject) => {
+    const p = spawn('docker', ['images'], opts);
+    const p2 = spawn('grep', [productName], opts);
+    const p3 = spawn('awk', ['{print $1":"$2}'], opts);
+    const p4 = spawn('xargs', ['docker', 'rmi'], opts);
+    p.stdout.pipe(p2.stdin);
+    p2.stdout.pipe(p3.stdin);
+    p3.stdout.pipe(p4.stdin);
+    if (!quiet) {
+      p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+      p2.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+      p3.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+      p4.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
+    }
+    p4.on('close', (code) => code == 0 ? resolve() : reject(code));
+  });
+}
+
 function createQuietTerminalAdapter() {
   const TerminalAdapter = require('yeoman-environment/lib/adapter');
   const impl = new TerminalAdapter();
@@ -187,6 +209,7 @@ function patchComposeFile(p, composeTemplate) {
   r.services[p.label] = service;
   return r;
 }
+
 
 function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
@@ -347,6 +370,7 @@ if (require.main === module) {
   const productName = pkg.name.replace('_product', '');
 
   fs.emptyDirAsync('build')
+    .then(dockerRemoveImages.bind(this, productName))
     .then(() => Promise.all(descs.map((d, i) => {
       d.additional = d.additional || []; //default values
       d.name = d.name || fromRepoUrl(d.repo);
