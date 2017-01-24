@@ -47,13 +47,18 @@ function fromRepoUrl(url) {
  */
 function spawn(cmd, args, opts) {
   const spawn = require('child_process').spawn;
+  const _ = require('lodash');
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, args, opts);
-    if (!quiet) {
-      p.stdout.on('data', (data) => console.log(data.toString()));
-      p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
-    }
-    p.on('close', (code) => code == 0 ? resolve() : reject(code));
+    const p = spawn(cmd, args, _.merge({stdio: ['ignore', 1, 2]}, opts));
+    p.on('close', (code, signal) => {
+      if (code === 0) {
+        console.info(cmd, 'ok status code',code, signal);
+        resolve(code);
+      } else {
+        console.error(cmd, 'status code',code, signal);
+        reject(`${cmd} failed with status code ${code} ${signal}`);
+      }
+    });
   });
 }
 
