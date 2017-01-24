@@ -110,18 +110,18 @@ function dockerRemoveImages(productName) {
   return new Promise((resolve, reject) => {
     const p = spawn('docker', ['images'], opts);
     const p2 = spawn('grep', [productName], opts);
-    const p3 = spawn('awk', ['{print $1":"$2}'], opts);
-    const p4 = spawn('xargs', ['docker', 'rmi'], opts);
     p.stdout.pipe(p2.stdin);
+    const p3 = spawn('awk', ['{print $1":"$2}'], opts);
     p2.stdout.pipe(p3.stdin);
-    p3.stdout.pipe(p4.stdin);
-    if (!quiet) {
-      p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
-      p2.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
-      p3.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
-      p4.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
-    }
-    p4.on('close', (code) => code == 0 ? resolve() : reject(code));
+    const p4 = spawn('xargs', ['docker', 'rmi'], {env, stdio: [p3.stdout, 1, 2]});
+    p4.on('close', (code) => {
+      if (code == 0) {
+        resolve();
+      } else {
+        console.log('invalid error code, but continuing');
+        resolve();
+      }
+    });
   });
 }
 
@@ -393,7 +393,7 @@ if (require.main === module) {
       console.log(chalk.bold('summary: '));
       const maxLength = Math.max(...descs.map((d) => d.name.length));
       descs.forEach((d) => console.log(` ${d.name}${'.'.repeat(3 + (maxLength - d.name.length))}` + (d.error ? chalk.red('ERROR') : chalk.green('SUCCESS'))));
-      const anyErrors = desc.some((d) => d.error);
+      const anyErrors = descs.some((d) => d.error);
       if (anyErrors) {
         process.exit(1);
       }
