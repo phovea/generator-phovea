@@ -104,18 +104,24 @@ class Generator extends Base {
     return Promise.resolve(cmd);
   }
 
-  _cloneRepo(repo, branch) {
+  _cloneRepo(repo, branch, extras) {
     const repoUrl = this.cloneSSH ? `git@github.com:${repo}.git` : `https://github.com/${repo}.git`;
-    this.log(chalk.blue(`clone repository:`), `git clone -b ${branch} ${repoUrl}`);
-    return this._spawnOrAbort('git', ['clone', '-b', branch, repoUrl]);
+    const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+    this.log(chalk.blue(`clone repository:`), `git ${line}`);
+    return this._spawnOrAbort('git', line.split(' '));
   }
 
   _getProduct() {
-    return this._cloneRepo(this.productName, 'master')
+    return this._cloneRepo(this.productName, 'master', ' --depth 1')
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
         this.product = this.fs.readJSON(this.destinationPath(`${this.cwd}/${name}/phovea_product.json`));
         return this.product;
+      }).then((product) => {
+        const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
+        // clean up again
+        this.fs.delete(this.destinationPath(`${this.cwd}/${name}`));
+        return product;
       });
   }
 
