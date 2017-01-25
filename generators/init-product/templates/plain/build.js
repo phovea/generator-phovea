@@ -145,7 +145,7 @@ function yo(generator, options, cwd) {
   // call yo internally
   const yeomanEnv = yeoman.createEnv([], {cwd, env}, quiet ? createQuietTerminalAdapter() : undefined);
   yeomanEnv.register(require.resolve('generator-phovea/generators/' + generator), 'phovea:' + generator);
-  const runYo = () => new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       console.log(cwd, chalk.blue('running yo phovea:' + generator));
       yeomanEnv.run('phovea:' + generator, options, resolve);
@@ -154,10 +154,6 @@ function yo(generator, options, cwd) {
       reject(e);
     }
   });
-  // move my own .yo-rc.json to avoid a conflict
-  return fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json')
-    .then(runYo)
-    .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'));
 }
 
 function cloneRepo(p, cwd) {
@@ -371,6 +367,8 @@ if (require.main === module) {
 
   fs.emptyDirAsync('build')
     .then(dockerRemoveImages.bind(this, productName))
+    // move my own .yo-rc.json to avoid a conflict
+    .then(fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'))
     .then(() => Promise.all(descs.map((d, i) => {
       d.additional = d.additional || []; //default values
       d.name = d.name || fromRepoUrl(d.repo);
@@ -387,6 +385,7 @@ if (require.main === module) {
       });
       return wait;
     })))
+    .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
     .then((composeFiles) => buildCompose(descs, composeFiles.filter((d) => !!d)))
     .then(pushImages.bind(this))
     .then(() => {
