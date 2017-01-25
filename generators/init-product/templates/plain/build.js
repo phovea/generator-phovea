@@ -74,8 +74,8 @@ function downloadDataFile(desc, destDir, cwd) {
   }
   switch(desc.type) {
     case 'url':
-      const destName = toDownloadName(url);
-      return fs.ensureDirAsync(destDir).then(() => downloadDataUrl(desc, path.join(destDir, destName)));
+      const destName = toDownloadName(desc.url);
+      return fs.ensureDirAsync(destDir).then(() => downloadDataUrl(desc.url, path.join(destDir, destName)));
     case 'repo':
       desc.name = desc.name || fromRepoUrl(desc.repo);
       let downloaded;
