@@ -168,13 +168,21 @@ function cloneRepo(p, cwd) {
   return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
 }
 
+function resolvePluginType(p, dir) {
+  return fs.readJSONAsync(`${dir}/${p.name}/.yo-rc.json`).then((json) => {
+    p.pluginType = json['generator-phovea'].type;
+    p.isHybridType = p.pluginType.includes('-');
+  });
+}
+
 function preBuild(p, dir) {
   const hasAdditional = p.additional.length > 0;
   let act = fs.emptyDirAsync(dir)
-    .then(() => cloneRepo(p, dir));
+    .then(() => cloneRepo(p, dir))
+    .then(() => resolvePluginType(p, dir));
   if (hasAdditional) {
     act = act
-      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir))));
+      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir).then(resolvePluginType.bind(this, p, dir)))));
   }
   return act;
 }
@@ -230,14 +238,14 @@ function buildWebApp(p, dir) {
       .then(() => npm(dir, 'install'));
     //test all modules
     if (hasAdditional && !argv.skipTests) {
-      act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test:${pi.name}`))));
+      act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test${pi.isHybridType ? ':web':''}:${pi.name}`))));
     }
     act = act
-      .then(() => npm(dir, `run dist:${p.name}`));
+      .then(() => npm(dir, `run dist${p.isHybridType ? ':web':''}:${p.name}`));
   } else {
     act = act
       .then(() => npm(dir + '/' + name, 'install'))
-      .then(() => npm(dir + '/' + name, 'run dist'));
+      .then(() => npm(dir + '/' + name, `run dist${p.isHybridType ? ':web':''}`));
   }
   return act
     .then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`))
@@ -254,8 +262,8 @@ function buildServerApp(p, dir) {
 
   act = act
     .then(() => console.log(chalk.yellow('create test environment')))
-    .then(() => npm(dir + '/' + name, 'run build'))
-    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build`))));
+    .then(() => npm(dir + '/' + name, `run build${pi.isHybridType ? ':python':''}:`))
+    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python':''}:`))));
 
   //copy all together
   act = act
