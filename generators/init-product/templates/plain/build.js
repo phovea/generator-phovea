@@ -262,8 +262,8 @@ function buildServerApp(p, dir) {
 
   act = act
     .then(() => console.log(chalk.yellow('create test environment')))
-    .then(() => npm(dir + '/' + name, `run build${p.isHybridType ? ':python':''}:`))
-    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python':''}:`))));
+    .then(() => npm(dir + '/' + name, `run build${p.isHybridType ? ':python':''}`))
+    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python':''}`))));
 
   //copy all together
   act = act
