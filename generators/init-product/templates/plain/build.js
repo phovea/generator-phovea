@@ -368,29 +368,42 @@ if (require.main === module) {
   const singleService = descs.length === 1;
   const productName = pkg.name.replace('_product', '');
 
+
+
   fs.emptyDirAsync('build')
     .then(dockerRemoveImages.bind(this, productName))
     // move my own .yo-rc.json to avoid a conflict
     .then(fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'))
-    .then(() => Promise.all(descs.map((d, i) => {
-      d.additional = d.additional || []; //default values
-      d.name = d.name || fromRepoUrl(d.repo);
-      d.label = d.label || d.name;
-      if (singleService) {
-        d.image = `${productName}:${pkg.version}`;
+    .then(() => {
+      const buildOne = (d, i) => {
+        d.additional = d.additional || []; //default values
+        d.name = d.name || fromRepoUrl(d.repo);
+        d.label = d.label || d.name;
+        if (singleService) {
+          d.image = `${productName}:${pkg.version}`;
+        } else {
+          d.image = `${productName}/${d.label}:${pkg.version}`;
+        }
+        let wait = buildImpl(d, './tmp' + i);
+        wait.catch((error) => {
+          d.error = error;
+          console.error('ERROR building ', d, error);
+        });
+        return wait;
+      };
+      if (argv.serial) {
+        let r = Promise.resolve([]);
+        for (let i = 0; i < descs.length; ++i) {
+          r = r.then((arr) => buildOne(descs[i], i).then((f) => arr.concat(f)));
+        }
+        return r;
       } else {
-        d.image = `${productName}/${d.label}:${pkg.version}`;
+        return Promise.all(descs.map(buildOne));
       }
-      let wait = buildImpl(d, './tmp' + i);
-      wait.catch((error) => {
-        d.error = error;
-        console.error('ERROR building ', d, error);
-      });
-      return wait;
-    })))
-    .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
+    })
     .then((composeFiles) => buildCompose(descs, composeFiles.filter((d) => !!d)))
     .then(pushImages.bind(this))
+    .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
     .then(() => {
       console.log(chalk.bold('summary: '));
       const maxLength = Math.max(...descs.map((d) => d.name.length));
