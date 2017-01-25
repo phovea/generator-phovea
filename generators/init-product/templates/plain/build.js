@@ -17,7 +17,10 @@ pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 
 function toRepoUrl(url) {
-  return url.startsWith('https://github.com/') ? url : `https://github.com/${url}`;
+  if (argv.useSSH) {
+    return `git@github.com:${url}.git`
+  }
+  return url.startsWith('https://github.com/') ? url : `https://github.com/${url}.git`;
 }
 
 
