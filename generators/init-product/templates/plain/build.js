@@ -400,7 +400,7 @@ if (require.main === module) {
       }
     })
     .then((composeFiles) => buildCompose(descs, composeFiles.filter((d) => !!d)))
-    .then(() => pushImages.bind(this, descs.filter((d) => !d.error).map((d) => d.image)))
+    .then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)))
     .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
     .then(() => {
       console.log(chalk.bold('summary: '));
