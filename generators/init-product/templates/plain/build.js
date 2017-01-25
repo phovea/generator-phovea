@@ -182,7 +182,7 @@ function preBuild(p, dir) {
     .then(() => resolvePluginType(p, dir));
   if (hasAdditional) {
     act = act
-      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir).then(resolvePluginType.bind(this, p, dir)))));
+      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir).then(resolvePluginType.bind(this, pi, dir)))));
   }
   return act;
 }
