@@ -162,7 +162,13 @@ class Generator extends Base {
       .then(this._yo.bind(this, 'workspace'))
       .then(this._customizeWorkspace.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
-      .then(this._spawnOrAbort.bind(this, 'docker-compose', 'build'))
+      .then(() => {
+        const l =  this.fs.readFile(this.destinationPath(`${this.cwd}/docker-compose.yml`), '');
+        if (l.trim().length > 0) {
+          return this._spawnOrAbort.bind(this, 'docker-compose', 'build');
+        }
+        return null;
+      })
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);
