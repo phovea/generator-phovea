@@ -153,6 +153,7 @@ class Generator extends Base {
 
   _mkdir(dir) {
     dir = dir || this.cwd;
+    this.log('create directory: ' + dir);
     return new Promise((resolve) => fs.mkdir(dir, resolve));
   }
 
@@ -194,7 +195,7 @@ class Generator extends Base {
 
   writing() {
     return Promise.resolve(1)
-      .then(this._mkdir.bind(this))
+      .then(this._mkdir.bind(this, null))
       .then(this._getProduct.bind(this))
       .then((product) => {
         const names = new Set();
@@ -227,7 +228,7 @@ class Generator extends Base {
       .then(this._downloadDataFiles.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
       .then(() => {
-        const l = this.fs.readFile(this.destinationPath(`${this.cwd}/docker-compose.yml`), '');
+        const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
         if (l.trim().length > 0) {
           return this._spawnOrAbort.bind(this, 'docker-compose', 'build');
         }
