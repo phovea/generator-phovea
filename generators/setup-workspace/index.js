@@ -1,7 +1,7 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
 
@@ -141,12 +141,12 @@ class Generator extends Base {
     return this._cloneRepo(this.productName, 'master', ' --depth 1')
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        this.product = this.fs.readJSON(this.destinationPath(`${this.cwd}/${name}/phovea_product.json`));
+        this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
         return this.product;
       }).then((product) => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
         // clean up again
-        this.fs.delete(this.destinationPath(`${this.cwd}/${name}`));
+        fs.removeSync(`${this.cwd}/${name}`);
         return product;
       });
   }
@@ -154,7 +154,7 @@ class Generator extends Base {
   _mkdir(dir) {
     dir = dir || this.cwd;
     this.log('create directory: ' + dir);
-    return new Promise((resolve) => fs.mkdir(dir, resolve));
+    return new Promise((resolve) => fs.ensureDir(dir, resolve));
   }
 
   _customizeWorkspace() {

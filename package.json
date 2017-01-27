@@ -33,6 +33,7 @@
     "escodegen": "1.7.0",
     "esprima": "2.7.0",
     "esprima-walk": "0.1.0",
+    "fs-extra": "^1.0.0",
     "git-remote-origin-url": "2.0.0",
     "glob": "7.1.1",
     "inquirer": "1.2.2",
