@@ -171,8 +171,7 @@ class Generator extends Base {
     }
     switch (desc.type) {
       case 'url':
-        const destName = toDownloadName(desc.url);
-        return downloadDataUrl(desc.url, path.join(destDir, destName));
+        return downloadDataUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
       default:
         this.log(chalk.red('cannot handle data type:', desc.type));
         return null;
