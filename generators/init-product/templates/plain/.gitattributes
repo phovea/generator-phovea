@@ -35,11 +35,6 @@
 *.scm text
 *.sql text
 *.sh text eof=LF
-forEach text eof=LF
-withinEnv text eof=LF
-docker-backup text eof=LF
-docker-compose-debug text eof=LF
-Dockerfile text eof=LF
 *.bat text
 
 # templates
@@ -68,7 +63,6 @@ Dockerfile text eof=LF
 *.yaml text
 *.yml text
 .editorconfig text
-Dockerfile text
 
 # build config
 *.npmignore text
@@ -114,7 +108,7 @@ AUTHORS text
 *.py3 		text
 *.pyw 		text
 *.pyx  		text
-*.sh        text eol=LF
+*.sh        text eol=lf
 *.json      text
 
 # Binary files
