@@ -1,6 +1,8 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
+const fs = require('fs');
+const path = require('path');
 const yeoman = require('yeoman-environment');
 
 function toBaseName(name) {
@@ -32,6 +34,30 @@ function findDefaultApp(product) {
     }
   }
   return '???';
+}
+
+function downloadDataUrl(url, dest) {
+  if (!url.startsWith('http')) {
+    url = `https://s3.eu-central-1.amazonaws.com/phovea-data-packages/${url}`;
+  }
+  const http = require(url.startsWith('https') ? 'https' : 'http');
+  console.log(chalk.blue('download file', url));
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+    http.get(url, (response) => {
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(resolve);
+      });
+    }).on('error', reject);
+  });
+}
+
+function toDownloadName(url) {
+  if (!url.startsWith('http')) {
+    return url;
+  }
+  return url.substring(url.lastIndexOf('/') + 1);
 }
 
 class Generator extends Base {
@@ -125,14 +151,46 @@ class Generator extends Base {
       });
   }
 
-  _mkdir() {
-    return this._spawn('mkdir', this.cwd, false);
+  _mkdir(dir) {
+    dir = dir || this.cwd;
+    return new Promise((resolve) => fs.mkdir(dir, resolve));
   }
 
   _customizeWorkspace() {
     this.fs.copyTpl(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/workspace.xml`), {
       defaultApp: findDefaultApp(this.product)
     });
+  }
+
+  _downloadDataFile(desc, destDir) {
+    if (typeof desc === 'string') {
+      desc = {
+        type: 'url',
+        url: desc
+      };
+    }
+    switch (desc.type) {
+      case 'url':
+        const destName = toDownloadName(desc.url);
+        return downloadDataUrl(desc.url, path.join(destDir, destName));
+      default:
+        this.log(chalk.red('cannot handle data type:', desc.type));
+        return null;
+    }
+  }
+
+  _downloadDataFiles() {
+    const data = [];
+    this.product.forEach((p) => {
+      if (p.data) {
+        data.push(...p.data);
+      }
+    });
+    if (data.length === 0) {
+      return Promise.resolve(null);
+    }
+    return this._mkdir(this.cwd + '/_data')
+      .then(() => Promise.all(data.map((d) => this._downloadDataFile(d, this.cwd + '/_data'))));
   }
 
   writing() {
@@ -167,9 +225,10 @@ class Generator extends Base {
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace'))
       .then(this._customizeWorkspace.bind(this))
+      .then(this._downloadDataFiles.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
       .then(() => {
-        const l =  this.fs.readFile(this.destinationPath(`${this.cwd}/docker-compose.yml`), '');
+        const l = this.fs.readFile(this.destinationPath(`${this.cwd}/docker-compose.yml`), '');
         if (l.trim().length > 0) {
           return this._spawnOrAbort.bind(this, 'docker-compose', 'build');
         }
