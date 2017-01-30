@@ -139,7 +139,9 @@ function generateWebpack(options) {
       }),
       //define magic constants that are replaced
       new webpack.DefinePlugin({
-        NODE_ENV: JSON.stringify(options.isProduction ? 'production': 'development'),
+        'process.env': {
+          'NODE_ENV': JSON.stringify(options.isProduction ? 'production': 'development')
+        },
         __VERSION__: JSON.stringify(pkg.version),
         __LICENSE__: JSON.stringify(pkg.license),
         __BUILD_ID__: buildId,
