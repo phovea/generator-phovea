@@ -389,7 +389,7 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "selectivity": "3.0.0"
+        "selectivity": "3.0.3"
       }
     },
     {
