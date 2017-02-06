@@ -249,7 +249,7 @@
         "ordino": "github:Caleydo/ordino#master"
       },
       "requirements": {
-        "-e git+https://github.com/Caleydo/ordino.git": "@migrate#egg=ordino"
+        "-e git+https://github.com/Caleydo/ordino.git": "@master#egg=ordino"
       },
       "develop": {
         "dependencies": {
