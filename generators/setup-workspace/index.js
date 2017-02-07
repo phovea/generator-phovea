@@ -1,6 +1,8 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
+const fs = require('fs-extra');
+const path = require('path');
 const yeoman = require('yeoman-environment');
 
 function toBaseName(name) {
@@ -32,6 +34,30 @@ function findDefaultApp(product) {
     }
   }
   return '???';
+}
+
+function downloadDataUrl(url, dest) {
+  if (!url.startsWith('http')) {
+    url = `https://s3.eu-central-1.amazonaws.com/phovea-data-packages/${url}`;
+  }
+  const http = require(url.startsWith('https') ? 'https' : 'http');
+  console.log(chalk.blue('download file', url));
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+    http.get(url, (response) => {
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(resolve);
+      });
+    }).on('error', reject);
+  });
+}
+
+function toDownloadName(url) {
+  if (!url.startsWith('http')) {
+    return url;
+  }
+  return url.substring(url.lastIndexOf('/') + 1);
 }
 
 class Generator extends Base {
@@ -104,23 +130,31 @@ class Generator extends Base {
     return Promise.resolve(cmd);
   }
 
-  _cloneRepo(repo, branch) {
+  _cloneRepo(repo, branch, extras) {
     const repoUrl = this.cloneSSH ? `git@github.com:${repo}.git` : `https://github.com/${repo}.git`;
-    this.log(chalk.blue(`clone repository:`), `git clone -b ${branch} ${repoUrl}`);
-    return this._spawnOrAbort('git', ['clone', '-b', branch, repoUrl]);
+    const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+    this.log(chalk.blue(`clone repository:`), `git ${line}`);
+    return this._spawnOrAbort('git', line.split(' '));
   }
 
   _getProduct() {
-    return this._cloneRepo(this.productName, 'master')
+    return this._cloneRepo(this.productName, 'master', ' --depth 1')
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        this.product = this.fs.readJSON(this.destinationPath(`${this.cwd}/${name}/phovea_product.json`));
+        this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
         return this.product;
+      }).then((product) => {
+        const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
+        // clean up again
+        fs.removeSync(`${this.cwd}/${name}`);
+        return product;
       });
   }
 
-  _mkdir() {
-    return this._spawn('mkdir', this.cwd, false);
+  _mkdir(dir) {
+    dir = dir || this.cwd;
+    this.log('create directory: ' + dir);
+    return new Promise((resolve) => fs.ensureDir(dir, resolve));
   }
 
   _customizeWorkspace() {
@@ -129,9 +163,39 @@ class Generator extends Base {
     });
   }
 
+  _downloadDataFile(desc, destDir) {
+    if (typeof desc === 'string') {
+      desc = {
+        type: 'url',
+        url: desc
+      };
+    }
+    switch (desc.type) {
+      case 'url':
+        return downloadDataUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
+      default:
+        this.log(chalk.red('cannot handle data type:', desc.type));
+        return null;
+    }
+  }
+
+  _downloadDataFiles() {
+    const data = [];
+    this.product.forEach((p) => {
+      if (p.data) {
+        data.push(...p.data);
+      }
+    });
+    if (data.length === 0) {
+      return Promise.resolve(null);
+    }
+    return this._mkdir(this.cwd + '/_data')
+      .then(() => Promise.all(data.map((d) => this._downloadDataFile(d, this.cwd + '/_data'))));
+  }
+
   writing() {
     return Promise.resolve(1)
-      .then(this._mkdir.bind(this))
+      .then(this._mkdir.bind(this, null))
       .then(this._getProduct.bind(this))
       .then((product) => {
         const names = new Set();
@@ -161,8 +225,15 @@ class Generator extends Base {
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace'))
       .then(this._customizeWorkspace.bind(this))
+      .then(this._downloadDataFiles.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
-      .then(this._spawnOrAbort.bind(this, 'docker-compose', 'build'))
+      .then(() => {
+        const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
+        if (l.trim().length > 0) {
+          return this._spawnOrAbort.bind(this, 'docker-compose', 'build');
+        }
+        return null;
+      })
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);

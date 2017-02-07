@@ -220,7 +220,12 @@ class Generator extends Base {
           });
         }
       } else {
-        requirements.delete(p);
+        // more intelligent guessing
+        Array.from(requirements.keys()).forEach((k) => {
+          if (k.includes(`/${p}.git@`)) {
+            requirements.delete(k);
+          }
+        });
       }
     });
 

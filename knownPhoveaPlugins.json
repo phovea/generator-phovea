@@ -241,22 +241,22 @@
       ]
     },
     {
-      "name": "targid2",
+      "name": "ordino",
       "type": "lib-slib",
       "description": "Targid Discovery Platform",
-      "repository": "https://github.com/Caleydo/targid2.git",
+      "repository": "https://github.com/Caleydo/ordino.git",
       "dependencies": {
-        "targid2": "github:Caleydo/targid2#master"
+        "ordino": "github:Caleydo/ordino#master"
       },
       "requirements": {
-        "-e git+https://github.com/Caleydo/targid2.git": "@migrate#egg=targid2"
+        "-e git+https://github.com/Caleydo/ordino.git": "@master#egg=ordino"
       },
       "develop": {
         "dependencies": {
-          "targid2": "github:Caleydo/targid2#develop"
+          "ordino": "github:Caleydo/ordino#develop"
         },
         "requirements": {
-          "-e git+https://github.com/Caleydo/targid2.git": "@develop#egg=targid2"
+          "-e git+https://github.com/Caleydo/ordino.git": "@develop#egg=ordino"
         }
       },
       "libraries": [
@@ -389,7 +389,7 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "selectivity": "3.0.0"
+        "selectivity": "3.0.3"
       }
     },
     {
