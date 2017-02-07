@@ -1,3 +1,4 @@
+/// <reference types="jasmine" />
 import {hello} from '../src/index';
 
 describe('index', () => {
