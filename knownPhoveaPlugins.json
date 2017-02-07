@@ -312,7 +312,7 @@
       "description": "LineUp.js",
       "aliases": {},
       "dependencies": {
-        "lineupjs": "1.0.0"
+        "lineupjs": "github:Caleydo/lineupjs#master"
       }
     },
     {
