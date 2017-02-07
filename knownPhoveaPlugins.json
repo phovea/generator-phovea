@@ -261,6 +261,50 @@
       },
       "libraries": [
       ]
+    },
+    {
+      "name": "pathfinder_ccle",
+      "type": "lib-slib",
+      "description": "",
+      "repository": "https://github.com/Caleydo/pathfinder_ccle.git",
+      "dependencies": {
+        "pathfinder_ccle": "github:Caleydo/pathfinder_ccle#master"
+      },
+      "requirements": {
+        "-e git+https://github.com/Caleydo/pathfinder_ccle.git": "@master#egg=pathfinder_ccle"
+      },
+      "develop": {
+        "dependencies": {
+          "pathfinder_ccle": "github:Caleydo/pathfinder_ccle#master"
+        },
+        "requirements": {
+          "-e git+https://github.com/Caleydo/pathfinder_ccle.git": "@master#egg=pathfinder_ccle"
+        }
+      },
+      "libraries": [
+      ]
+    },
+    {
+      "name": "pathfinder_graph",
+      "type": "lib-slib",
+      "description": "",
+      "repository": "https://github.com/Caleydo/pathfinder_graph.git",
+      "dependencies": {
+        "pathfinder_graph": "github:Caleydo/pathfinder_graph#master"
+      },
+      "requirements": {
+        "-e git+https://github.com/Caleydo/pathfinder_graph.git": "@master#egg=pathfinder_graph"
+      },
+      "develop": {
+        "dependencies": {
+          "pathfinder_graph": "github:Caleydo/pathfinder_graph#master"
+        },
+        "requirements": {
+          "-e git+https://github.com/Caleydo/pathfinder_graph.git": "@master#egg=pathfinder_graph"
+        }
+      },
+      "libraries": [
+      ]
     }
   ],
   "libraries": [
