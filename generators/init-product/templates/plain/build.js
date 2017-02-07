@@ -84,7 +84,8 @@ function downloadDataFile(desc, destDir, cwd) {
       } else {
         downloaded = cloneRepo(desc, cwd);
       }
-      return downloaded.then(() => fs.copyAsync(`${cwd}/${desc.name}/data`, `${destDir}/${desc.name}`));
+      return Promise.all([fs.ensureDirAsync(destDir), downloaded])
+        .then(() => fs.copyAsync(`${cwd}/${desc.name}/data`, `${destDir}/${desc.name}`));
     default:
       console.error('unknown data type:', desc.type);
       return null;
