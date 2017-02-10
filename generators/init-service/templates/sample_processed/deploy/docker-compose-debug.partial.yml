@@ -1,6 +1,6 @@
 version: '2.0'
 services:
-  <%-servicename%>:
+  <%-serviceName%>:
 #    ports:
 #      - '2222:22'
     command: /usr/sbin/sshd -D
