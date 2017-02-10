@@ -1,10 +1,19 @@
 'use strict';
-var BasePluginGenerator = require('../../utils').BasePython;
+const BasePluginGenerator = require('../../utils').BasePython;
 
 class PluginGenerator extends BasePluginGenerator {
 
   initializing() {
-    // since just last in the hierarchy used, need to do super calls
+    this.config.defaults({
+      sextensions: [{
+        type: 'namespace',
+        id: 'hello_world',
+        module: 'hello_world',
+        extras: {
+          namespace: '/api/hello_world'
+        }
+      }]
+    });
     super.initializing();
   }
 
