@@ -8,7 +8,7 @@ First, install [Yeoman](http://yeoman.io) and generator-phovea using [npm](https
 
 ```bash
 npm install -g yo
-npm install -g generator-phovea
+npm install -g yo github:phovea/generator-phovea
 ```
 
 Then generate your new project:
