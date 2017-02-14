@@ -45,7 +45,7 @@ yo phovea
 This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform for developing web-based visualization applications. For tutorials, API docs, and more information about the build and deployment process, see the [documentation page](http://caleydo.org/documentation/).
 
 
-[phovea-image]: https://img.shields.io/badge/Phovea-Utils-lightgrey.svg
+[phovea-image]: https://img.shields.io/badge/Phovea-DevTools-lightgrey.svg
 [phovea-url]: https://phovea.caleydo.org
 [npm-image]: https://badge.fury.io/js/generator-phovea.svg
 [npm-url]: https://npmjs.org/package/generator-phovea
