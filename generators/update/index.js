@@ -1,6 +1,32 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
-const {extractFromReadme} = require('../migrate');
+
+function extractFromReadme(content) {
+  const safe = (p) => p ? p[1] : '';
+  // between header and installation
+  const longDescription = safe(content.match(/=====$\s([\s\S]*)^Installation/m)).trim();
+  // usage till end line
+  const readme = safe(content.match(/(^Usage[\s\S]*)^\*\*\*$/m)).trim();
+
+  return {longDescription, readme};
+}
+
+function toPhoveaName(name) {
+  return name.replace(/^caleydo_/, 'phovea_');
+}
+
+function toExtension(name, desc) {
+  const copy = _.merge({}, desc);
+  delete copy.type;
+  delete copy.id;
+  delete copy.file;
+  return {
+    type: desc.type,
+    id: desc.id || name,
+    module: desc.file || '',
+    extras: copy
+  };
+}
 
 class Generator extends Base {
 
