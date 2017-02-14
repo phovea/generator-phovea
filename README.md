@@ -37,7 +37,6 @@ yo phovea
 | `yo phovea:workspace`      | Create a workspace of multiple containing plugins |
 | `yo phovea:setup-workspace` | Clone a product repository as new workspace and resolve dependencies |
 | `yo phovea:update`         | Update the current plugin or workspace |
-| `yo phovea:migrate-wizard` | Migration wizward from Caleydo Web to phovea |
 
 
 ***
