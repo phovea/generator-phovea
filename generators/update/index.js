@@ -11,23 +11,6 @@ function extractFromReadme(content) {
   return {longDescription, readme};
 }
 
-function toPhoveaName(name) {
-  return name.replace(/^caleydo_/, 'phovea_');
-}
-
-function toExtension(name, desc) {
-  const copy = _.merge({}, desc);
-  delete copy.type;
-  delete copy.id;
-  delete copy.file;
-  return {
-    type: desc.type,
-    id: desc.id || name,
-    module: desc.file || '',
-    extras: copy
-  };
-}
-
 class Generator extends Base {
 
   initializing() {
