@@ -76,7 +76,7 @@ class PluginGenerator extends Base {
 
   prompting() {
     if (this.config.get('type').includes('-')) {
-      return; //hybrid
+      return; // hybrid
     }
     return this.prompt([{
       type: 'checkbox',
@@ -104,7 +104,7 @@ class PluginGenerator extends Base {
 
   default() {
     if (this.config.get('type').includes('-')) {
-      return; //hybrid
+      return; // hybrid
     }
     this.composeWith('phovea:_node', {
       options: this.options
