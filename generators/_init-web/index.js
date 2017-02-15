@@ -75,6 +75,9 @@ class PluginGenerator extends Base {
   }
 
   prompting() {
+    if (this.config.get('type').includes('-')) {
+      return; //hybrid
+    }
     return this.prompt([{
       type: 'checkbox',
       name: 'modules',
