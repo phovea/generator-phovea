@@ -253,10 +253,10 @@
       },
       "develop": {
         "dependencies": {
-          "ordino": "github:Caleydo/ordino#master"
+          "ordino": "github:Caleydo/ordino#develop"
         },
         "requirements": {
-          "-e git+https://github.com/Caleydo/ordino.git": "@master#egg=ordino"
+          "-e git+https://github.com/Caleydo/ordino.git": "@develop#egg=ordino"
         }
       },
       "libraries": [
