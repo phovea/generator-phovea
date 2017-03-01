@@ -139,13 +139,13 @@ class PluginGenerator extends Base {
 
   end() {
     this.log('\n\nuseful commands: ');
-    this.log(chalk.red(' npm run build'), '             ... regular build');
-    this.log(chalk.red(' node build.js --skipTests'), ' ... skip tests');
-    this.log(chalk.red(' node build.js --quiet'), '     ... reduce log output');
+    this.log(chalk.yellow(' npm run build'), '             ... regular build');
+    this.log(chalk.yellow(' node build.js --skipTests'), ' ... skip tests');
+    this.log(chalk.yellow(' node build.js --quiet'), '     ... reduce log output');
 
     this.log('\n\nnext steps: ');
-    this.log(chalk.red(' npm install'));
-    this.log(chalk.red(' npm run build'));
+    this.log(chalk.yellow(' npm install'));
+    this.log(chalk.yellow(' npm run build'));
   }
 }
 

@@ -49,6 +49,11 @@ class Generator extends Base {
       local: require.resolve(`../update`)
     });
   }
+
+  end() {
+    this.log('\n\nnext steps: ');
+    this.log(chalk.yellow(' npm install'));
+  }
 }
 
 module.exports = Generator;

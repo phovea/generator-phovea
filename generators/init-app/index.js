@@ -45,6 +45,12 @@ class PluginGenerator extends BasePluginGenerator {
     this._patchPackageJSON(config, ['main']);
     this._writeTemplates(config, !this.options.noSamples);
   }
+
+  end() {
+    this.log('\n\nnext steps: ');
+    this.log(chalk.yellow(' npm install'));
+    this.log(chalk.yellow(` npm start`));
+  }
 }
 
 module.exports = PluginGenerator;

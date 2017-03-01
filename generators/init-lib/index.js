@@ -1,4 +1,25 @@
 'use strict';
-var BasePluginGenerator = require('../../utils').Base;
+const BasePluginGenerator = require('../../utils').Base;
 
-module.exports = BasePluginGenerator;
+class PluginGenerator extends BasePluginGenerator {
+
+  initializing() {
+    return super.initializing();
+  }
+
+  default() {
+    return super.default();
+  }
+
+  writing() {
+    return super.writing()
+  }
+
+  end() {
+    this.log('\n\nnext steps: ');
+    this.log(chalk.yellow(' npm install'));
+    this.log(chalk.yellow(` npm build`));
+  }
+}
+
+module.exports = PluginGenerator;
