@@ -65,9 +65,30 @@ class PluginGenerator extends Base {
     });
   }
 
+  _parseRequirements(file) {
+    file = file.trim();
+    if (file === '') {
+      return {};
+    }
+    const r = {};
+    file.split('\n').forEach((line) => {
+      let i = line.indexOf('@');
+      if (i < 0) {
+        i = line.indexOf('=');
+      }
+      if (i >= 0) {
+        const requirement = line.slice(0, i);
+        r[requirement] = line.slice(i);
+      } else {
+        r[line] = '';
+      }
+    });
+    return r;
+  }
+
   _generateDependencies(useDevelopDependencies) {
-    const requirements = {};
-    const dockerPackages = {};
+    const requirements = this._parseRequirements(this.fs.read(this.destinationPath('requirements.txt'), {defaults: ''}));
+    const dockerPackages = this._parseRequirements(this.fs.read(this.destinationPath('docker_packages.txt'), {defaults: ''}));
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
@@ -98,12 +119,13 @@ class PluginGenerator extends Base {
 
   writing() {
     const config = this.config.getAll();
+    const deps = this._generateDependencies(useDevVersion.call(this));
+
     patchPackageJSON.call(this, config, ['devDependencies']);
     writeTemplates.call(this, config);
 
-    const deps = this._generateDependencies(useDevVersion.call(this));
-    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.concat(this.config.get('unknown').requirements).join('\n'));
-    this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.concat(this.config.get('unknown').dockerPackages).join('\n'));
+    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.join('\n'));
+    this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.join('\n'));
 
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath(config.name + '/__init__.py'))) {
