@@ -160,7 +160,10 @@ class Generator extends Base {
   _customizeWorkspace() {
     const defaultApp = findDefaultApp(this.product);
     if (defaultApp) {
-      this.fs.copyTpl(this.templatePath('run_configuration.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/${defaultApp}.xml`), {
+      this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${defaultApp}.xml`), {
+        defaultApp: defaultApp
+      });
+      this.fs.copyTpl(this.templatePath('lint_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/lint_${defaultApp}.xml`), {
         defaultApp: defaultApp
       });
     }
@@ -245,6 +248,7 @@ class Generator extends Base {
 
   end() {
     this.log('\n\nnext steps: ');
+    this.log(chalk.yellow(` cd ${this.cwd}`));
     this.log(chalk.green(' Open PyCharm and select:'), this.destinationPath(this.cwd));
     this.log(chalk.yellow(' docker-compose up -d'));
     this.log(chalk.yellow(` npm run start:${findDefaultApp(this.product)}`));
