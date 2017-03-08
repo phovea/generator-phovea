@@ -158,9 +158,12 @@ class Generator extends Base {
   }
 
   _customizeWorkspace() {
-    this.fs.copyTpl(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/workspace.xml`), {
-      defaultApp: findDefaultApp(this.product)
-    });
+    const defaultApp = findDefaultApp(this.product);
+    if (defaultApp) {
+      this.fs.copyTpl(this.templatePath('run_configuration.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/${defaultApp}.xml`), {
+        defaultApp: defaultApp
+      });
+    }
   }
 
   _downloadDataFile(desc, destDir) {
