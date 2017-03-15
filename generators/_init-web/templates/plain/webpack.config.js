@@ -164,7 +164,9 @@ function generateWebpack(options) {
       loaders: webpackloaders.slice()
     },
     devServer: {
-      ignored: '/node_modules/',
+      watchOptions: {
+        ignored: '/node_modules/'
+      },
       proxy: {
         '/api/*': {
           target: 'http://localhost:9000',
