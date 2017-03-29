@@ -39,7 +39,7 @@ function resolveModules() {
   const reg = fs.readFileSync('../phovea_registry.js').toString();
   const regex = /import '(.*)\/phovea_registry.js'/g;
   const modules = [];
-  var r;
+  let r;
   while ((r = regex.exec(reg)) !== null) {
     modules.push(r[1]);
   }
@@ -164,14 +164,14 @@ module.exports.metaDataTmpFile = function(pkg) {
   const file = `${tmpdir()}/metaData${Math.random().toString(36).slice(-8)}.txt`;
   fs.writeFileSync(file, JSON.stringify(s, null, ' '));
   return file;
-}
+};
 module.exports.generate = generate;
 module.exports.tmpFile = function() {
   const s = generate();
   const file = `${tmpdir()}/buildInfo${Math.random().toString(36).slice(-8)}.txt`;
   fs.writeFileSync(file, JSON.stringify(s, null, ' '));
   return file;
-}
+};
 
 
 if (require.main === module) {
