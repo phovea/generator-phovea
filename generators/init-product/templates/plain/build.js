@@ -408,7 +408,7 @@ function pushImages(images) {
       tags.push(...images.map((image) => ({image, tag: `${privateDockerRepository}/${image}`})));
     }
     if (publicDockerRegistry) {
-      tags.push(...images.map((image) => ({image, tag: `docker.io/caleydo/${cleanPublicName(image)}`})));
+      tags.push(...images.map((image) => ({image, tag: `caleydo/${cleanPublicName(image)}`})));
     }
   }
   if (argv.pushExtra) { //push additional custom prefix without the version
@@ -421,7 +421,7 @@ function pushImages(images) {
     if (publicDockerRegistry) {
       tags.push(...images.map((image) => ({
         image,
-        tag: `docker.io/caleydo/${cleanPublicName(image.substring(0, image.lastIndexOf(':')))}:${argv.pushExtra}`
+        tag: `caleydo/${cleanPublicName(image.substring(0, image.lastIndexOf(':')))}:${argv.pushExtra}`
       })));
     }
   }
