@@ -386,22 +386,44 @@ function buildCompose(descs, composePartials) {
     .then(() => dockerCompose);
 }
 
+function cleanPublicName(image) {
+  // docker.io doesn't allow two nested levels. e.g., caleydo/taco/taco_server -> taco_server
+  if (image.includes('/')) {
+    image = image.substring(image.indexOf('/')+1);
+  }
+  return image;
+}
+
 function pushImages(images) {
-  const dockerRepository = argv.pushTo;
-  if (!dockerRepository) {
-    return null;
+  const privateDockerRepository = argv.pushTo;
+  const publicDockerRegistry = argv.pushToPublic;
+  if (!privateDockerRepository && !publicDockerRegistry) {
+    return;
   }
   console.log('push docker images');
 
   const tags = [];
   if (!argv.noDefaultTags) {
-    tags.push(...images.map((image) => ({image, tag: `${dockerRepository}/${image}`})));
+    if (privateDockerRepository) {
+      tags.push(...images.map((image) => ({image, tag: `${privateDockerRepository}/${image}`})));
+    }
+    if (publicDockerRegistry) {
+      tags.push(...images.map((image) => ({image, tag: `docker.io/caleydo/${cleanPublicName(image)}`})));
+    }
   }
   if (argv.pushExtra) { //push additional custom prefix without the version
-    tags.push(...images.map((image) => ({
-      image,
-      tag: `${dockerRepository}/${image.substring(0, image.lastIndexOf(':'))}:${argv.pushExtra}`
-    })));
+    if (privateDockerRepository) {
+      tags.push(...images.map((image) => ({
+        image,
+        tag: `${privateDockerRepository}/${image.substring(0, image.lastIndexOf(':'))}:${argv.pushExtra}`
+      })));
+    }
+    if (publicDockerRegistry) {
+      tags.push(...images.map((image) => ({
+        image,
+        tag: `docker.io/caleydo/${cleanPublicName(image.substring(0, image.lastIndexOf(':')))}:${argv.pushExtra}`
+      })));
+    }
   }
   if (tags.length === 0) {
     return Promise.resolve([]);
