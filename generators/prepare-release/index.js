@@ -103,16 +103,22 @@ class Generator extends Base {
     } else {
       this.version = version;
     }
+    this.nextDevVersion = semver.inc(this.version, 'patch') + '-SNAPSHOT';
   }
 
-  _checkoutReleaseBranch() {
-    const branch = `release_${this.version}`;
-    const line = `checkout -b ${branch}`;
+  _checkoutBranch(branch) {
+    const line = `checkout ${branch}`;
     this.log(chalk.blue(`checkout ${branch}:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
   }
 
-  _updatePackage() {
+  _tag() {
+    const line = `tag v${this.version}`;
+    this.log(chalk.blue(`tag version:`), `git ${line}`);
+    return this._spawnOrAbort('git', line.split(' '));
+  }
+
+  _prepareReleasePackage() {
     const pkg = this.fs.readJSON(`${this.cwd}/package.json`);
     pkg.version = this.version;
     Object.keys(pkg.dependencies || {}).forEach((dep) => {
@@ -128,9 +134,30 @@ class Generator extends Base {
     });
   }
 
-  _pushBranch() {
+  _preareNextDevPackage() {
+    const pkg = this.fs.readJSON(`${this.cwd}/package.json`);
+    pkg.version = this.nextDevVersion;
+    Object.keys(pkg.dependencies || {}).forEach((dep) => {
+      const depVersion = pkg.dependencies[dep];
+      //TODO
+      pkg.dependencies[dep] = depVersion;
+    });
+    this.fs.writeJSON(`${this.cwd}/package.json`, pkg);
+    return new Promise((resolve) => this.fs.commit(resolve)).then(() => {
+      const line = `commit -am "prepare next development version ${this.nextDevVersion}"`;
+      this.log(chalk.blue(`git commit:`), `git ${line}`);
+      return this._spawnOrAbort('git', ['commit','-am',`prepare next development version ${this.nextDevVersion}`]);
+    });
+  }
 
-    const line = `push origin release_${this.version}`;
+  _fetch() {
+    const line = `fetch origin`;
+    this.log(chalk.blue(`push:`), `git ${line}`);
+    return this._spawnOrAbort('git', line.split(' '));
+  }
+
+  _pushBranch(branch, tags) {
+    const line = `push origin${tags?' --tags':''} ${branch}`;
     this.log(chalk.blue(`push:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
   }
@@ -143,9 +170,30 @@ class Generator extends Base {
     });
   }
 
+  _waitForConfirmation() {
+    return this.prompt({
+      type: 'confirm',
+      name: 'confirm',
+      message: 'Merged the pull request?',
+      default: false
+    }).then((props) => {
+      if (!props.confirm) {
+        return this._waitForConfirmation();
+      }
+    });
+  }
+
   _cleanUp() {
     return new Promise((resolve) => {
       fs.remove(this.cwd, resolve);
+    });
+  }
+
+  _openReleasePage() {
+    const opn = require('opn');
+    const url = `https://github.com/${this.repository}/releases/tag/v${this.version}`;
+    return opn(url, {
+      wait: false
     });
   }
 
@@ -154,21 +202,23 @@ class Generator extends Base {
       .then(this._mkdir.bind(this, null))
       .then(this._cloneRepo.bind(this, this.repository, 'develop'))
       .then(this._determineVersions.bind(this))
-      .then(this._checkoutReleaseBranch.bind(this))
-      .then(this._updatePackage.bind(this))
-      .then(this._pushBranch.bind(this))
-      .then(this._cleanUp.bind(this))
+      .then(() => this._checkoutBranch(`-b release_${this.version}`))
+      .then(this._prepareReleasePackage.bind(this))
+      .then(() => this._pushBranch(`release_${this.version}`))
       .then(this._createPullRequest.bind(this))
+      .then(this._waitForConfirmation.bind(this))
+      .then(this._fetch.bind(this))
+      .then(this._checkoutBranch.bind(this, '-t origin/master'))
+      .then(this._tag.bind(this))
+      .then(this._checkoutBranch.bind(this, 'develop'))
+      .then(this._preareNextDevPackage.bind(this))
+      .then(this._pushBranch.bind(this, 'develop', true))
+      .then(this._openReleasePage.bind(this))
+      .then(this._cleanUp.bind(this))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);
       });
-  }
-
-  end() {
-    this.log('\n\nnext steps: ');
-    this.log(chalk.green(' wait for travis to confirm pull request and merge it'));
-    this.log(chalk.yellow(` yo phovea:perform-release ${this.repository}`));
   }
 }
 
