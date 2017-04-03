@@ -119,26 +119,40 @@ class Generator extends Base {
   }
 
   _prepareReleasePackage() {
+    const semver = require('semver');
     const pkg = this.fs.readJSON(`${this.cwd}/package.json`);
     pkg.version = this.version;
+    this.dependencies = {};
     Object.keys(pkg.dependencies || {}).forEach((dep) => {
       const depVersion = pkg.dependencies[dep];
-      //TODO
-      pkg.dependencies[dep] = depVersion;
+      let version = depVersion;
+      if (depVersion.endsWith('-SHAPSHOT')) {
+        this.dependencies[dep] = depVersion;
+        version = depVersion.slice(0, depVersion.length - 9);
+        pkg.dependencies[dep] = version;
+        this.dependencies[dep] = semver.inc(version, 'patch') + '-SNAPSHOT';
+      } else if (depVersion.startsWith('github:')) {
+        this.dependencies[dep] = depVersion;
+        const output = this.spawnCommandSync('npm', ['info', dep, 'version'], {stdio: 'pipe'});
+        version = String(output.stdout).trim();
+        this.log(`resolved ${dep} to ${version}`);
+        pkg.dependencies[dep] = version;
+      }
     });
     this.fs.writeJSON(`${this.cwd}/package.json`, pkg);
     return new Promise((resolve) => this.fs.commit(resolve)).then(() => {
       const line = `commit -am "prepare release_${this.version}"`;
       this.log(chalk.blue(`git commit:`), `git ${line}`);
-      return this._spawnOrAbort('git', ['commit','-am',`prepare release_${this.version}`]);
+      return this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.version}`]);
     });
   }
 
   _preareNextDevPackage() {
     const pkg = this.fs.readJSON(`${this.cwd}/package.json`);
     pkg.version = this.nextDevVersion;
-    Object.keys(pkg.dependencies || {}).forEach((dep) => {
-      const depVersion = pkg.dependencies[dep];
+    //
+    Object.keys(this.dependencies).forEach((dep) => {
+      const depVersion = this.dependencies[dep];
       //TODO
       pkg.dependencies[dep] = depVersion;
     });
@@ -153,6 +167,12 @@ class Generator extends Base {
   _fetch() {
     const line = `fetch origin`;
     this.log(chalk.blue(`push:`), `git ${line}`);
+    return this._spawnOrAbort('git', line.split(' '));
+  }
+
+  _merge(branch) {
+    const line = `merge ${branch}`;
+    this.log(chalk.blue(`merge:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
   }
 
@@ -211,6 +231,7 @@ class Generator extends Base {
       .then(this._checkoutBranch.bind(this, '-t origin/master'))
       .then(this._tag.bind(this))
       .then(this._checkoutBranch.bind(this, 'develop'))
+      .then(this._merge.bind(this, 'origin/master'))
       .then(this._preareNextDevPackage.bind(this))
       .then(this._pushBranch.bind(this, 'develop', true))
       .then(this._openReleasePage.bind(this))
