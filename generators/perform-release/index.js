@@ -90,6 +90,7 @@ class Generator extends Base {
     const semver = require('semver');
     const pkg = this.fs.readJSON(`${this.cwd}/package.json`);
     let version = pkg.version;
+    this.version = pkg.version;
     this.nextDevVersion = semver.inc(version, 'patch') + '-SNAPSHOT';
   }
 
