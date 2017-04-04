@@ -2,7 +2,6 @@
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const fs = require('fs-extra');
-const path = require('path');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -30,7 +29,7 @@ function topologicalSort(nodes) {
     lookup.set(d.name, n);
     return n;
   });
-  graph.map((n) => {
+  graph.forEach((n) => {
     n.outgoing = n.outgoing.map((e) => lookup.get(e));
     n.outgoing.forEach((m) => m.incoming.push(n));
   });
@@ -192,14 +191,13 @@ class Generator extends Base {
     //
     Object.keys(ctx.dependencies).forEach((dep) => {
       const depVersion = ctx.dependencies[dep];
-      //TODO
       pkg.dependencies[dep] = depVersion;
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
     return new Promise((resolve) => this.fs.commit(resolve)).then(() => {
       const line = `commit -am "prepare next development version ${ctx.nextDevVersion}"`;
       this.log(chalk.blue(`git commit:`), `git ${line}`);
-      return this._spawnOrAbort('git', ['commit','-am',`prepare next development version ${ctx.nextDevVersion}`], ctx.cwd, ctx);
+      return this._spawnOrAbort('git', ['commit', '-am', `prepare next development version ${ctx.nextDevVersion}`], ctx.cwd, ctx);
     });
   }
 
@@ -216,7 +214,7 @@ class Generator extends Base {
   }
 
   _pushBranch(branch, tags, ctx) {
-    const line = `push origin${tags?' --tags':''} ${branch}`;
+    const line = `push origin${tags ? ' --tags' : ''} ${branch}`;
     this.log(chalk.blue(`push:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '), ctx.cwd, ctx);
   }
