@@ -195,7 +195,7 @@ class Generator extends Base {
         } else if (dep.startsWith('-e git+https://github.com/')) {
           ctx.requirements[dep] = depVersion;
           // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
-          const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length-4)); // remove prefix and suffix (.git)
+          const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length - 4)); // remove prefix and suffix (.git)
           const local = this.repos.find((d) => d.name === key);
 
           delete req[dep];
@@ -208,7 +208,7 @@ class Generator extends Base {
             return new Promise((resolve) => {
               const request = require('request');
               console.log(`https://pypi.python.org/pypi/${key}/json`);
-              request(`https://pypi.python.org/pypi/${key}/json`, (error, response, data) => resolve(data))
+              request(`https://pypi.python.org/pypi/${key}/json`, (error, response, data) => resolve(data));
             }).then((data) => {
               const infos = JSON.parse(data);
               const versions = Object.keys(infos.releases).sort(semver.compare);
@@ -219,6 +219,7 @@ class Generator extends Base {
             });
           }
         }
+        return null;
       })).then(() => {
         this.fs.write(`${ctx.cwd}/requirements.txt`, Object.keys(req).map((pi) => pi + req[pi]).join('\n'));
       });
