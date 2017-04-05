@@ -122,7 +122,7 @@
       },
       "libraries": [],
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_security_flask.git": "@v0.0.5#egg=phovea_security_flask"
+        "phovea_security_flask": "==0.1.0"
       }
     },
     {
@@ -131,7 +131,7 @@
       "description": "Phovea Server Plugin",
       "repository": "https://github.com/phovea/phovea_server.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_server.git": "@v0.0.5#egg=phovea_server"
+        "phovea_server": "==0.1.0"
       },
       "develop": {
         "requirements": {
@@ -145,7 +145,7 @@
       "description": "Phovea Server RedisDB Plugin",
       "repository": "https://github.com/phovea/phovea_data_redis.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_redis.git": "@v0.0.5#egg=phovea_data_redis"
+        "phovea_data_redis": "==0.1.0"
       },
       "develop": {
         "requirements": {
@@ -159,7 +159,7 @@
       "description": "Phovea Server MongoDB Plugin",
       "repository": "https://github.com/phovea/phovea_data_mongo.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_mongo.git": "@v0.0.5#egg=phovea_data_mongo"
+        "phovea_data_mongo": "==0.1.0"
       },
       "develop": {
         "requirements": {
@@ -173,7 +173,7 @@
       "description": "Phovea Server SQL Plugin",
       "repository": "https://github.com/phovea/phovea_data_sql.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_sql.git": "@v0.0.5#egg=phovea_data_sql"
+        "phovea_data_sql": "==0.1.0"
       },
       "develop": {
         "requirements": {
@@ -187,7 +187,7 @@
       "description": "Phovea Server HDF5 Plugin",
       "repository": "https://github.com/phovea/phovea_data_hdf.git",
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_data_hdf.git": "@v0.0.5#egg=phovea_data_hdf"
+        "phovea_data_hdf": "==0.1.0"
       },
       "develop": {
         "requirements": {
@@ -204,7 +204,7 @@
         "phovea_clue": "github:phovea/phovea_clue#v0.0.5"
       },
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_clue.git": "@v0.0.5#egg=phovea_clue"
+        "phovea_clue": "==0.1.0"
       },
       "develop": {
         "dependencies": {
@@ -227,7 +227,7 @@
         "phovea_processing_queue": "github:phovea/phovea_processing_queue#v0.0.5"
       },
       "requirements": {
-        "-e git+https://github.com/phovea/phovea_processing_queue.git": "@v0.0.5#egg=phovea_processing_queue"
+        "phovea_processing_queue": "==0.1.0"
       },
       "develop": {
         "dependencies": {
