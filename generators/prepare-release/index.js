@@ -199,17 +199,17 @@ class Generator extends Base {
             version = local.version;
             this.log(`resolved ${key} to local ${version}`);
           } else {
-            //FIXME
+            // FIXME
             const output = this.spawnCommandSync('curl', ['-s', `https://pypi.python.org/pypi/${key}/json`], {stdio: 'pipe'});
             const infos = JSON.parse(String(output.stdout).trim());
             const versions = Object.keys(infos.releases).sort(semver.compare);
             console.log(infos, versions);
-            version = version[version.length-1];
+            version = version[version.length - 1];
             this.log(`resolved ${key} to pip ${version}`);
           }
           delete req[dep];
           req[key] = '==' + version;
-          ctx.requirements[key] = null; //mark to be deleted
+          ctx.requirements[key] = null; // mark to be deleted
         }
       });
       this.fs.write(`${ctx.cwd}/requirements.txt`, Object.keys(req).map((pi) => pi + req[pi]).join('\n'));

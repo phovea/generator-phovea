@@ -2,7 +2,6 @@
  * Created by Samuel Gratzl on 05.04.2017.
  */
 
-
 function parseRequirements(file) {
   file = file.trim();
   if (file === '') {
