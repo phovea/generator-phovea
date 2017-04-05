@@ -16,6 +16,6 @@
     "prebuild": "node -e \"process.exit(process.env.PHOVEA_SKIP_TESTS === undefined?1:0)\" || npm run test",
     "build": "python build.py",
     "predist": "npm run build && npm run docs",
-    "dist": "python setup.py bdist_egg"
+    "dist": "python setup.py bdist_egg && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
   }
 }
