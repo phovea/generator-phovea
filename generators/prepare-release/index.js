@@ -2,6 +2,7 @@
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const fs = require('fs-extra');
+const {parseRequirements} = require('../../utils/pip');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -158,7 +159,6 @@ class Generator extends Base {
       const depVersion = pkg.dependencies[dep];
       let version = depVersion;
       if (depVersion.endsWith('-SHAPSHOT')) {
-        ctx.dependencies[dep] = depVersion;
         version = depVersion.slice(0, depVersion.length - 9);
         pkg.dependencies[dep] = version;
         ctx.dependencies[dep] = semver.inc(version, 'patch') + '-SNAPSHOT';
@@ -178,6 +178,43 @@ class Generator extends Base {
       }
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
+
+    if (this.fs.exists(`${ctx.cwd}/requirements.txt`)) {
+      ctx.requirements = {};
+      const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
+      Object.keys(req).forEach((dep) => {
+        const depVersion = req[dep];
+        ctx.requirements[dep] = depVersion;
+        let version = depVersion;
+        if (depVersion.endsWith('-SNAPSHOT')) {
+          version = depVersion.slice(0, depVersion.length - 9);
+          req[dep] = version;
+          ctx.requirements[dep] = semver.inc(version, 'patch') + '-SNAPSHOT';
+        } else if (dep.startsWith('-e git+https://github.com/')) {
+          ctx.requirements[dep] = depVersion;
+          // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
+          const key = toCWD(dep.slice('-e git+https://github.com/'.length));
+          const local = this.repos.find((d) => d.name === key);
+          if (local) {
+            version = local.version;
+            this.log(`resolved ${key} to local ${version}`);
+          } else {
+            //FIXME
+            const output = this.spawnCommandSync('curl', ['-s', `https://pypi.python.org/pypi/${key}/json`], {stdio: 'pipe'});
+            const infos = JSON.parse(String(output.stdout).trim());
+            const versions = Object.keys(infos.releases).sort(semver.compare);
+            console.log(infos, versions);
+            version = version[version.length-1];
+            this.log(`resolved ${key} to pip ${version}`);
+          }
+          delete req[dep];
+          req[key] = '==' + version;
+          ctx.requirements[key] = null; //mark to be deleted
+        }
+      });
+      this.fs.write(`${ctx.cwd}/requirements.txt`, Object.keys(req).map((pi) => pi + req[pi]).join('\n'));
+    }
+
     return new Promise((resolve) => this.fs.commit(resolve)).then(() => {
       const line = `commit -am "prepare release_${ctx.version}"`;
       this.log(chalk.blue(`git commit:`), `git ${line}`);
@@ -194,6 +231,18 @@ class Generator extends Base {
       pkg.dependencies[dep] = depVersion;
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
+    if (ctx.requirements) {
+      const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
+      Object.keys(ctx.requirements).forEach((dep) => {
+        const depVersion = req[dep];
+        if (depVersion) {
+          req[dep] = depVersion;
+        } else {
+          delete req[dep];
+        }
+      });
+      this.fs.write(`${ctx.cwd}/requirements.txt`, Object.keys(req).map((pi) => pi + req[pi]).join('\n'));
+    }
     return new Promise((resolve) => this.fs.commit(resolve)).then(() => {
       const line = `commit -am "prepare next development version ${ctx.nextDevVersion}"`;
       this.log(chalk.blue(`git commit:`), `git ${line}`);

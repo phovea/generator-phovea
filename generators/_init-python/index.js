@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
+const {parseRequirements} = require('../../utils/pip');
 
 const known = require('../../utils/known');
 
@@ -65,30 +66,9 @@ class PluginGenerator extends Base {
     });
   }
 
-  _parseRequirements(file) {
-    file = file.trim();
-    if (file === '') {
-      return {};
-    }
-    const r = {};
-    file.split('\n').forEach((line) => {
-      let i = line.indexOf('@');
-      if (i < 0) {
-        i = line.indexOf('=');
-      }
-      if (i >= 0) {
-        const requirement = line.slice(0, i);
-        r[requirement] = line.slice(i);
-      } else {
-        r[line] = '';
-      }
-    });
-    return r;
-  }
-
   _generateDependencies(useDevelopDependencies) {
-    const requirements = this._parseRequirements(this.fs.read(this.destinationPath('requirements.txt'), {defaults: ''}));
-    const dockerPackages = this._parseRequirements(this.fs.read(this.destinationPath('docker_packages.txt'), {defaults: ''}));
+    const requirements = parseRequirements(this.fs.read(this.destinationPath('requirements.txt'), {defaults: ''}));
+    const dockerPackages = parseRequirements(this.fs.read(this.destinationPath('docker_packages.txt'), {defaults: ''}));
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
 
