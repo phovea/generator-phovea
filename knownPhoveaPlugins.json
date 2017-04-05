@@ -6,7 +6,7 @@
       "description": "Phovea Core Plugin",
       "repository": "https://github.com/phovea/phovea_core.git",
       "dependencies": {
-        "phovea_core": "github:phovea/phovea_core#v0.0.5"
+        "phovea_core": "0.1.0"
       },
       "develop": {
         "dependencies": {
@@ -21,7 +21,7 @@
       "description": "Phovea D3 Plugin",
       "repository": "https://github.com/phovea/phovea_d3.git",
       "dependencies": {
-        "phovea_d3": "github:phovea/phovea_d3#v0.0.5"
+        "phovea_d3": "0.1.0"
       },
       "develop": {
         "dependencies": {
@@ -38,7 +38,7 @@
       "description": "Phovea Vis Plugin",
       "repository": "https://github.com/phovea/phovea_vis.git",
       "dependencies": {
-        "phovea_vis": "github:phovea/phovea_vis#v0.0.5"
+        "phovea_vis": "0.1.0"
       },
       "develop": {
         "dependencies": {
@@ -55,7 +55,7 @@
       "description": "Phovea Common Style Plugin",
       "repository": "https://github.com/phovea/phovea_ui.git",
       "dependencies": {
-        "phovea_ui": "github:phovea/phovea_ui#v0.0.5"
+        "phovea_ui": "0.1.0"
       },
       "develop": {
         "dependencies": {
@@ -73,7 +73,7 @@
       "description": "Phovea Importer Plugin",
       "repository": "https://github.com/phovea/phovea_importer.git",
       "dependencies": {
-        "phovea_importer": "github:phovea/phovea_importer#v0.0.5"
+        "phovea_importer": "0.1.0"
       },
       "develop": {
         "dependencies": {
@@ -91,7 +91,7 @@
       "description": "Phovea LineUp Visualization",
       "repository": "https://github.com/phovea/phovea_vis_lineup.git",
       "dependencies": {
-        "phovea_vis_lineup": "github:phovea/phovea_vis_lineup#v0.0.5"
+        "phovea_vis_lineup": "0.1.0"
       },
       "develop": {
         "dependencies": {
