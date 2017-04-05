@@ -179,10 +179,12 @@ class Generator extends Base {
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
 
+    let p = Promise.resolve(1);
+
     if (this.fs.exists(`${ctx.cwd}/requirements.txt`)) {
       ctx.requirements = {};
       const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
-      Object.keys(req).forEach((dep) => {
+      p = Promise.all(Object.keys(req).map((dep) => {
         const depVersion = req[dep];
         ctx.requirements[dep] = depVersion;
         let version = depVersion;
@@ -193,29 +195,36 @@ class Generator extends Base {
         } else if (dep.startsWith('-e git+https://github.com/')) {
           ctx.requirements[dep] = depVersion;
           // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
-          const key = toCWD(dep.slice('-e git+https://github.com/'.length));
+          const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length-4)); // remove prefix and suffix (.git)
           const local = this.repos.find((d) => d.name === key);
+
+          delete req[dep];
+          ctx.requirements[key] = null; // mark to be deleted
           if (local) {
             version = local.version;
             this.log(`resolved ${key} to local ${version}`);
+            req[key] = '==' + version;
           } else {
-            // FIXME
-            const output = this.spawnCommandSync('curl', ['-s', `https://pypi.python.org/pypi/${key}/json`], {stdio: 'pipe'});
-            const infos = JSON.parse(String(output.stdout).trim());
-            const versions = Object.keys(infos.releases).sort(semver.compare);
-            console.log(infos, versions);
-            version = version[version.length - 1];
-            this.log(`resolved ${key} to pip ${version}`);
+            return new Promise((resolve) => {
+              const request = require('request');
+              console.log(`https://pypi.python.org/pypi/${key}/json`);
+              request(`https://pypi.python.org/pypi/${key}/json`, (error, response, data) => resolve(data))
+            }).then((data) => {
+              const infos = JSON.parse(data);
+              const versions = Object.keys(infos.releases).sort(semver.compare);
+              console.log(versions);
+              version = versions[versions.length - 1];
+              this.log(`resolved ${key} to pip ${version}`);
+              req[key] = '==' + version;
+            });
           }
-          delete req[dep];
-          req[key] = '==' + version;
-          ctx.requirements[key] = null; // mark to be deleted
         }
+      })).then(() => {
+        this.fs.write(`${ctx.cwd}/requirements.txt`, Object.keys(req).map((pi) => pi + req[pi]).join('\n'));
       });
-      this.fs.write(`${ctx.cwd}/requirements.txt`, Object.keys(req).map((pi) => pi + req[pi]).join('\n'));
     }
 
-    return new Promise((resolve) => this.fs.commit(resolve)).then(() => {
+    return p.then(() => new Promise((resolve) => this.fs.commit(resolve))).then(() => {
       const line = `commit -am "prepare release_${ctx.version}"`;
       this.log(chalk.blue(`git commit:`), `git ${line}`);
       return this._spawnOrAbort('git', ['commit', '-am', `prepare release_${ctx.version}`], ctx.cwd, ctx);
