@@ -2,7 +2,7 @@
   "name": "generator-phovea",
   "description": "helper generator for phovea",
   "homepage": "https://github.com/phovea/generator-phovea",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
