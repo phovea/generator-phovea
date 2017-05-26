@@ -120,6 +120,7 @@ class Generator extends Base {
     const requirements = new Set();
     const devRequirements = new Set();
     const dockerPackages = new Set();
+    const dockerScripts = [];
     let dockerCompose = {};
     let dockerComposeDebug = {};
     let scripts = {};
@@ -135,6 +136,10 @@ class Generator extends Base {
       addAll('requirements.txt', requirements);
       addAll('requirements_dev.txt', devRequirements);
       addAll('docker_packages.txt', dockerPackages);
+      const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});
+      if (script) {
+        dockerScripts.push(script);
+      }
 
       {
         const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
@@ -234,6 +239,7 @@ class Generator extends Base {
       requirements: [...requirements.values()],
       devRequirements: [...devRequirements.values()],
       dockerPackages: [...dockerPackages.values()],
+      dockerScripts: dockerScripts,
       scripts: scripts,
       dockerCompose: rewriteDockerCompose(dockerCompose),
       dockerComposeDebug: rewriteDockerCompose(dockerComposeDebug)
@@ -265,6 +271,7 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.sort().join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
+    this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 
     {
       const yaml = require('yamljs');
