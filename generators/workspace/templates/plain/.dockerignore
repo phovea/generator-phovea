@@ -1,0 +1,4 @@
+*
+!requirements*.txt
+!docker_packages.txt
+!docker_script.sh
