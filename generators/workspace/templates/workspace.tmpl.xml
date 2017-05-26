@@ -7,4 +7,8 @@
     <property name="js-tslint-package" value="$PROJECT_DIR$/node_modules/tslint" />
     <property name="editor.config.accepted" value="true" />
   </component>
+  <component name="PyDebuggerOptionsProvider">
+    <option name="mySupportGeventDebugging" value="true" />
+    <option name="mySupportQtDebugging" value="false" />
+  </component>
 </project>

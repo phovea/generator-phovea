@@ -2,7 +2,7 @@
   "name": "generator-phovea",
   "description": "helper generator for phovea",
   "homepage": "https://github.com/phovea/generator-phovea",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
@@ -39,6 +39,7 @@
     "inquirer": "1.2.2",
     "inquirer-npm-name": "2.0.0",
     "lodash": "4.6.1",
+    "opn": "^4.0.2",
     "parse-author": "1.0.0",
     "yamljs": "0.2.8",
     "yeoman-environment": "1.6.5",
@@ -75,6 +76,9 @@
   "scripts": {
     "lint": "gulp static",
     "prepublish": "gulp prepublish",
-    "test": "gulp"
+    "test": "gulp",
+    "release:major": "npm version major && npm publish && git push --follow-tags",
+    "release:minor": "npm version minor && npm publish && git push --follow-tags",
+    "release:patch": "npm version patch && npm publish && git push --follow-tags"
   }
 }
