@@ -1,4 +1,7 @@
-*
-!requirements*.txt
-!docker_packages.txt
-!docker_script.sh
+/_backup
+/_data
+node_modules
+/*/tests/
+/*/data/
+/*/docs/
+/*/src/
