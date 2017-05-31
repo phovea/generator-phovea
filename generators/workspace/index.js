@@ -219,6 +219,12 @@ class Generator extends Base {
             requirements.delete(pi + k.develop.requirements[pi]);
           });
         }
+		// more intelligent guessing to catch tags
+        Array.from(requirements.keys()).forEach((k) => {
+          if (k.includes(`/${p}.git@`)) {
+            requirements.delete(k);
+          }
+        });
       } else {
         // more intelligent guessing
         Array.from(requirements.keys()).forEach((k) => {
