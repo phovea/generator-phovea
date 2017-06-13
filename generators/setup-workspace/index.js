@@ -128,7 +128,7 @@ class Generator extends Base {
   }
 
   _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : {cwd: this.cwd};
+    const options = cwd === false ? {} : Object.assign({cwd: this.cwd}, cwd || {});
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -279,7 +279,7 @@ class Generator extends Base {
       .then(() => {
         const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
         if (l.trim().length > 0) {
-          return this._spawnOrAbort.bind(this, 'docker-compose', 'build');
+          return this._spawnOrAbort('docker-compose', 'build');
         }
         return null;
       })
