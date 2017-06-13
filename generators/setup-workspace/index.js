@@ -36,10 +36,7 @@ function findDefaultApp(product) {
   return '???';
 }
 
-function downloadDataUrl(url, dest) {
-  if (!url.startsWith('http')) {
-    url = `https://s3.eu-central-1.amazonaws.com/phovea-data-packages/${url}`;
-  }
+function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
   console.log(chalk.blue('download file', url));
   return new Promise((resolve, reject) => {
@@ -51,6 +48,20 @@ function downloadDataUrl(url, dest) {
       });
     }).on('error', reject);
   });
+}
+
+function downloadDataUrl(url, dest) {
+  if (!url.startsWith('http')) {
+    url = `https://s3.eu-central-1.amazonaws.com/phovea-data-packages/${url}`;
+  }
+  return downloadFileImpl(url, dest);
+}
+
+function downloadBackupUrl(url, dest) {
+  if (!url.startsWith('http')) {
+    url = `https://s3.eu-central-1.amazonaws.com/phovea-volume-backups/${url}`;
+  }
+  return downloadFileImpl(url, dest);
 }
 
 function toDownloadName(url) {
@@ -185,6 +196,22 @@ class Generator extends Base {
     }
   }
 
+  _downloadBackupFile(desc, destDir) {
+    if (typeof desc === 'string') {
+      desc = {
+        type: 'url',
+        url: desc
+      };
+    }
+    switch (desc.type) {
+      case 'url':
+        return downloadBackupUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
+      default:
+        this.log(chalk.red('cannot handle data type:', desc.type));
+        return null;
+    }
+  }
+
   _downloadDataFiles() {
     const data = [];
     this.product.forEach((p) => {
@@ -197,6 +224,21 @@ class Generator extends Base {
     }
     return this._mkdir(this.cwd + '/_data')
       .then(() => Promise.all(data.map((d) => this._downloadDataFile(d, this.cwd + '/_data'))));
+  }
+
+  _downloadBackupFiles() {
+    const data = [];
+    this.product.forEach((p) => {
+      if (p.backup) {
+        data.push(...p.backup);
+      }
+    });
+    if (data.length === 0) {
+      return Promise.resolve(null);
+    }
+    return this._mkdir(this.cwd + '/_backup')
+      .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
+      .then(this._spawnOrAbort.bind(this, './docker-backup', 'restore'));
   }
 
   writing() {
@@ -233,6 +275,7 @@ class Generator extends Base {
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
+      .then(this._downloadBackupFiles.bind(this))
       .then(() => {
         const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
         if (l.trim().length > 0) {
