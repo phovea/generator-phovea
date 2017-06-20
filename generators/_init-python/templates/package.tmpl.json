@@ -9,7 +9,7 @@
     "docker_packages.txt"
   ],
   "scripts": {
-    "check": "flake8",
+    "check": "flake8 --exclude=.git,venv,deploy,docs,__pycache__,node_modules",
     "pretest": "npm run check",
     "test": "test ! -d tests || python setup.py test",
     "docs": "sphinx-apidoc -o docs -f ./<%-name%> && sphinx-build ./docs build/docs",
