@@ -399,8 +399,7 @@
       "aliases": {},
       "externals": [],
       "dependencies": {
-        "@types/moment": "2.13.0",
-        "moment": "2.15.2"
+        "moment": "2.18.1"
       }
     },
     {
