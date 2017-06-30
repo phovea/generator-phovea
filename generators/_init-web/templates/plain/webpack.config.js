@@ -88,11 +88,9 @@ function testPhoveaModules(modules) {
   };
 }
 
-
 // use workspace registry file if available
 const isWorkspaceContext = fs.existsSync(resolve(__dirname, '..', 'phovea_registry.js'));
 const registryFile = isWorkspaceContext ? '../phovea_registry.js' : './phovea_registry.js';
-const actMetaData = `file-loader?name=phoveaMetaData.json!${buildInfo.metaDataTmpFile(pkg)}`;
 const actBuildInfoFile = `file-loader?name=buildInfo.json!${buildInfo.tmpFile()}`;
 
 /**
@@ -101,14 +99,13 @@ const actBuildInfoFile = `file-loader?name=buildInfo.json!${buildInfo.tmpFile()}
  * @returns {*}
  */
 function injectRegistry(entry) {
-  const extraFiles = [registryFile, actBuildInfoFile, actMetaData];
   //build also the registry
   if (typeof entry === 'string') {
-    return extraFiles.concat(entry);
+    return [registryFile, actBuildInfoFile].concat(entry);
   } else {
     const transformed = {};
     Object.keys(entry).forEach((eentry) => {
-      transformed[eentry] = extraFiles.concat(entry[eentry]);
+      transformed[eentry] = [registryFile, actBuildInfoFile].concat(entry[eentry]);
     });
     return transformed;
   }
@@ -136,10 +133,6 @@ function generateWebpack(options) {
       ] : ['node_modules']
     },
     plugins: [
-      new webpack.BannerPlugin({
-        banner: banner,
-        raw: true
-      }),
       //define magic constants that are replaced
       new webpack.DefinePlugin({
         'process.env': {
@@ -152,11 +145,7 @@ function generateWebpack(options) {
         __TEST__: options.isTest,
         __PRODUCTION__: options.isProduction,
         __APP_CONTEXT__: JSON.stringify('/')
-      }),
-      new webpack.optimize.MinChunkSizePlugin({
-        minChunkSize: 10000 //at least 10.000 characters
-      }),
-      new webpack.optimize.AggressiveMergingPlugin()
+      })
       //rest depends on type
     ],
     externals: [],
@@ -164,9 +153,6 @@ function generateWebpack(options) {
       loaders: webpackloaders.slice()
     },
     devServer: {
-      watchOptions: {
-        ignored: '/node_modules/'
-      },
       proxy: {
         '/api/*': {
           target: 'http://localhost:9000',
@@ -186,9 +172,28 @@ function generateWebpack(options) {
           secure: false
         }
       },
-      contentBase: resolve(__dirname, 'build')
-    }
+      contentBase: resolve(__dirname, 'build'),
+	  watchOptions: {
+	    aggregateTimeout: 500,
+	    ignored: /node_modules/
+	  }
+    },
+	watchOptions: {
+	  aggregateTimeout: 500,
+	  ignored: /node_modules/
+	}
   };
+  
+  if (options.isProduction) {
+	  base.plugins.unshift(new webpack.BannerPlugin({
+        banner: banner,
+        raw: true
+      }));
+	  base.plugins.push(new webpack.optimize.MinChunkSizePlugin({
+			minChunkSize: 10000 //at least 10.000 characters
+		  }),
+		  new webpack.optimize.AggressiveMergingPlugin());
+  }
 
   if (options.library) {
     let libName = /phovea_.*/.test(pkg.name) ? ['phovea', pkg.name.slice(7)] : pkg.name;
