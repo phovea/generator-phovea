@@ -88,9 +88,11 @@ function testPhoveaModules(modules) {
   };
 }
 
+
 // use workspace registry file if available
 const isWorkspaceContext = fs.existsSync(resolve(__dirname, '..', 'phovea_registry.js'));
 const registryFile = isWorkspaceContext ? '../phovea_registry.js' : './phovea_registry.js';
+const actMetaData = `file-loader?name=phoveaMetaData.json!${buildInfo.metaDataTmpFile(pkg)}`;
 const actBuildInfoFile = `file-loader?name=buildInfo.json!${buildInfo.tmpFile()}`;
 
 /**
@@ -99,13 +101,14 @@ const actBuildInfoFile = `file-loader?name=buildInfo.json!${buildInfo.tmpFile()}
  * @returns {*}
  */
 function injectRegistry(entry) {
+  const extraFiles = [registryFile, actBuildInfoFile, actMetaData];
   //build also the registry
   if (typeof entry === 'string') {
-    return [registryFile, actBuildInfoFile].concat(entry);
+    return extraFiles.concat(entry);
   } else {
     const transformed = {};
     Object.keys(entry).forEach((eentry) => {
-      transformed[eentry] = [registryFile, actBuildInfoFile].concat(entry[eentry]);
+      transformed[eentry] = extraFiles.concat(entry[eentry]);
     });
     return transformed;
   }
@@ -173,17 +176,17 @@ function generateWebpack(options) {
         }
       },
       contentBase: resolve(__dirname, 'build'),
-	  watchOptions: {
-	    aggregateTimeout: 500,
-	    ignored: /node_modules/
-	  }
+      watchOptions: {
+        aggregateTimeout: 500,
+        ignored: /node_modules/
+      }
     },
-	watchOptions: {
-	  aggregateTimeout: 500,
-	  ignored: /node_modules/
-	}
+    watchOptions: {
+      aggregateTimeout: 500,
+      ignored: /node_modules/
+    }
   };
-  
+
   if (options.isProduction) {
 	  base.plugins.unshift(new webpack.BannerPlugin({
         banner: banner,
