@@ -20,7 +20,7 @@ jobs:
           - ./node_modules
       - run: #force update of dynamic dependencies
           name: update-vcs-dependencies
-          command: npm update
+          command: npm --depth 9999 update
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements_dev.txt" }}
       - run:
