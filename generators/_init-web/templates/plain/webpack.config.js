@@ -123,6 +123,7 @@ function generateWebpack(options) {
     output: {
       path: resolve(__dirname, 'build'),
       filename: (options.name || (pkg.name + (options.bundle ? '_bundle' : ''))) + (options.min && !options.nosuffix ? '.min' : '') + '.js',
+      chunkFilename: '[chunkhash].js',
       publicPath: '' //no public path = relative
     },
     resolve: {
@@ -138,9 +139,7 @@ function generateWebpack(options) {
     plugins: [
       //define magic constants that are replaced
       new webpack.DefinePlugin({
-        'process.env': {
-          'NODE_ENV': JSON.stringify(options.isProduction ? 'production': 'development')
-        },
+        'process.env.NODE_ENV': JSON.stringify(options.isProduction ? 'production': 'development'),
         __VERSION__: JSON.stringify(pkg.version),
         __LICENSE__: JSON.stringify(pkg.license),
         __BUILD_ID__: buildId,
