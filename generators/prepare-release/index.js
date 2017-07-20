@@ -181,7 +181,7 @@ class Generator extends Base {
     Object.keys(pkg.dependencies || {}).forEach((dep) => {
       const depVersion = pkg.dependencies[dep];
       let version = depVersion;
-      if (dependenciesToIgnores.some((d) => dep.startsWith(d))) { //HACK
+      if (dependenciesToIgnores.some((d) => dep.startsWith(d))) {
         return;
       }
       if (depVersion.endsWith('-SHAPSHOT')) {
@@ -211,8 +211,8 @@ class Generator extends Base {
       ctx.requirements = {};
       const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       p = Promise.all(Object.keys(req).map((dep) => {
-        if (dependenciesToIgnores.some((d) => dep.includes(d))) { //HACK
-          return;
+        if (dependenciesToIgnores.some((d) => dep.includes(d))) {
+          return null;
         }
         const depVersion = req[dep];
         ctx.requirements[dep] = depVersion;
