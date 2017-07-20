@@ -58,19 +58,20 @@ class Generator extends Base {
     super(args, options);
 
     this.option('major', {
-      alias: 's',
       defaults: false,
       type: Boolean
     });
     this.option('minor', {
-      alias: 's',
       defaults: false,
       type: Boolean
     });
     this.option('patch', {
-      alias: 's',
       defaults: false,
       type: Boolean
+    });
+    this.option('ignore', {
+      defaults: '',
+      type: String
     });
     this.option('ssh', {
       alias: 's',
@@ -173,11 +174,14 @@ class Generator extends Base {
     const semver = require('semver');
     const pkg = this.fs.readJSON(`${ctx.cwd}/package.json`);
     pkg.version = ctx.version;
+
+    const dependenciesToIgnores = (this.options.ignore || '').split(',');
+
     ctx.dependencies = {};
     Object.keys(pkg.dependencies || {}).forEach((dep) => {
       const depVersion = pkg.dependencies[dep];
       let version = depVersion;
-      if (dep.startsWith('phovea_') || dep.startsWith('lineupjs')) { //HACK
+      if (dependenciesToIgnores.some((d) => dep.startsWith(d))) { //HACK
         return;
       }
       if (depVersion.endsWith('-SHAPSHOT')) {
@@ -189,7 +193,7 @@ class Generator extends Base {
         // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
         const local = this.repos.find((d) => d.name === dep);
         if (local) {
-          version = local.private ? (`${depVersion.split('#')[0]}#${local.version}` : local.version;
+          version = local.private ? `${depVersion.split('#')[0]}#${local.version}` : local.version;
           this.log(`resolved ${dep} to local ${version}`);
         } else {
           const output = this.spawnCommandSync('npm', ['info', dep, 'version'], {stdio: 'pipe'});
@@ -207,8 +211,8 @@ class Generator extends Base {
       ctx.requirements = {};
       const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       p = Promise.all(Object.keys(req).map((dep) => {
-        if (dep.includes('phovea_')) {
-          return null;
+        if (dependenciesToIgnores.some((d) => dep.includes(d))) { //HACK
+          return;
         }
         const depVersion = req[dep];
         ctx.requirements[dep] = depVersion;
@@ -223,7 +227,7 @@ class Generator extends Base {
           const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length - 4)); // remove prefix and suffix (.git)
           const local = this.repos.find((d) => d.name === key);
           if (local && local.private) {
-            req[dep] = `${local.version}#${version.split('#')[1]}`;
+            req[dep] = `@${local.version}#${version.split('#')[1]}`;
           } else {
             delete req[dep];
             ctx.requirements[key] = ''; // mark to be deleted
