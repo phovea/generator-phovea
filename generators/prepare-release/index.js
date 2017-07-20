@@ -57,8 +57,26 @@ class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
-    this.option('major');
-    this.option('minor');
+    this.option('major', {
+      alias: 's',
+      defaults: false,
+      type: Boolean
+    });
+    this.option('minor', {
+      alias: 's',
+      defaults: false,
+      type: Boolean
+    });
+    this.option('patch', {
+      alias: 's',
+      defaults: false,
+      type: Boolean
+    });
+    this.option('ssh', {
+      alias: 's',
+      defaults: false,
+      type: Boolean
+    });
 
     this.argument('repo', {
       required: false
@@ -134,6 +152,7 @@ class Generator extends Base {
     } else {
       ctx.version = version;
     }
+    ctx.private = pkg.private === true;
     ctx.nextDevVersion = semver.inc(ctx.version, 'patch') + '-SNAPSHOT';
     return Promise.resolve(ctx);
   }
@@ -158,6 +177,9 @@ class Generator extends Base {
     Object.keys(pkg.dependencies || {}).forEach((dep) => {
       const depVersion = pkg.dependencies[dep];
       let version = depVersion;
+      if (dep.startsWith('phovea_') || dep.startsWith('lineupjs')) { //HACK
+        return;
+      }
       if (depVersion.endsWith('-SHAPSHOT')) {
         version = depVersion.slice(0, depVersion.length - 9);
         pkg.dependencies[dep] = version;
@@ -167,7 +189,7 @@ class Generator extends Base {
         // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
         const local = this.repos.find((d) => d.name === dep);
         if (local) {
-          version = local.version;
+          version = local.private ? (`${depVersion.split('#')[0]}#${local.version}` : local.version;
           this.log(`resolved ${dep} to local ${version}`);
         } else {
           const output = this.spawnCommandSync('npm', ['info', dep, 'version'], {stdio: 'pipe'});
@@ -185,6 +207,9 @@ class Generator extends Base {
       ctx.requirements = {};
       const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       p = Promise.all(Object.keys(req).map((dep) => {
+        if (dep.includes('phovea_')) {
+          return null;
+        }
         const depVersion = req[dep];
         ctx.requirements[dep] = depVersion;
         let version = depVersion;
@@ -197,26 +222,29 @@ class Generator extends Base {
           // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
           const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length - 4)); // remove prefix and suffix (.git)
           const local = this.repos.find((d) => d.name === key);
-
-          delete req[dep];
-          ctx.requirements[key] = null; // mark to be deleted
-          if (local) {
-            version = local.version;
-            this.log(`resolved ${key} to local ${version}`);
-            req[key] = '==' + version;
+          if (local && local.private) {
+            req[dep] = `${local.version}#${version.split('#')[1]}`;
           } else {
-            return new Promise((resolve) => {
-              const request = require('request');
-              console.log(`https://pypi.python.org/pypi/${key}/json`);
-              request(`https://pypi.python.org/pypi/${key}/json`, (error, response, data) => resolve(data));
-            }).then((data) => {
-              const infos = JSON.parse(data);
-              const versions = Object.keys(infos.releases).sort(semver.compare);
-              console.log(versions);
-              version = versions[versions.length - 1];
-              this.log(`resolved ${key} to pip ${version}`);
+            delete req[dep];
+            ctx.requirements[key] = ''; // mark to be deleted
+            if (local) {
+              version = local.version;
+              this.log(`resolved ${key} to local ${version}`);
               req[key] = '==' + version;
-            });
+            } else {
+              return new Promise((resolve) => {
+                const request = require('request');
+                console.log(`https://pypi.python.org/pypi/${key}/json`);
+                request(`https://pypi.python.org/pypi/${key}/json`, (error, response, data) => resolve(data));
+              }).then((data) => {
+                const infos = JSON.parse(data);
+                const versions = Object.keys(infos.releases).sort(semver.compare);
+                console.log(versions);
+                version = versions[versions.length - 1];
+                this.log(`resolved ${key} to pip ${version}`);
+                req[key] = '==' + version;
+              });
+            }
           }
         }
         return null;
@@ -245,7 +273,7 @@ class Generator extends Base {
       const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       Object.keys(ctx.requirements).forEach((dep) => {
         const depVersion = req[dep];
-        if (depVersion) {
+        if (depVersion && depVersion !== '') {
           req[dep] = depVersion;
         } else {
           delete req[dep];
@@ -317,6 +345,7 @@ class Generator extends Base {
 
   _reorder() {
     const pkgs = this.repos.map((d) => {
+      console.log(d, d.cwd);
       if (this.fs.exists(`${d.cwd}/.yo-rc.json`)) {
         return this.fs.readJSON(`${d.cwd}/.yo-rc.json`)['generator-phovea'];
       }
