@@ -76,6 +76,12 @@ class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
+    this.option('ssh', {
+      alias: 's',
+      defaults: false,
+      type: Boolean
+    });
+
     this.argument('product', {
       required: true
     });
