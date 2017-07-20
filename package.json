@@ -41,6 +41,7 @@
     "lodash": "4.6.1",
     "opn": "^4.0.2",
     "parse-author": "1.0.0",
+    "request": "^2.81.0",
     "yamljs": "0.2.8",
     "yeoman-environment": "1.6.5",
     "yeoman-generator": "0.24.1"
