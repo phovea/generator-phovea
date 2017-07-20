@@ -103,7 +103,8 @@ class Generator extends Base {
       this.repository = toBaseName(props.repository || this.args[0]);
       this.cloneSSH = props.cloneSSH || this.options.ssh;
       this.cwd = toCWD(this.repository);
-      this.repos = this.args.map(toBaseName).map((d) => ({cwd: `${this.cwd}/${toCWD(d)}`, repo: d, name: toCWD(d)}));
+      const reposToRelease = [props.repository || this.args[0]].concat(this.args.slice(1));
+      this.repos = reposToRelease.map(toBaseName).map((d) => ({cwd: `${this.cwd}/${toCWD(d)}`, repo: d, name: toCWD(d)}));
     });
   }
 
