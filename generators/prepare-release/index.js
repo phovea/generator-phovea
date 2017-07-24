@@ -155,10 +155,10 @@ class Generator extends Base {
       ctx.version = semver.inc(version, 'major');
     } else if (this.options.minor) {
       ctx.version = semver.inc(version, 'minor');
-    } else if (!version.endsWith('-SNAPSHOT')) {
-      ctx.version = semver.inc(version, 'patch');
-    } else {
+    } else if (version.endsWith('-SNAPSHOT')) {
       ctx.version = version;
+    } else {
+      ctx.version = semver.inc(version, 'patch');
     }
 
     ctx.private = pkg.private === true;
