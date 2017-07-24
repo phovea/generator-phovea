@@ -73,6 +73,10 @@ class Generator extends Base {
       defaults: '',
       type: String
     });
+    this.option('branch', {
+      defaults: 'develop',
+      type: String
+    });
     this.option('ssh', {
       alias: 's',
       defaults: false,
@@ -151,9 +155,12 @@ class Generator extends Base {
       ctx.version = semver.inc(version, 'major');
     } else if (this.options.minor) {
       ctx.version = semver.inc(version, 'minor');
+    } else if (!version.endsWith('-SNAPSHOT')) {
+      ctx.version = semver.inc(version, 'patch');
     } else {
       ctx.version = version;
     }
+
     ctx.private = pkg.private === true;
     ctx.nextDevVersion = semver.inc(ctx.version, 'patch') + '-SNAPSHOT';
     return Promise.resolve(ctx);
@@ -194,7 +201,7 @@ class Generator extends Base {
         // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
         const local = this.repos.find((d) => d.name === dep);
         if (local) {
-          version = local.private ? `${depVersion.split('#')[0]}#${local.version}` : local.version;
+          version = local.private ? `${depVersion.split('#')[0]}#v${local.version}` : local.version;
           this.log(`resolved ${dep} to local ${version}`);
         } else {
           const output = this.spawnCommandSync('npm', ['info', dep, 'version'], {stdio: 'pipe'});
@@ -228,7 +235,7 @@ class Generator extends Base {
           const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length - 4)); // remove prefix and suffix (.git)
           const local = this.repos.find((d) => d.name === key);
           if (local && local.private) {
-            req[dep] = `@${local.version}#${version.split('#')[1]}`;
+            req[dep] = `@${local.version}#v${version.split('#')[1]}`;
           } else {
             delete req[dep];
             ctx.requirements[key] = ''; // mark to be deleted
@@ -375,7 +382,7 @@ class Generator extends Base {
   writing() {
     return Promise.resolve(1)
       .then(this._mkdir.bind(this, null))
-      .then(() => Promise.all(this.repos.map((repo) => this._cloneRepo(repo.repo, 'develop'))))
+      .then(() => Promise.all(this.repos.map((repo) => this._cloneRepo(repo.repo, this.options.branch))))
       .then(() => this._reorder())
       .then((orderedRepos) => {
         let p = Promise.resolve(1);
@@ -391,10 +398,10 @@ class Generator extends Base {
             .then(this._fetch.bind(this))
             .then(this._checkoutBranch.bind(this, '-t origin/master'))
             .then(this._tag.bind(this))
-            .then(this._checkoutBranch.bind(this, 'develop'))
+            .then(this._checkoutBranch.bind(this, this.options.branch))
             .then(this._merge.bind(this, 'origin/master'))
             .then(this._preareNextDevPackage.bind(this))
-            .then(this._pushBranch.bind(this, 'develop', true))
+            .then(this._pushBranch.bind(this, this.options.branch, true))
             .then(this._openReleasePage.bind(this))
             .then(this._waitForConfirmation.bind(this, 'Travis finished successfully for the build and updated the release?'));
         });
