@@ -8,12 +8,12 @@ const stringifyAble = require('../../utils').stringifyAble;
 function toJSONFromText(text) {
   const r = {};
   text.split('\n').forEach((line) => {
-    var [key, value] = line.split('=');
+    let [key, value] = line.split('=');
     value = value.trim();
     if (!isNaN(parseFloat(value))) {
       value = parseFloat(value);
     }
-    var obj = r;
+    let obj = r;
     const keys = key.trim().split('.');
     keys.slice(0, keys.length - 1).forEach((k) => {
       if (!(k in obj)) {
@@ -94,7 +94,7 @@ class Generator extends Base {
   _injectWebExtension(d) {
     const file = this.destinationPath('phovea.js');
     const old = this.fs.read(file);
-    const text = `\n\n  registry.push('${d.type}', '${d.id}', function() { return System.import('./src/${d.module}'); }, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
+    const text = `\n\n  registry.push('${d.type}', '${d.id}', function() { return import('./src/${d.module}'); }, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
     const new_ = old.replace('  // generator-phovea:end', text);
     this.fs.write(file, new_);
 
