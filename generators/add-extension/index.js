@@ -8,6 +8,10 @@ const stringifyAble = require('../../utils').stringifyAble;
 function toJSONFromText(text) {
   const r = {};
   text.split('\n').forEach((line) => {
+    if (line.length === 0) { // ignore new lines at the end of the file
+      return;
+    }
+
     let [key, value] = line.split('=');
     value = value.trim();
     if (!isNaN(parseFloat(value))) {
