@@ -9,7 +9,7 @@ function toJSONFromText(text) {
   const r = {};
   text.split('\n').forEach((line) => {
     const trimmedLine = line.trim();
-    if (trimmedLine.length === 0) { // ignore new lines at the end of the file
+    if (trimmedLine.length === 0) { // ignore empty lines (e.g. new line added by editor)
       return;
     }
 
