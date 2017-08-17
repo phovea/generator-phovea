@@ -250,18 +250,21 @@ class Generator extends Base {
   _ifExecutable(cmd, ifExists, extraMessage = '') {
     const paths = process.env.PATH.split(path.delimiter);
     const pathExt = (process.env.PATHEXT || '').split(path.delimiter);
-    let found = false;
-    outer: for (const p of paths) {
-      for (const ext of pathExt) {
-        const fullPath = `${p}${path.sep}${cmd}${ext}`;
-        if (fs.existsSync(fullPath)) {
-          this.log(`found ${cmd} at ${fullPath}`);
-          found = true;
-          break outer;
+
+    const findIt = () => {
+      for (const p of paths) {
+        for (const ext of pathExt) {
+          const fullPath = `${p}${path.sep}${cmd}${ext}`;
+          if (fs.existsSync(fullPath)) {
+            this.log(`found ${cmd} at ${fullPath}`);
+            return true;
+          }
         }
       }
-    }
-    if (!found) {
+      return false;
+    };
+    
+    if (!findIt()) {
       this.log(chalk.red(`Error: ${cmd} not found${extraMessage}`));
       return Promise.resolve(null);
     }
