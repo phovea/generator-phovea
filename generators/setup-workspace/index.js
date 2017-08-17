@@ -263,7 +263,7 @@ class Generator extends Base {
       }
       return false;
     };
-    
+
     if (!findIt()) {
       this.log(chalk.red(`Error: ${cmd} not found${extraMessage}`));
       return Promise.resolve(null);
