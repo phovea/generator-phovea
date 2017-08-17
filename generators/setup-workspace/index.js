@@ -244,7 +244,28 @@ class Generator extends Base {
     }
     return this._mkdir(this.cwd + '/_backup')
       .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
-      .then(this._spawnOrAbort.bind(this, './docker-backup', 'restore'));
+      .then(this._ifExecutable.bind(this, 'docker-compose', this._spawnOrAbort.bind(this, './docker-backup', 'restore'), 'please execute: "./docker-backup restore" manually'));
+  }
+
+  _ifExecutable(cmd, ifExists, extraMessage = '') {
+    const paths = process.env.PATH.split(path.delimiter);
+    const pathExt = (process.env.PATHEXT || '').split(path.delimiter);
+    let found = false;
+    outer: for (const p of paths) {
+      for (const ext of pathExt) {
+        const fullPath = `${p}${path.sep}${cmd}${ext}`;
+        if (fs.existsSync(fullPath)) {
+          this.log(`found ${cmd} at ${fullPath}`);
+          found = true;
+          break outer;
+        }
+      }
+    }
+    if (!found) {
+      this.log(chalk.red(`Error: ${cmd} not found${extraMessage}`));
+      return Promise.resolve(null);
+    }
+    return ifExists();
   }
 
   writing() {
@@ -280,12 +301,12 @@ class Generator extends Base {
       .then(this._yo.bind(this, 'workspace'))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
-      .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
+      //.then(this._spawnOrAbort.bind(this, 'npm', 'install'))
       .then(this._downloadBackupFiles.bind(this))
       .then(() => {
         const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
         if (l.trim().length > 0) {
-          return this._spawnOrAbort('docker-compose', 'build');
+          return this._ifExecutable('docker-compose', this._spawnOrAbort.bind(this, 'docker-compose', 'build'), ' please run "docker-compose build" manually"');
         }
         return null;
       })
