@@ -26,6 +26,7 @@ const banner = '/*! ' + (pkg.title || pkg.name) + ' - v' + pkg.version + ' - ' +
 // list of loaders and their mappings
 const webpackloaders = [
   {test: /\.scss$/, loader: 'style-loader!css-loader!sass-loader'},
+  {test: /\.css$/, loader: 'style-loader!css-loader'},
   {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
   {test: /\.json$/, loader: 'json-loader'},
   {
@@ -193,9 +194,9 @@ function generateWebpack(options) {
     }));
     base.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
   } else if (options.isDev) {
-    //use dev version of tsconfig
-    const { TsConfigPathsPlugin } = require('awesome-typescript-loader');
-    base.plugins.push(new TsConfigPathsPlugin({ configFileName: './tsconfig_dev.json'}));
+    // use dev version of tsconfig
+    const {TsConfigPathsPlugin} = require('awesome-typescript-loader');
+    base.plugins.push(new TsConfigPathsPlugin({configFileName: './tsconfig_dev.json'}));
   }
 
   if (options.library) {
@@ -242,6 +243,10 @@ function generateWebpack(options) {
       test: /\.scss$/,
       loader: p.extract(['css-loader', 'sass-loader'])
     };
+    base.module.loaders[1] = {
+      test: /\.css$/,
+      loader: p.extract(['css-loader'])
+    };
   }
   if (options.isApp) {
     // create manifest
@@ -262,17 +267,7 @@ function generateWebpack(options) {
         minimize: true,
         debug: false
       }),
-      new webpack.optimize.UglifyJsPlugin({
-        beautify: false,
-        mangle: {
-          keep_fnames: true
-        },
-        compress: {
-          warnings: false
-        },
-        comments: false,
-        sourceMap: false
-      }));
+      new webpack.optimize.UglifyJsPlugin());
   } else {
     // generate source maps
     base.devtool = 'source-map';
