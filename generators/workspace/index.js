@@ -252,6 +252,40 @@ class Generator extends Base {
     };
   }
 
+  _patchDockerImages(dockerImages, dockerCompose) {
+    const services = dockerCompose.services;
+    if (!services) {
+      return;
+    }
+    Object.keys(services).forEach((name) => {
+      const image = dockerImages[name];
+      if (!image) {
+        return;
+      }
+      const service = services[name];
+      if (service.image) {
+        // direct replacement
+        service.image = image;
+        return;
+      }
+      if (!service.build) {
+        this.log(`cannot patch patching docker image of service: ${name}: neither build nor image defined`);
+        return;
+      }
+      const dockerFile = this.destinationPath(service.build.dockerfile);
+      let content = this.fs.read(dockerFile).toString();
+      // create a copy of the Dockerfile to avoid git changes
+      const r = /^\s*FROM (.+)\s*$/igm;
+      const fromImage = r.exec(content)[1];
+      content = content.replace(r, `FROM ${image}`);
+      const targetDockerFile = this.destinationPath(`Dockerfile_${name}`);
+
+      this.log(`patching ${dockerFile} change from ${fromImage} -> ${image} resulting in ${targetDockerFile}`);
+      this.fs.write(targetDockerFile, content);
+      service.build.dockerfile = `Dockerfile_${name}`; // since we are in the workspace
+    });
+  }
+
   writing() {
     // save config
     this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules});
@@ -279,6 +313,9 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 
+    if (this.fs.exists(this.destinationPath('dockerImages.json'))) {
+      this._patchDockerImages(this.fs.readJSON(this.destinationPath('dockerImages.json')), sdeps.dockerCompose);
+    }
     {
       const yaml = require('yamljs');
       this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));

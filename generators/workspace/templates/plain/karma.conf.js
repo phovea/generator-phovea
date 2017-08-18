@@ -13,7 +13,7 @@ module.exports = (config) => {
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine'],
 
-    //all plugins
+    // all plugins
     files: webpack.plugins().map((d) => resolve(d, 'tests.webpack.js')),
 
     // preprocess matching files before serving them to the browser
@@ -34,7 +34,6 @@ module.exports = (config) => {
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
-
 
     browsers: [process.env.CONTINUOUS_INTEGRATION ? 'Firefox' : 'Chrome'],
 

@@ -4,6 +4,7 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
+const {toHTTPRepoUrl, toSSHRepoUrl} = require('../../utils/repo');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -148,7 +149,7 @@ class Generator extends Base {
   }
 
   _cloneRepo(repo, branch, extras) {
-    const repoUrl = this.cloneSSH ? `git@github.com:${repo}.git` : `https://github.com/${repo}.git`;
+    const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
@@ -159,6 +160,11 @@ class Generator extends Base {
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
         this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
+
+        // pass through the dockerImages overrides
+        if (fs.existsSync(`${this.cwd}/${name}/dockerImages.json`)) {
+          this.fs.copy(`${this.cwd}/${name}/dockerImages.json`, this.destinationPath('dockerImages.json'));
+        }
         return this.product;
       }).then((product) => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);

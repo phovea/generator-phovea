@@ -6,16 +6,10 @@ const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const plugins = require('../../utils/known').plugin;
+const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
 
 const isRequired = (v) => v.toString().length > 0;
-
-function simplifyRepoUrl(httpsUrl) {
-  if (httpsUrl.startsWith('https://github.com/') && httpsUrl.endsWith('.git')) {
-    return httpsUrl.slice('https://github.com/'.length, -'.git'.length);
-  }
-  return httpsUrl;
-}
 
 function buildPossibleAdditionalPlugins(type) {
   const toDescription = (d) => ({

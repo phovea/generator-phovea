@@ -3,17 +3,11 @@ const Base = require('yeoman-generator').Base;
 const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
+const {toHTTPRepoUrl, toSSHRepoUrl} = require('../../utils/repo');
 
-function toRepository(plugin) {
+function toRepository(plugin, useSSH) {
   const p = known.plugin.byName(plugin);
-  return p.repository;
-}
-
-function toSSH(repo) {
-  if (/https:\/\/github.com/.test(repo)) {
-    return `git@github.com:${repo.substring('https://github.com'.length)}`;
-  }
-  return repo;
+  return useSSH ? toSSHRepoUrl(p.repository) : toHTTPRepoUrl(p.repository);
 }
 
 function resolveNeighbors(plugins, useSSH, types, shallow) {
@@ -35,10 +29,7 @@ function resolveNeighbors(plugins, useSSH, types, shallow) {
 
   while (missing.length > 0) {
     let next = missing.shift();
-    let repo = toRepository(next);
-    if (useSSH) {
-      repo = toSSH(repo);
-    }
+    let repo = toRepository(next, useSSH);
     let args = ['clone', repo];
     if (shallow) {
       args.splice(1, 0, '--depth', '1');
@@ -137,10 +128,7 @@ class Generator extends Base {
   }
 
   writing() {
-    let repos = this.props.plugins.map(toRepository);
-    if (this.props.cloneSSH) {
-      repos = repos.map(toSSH);
-    }
+    const repos = this.props.plugins.map((d) => toRepository(d, this.props.cloneSSH));
 
     repos.forEach((repo) => {
       this.log(`git clone ${repo}`);

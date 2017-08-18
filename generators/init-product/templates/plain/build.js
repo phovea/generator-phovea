@@ -17,26 +17,43 @@ pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 
 function toRepoUrl(url) {
-  if (argv.useSSH) {
-    return `git@github.com:${url}.git`
+  if (url.startsWith('git@')) {
+    if (argv.useSSH) {
+      return url;
+    }
+    // have an ssh url need an http url
+    const m = url.match(/(https?:\/\/([^/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+    return `https://${m[3]}/${m[4]}.git`;
   }
-  return url.startsWith('https://github.com/') ? url : `https://github.com/${url}.git`;
+  if (url.startsWith('http')) {
+    if (!argv.useSSH) {
+      return url;
+    }
+    // have a http url need an ssh url
+    const m = url.match(/(https?:\/\/([^/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+    return `git@${m[2]}:${m[4]}.git`;
+  }
+  if (!url.includes('/')) {
+    url = `Caleydo/${url}`;
+  }
+  if (argv.useSSH) {
+    return `git@github.com:${url}.git`;
+  }
+  return `https://github.com/${url}.git`;
 }
-
 
 function toRepoUrlWithUser(url) {
   const repo = toRepoUrl(url);
-  const username_and_password = process.env.PHOVEA_GITHUB_CREDENTIALS;
-  if (repo.includes('git@github.com') || !username_and_password) {
+  const usernameAndPassword = process.env.PHOVEA_GITHUB_CREDENTIALS;
+  if (repo.startsWith('git@') || !usernameAndPassword) { // ssh or no user given
     return repo;
   }
-  return repo.replace('://', `://${username_and_password}@`);
+  return repo.replace('://', `://${usernameAndPassword}@`);
 }
-
 
 function fromRepoUrl(url) {
   if (url.includes('.git')) {
-    return url.match(/\/(.*)\.git/)[0]
+    return url.match(/\/(.*)\.git/)[0];
   }
   return url.slice(url.lastIndexOf('/') + 1);
 }
@@ -49,7 +66,7 @@ function downloadDataUrl(url, dest) {
   console.log(chalk.blue('download file', url));
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    const request = http.get(url, (response) => {
+    http.get(url, (response) => {
       response.pipe(file);
       file.on('finish', () => {
         file.close(resolve);
@@ -72,11 +89,12 @@ function downloadDataFile(desc, destDir, cwd) {
       url: desc
     };
   }
-  switch(desc.type) {
-    case 'url':
+  switch (desc.type) {
+    case 'url': {
       const destName = toDownloadName(desc.url);
       return fs.ensureDirAsync(destDir).then(() => downloadDataUrl(desc.url, path.join(destDir, destName)));
-    case 'repo':
+    }
+    case 'repo': {
       desc.name = desc.name || fromRepoUrl(desc.repo);
       let downloaded;
       if (fs.existsSync(path.join(cwd, desc.name))) {
@@ -85,6 +103,7 @@ function downloadDataFile(desc, destDir, cwd) {
         downloaded = cloneRepo(desc, cwd);
       }
       return downloaded.then(() => fs.copyAsync(`${cwd}/${desc.name}/data`, `${destDir}/${desc.name}`));
+    }
     default:
       console.error('unknown data type:', desc.type);
       return null;
@@ -113,7 +132,6 @@ function spawn(cmd, args, opts) {
     });
   });
 }
-
 
 /**
  * run npm with the given args
@@ -151,15 +169,18 @@ function dockerSave(image, target) {
       p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
       p2.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
     }
-    p2.on('close', (code) => code == 0 ? resolve() : reject(code));
+    p2.on('close', (code) => code === 0 ? resolve() : reject(code));
   });
 }
 
 function dockerRemoveImages(productName) {
+  if (argv.skipCleanUp) {
+    return Promise.resolve();
+  }
   console.log(chalk.blue(`docker images | grep ${productName} | awk '{print $1":"$2}') | xargs docker rmi`));
   const spawn = require('child_process').spawn;
   const opts = {env};
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const p = spawn('docker', ['images'], opts);
     const p2 = spawn('grep', [productName], opts);
     p.stdout.pipe(p2.stdin);
@@ -167,7 +188,7 @@ function dockerRemoveImages(productName) {
     p2.stdout.pipe(p3.stdin);
     const p4 = spawn('xargs', ['docker', 'rmi'], {env, stdio: [p3.stdout, 1, 2]});
     p4.on('close', (code) => {
-      if (code == 0) {
+      if (code === 0) {
         resolve();
       } else {
         console.log('invalid error code, but continuing');
@@ -241,16 +262,15 @@ function loadComposeFile(dir, p) {
   if (fs.existsSync(composeFile)) {
     const yaml = require('yamljs');
     return fs.readFileAsync(composeFile).then((content) => yaml.parse(content.toString()));
-  } else {
-    return Promise.resolve({});
   }
+  return Promise.resolve({});
 }
 
 function patchComposeFile(p, composeTemplate) {
   const service = {};
   if (composeTemplate && composeTemplate.services) {
     const firstService = Object.keys(composeTemplate.services)[0];
-    //copy data from first service
+    // copy data from first service
     Object.assign(service, composeTemplate.services[firstService]);
     delete service.build;
   }
@@ -266,9 +286,24 @@ function patchComposeFile(p, composeTemplate) {
   return r;
 }
 
+function patchDockerfile(p, dockerFile) {
+  if (!p.baseImage) {
+    return null;
+  }
+  return fs.readFileAsync(dockerFile).then((content) => {
+    content = content.toString();
+    // patch the Dockerfile by replacing the FROM statement
+    const r = /^\s*FROM (.+)\s*$/igm;
+    const fromImage = r.exec(content)[1];
+    console.log(`patching ${dockerFile} change from ${fromImage} -> ${p.baseImage}`);
+    content = content.replace(r, `FROM ${p.baseImage}`);
+    return fs.writeFileAsync(dockerFile, content);
+  });
+}
 
 function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
+    .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
     .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
     .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
@@ -280,12 +315,12 @@ function buildWebApp(p, dir) {
   const name = p.name;
   const hasAdditional = p.additional.length > 0;
   let act = preBuild(p, dir);
-  //let act = Promise.resolve(null);
+  // let act = Promise.resolve(null);
   if (hasAdditional) {
     act = act
       .then(() => yo('workspace', {noAdditionals: true}, dir))
       .then(() => npm(dir, 'install'));
-    //test all modules
+    // test all modules
     if (hasAdditional && !argv.skipTests) {
       act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`))));
     }
@@ -320,17 +355,17 @@ function buildServerApp(p, dir) {
     .then(() => npm(dir + '/' + name, `run build${p.isHybridType ? ':python' : ''}`))
     .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python' : ''}`))));
 
-  //copy all together
+  // copy all together
   act = act
     .then(() => fs.ensureDirAsync(`${dir}/build/source`))
     .then(() => fs.copyAsync(`${dir}/${name}/build/source`, `${dir}/build/source/`))
     .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${dir}/${pi.name}/build/source`, `${dir}/build/source/`))));
 
-  //copy data packages
+  // copy data packages
   act = act.then(() => Promise.all(p.data.map((d) => downloadDataFile(d, `${dir}/build/source/_data`, dir))));
-  //let act = Promise.resolve([]);
+  // let act = Promise.resolve([]);
 
-  //copy main deploy thing and create a docker out of it
+  // copy main deploy thing and create a docker out of it
   return act
     .then(() => fs.ensureDirAsync(`${dir}/deploy`))
     .then(() => fs.copyAsync(`${dir}/${name}/deploy`, `${dir}/deploy/`))
@@ -361,7 +396,7 @@ function mergeCompose(composePartials) {
   return dockerCompose;
 }
 
-function buildCompose(descs, composePartials) {
+function buildCompose(descs, dockerServiceOverrides, composePartials) {
   console.log('create docker-compose.yml');
   const dockerCompose = mergeCompose(composePartials);
   const services = dockerCompose.services;
@@ -380,6 +415,23 @@ function buildCompose(descs, composePartials) {
       services[w].links.push(`${s.label}:${s.name}`);
     });
   });
+
+  if (services._host) {
+    // inline _host to apis
+    const host = services._host;
+    delete services._host;
+    api.forEach((s) => {
+      services[s] = mergeCompose([host, services[s]]);
+    });
+  }
+
+  Object.keys(dockerServiceOverrides).forEach((service) => {
+    if (services[service] !== undefined) {
+      console.log(`patch generated docker-compose file for ${service}: ${services[service].image} -> ${dockerServiceOverrides[service]}`);
+      services[service].image = dockerServiceOverrides[service];
+    }
+  });
+
   const yaml = require('yamljs');
   return fs.writeFileAsync('build/docker-compose.yml', yaml.stringify(dockerCompose, 100, 2))
     .then(() => dockerCompose);
@@ -396,7 +448,7 @@ function pushImages(images) {
   if (!argv.noDefaultTags) {
     tags.push(...images.map((image) => ({image, tag: `${dockerRepository}/${image}`})));
   }
-  if (argv.pushExtra) { //push additional custom prefix without the version
+  if (argv.pushExtra) { // push additional custom prefix without the version
     tags.push(...images.map((image) => ({
       image,
       tag: `${dockerRepository}/${image.substring(0, image.lastIndexOf(':'))}:${argv.pushExtra}`
@@ -420,9 +472,9 @@ if (require.main === module) {
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
   const descs = require('./phovea_product.json');
+  const dockerImageOverrides = fs.existsSync('./dockerImages.json') ? require('./dockerImages.json') : {};
   const singleService = descs.length === 1;
   const productName = pkg.name.replace('_product', '');
-
 
   fs.emptyDirAsync('build')
     .then(dockerRemoveImages.bind(this, productName))
@@ -430,10 +482,15 @@ if (require.main === module) {
     .then(fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'))
     .then(() => {
       const buildOne = (d, i) => {
-        d.additional = d.additional || []; //default values
+        d.additional = d.additional || []; // default values
         d.data = d.data || [];
         d.name = d.name || fromRepoUrl(d.repo);
         d.label = d.label || d.name;
+        if (dockerImageOverrides[d.label] !== undefined) {
+          // use a different base image to build the item
+          d.baseImage = dockerImageOverrides[d.label];
+          delete dockerImageOverrides[d.label];
+        }
         if (singleService) {
           d.image = `${productName}:${pkg.version}`;
         } else {
@@ -452,11 +509,10 @@ if (require.main === module) {
           r = r.then((arr) => buildOne(descs[i], i).then((f) => arr.concat(f)));
         }
         return r;
-      } else {
-        return Promise.all(descs.map(buildOne));
       }
+      return Promise.all(descs.map(buildOne));
     })
-    .then((composeFiles) => buildCompose(descs, composeFiles.filter((d) => !!d)))
+    .then((composeFiles) => buildCompose(descs, dockerImageOverrides, composeFiles.filter((d) => Boolean(d))))
     .then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)))
     .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
     .then(() => {
@@ -468,7 +524,7 @@ if (require.main === module) {
         process.exit(1);
       }
     }).catch((error) => {
-    console.error('ERROR extra building ', error);
-    process.exit(1);
-  });
+      console.error('ERROR extra building ', error);
+      process.exit(1);
+    });
 }
