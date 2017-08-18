@@ -160,6 +160,11 @@ class Generator extends Base {
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
         this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
+
+        // pass through the dockerImages overrides
+        if (fs.existsSync(`${this.cwd}/${name}/dockerImages.json`)) {
+          this.fs.copy(`${this.cwd}/${name}/dockerImages.json`, this.destinationPath('dockerImages.json'));
+        }
         return this.product;
       }).then((product) => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);

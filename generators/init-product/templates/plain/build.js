@@ -174,6 +174,9 @@ function dockerSave(image, target) {
 }
 
 function dockerRemoveImages(productName) {
+  if (argv.skipCleanUp) {
+    return Promise.resolve();
+  }
   console.log(chalk.blue(`docker images | grep ${productName} | awk '{print $1":"$2}') | xargs docker rmi`));
   const spawn = require('child_process').spawn;
   const opts = {env};
@@ -288,9 +291,10 @@ function patchDockerfile(p, dockerFile) {
     return null;
   }
   return fs.readFileAsync(dockerFile).then((content) => {
+    content = content.toString();
     // patch the Dockerfile by replacing the FROM statement
     const r = /^\s*FROM (.+)\s*$/igm;
-    const fromImage = content.match(r)[1];
+    const fromImage = r.exec(content)[1];
     console.log(`patching ${dockerFile} change from ${fromImage} -> ${p.baseImage}`);
     content = content.replace(r, `FROM ${p.baseImage}`);
     return fs.writeFileAsync(dockerFile, content);
@@ -482,10 +486,10 @@ if (require.main === module) {
         d.data = d.data || [];
         d.name = d.name || fromRepoUrl(d.repo);
         d.label = d.label || d.name;
-        if (dockerImageOverrides[d.name] !== undefined) {
+        if (dockerImageOverrides[d.label] !== undefined) {
           // use a different base image to build the item
-          d.baseImage = dockerImageOverrides[d.name];
-          delete dockerImageOverrides[d.name];
+          d.baseImage = dockerImageOverrides[d.label];
+          delete dockerImageOverrides[d.label];
         }
         if (singleService) {
           d.image = `${productName}:${pkg.version}`;
