@@ -192,6 +192,10 @@ function generateWebpack(options) {
       minChunkSize: 10000 // at least 10.000 characters
     }));
     base.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
+  } else if (options.isDev) {
+    //use dev version of tsconfig
+    const { TsConfigPathsPlugin } = require('awesome-typescript-loader');
+    base.plugins.push(new TsConfigPathsPlugin({ configFileName: './tsconfig_dev.json'}));
   }
 
   if (options.library) {
@@ -259,12 +263,14 @@ function generateWebpack(options) {
         debug: false
       }),
       new webpack.optimize.UglifyJsPlugin({
+        beautify: false,
+        mangle: {
+          keep_fnames: true
+        },
         compress: {
           warnings: false
         },
-        output: {
-          comments: false
-        },
+        comments: false,
         sourceMap: false
       }));
   } else {
