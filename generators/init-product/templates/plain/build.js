@@ -283,8 +283,23 @@ function patchComposeFile(p, composeTemplate) {
   return r;
 }
 
+function patchDockerfile(p, dockerFile) {
+  if (!p.baseImage) {
+    return null;
+  }
+  return fs.readFileAsync(dockerFile).then((content) => {
+    // patch the Dockerfile by replacing the FROM statement
+    const r = /^\s*FROM (.+)\s*$/igm;
+    const fromImage = content.match(r)[1];
+    console.log(`patching ${dockerFile} change from ${fromImage} -> ${p.baseImage}`);
+    content = content.replace(r, `FROM ${p.baseImage}`);
+    return fs.writeFileAsync(dockerFile, content);
+  });
+}
+
 function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
+    .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
     .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
     .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
@@ -377,7 +392,7 @@ function mergeCompose(composePartials) {
   return dockerCompose;
 }
 
-function buildCompose(descs, composePartials) {
+function buildCompose(descs, dockerServiceOverrides, composePartials) {
   console.log('create docker-compose.yml');
   const dockerCompose = mergeCompose(composePartials);
   const services = dockerCompose.services;
@@ -396,6 +411,23 @@ function buildCompose(descs, composePartials) {
       services[w].links.push(`${s.label}:${s.name}`);
     });
   });
+
+  if (services._host) {
+    // inline _host to apis
+    const host = services._host;
+    delete services._host;
+    api.forEach((s) => {
+      services[s] = mergeCompose([host, services[s]]);
+    });
+  }
+
+  Object.keys(dockerServiceOverrides).forEach((service) => {
+    if (services[service] !== undefined) {
+      console.log(`patch generated docker-compose file for ${service}: ${services[service].image} -> ${dockerServiceOverrides[service]}`);
+      services[service].image = dockerServiceOverrides[service];
+    }
+  });
+
   const yaml = require('yamljs');
   return fs.writeFileAsync('build/docker-compose.yml', yaml.stringify(dockerCompose, 100, 2))
     .then(() => dockerCompose);
@@ -436,6 +468,7 @@ if (require.main === module) {
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
   const descs = require('./phovea_product.json');
+  const dockerImageOverrides = fs.existsSync('./dockerImages.json') ? require('./dockerImages.json') : {};
   const singleService = descs.length === 1;
   const productName = pkg.name.replace('_product', '');
 
@@ -449,6 +482,11 @@ if (require.main === module) {
         d.data = d.data || [];
         d.name = d.name || fromRepoUrl(d.repo);
         d.label = d.label || d.name;
+        if (dockerImageOverrides[d.name] !== undefined) {
+          // use a different base image to build the item
+          d.baseImage = dockerImageOverrides[d.name];
+          delete dockerImageOverrides[d.name];
+        }
         if (singleService) {
           d.image = `${productName}:${pkg.version}`;
         } else {
@@ -470,7 +508,7 @@ if (require.main === module) {
       }
       return Promise.all(descs.map(buildOne));
     })
-    .then((composeFiles) => buildCompose(descs, composeFiles.filter((d) => Boolean(d))))
+    .then((composeFiles) => buildCompose(descs, dockerImageOverrides, composeFiles.filter((d) => Boolean(d))))
     .then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)))
     .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
     .then(() => {
