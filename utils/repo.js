@@ -1,11 +1,10 @@
 
-
 module.exports.toHTTPRepoUrl = (repo) => {
   if (repo.startsWith('http')) {
     return repo;
   }
   if (repo.startsWith('git@')) {
-    const m = repo.match(/(https?:\/\/([^\/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+    const m = repo.match(/(https?:\/\/([^/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
     return `https://${m[3]}/${m[4]}.git`;
   }
   if (!repo.includes('/')) {
@@ -19,7 +18,7 @@ module.exports.toSSHRepoUrl = (repo) => {
     return repo;
   }
   if (repo.startsWith('http')) {
-    const m = repo.match(/(https?:\/\/([^\/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+    const m = repo.match(/(https?:\/\/([^/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
     return `git@${m[2]}:${m[4]}.git`;
   }
   if (!repo.includes('/')) {
@@ -29,10 +28,10 @@ module.exports.toSSHRepoUrl = (repo) => {
 };
 
 module.exports.toSSHRepoUrlFromHTTP = (repo) => {
-  if(repo.startsWith('git@')) {
+  if (repo.startsWith('git@')) {
     return repo;
   }
-  const m = repo.match(/(https?:\/\/([^\/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+  const m = repo.match(/(https?:\/\/([^/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
   if (m) {
     return `git@${m[2]}:${m[4]}.git`;
   }
@@ -40,10 +39,10 @@ module.exports.toSSHRepoUrlFromHTTP = (repo) => {
 };
 
 module.exports.simplifyRepoUrl = (repo) => {
-  //matches http and git urls
-  const m = repo.match(/(https?:\/\/[^\/]+\/|git@.+:)([\w\d-_/]+)(.git)?/);
+  // matches http and git urls
+  const m = repo.match(/(https?:\/\/[^/]+\/|git@.+:)([\w\d-_/]+)(.git)?/);
   if (m) {
-    //just the repo part
+    // just the repo part
     return m[2];
   }
   return repo;

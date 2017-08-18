@@ -9,7 +9,7 @@ var nsp = require('gulp-nsp');
 var plumber = require('gulp-plumber');
 
 gulp.task('static', function () {
-  return gulp.src(['generators/*/*.js','test/**.js','utils/**.js'])
+  return gulp.src(['generators/*/*.js','test/**.js','utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'])
     .pipe(excludeGitignore())
     .pipe(eslint())
     .pipe(eslint.format())
