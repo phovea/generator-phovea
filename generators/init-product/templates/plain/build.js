@@ -177,7 +177,7 @@ function dockerRemoveImages(productName) {
   if (argv.skipCleanUp) {
     return Promise.resolve();
   }
-  console.log(chalk.blue(`docker images | grep ${productName} | awk '{print $1":"$2}') | xargs docker rmi`));
+  console.log(chalk.blue(`docker images | grep ${productName} | awk '{print $1":"$2}') | xargs --no-run-if-empty docker rmi`));
   const spawn = require('child_process').spawn;
   const opts = {env};
   return new Promise((resolve) => {
@@ -186,7 +186,7 @@ function dockerRemoveImages(productName) {
     p.stdout.pipe(p2.stdin);
     const p3 = spawn('awk', ['{print $1":"$2}'], opts);
     p2.stdout.pipe(p3.stdin);
-    const p4 = spawn('xargs', ['docker', 'rmi'], {env, stdio: [p3.stdout, 1, 2]});
+    const p4 = spawn('xargs', ['--no-run-if-empty', 'docker', 'rmi'], {env, stdio: [p3.stdout, 1, 2]});
     p4.on('close', (code) => {
       if (code === 0) {
         resolve();
