@@ -3,6 +3,7 @@ const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const {parseRequirements} = require('../../utils/pip');
+const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -132,7 +133,7 @@ class Generator extends Base {
   }
 
   _cloneRepo(repo, branch, extras) {
-    const repoUrl = this.cloneSSH ? `git@github.com:${repo}.git` : `https://github.com/${repo}.git`;
+    const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
@@ -196,7 +197,7 @@ class Generator extends Base {
         version = depVersion.slice(0, depVersion.length - 9);
         pkg.dependencies[dep] = version;
         ctx.dependencies[dep] = semver.inc(version, 'patch') + '-SNAPSHOT';
-      } else if (depVersion.startsWith('github:')) {
+      } else if (depVersion.startsWith('github:') || depVersion.starsWith('bitbucket:')) {
         ctx.dependencies[dep] = depVersion;
         // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
         const local = this.repos.find((d) => d.name === dep);
@@ -229,10 +230,11 @@ class Generator extends Base {
           version = depVersion.slice(0, depVersion.length - 9);
           req[dep] = version;
           ctx.requirements[dep] = semver.inc(version, 'patch') + '-SNAPSHOT';
-        } else if (dep.startsWith('-e git+https://github.com/')) {
+        } else if (dep.startsWith('-e git+http')) {
           ctx.requirements[dep] = depVersion;
           // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
-          const key = toCWD(dep.slice('-e git+https://github.com/'.length, dep.length - 4)); // remove prefix and suffix (.git)
+          const repo = dep.match(/-e git\+https?:\/\/([^/]+)\/([\w\d-_/]+)\.git/)[2];  // remove prefix and suffix (.git)
+          const key = toCWD(repo);
           const local = this.repos.find((d) => d.name === key);
           if (local && local.private) {
             req[dep] = `@${local.version}#v${version.split('#')[1]}`;
@@ -277,8 +279,7 @@ class Generator extends Base {
     pkg.version = ctx.nextDevVersion;
     //
     Object.keys(ctx.dependencies).forEach((dep) => {
-      const depVersion = ctx.dependencies[dep];
-      pkg.dependencies[dep] = depVersion;
+      pkg.dependencies[dep] = ctx.dependencies[dep];
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
     if (ctx.requirements) {
@@ -320,7 +321,8 @@ class Generator extends Base {
 
   _createPullRequest(ctx) {
     const opn = require('opn');
-    const url = `https://github.com/${ctx.repo}/compare/release_${ctx.version}?expand=1`;
+    const base = simplifyRepoUrl(ctx.repo);
+    const url = `https://github.com/${base}/compare/release_${ctx.version}?expand=1`;
     return opn(url, {
       wait: false
     }).then(() => ctx);
@@ -349,7 +351,8 @@ class Generator extends Base {
 
   _openReleasePage(ctx) {
     const opn = require('opn');
-    const url = `https://github.com/${ctx.repo}/releases/tag/v${ctx.version}`;
+    const base = simplifyRepoUrl(ctx.repo);
+    const url = `https://github.com/${base}/releases/tag/v${ctx.version}`;
     return opn(url, {
       wait: false
     }).then(() => ctx);

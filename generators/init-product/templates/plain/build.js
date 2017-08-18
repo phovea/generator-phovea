@@ -17,17 +17,36 @@ pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 
 function toRepoUrl(url) {
+  if (url.startsWith('git@')) {
+    if (argv.useSSH) {
+      return url;
+    }
+    //have an ssh url need an http url
+    const m = repo.match(/(https?:\/\/([^\/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+    return `https://${m[3]}/${m[4]}.git`;
+  }
+  if (url.startsWith('http')) {
+    if (!argv.useSSH) {
+      return url;
+    }
+    //have a http url need an ssh url
+    const m = repo.match(/(https?:\/\/([^\/]+)\/|git@(.+):)([\w\d-_/]+)(.git)?/);
+    return `git@${m[2]}:${m[4]}.git`;
+  }
+  if (!url.includes('/')) {
+    url = `Caleydo/${url}`;
+  }
   if (argv.useSSH) {
     return `git@github.com:${url}.git`
   }
-  return url.startsWith('https://github.com/') ? url : `https://github.com/${url}.git`;
+  return `https://github.com/${url}.git`;
 }
 
 
 function toRepoUrlWithUser(url) {
   const repo = toRepoUrl(url);
   const username_and_password = process.env.PHOVEA_GITHUB_CREDENTIALS;
-  if (repo.includes('git@github.com') || !username_and_password) {
+  if (repo.startsWith('git@') || !username_and_password) { //ssh or no user given
     return repo;
   }
   return repo.replace('://', `://${username_and_password}@`);
@@ -151,7 +170,7 @@ function dockerSave(image, target) {
       p.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
       p2.stderr.on('data', (data) => console.error(chalk.red(data.toString())));
     }
-    p2.on('close', (code) => code == 0 ? resolve() : reject(code));
+    p2.on('close', (code) => code === 0 ? resolve() : reject(code));
   });
 }
 
@@ -167,7 +186,7 @@ function dockerRemoveImages(productName) {
     p2.stdout.pipe(p3.stdin);
     const p4 = spawn('xargs', ['docker', 'rmi'], {env, stdio: [p3.stdout, 1, 2]});
     p4.on('close', (code) => {
-      if (code == 0) {
+      if (code === 0) {
         resolve();
       } else {
         console.log('invalid error code, but continuing');
