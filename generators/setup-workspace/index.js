@@ -27,14 +27,14 @@ function toCWD(basename) {
 
 function findDefaultApp(product) {
   if (!product) {
-    return '???';
+    return null;
   }
   for (let p of product) {
     if (p.type === 'web') {
       return p.repo.slice(p.repo.lastIndexOf('/') + 1);
     }
   }
-  return '???';
+  return null;
 }
 
 function downloadFileImpl(url, dest) {
@@ -110,7 +110,7 @@ class Generator extends Base {
     });
   }
 
-  _yo(generator) {
+  _yo(generator, options) {
     // call yo internally
     const env = yeoman.createEnv([], {
       cwd: this.cwd
@@ -119,7 +119,7 @@ class Generator extends Base {
     return new Promise((resolve, reject) => {
       try {
         this.log('running yo phovea:' + generator);
-        env.run('phovea:' + generator, () => {
+        env.run('phovea:' + generator, options || {}, () => {
           // wait a second after running yo to commit the files correctly
           setTimeout(() => resolve(), 500);
         });
@@ -307,7 +307,7 @@ class Generator extends Base {
         return repos;
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
-      .then(this._yo.bind(this, 'workspace'))
+      .then(this._yo.bind(this, 'workspace', { defaultApp: findDefaultApp()}))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))

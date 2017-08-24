@@ -44,14 +44,17 @@ class Generator extends Base {
 
     // readme content
     this.option('noAdditionals');
+    this.option('defaultApp');
   }
 
   initializing() {
-    this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: []});
+    this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: [], defaultApp: null});
+    this.props.defaultApp = this.props.defaultApp || this.options.defaultApp;
   }
 
   prompting() {
     const isInstalled = glob('*/package.json', {cwd: this.destinationPath()}).map(path.dirname);
+    const apps = this._findApps();
     return this.prompt([{
       type: 'checkbox',
       name: 'modules',
@@ -59,11 +62,30 @@ class Generator extends Base {
       choices: known.plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
       default: this.props.modules,
       when: !this.option('noAdditionals')
+    }, {
+      type: 'list',
+      name: 'defaultApp',
+      message: 'Default Application to launch using `npm start`?',
+      choices: apps,
+      default: apps[0],
+      when: apps.length > 1 && !this.props.defaultApp
     }]).then((props) => {
       if (props.modules !== undefined) {
         this.props.modules = props.modules;
       }
+      if (props.defaultApp) {
+        this.props.defaultApp = props.defaultApp;
+      }
     });
+  }
+
+  _findApps() {
+    return glob('*/.yo-rc.json', {
+      cwd: this.destinationPath()
+    }).filter((p) => {
+      const config = this.fs.readJSON(this.destinationPath(p));
+      return config['generator-phovea'].type.includes('app');
+    }).map(path.dirname);
   }
 
   _generateWebDependencies(additionalPlugins) {
@@ -288,13 +310,17 @@ class Generator extends Base {
 
   writing() {
     // save config
-    this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules});
+    this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules, defaultApp: this.props.defaultApp});
 
     const {plugins, dependencies, devDependencies, scripts} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
 
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
+    // generate default start script
+    if (this.props.defaultApp) {
+      scripts.start = `cd ${this.props.defaultApp} && npm start`;
+    }
 
     const config = {};
     config.workspace = path.basename(this.destinationPath());
