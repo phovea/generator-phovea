@@ -307,7 +307,7 @@ class Generator extends Base {
         return repos;
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
-      .then(this._yo.bind(this, 'workspace', { defaultApp: findDefaultApp()}))
+      .then(this._yo.bind(this, 'workspace', {defaultApp: findDefaultApp()}))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
       .then(this._spawnOrAbort.bind(this, 'npm', 'install'))
