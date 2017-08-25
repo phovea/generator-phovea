@@ -156,7 +156,7 @@ class Generator extends Base {
       ctx.version = semver.inc(version, 'major');
     } else if (this.options.minor) {
       ctx.version = semver.inc(version, 'minor');
-    } else if (version.endsWith('-SNAPSHOT')) {
+    } else if (pkg.version.endsWith('-SNAPSHOT')) {
       ctx.version = version;
     } else {
       ctx.version = semver.inc(version, 'patch');
@@ -197,7 +197,7 @@ class Generator extends Base {
         version = depVersion.slice(0, depVersion.length - 9);
         pkg.dependencies[dep] = version;
         ctx.dependencies[dep] = semver.inc(version, 'patch') + '-SNAPSHOT';
-      } else if (depVersion.startsWith('github:') || depVersion.starsWith('bitbucket:')) {
+      } else if (depVersion.startsWith('github:') || depVersion.startsWith('bitbucket:')) {
         ctx.dependencies[dep] = depVersion;
         // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
         const local = this.repos.find((d) => d.name === dep);
@@ -237,7 +237,7 @@ class Generator extends Base {
           const key = toCWD(repo);
           const local = this.repos.find((d) => d.name === key);
           if (local && local.private) {
-            req[dep] = `@${local.version}#v${version.split('#')[1]}`;
+            req[dep] = `@v${local.version}#${version.split('#')[1]}`;
           } else {
             delete req[dep];
             ctx.requirements[key] = ''; // mark to be deleted
