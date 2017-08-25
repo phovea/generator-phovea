@@ -318,7 +318,7 @@ function buildWebApp(p, dir) {
   // let act = Promise.resolve(null);
   if (hasAdditional) {
     act = act
-      .then(() => yo('workspace', {noAdditionals: true}, dir))
+      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir))
       .then(() => npm(dir, 'install'));
     // test all modules
     if (hasAdditional && !argv.skipTests) {
@@ -342,7 +342,7 @@ function buildServerApp(p, dir) {
 
   let act = preBuild(p, dir);
   act = act
-    .then(() => yo('workspace', {noAdditionals: true}, dir));
+    .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir));
 
   if (!argv.skipTests) {
     act = act
