@@ -161,9 +161,9 @@ class Generator extends Base {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
         this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
 
-        // pass through the dockerImages overrides
-        if (fs.existsSync(`${this.cwd}/${name}/dockerImages.json`)) {
-          this.fs.copy(`${this.cwd}/${name}/dockerImages.json`, this.destinationPath('dockerImages.json'));
+        // pass through the docker overrides
+        if (fs.existsSync(`${this.cwd}/${name}/docker-compose-patch.yaml`)) {
+          this.fs.copy(`${this.cwd}/${name}/docker-compose-patch.yaml`, this.destinationPath('docker-compose-patch.yaml'));
         }
         return this.product;
       }).then((product) => {

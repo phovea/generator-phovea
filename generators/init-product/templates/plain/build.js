@@ -388,15 +388,20 @@ function buildImpl(d, dir) {
   }
 }
 
-function mergeCompose(composePartials) {
-  let dockerCompose = {};
+function mergeWith(target, source) {
   const _ = require('lodash');
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
-  composePartials.forEach((c) => _.mergeWith(dockerCompose, c, mergeArrayUnion));
+  _.mergeWith(target, source, mergeArrayUnion);
+  return target;
+}
+
+function mergeCompose(composePartials) {
+  let dockerCompose = {};
+  composePartials.forEach((c) => mergeWith(dockerCompose, c));
   return dockerCompose;
 }
 
-function buildCompose(descs, dockerServiceOverrides, composePartials) {
+function buildCompose(descs, dockerComposePatch, composePartials) {
   console.log('create docker-compose.yml');
   const dockerCompose = mergeCompose(composePartials);
   const services = dockerCompose.services;
@@ -425,10 +430,10 @@ function buildCompose(descs, dockerServiceOverrides, composePartials) {
     });
   }
 
-  Object.keys(dockerServiceOverrides).forEach((service) => {
+  Object.keys(dockerComposePatch.services).forEach((service) => {
     if (services[service] !== undefined) {
-      console.log(`patch generated docker-compose file for ${service}: ${services[service].image} -> ${dockerServiceOverrides[service]}`);
-      services[service].image = dockerServiceOverrides[service];
+      console.log(`patch generated docker-compose file for ${service}`);
+      mergeWith(services[service], dockerComposePatch.services[service]);
     }
   });
 
@@ -461,6 +466,19 @@ function pushImages(images) {
     .then(() => Promise.all(tags.map((tag) => docker('.', `push ${tag.tag}`))));
 }
 
+function loadPatchFile() {
+  if (!fs.existsSync('./docker-compose-patch.yaml')) {
+    return {services: {}};
+  }
+  const content = fs.readFileSync('./docker-compose-patch.yaml');
+  const yaml = require('yamljs');
+  const r = yaml.parse(content.toString());
+  if (r.services === undefined) {
+    r.services = {};
+  }
+  return r;
+}
+
 if (require.main === module) {
   if (argv.skipTests) {
     // if skipTest option is set, skip tests
@@ -472,7 +490,7 @@ if (require.main === module) {
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
   const descs = require('./phovea_product.json');
-  const dockerImageOverrides = fs.existsSync('./dockerImages.json') ? require('./dockerImages.json') : {};
+  const dockerComposePatch = loadPatchFile();
   const singleService = descs.length === 1;
   const productName = pkg.name.replace('_product', '');
 
@@ -486,10 +504,10 @@ if (require.main === module) {
         d.data = d.data || [];
         d.name = d.name || fromRepoUrl(d.repo);
         d.label = d.label || d.name;
-        if (dockerImageOverrides[d.label] !== undefined) {
+        if (dockerComposePatch.services[d.label] !== undefined && dockerComposePatch.services[d.label].image !== undefined) {
           // use a different base image to build the item
-          d.baseImage = dockerImageOverrides[d.label];
-          delete dockerImageOverrides[d.label];
+          d.baseImage = dockerComposePatch.services[d.label].image;
+          delete dockerComposePatch.services[d.label].image;
         }
         if (singleService) {
           d.image = `${productName}:${pkg.version}`;
@@ -512,7 +530,7 @@ if (require.main === module) {
       }
       return Promise.all(descs.map(buildOne));
     })
-    .then((composeFiles) => buildCompose(descs, dockerImageOverrides, composeFiles.filter((d) => Boolean(d))))
+    .then((composeFiles) => buildCompose(descs, dockerComposePatch, composeFiles.filter((d) => Boolean(d))))
     .then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)))
     .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
     .then(() => {
@@ -524,7 +542,7 @@ if (require.main === module) {
         process.exit(1);
       }
     }).catch((error) => {
-      console.error('ERROR extra building ', error);
-      process.exit(1);
-    });
+    console.error('ERROR extra building ', error);
+    process.exit(1);
+  });
 }

@@ -10,8 +10,10 @@ const known = require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 
-function mergeArrayUnion(a, b) {
-  return Array.isArray(a) ? _.union(a, b) : undefined;
+function mergeWith(target, source) {
+  const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
+  _.mergeWith(target, source, mergeArrayUnion);
+  return target;
 }
 
 function isHelperContainer(name) {
@@ -31,7 +33,7 @@ function rewriteDockerCompose(compose) {
   delete services._host;
   Object.keys(services).forEach((k) => {
     if (!isHelperContainer(k)) {
-      _.mergeWith(services[k], host, mergeArrayUnion);
+      mergeWith(services[k], host);
     }
   });
   return compose;
@@ -217,8 +219,8 @@ class Generator extends Base {
 
         return localCompose;
       };
-      _.mergeWith(dockerCompose, dockerFile(p + '/deploy/docker-compose.partial.yml'), mergeArrayUnion);
-      _.mergeWith(dockerComposeDebug, dockerFile(p + '/deploy/docker-compose-debug.partial.yml'), mergeArrayUnion);
+      mergeWith(dockerCompose, dockerFile(p + '/deploy/docker-compose.partial.yml'));
+      mergeWith(dockerComposeDebug, dockerFile(p + '/deploy/docker-compose-debug.partial.yml'));
     });
 
     // add additional to install plugins
@@ -246,7 +248,7 @@ class Generator extends Base {
             requirements.delete(pi + k.develop.requirements[pi]);
           });
         }
-		// more intelligent guessing to catch tags
+        // more intelligent guessing to catch tags
         Array.from(requirements.keys()).forEach((k) => {
           if (k.includes(`/${p}.git@`)) {
             requirements.delete(k);
@@ -274,35 +276,32 @@ class Generator extends Base {
     };
   }
 
-  _patchDockerImages(dockerImages, dockerCompose) {
+  _patchDockerImages(dockerComposePatch, dockerCompose) {
     const services = dockerCompose.services;
     if (!services) {
       return;
     }
+    const patchedServices = dockerComposePatch.services || {};
     Object.keys(services).forEach((name) => {
-      const image = dockerImages[name];
-      if (!image) {
+      const patch = patchedServices[name];
+      if (!patch) {
         return;
       }
       const service = services[name];
-      if (service.image) {
-        // direct replacement
-        service.image = image;
+      mergeWith(service, patch);
+      if (!service.build || !patch.image) {
         return;
       }
-      if (!service.build) {
-        this.log(`cannot patch patching docker image of service: ${name}: neither build nor image defined`);
-        return;
-      }
+      delete service.image; // delete merged image if used
       const dockerFile = this.destinationPath(service.build.dockerfile);
       let content = this.fs.read(dockerFile).toString();
       // create a copy of the Dockerfile to avoid git changes
       const r = /^\s*FROM (.+)\s*$/igm;
       const fromImage = r.exec(content)[1];
-      content = content.replace(r, `FROM ${image}`);
+      content = content.replace(r, `FROM ${patch.image}`);
       const targetDockerFile = this.destinationPath(`Dockerfile_${name}`);
 
-      this.log(`patching ${dockerFile} change from ${fromImage} -> ${image} resulting in ${targetDockerFile}`);
+      this.log(`patching ${dockerFile} change from ${fromImage} -> ${patch.image} resulting in ${targetDockerFile}`);
       this.fs.write(targetDockerFile, content);
       service.build.dockerfile = `Dockerfile_${name}`; // since we are in the workspace
     });
@@ -310,7 +309,10 @@ class Generator extends Base {
 
   writing() {
     // save config
-    this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: this.props.modules, defaultApp: this.props.defaultApp});
+    this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {
+      modules: this.props.modules,
+      defaultApp: this.props.defaultApp
+    });
 
     const {plugins, dependencies, devDependencies, scripts} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
@@ -339,8 +341,11 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 
-    if (this.fs.exists(this.destinationPath('dockerImages.json'))) {
-      this._patchDockerImages(this.fs.readJSON(this.destinationPath('dockerImages.json')), sdeps.dockerCompose);
+    if (this.fs.exists(this.destinationPath('docker-compose-patch.yaml'))) {
+      const yaml = require('yamljs');
+      const file = this.fs.read(this.destinationPath('docker-compose-patch.yaml'));
+      const patch = yaml.parse(file);
+      this._patchDockerImages(patch, sdeps.dockerCompose);
     }
     {
       const yaml = require('yamljs');
