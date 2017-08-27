@@ -7,7 +7,20 @@ const path = require('path');
 const fs = Promise.promisifyAll(require('fs-extra'));
 const chalk = require('chalk');
 const pkg = require('./package.json');
+/**
+ * arguments:
+ *  * --quiet ... reduce log messages
+ *  * --serial ... build elements sequentially
+ *  * --skipTests
+ *  * --useSSH
+ *  * --skipCleanUp ... skip cleaning up old docker images
+ *  * --skipSaveImage ... skip saving the generated docker images
+ *  * --pushTo ... push docker images to the given registry
+ *  * --noDefaultTags ... don't push generated default tag :<timestamp>
+ *  * --pushExtra ... push additional custom tag: e.g., --pushExtra=develop
+ */
 const argv = require('yargs-parser')(process.argv.slice(2));
+
 const quiet = argv.quiet !== undefined;
 
 const now = new Date();
@@ -542,7 +555,7 @@ if (require.main === module) {
         process.exit(1);
       }
     }).catch((error) => {
-    console.error('ERROR extra building ', error);
-    process.exit(1);
-  });
+      console.error('ERROR extra building ', error);
+      process.exit(1);
+    });
 }
