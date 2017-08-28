@@ -29,8 +29,8 @@ class Generator extends Base {
       this.log('switch to workspace for install dependencies but keep ' + this.plugin, 'in mind');
       process.chdir('../');
     }
-    this.log('installing: ',this.pkgs.join(' '));
-    this.npmInstall(this.pkgs, { save: true });
+    this.log('installing: ', this.pkgs.join(' '));
+    this.npmInstall(this.pkgs, {save: true});
   }
 
   end() {
@@ -38,7 +38,7 @@ class Generator extends Base {
     if (this.plugin && this.fs.exists(this.destinationPath(`package.json`))) {
       // also store the dependency in the plugin
       const parent = this.fs.readJSON(this.destinationPath('../package.json'));
-      const child = { dependencies: {}};
+      const child = {dependencies: {}};
       this.pkgs.forEach((p) => {
         const pp = parent.dependencies[p];
         if (pp) {
