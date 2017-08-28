@@ -241,22 +241,22 @@
       ]
     },
     {
-      "name": "ordino",
+      "name": "tdp_core",
       "type": "lib-slib",
       "description": "Targid Discovery Platform",
-      "repository": "https://github.com/Caleydo/ordino.git",
+      "repository": "https://github.com/datavisyn/tdp_core.git",
       "dependencies": {
-        "ordino": "github:Caleydo/ordino#master"
+        "tdp_core": "github:dataivsyn/tdp_core#develop"
       },
       "requirements": {
-        "-e git+https://github.com/Caleydo/ordino.git": "@master#egg=ordino"
+        "-e git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core"
       },
       "develop": {
         "dependencies": {
-          "ordino": "github:Caleydo/ordino#develop"
+          "tdp_core": "github:dataivsyn/tdp_core#develop"
         },
         "requirements": {
-          "-e git+https://github.com/Caleydo/ordino.git": "@develop#egg=ordino"
+          "-e git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core"
         }
       },
       "libraries": [
