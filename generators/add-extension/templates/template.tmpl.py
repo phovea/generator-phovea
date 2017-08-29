@@ -6,7 +6,7 @@
 
 import logging
 
-_log = logger.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class Template(object):
