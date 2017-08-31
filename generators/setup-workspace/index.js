@@ -163,7 +163,7 @@ class Generator extends Base {
 
         // pass through the docker overrides
         if (fs.existsSync(`${this.cwd}/${name}/docker-compose-patch.yaml`)) {
-          this.fs.copy(`${this.cwd}/${name}/docker-compose-patch.yaml`, this.destinationPath('docker-compose-patch.yaml'));
+          this.fs.copy(`${this.cwd}/${name}/docker-compose-patch.yaml`, this.destinationPath(`${this.cwd}/docker-compose-patch.yaml`));
         }
         return this.product;
       }).then((product) => {
