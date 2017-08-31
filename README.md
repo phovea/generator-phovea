@@ -31,12 +31,14 @@ yo phovea
 | `yo phovea`                | Initialize a new web application, library bundle, web library, server library, or service |
 | `yo phovea:add-dependency` | Add an additional plugin or external libraries to the current plugin |
 | `yo phovea:add-extension`  | Add an additional web or server extension to the current plugin |
-| `yo phovea:clone`          | Clone a plugin (by plugin name) and resolve the dependencies |
-| `yo phovea:resolve`        | Clone dependent plugins of the current workspace into the workspace |
+| `yo phovea:clone`          | DEPRECATED Clone a plugin (by plugin name) and resolve the dependencies |
+| `yo phovea:resolve`        | DEPRECATED Clone dependent plugins of the current workspace into the workspace |
 | `yo phovea:init-product`   | Create product files and repos |
+| `yo phovea:install`        | Add an NPM dependency to a plugin in a workspace setup |
 | `yo phovea:workspace`      | Create a workspace of multiple containing plugins |
 | `yo phovea:setup-workspace` | Clone a product repository as new workspace and resolve dependencies |
 | `yo phovea:update`         | Update the current plugin or workspace |
+| `yo phovea:prepare-release` | Utility to release a set of plugins  |
 
 
 ***
