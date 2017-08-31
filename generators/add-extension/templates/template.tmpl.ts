@@ -1,11 +1,7 @@
 
 
-export class Template {
+export default class <%-module%> {
   constructor() {
 
   }
-}
-
-export function create() {
-  return new Template();
 }

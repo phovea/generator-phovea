@@ -103,8 +103,13 @@ class Generator extends Base {
     const new_ = old.replace('  // generator-phovea:end', text);
     this.fs.write(file, new_);
 
-    if (!this.fs.exists(this.destinationPath(`src/${d.module}.ts`))) {
-      this.fs.copy(this.templatePath('template.tmpl.ts'), this.destinationPath(`src/${d.module}.ts`));
+    const target = this.destinationPath(`src/${d.module}.ts`);
+    if (!this.fs.exists(target)) {
+      let source = this.templatePath(`${d.type}.tmpl.ts`);
+      if (!this.fs.exists(source)) {
+        source = this.templatePath('template.tmpl.ts');
+      }
+      this.fs.copyTpl(source, target, d);
     }
   }
 
@@ -116,8 +121,13 @@ class Generator extends Base {
     const new_ = old.replace('  # generator-phovea:end', text);
     this.fs.write(file, new_);
 
-    if (!this.fs.exists(this.destinationPath(`${name}/${d.module}.py`))) {
-      this.fs.copy(this.templatePath(`${d.type === 'namespace' ? 'namespace' : 'template'}.tmpl.py`), this.destinationPath(`${name}/${d.module}.py`));
+    const target = this.destinationPath(`${name}/${d.module}.py`);
+    if (!this.fs.exists(target)) {
+      let source = this.templatePath(`${d.type}.tmpl.py`);
+      if (!this.fs.exists(source)) {
+        source = this.templatePath('template.tmpl.py');
+      }
+      this.fs.copyTpl(source, target, d);
     }
   }
 }
