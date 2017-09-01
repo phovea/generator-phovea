@@ -253,7 +253,7 @@
       },
       "develop": {
         "dependencies": {
-          "tdp_core": "github:dataivsyn/tdp_core#develop"
+          "tdp_core": "github:datavisyn/tdp_core#develop"
         },
         "requirements": {
           "-e git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core"
