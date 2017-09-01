@@ -102,7 +102,7 @@ class PluginGenerator extends Base {
     const deps = this._generateDependencies(useDevVersion.call(this));
 
     patchPackageJSON.call(this, config, ['devDependencies']);
-    writeTemplates.call(this, config);
+    writeTemplates.call(this, config, !this.options.noSamples);
 
     this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.join('\n'));
