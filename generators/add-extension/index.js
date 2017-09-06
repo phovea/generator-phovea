@@ -13,7 +13,9 @@ function toJSONFromText(text) {
       return;
     }
 
-    let [key, value] = trimmedLine.split('=');
+    const splitPoint = trimmedLine.indexOf('=');
+    const key = trimmedLine.slice(0, splitPoint);
+    let value = trimmedLine.slice(splitPoint + 1);
     value = value.trim();
     if (!isNaN(parseFloat(value))) {
       value = parseFloat(value);
