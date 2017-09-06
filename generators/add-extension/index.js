@@ -99,7 +99,7 @@ class Generator extends Base {
   _injectWebExtension(d) {
     const file = this.destinationPath('phovea.js');
     const old = this.fs.read(file);
-    const absFile = d.module.startsWith('~'): d.module.slice(1) : `./src/${d.module}`;
+    const absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module}`;
     const text = `\n\n  registry.push('${d.type}', '${d.id}', function() { return import('${absFile}'); }, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
     const new_ = old.replace('  // generator-phovea:end', text);
     this.fs.write(file, new_);
