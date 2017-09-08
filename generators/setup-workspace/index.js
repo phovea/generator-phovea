@@ -165,6 +165,15 @@ class Generator extends Base {
         if (fs.existsSync(`${this.cwd}/${name}/docker-compose-patch.yaml`)) {
           fs.copySync(`${this.cwd}/${name}/docker-compose-patch.yaml`, this.destinationPath(`${this.cwd}/docker-compose-patch.yaml`));
         }
+
+        const defaultApp = this.product.find((v) => v.type === 'web');
+        if (defaultApp) {
+          fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
+            modules: [],
+            defaultApp: defaultApp.repo.slice(defaultApp.repo.lastIndexOf('/') + 1)
+          });
+        }
+
         return this.product;
       }).then((product) => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
