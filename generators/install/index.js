@@ -10,7 +10,7 @@ function toPluginRepo(url, useSSH) {
     name: match ? match[3] : url,
     url,
     repo
-  }
+  };
 }
 
 class Generator extends Base {
@@ -34,7 +34,6 @@ class Generator extends Base {
       defaults: false,
       type: Boolean
     });
-
 
     this.option('type', {
       type: String,
@@ -81,21 +80,20 @@ class Generator extends Base {
         const p = toPluginRepo(url, this.options.ssh);
         if (!p.repo) {
           this.log('can resolve repository for ' + url);
-          return;
+          return null;
         }
         this.log(`cloning git clone ${p.repo}`);
         this.spawnCommandSync('git', ['clone'].concat(p.repo.split(' ')));
         return p;
-      });
+      }).filter((n) => Boolean(n));
       this.log('updating workspace');
       return this._yo('workspace').then(() => {
         this.log('running npm install');
-        this.npmInstall()
+        this.npmInstall();
       });
-    } else {
-      this.log('installing: ', this.pkgs.join(' '));
-      this.npmInstall(this.pkgs, {save: true});
     }
+    this.log('installing: ', this.pkgs.join(' '));
+    this.npmInstall(this.pkgs, {save: true});
   }
 
   end() {
