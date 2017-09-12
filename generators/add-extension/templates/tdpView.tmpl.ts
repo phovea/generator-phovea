@@ -1,6 +1,6 @@
 import {AView} from 'tdp_core/src/views/AView';
 
-export default class <%-module%> extends AView {
+export default class <%-moduleName%> extends AView {
 
   protected initImpl() {
     super.initImpl();

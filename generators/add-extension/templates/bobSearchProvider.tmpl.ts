@@ -4,7 +4,7 @@ import {getTDPFilteredRows, getTDPLookup} from 'tdp_core/src/rest';
 // import './styles/idtype_color.scss';
 
 
-export default class <%-module%> implements ISearchProvider {
+export default class <%-moduleName%> implements ISearchProvider {
   private readonly database = 'TODO';
   private readonly table = 'TODO';
 

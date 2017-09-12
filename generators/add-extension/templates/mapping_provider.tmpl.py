@@ -4,7 +4,7 @@ from tdp_core import db
 _log = logging.getLogger(__name__)
 
 
-class <%-module%>Table(object):
+class <%-moduleName%>Table(object):
   def __init__(self):
     self.from_idtype = 'TODO'
     self.to_idtype = 'TODO'
@@ -19,7 +19,7 @@ class <%-module%>Table(object):
     return [[id] for id in ids]
 
 
-class <%-module%>(object):
+class <%-moduleName%>(object):
   """
   a mapping provider extension can implement multiple mapping tables at once, i.e. register multiple mappings for different types
   """
@@ -36,4 +36,4 @@ class <%-module%>(object):
 
 
 def create():
-  return <%-module%>()
+  return <%-moduleName%>()

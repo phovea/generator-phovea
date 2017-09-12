@@ -7,14 +7,14 @@ import {getTDPScore} from 'tdp_core/src/rest';
 /**
  * interface describing the parameter needed for MyScore
  */
-export interface I<%-module%>Param {
+export interface I<%-moduleName%>Param {
   // TODO
 }
 
 /**
  * score implementation in this case a numeric score is computed
  */
-export default class <%-module%> implements IScore<number> {
+export default class <%-moduleName%> implements IScore<number> {
 
   /**
    * defines the IDType of which score values are returned. A score row is a pair of id and its score, e.g. {id: 'EGFR', score: 100}
@@ -31,7 +31,7 @@ export default class <%-module%> implements IScore<number> {
    * @returns {IAdditionalColumnDesc}
    */
   createDesc() {
-    const label = `<%-module%> of ${this.params}`;
+    const label = `<%-moduleName%> of ${this.params}`;
     return numberCol('', 0, 100, {label});
   }
 
@@ -53,12 +53,12 @@ export function create() {
    * a formDialog is a modal dialog showing a form to the user. The first argument is the dialog title, the second the label of the submit button
    * @type {FormDialog}
    */
-  const dialog = new FormDialog('Add <%-extras.name || module%>', 'Add');
+  const dialog = new FormDialog('Add <%-extras.name || moduleName%>', 'Add');
 
   return dialog.showAsPromise((r) => {
     // retrieve the entered values, each one identified by its formID
     const data = r.getElementValues();
-    return <I<%-module%>Param>{
+    return <I<%-moduleName%>Param>{
       // TODO
     };
   });
