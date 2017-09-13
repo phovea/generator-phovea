@@ -6,8 +6,6 @@
 
 from phovea_server.ns import Namespace
 from phovea_server.util import jsonify
-import os.path
-import datetime
 import logging
 
 app = Namespace(__name__)

@@ -165,6 +165,9 @@ class Generator extends Base {
         if (fs.existsSync(`${this.cwd}/${name}/docker-compose-patch.yaml`)) {
           fs.copySync(`${this.cwd}/${name}/docker-compose-patch.yaml`, this.destinationPath(`${this.cwd}/docker-compose-patch.yaml`));
         }
+        if (fs.existsSync(`${this.cwd}/${name}/ws`)) {
+          fs.copySync(`${this.cwd}/${name}/ws`, this.destinationPath(`${this.cwd}`));
+        }
 
         const defaultApp = this.product.find((v) => v.type === 'web');
         if (defaultApp) {
