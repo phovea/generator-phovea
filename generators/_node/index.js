@@ -1,6 +1,5 @@
 'use strict';
 const _ = require('lodash');
-const askName = require('inquirer-npm-name');
 const parseAuthor = require('parse-author');
 const Base = require('yeoman-generator').Base;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
@@ -60,12 +59,12 @@ class PackageJSONGenerator extends Base {
     if (this.options.useDefaults) {
       return Promise.resolve(null);
     }
-    return askName({
+    return this.prompt([{
       name: 'name',
       message: 'Plugin Name',
       default: this.config.get('name'),
       filter: _.snakeCase
-    }, this).then((props) => {
+    }]).then((props) => {
       this.config.set('name', props.name);
     });
   }
