@@ -83,6 +83,12 @@ class Generator extends Base {
       type: Boolean
     });
 
+    this.option('branch', {
+      alias: 'b',
+      defaults: 'master',
+      type: String
+    });
+
     this.argument('product', {
       required: true
     });
@@ -156,7 +162,7 @@ class Generator extends Base {
   }
 
   _getProduct() {
-    return this._cloneRepo(this.productName, 'master', ' --depth 1')
+    return this._cloneRepo(this.productName, this.options.branch || 'master', ' --depth 1')
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
         this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);

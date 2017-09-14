@@ -4,6 +4,7 @@ const Base = require('yeoman-generator').Base;
 const known = require('../../utils/known');
 const plugins = known.plugin;
 const stringifyAble = require('../../utils').stringifyAble;
+const path = require('path');
 
 function toJSONFromText(text) {
   const r = {};
@@ -112,7 +113,9 @@ class Generator extends Base {
       if (!this.fs.exists(source)) {
         source = this.templatePath('template.tmpl.ts');
       }
-      this.fs.copyTpl(source, target, d);
+      this.fs.copyTpl(source, target, Object.assign({
+        moduleName: path.basename(target, path.extname(target))
+      }, d));
     }
   }
 

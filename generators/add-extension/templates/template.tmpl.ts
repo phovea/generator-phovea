@@ -1,6 +1,6 @@
 
 
-export default class <%-module%> {
+export default class <%-moduleName%> {
   constructor() {
 
   }
