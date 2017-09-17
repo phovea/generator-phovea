@@ -353,7 +353,7 @@ class Generator extends Base {
       this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2));
     }
 
-    this.fs.copy(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`));
+    this.fs.copyTpl(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`), config);
     if (!this.fs.exists(this.destinationPath(`.idea/workspace.xml`))) {
       this.fs.copy(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`.idea/workspace.xml`));
     }
