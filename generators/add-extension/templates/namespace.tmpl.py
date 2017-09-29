@@ -5,7 +5,7 @@
 ###############################################################################
 
 from phovea_server.ns import Namespace
-from phovea_server.util import jsonfiy
+from phovea_server.util import jsonify
 import logging
 
 app = Namespace(__name__)
