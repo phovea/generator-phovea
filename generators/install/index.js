@@ -75,25 +75,28 @@ class Generator extends Base {
       this.log('switch to workspace for install dependencies but keep ' + this.plugin, 'in mind');
       process.chdir('../');
     }
-    if (this.options.type.startsWith('p')) {
-      this.plugins = this.pkgs.map((url) => {
-        const p = toPluginRepo(url, this.options.ssh);
-        if (!p.repo) {
-          this.log('can resolve repository for ' + url);
-          return null;
-        }
-        this.log(`cloning git clone ${p.repo}`);
-        this.spawnCommandSync('git', ['clone'].concat(p.repo.split(' ')));
-        return p;
-      }).filter((n) => Boolean(n));
-      this.log('updating workspace');
-      return this._yo('workspace').then(() => {
-        this.log('running npm install');
-        this.npmInstall();
-      });
+    if (!this.options.type.startsWith('p')) {
+      // regular dependency
+      this.before = this.fs.readJSON(this.destinationPath('../package.json'));
+      this.log('installing: ', this.pkgs.join(' '));
+      this.npmInstall(this.pkgs, {save: true});
     }
-    this.log('installing: ', this.pkgs.join(' '));
-    this.npmInstall(this.pkgs, {save: true});
+
+    this.plugins = this.pkgs.map((url) => {
+      const p = toPluginRepo(url, this.options.ssh);
+      if (!p.repo) {
+        this.log('can resolve repository for ' + url);
+        return null;
+      }
+      this.log(`cloning git clone ${p.repo}`);
+      this.spawnCommandSync('git', ['clone'].concat(p.repo.split(' ')));
+      return p;
+    }).filter((n) => Boolean(n));
+    this.log('updating workspace');
+    return this._yo('workspace').then(() => {
+      this.log('running npm install');
+      this.npmInstall();
+    });
   }
 
   end() {
@@ -106,13 +109,12 @@ class Generator extends Base {
         });
       } else {
         // copy from package json
-        const parent = this.fs.readJSON(this.destinationPath('../package.json'));
-        this.pkgs.forEach((p) => {
-          const pp = parent.dependencies[p];
-          if (pp) {
-            child.dependencies[p] = pp;
-          }
-        });
+        const before = this.before.dependencies;
+        const after = this.fs.readJSON(this.destinationPath('../package.json'));
+        const changes = after.dependencies;
+        Object.keys(before).forEach((k) => delete changes[k]); // delete old entries
+        // integrate new ones
+        Object.assign(child.dependencies, changes);
       }
       this.fs.extendJSON(this.destinationPath(`package.json`), child);
     }
