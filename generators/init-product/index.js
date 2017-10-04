@@ -5,7 +5,6 @@
 const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON} = require('../../utils');
-const plugins = require('../../utils/known').plugin;
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
 
@@ -18,6 +17,7 @@ function buildPossibleAdditionalPlugins(type) {
     short: d.name
   });
 
+  const plugins = require('../../utils/known').plugin;
   return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
 }
 

@@ -6,7 +6,7 @@ const chalk = require('chalk');
 const extend = require('lodash').extend;
 const _ = require('lodash');
 
-const known = require('../../utils/known');
+const known = () => require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 
@@ -61,7 +61,7 @@ class Generator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Additional Plugins',
-      choices: known.plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
+      choices: known().plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
       default: this.props.modules,
       when: !this.option('noAdditionals')
     }, {
@@ -114,7 +114,7 @@ class Generator extends Base {
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
-      const k = known.plugin.byName(p);
+      const k = known().plugin.byName(p);
       if (k && k.dependencies) {
         extend(dependencies, k.dependencies);
       }
@@ -122,7 +122,7 @@ class Generator extends Base {
 
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
-      const k = known.plugin.byName(p);
+      const k = known().plugin.byName(p);
       if (k && k.dependencies) {
         Object.keys(k.dependencies).forEach((pi) => {
           delete dependencies[pi];
@@ -225,18 +225,18 @@ class Generator extends Base {
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
-      const k = known.plugin.byName(p);
+      const k = known().plugin.byName(p);
       if (k && k.requirements) {
         Object.keys(k.requirements).forEach((ri) => requirements.add(ri + k.requirements[ri]));
       }
       if (k && k.dockerPackages) {
-        Object.keys(k.dockerPackages).forEach((ri) => dockerPackages.add(ri + known.dockerPackages[ri]));
+        Object.keys(k.dockerPackages).forEach((ri) => dockerPackages.add(ri + k.dockerPackages[ri]));
       }
     });
 
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
-      const k = known.plugin.byName(p);
+      const k = known().plugin.byName(p);
       if (k) {
         if (k.requirements) {
           Object.keys(k.requirements).forEach((pi) => {

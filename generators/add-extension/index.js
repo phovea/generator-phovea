@@ -1,8 +1,7 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 
-const known = require('../../utils/known');
-const plugins = known.plugin;
+const plugins = require('../../utils/types').plugin;
 const stringifyAble = require('../../utils').stringifyAble;
 const path = require('path');
 

@@ -1,8 +1,7 @@
 'use strict';
 const generators = require('yeoman-generator');
-const _ = require('lodash');
+const {merge, template} = require('lodash');
 const path = require('path');
-const known = require('./known');
 const glob = require('glob').sync;
 
 function patchPackageJSON(config, unset, extra) {
@@ -10,12 +9,12 @@ function patchPackageJSON(config, unset, extra) {
 
   let pkgPatch;
   if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
-    pkgPatch = JSON.parse(_.template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
+    pkgPatch = JSON.parse(template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
   } else {
     pkgPatch = {};
   }
-  _.merge(pkg, pkgPatch);
-  _.merge(pkg, extra || {});
+  merge(pkg, pkgPatch);
+  merge(pkg, extra || {});
 
   (unset || []).forEach((d) => delete pkg[d]);
 
@@ -32,7 +31,7 @@ function stringifyInline(obj, space) {
 }
 
 function stringifyAble(config) {
-  return _.assign({
+  return Object.assign({
     stringifyPython: (obj, space) => {
       let base = stringifyInline(obj, space);
       // python different true false
@@ -40,7 +39,10 @@ function stringifyAble(config) {
       return base;
     },
     stringify: stringifyInline,
-    isWeb: known.plugin.isTypeWeb
+    isWeb: (p) => {
+      const {plugin} = require('./known');
+      return plugin.isTypeWeb(p);
+    }
   }, config);
 }
 
@@ -110,7 +112,7 @@ class BaseInitPluginGenerator extends generators.Base {
 
   default() {
     this.composeWith('phovea:_init-' + this.basetype, {
-      options: _.assign({
+      options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
       }, this.options)
     }, {

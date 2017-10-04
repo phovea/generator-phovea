@@ -1,6 +1,6 @@
 'use strict';
 const Base = require('../../utils').Base;
-const known = require('../../utils/known');
+const known = () => require('../../utils/known');
 const {toLibraryAliasMap, toLibraryExternals} = require('../_init-web');
 
 class Generator extends Base {
@@ -16,14 +16,14 @@ class Generator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: known.plugin.listNamesWithDescription,
+      choices: known().plugin.listNamesWithDescription,
       default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: known.lib.listNamesWithDescription,
+      choices: known().lib.listNamesWithDescription,
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {

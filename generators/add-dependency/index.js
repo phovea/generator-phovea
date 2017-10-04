@@ -10,8 +10,8 @@ class Generator extends Base {
 
   prompting() {
     const type = this.config.get('type');
-    var moduleChoices = [];
-    var libraryChoices = [];
+    let moduleChoices = [];
+    let libraryChoices = [];
     if (plugins.isTypeHybrid({type})) {
       moduleChoices = plugins.listNamesWithDescription;
       libraryChoices = libs.listNamesWithDescription;

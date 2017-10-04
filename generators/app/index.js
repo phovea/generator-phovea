@@ -1,7 +1,7 @@
 'use strict';
 const generators = require('yeoman-generator');
 
-const plugins = require('../../utils/known').plugin;
+const plugins = require('../../utils/types').plugin;
 
 class ChooseGenerator extends generators.Base {
 

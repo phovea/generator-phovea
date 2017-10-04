@@ -4,7 +4,7 @@ const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 const {parseRequirements} = require('../../utils/pip');
 
-const known = require('../../utils/known');
+const known = () => require('../../utils/known');
 
 class PluginGenerator extends Base {
 
@@ -37,14 +37,14 @@ class PluginGenerator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: known.plugin.listServerNamesWithDescription,
+      choices: known().plugin.listServerNamesWithDescription,
       default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: known.lib.listServerNamesWithDescription,
+      choices: known().lib.listServerNamesWithDescription,
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
@@ -77,16 +77,16 @@ class PluginGenerator extends Base {
     const modules = this.config.get('modules').concat(this.config.get('smodules') || []);
     this.config.delete('smodules');
     this.config.set('modules', modules);
-    modules.filter(known.plugin.isTypeServer).forEach((m) => {
-      const p = known.plugin.byName(m);
+    modules.filter(known().plugin.isTypeServer).forEach((m) => {
+      const p = known().plugin.byName(m);
       _.assign(requirements, (useDevelopDependencies ? p.develop : p).requirements);
       _.assign(dockerPackages, (useDevelopDependencies ? p.develop : p).dockerPackages);
     });
     const libraries = this.config.get('libraries').concat(this.config.get('slibraries') || []);
     this.config.delete('slibraries');
     this.config.set('libraries', libraries);
-    libraries.filter(known.lib.isTypeServer).forEach((m) => {
-      const p = known.lib.byName(m);
+    libraries.filter(known().lib.isTypeServer).forEach((m) => {
+      const p = known().lib.byName(m);
       _.assign(requirements, p.requirements);
       _.assign(dockerPackages, p.dockerPackages);
     });

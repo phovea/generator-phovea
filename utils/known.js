@@ -1,31 +1,11 @@
 'use strict';
 
 const Separator = require('inquirer').Separator;
+const types = require('./types');
 const registry = require('../knownPhoveaPlugins.json');
 
-function generate(items, typesWeb, typesServer, typesHybrid) {
-  const r = {};
-
-  r.typesHybrid = Object.keys(typesHybrid);
-  r.typesWeb = Object.keys(typesWeb).concat(r.typesHybrid);
-  r.typesServer = Object.keys(typesServer).concat(r.typesHybrid);
-  r.types = [].concat(
-    r.typesWeb,
-    new Separator(),
-    r.typesServer);
-
-  r.typesWithDescription = [].concat(
-    Object.keys(typesWeb).map((t) => ({value: t, name: `${t}: ${typesWeb[t]}`, short: t})),
-    new Separator(),
-    Object.keys(typesServer).map((t) => ({value: t, name: `${t}: ${typesServer[t]}`, short: t}))
-  );
-  if (r.typesHybrid.length > 0) {
-    r.types = r.types.concat(new Separator(), r.typesHybrid, new Separator());
-    r.typesWithDescription = r.typesWithDescription.concat(
-      new Separator(),
-      r.typesHybrid.map((t) => ({value: t, name: `${t}: ${typesHybrid[t]}`, short: t})),
-      new Separator());
-  }
+function generate(items, base) {
+  const r = Object.assign({}, base);
 
   r.isTypeHybrid = (d) => r.typesHybrid.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
   r.isTypeWeb = (d) => r.typesWeb.indexOf(typeof d === 'string' ? r.byName(d).type : d.type) >= 0;
@@ -60,14 +40,6 @@ function generate(items, typesWeb, typesServer, typesHybrid) {
   return r;
 }
 
-module.exports.plugin = generate(registry.plugins, {
-  app: 'web application',
-  bundle: 'library bundle',
-  lib: 'web library'
-}, {slib: 'server library', service: 'server application service'}, {
-  'lib-slib': 'web library with server counterpart',
-  'app-slib': 'web application with server counterpart',
-  'lib-service': 'web library with server application service'
-});
-module.exports.lib = generate(registry.libraries, {web: 'Web Library'}, {python: 'Python Libary'}, {});
+module.exports.plugin = generate(registry.plugins, types.plugin);
+module.exports.lib = generate(registry.libraries, types.lib);
 

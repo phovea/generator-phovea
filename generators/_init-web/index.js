@@ -3,12 +3,12 @@ const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
-const known = require('../../utils/known');
+const known = () => require('../../utils/known');
 
 function toLibraryAliasMap(moduleNames, libraryNames) {
   let r = {};
   moduleNames.forEach((m) => {
-    const plugin = known.plugin.byName(m);
+    const plugin = known().plugin.byName(m);
     if (!plugin) {
       this.log('cant find plugin: ', m);
       return;
@@ -16,7 +16,7 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
     libraryNames.push(...(plugin.libraries || []));
   });
   libraryNames.forEach((l) => {
-    const lib = known.lib.byName(l);
+    const lib = known().lib.byName(l);
     if (!lib) {
       this.log('cant find library: ', l);
       return;
@@ -29,7 +29,7 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
 function toLibraryExternals(moduleNames, libraryNames) {
   let r = [];
   moduleNames.forEach((m) => {
-    const plugin = known.plugin.byName(m);
+    const plugin = known().plugin.byName(m);
     if (!plugin) {
       this.log('cant find plugin: ', m);
       return;
@@ -38,7 +38,7 @@ function toLibraryExternals(moduleNames, libraryNames) {
     libraryNames.push(...(plugin.libraries || []));
   });
   libraryNames.forEach((l) => {
-    const lib = known.lib.byName(l);
+    const lib = known().lib.byName(l);
     if (!lib) {
       this.log('cant find library: ', l);
       return;
@@ -82,14 +82,14 @@ class PluginGenerator extends Base {
       type: 'checkbox',
       name: 'modules',
       message: 'Included Modules',
-      choices: known.plugin.listWebNamesWithDescription,
+      choices: known().plugin.listWebNamesWithDescription,
       default: this.config.get('modules'),
       when: !this.options.useDefaults
     }, {
       type: 'checkbox',
       name: 'libraries',
       message: 'Included Libraries',
-      choices: known.lib.listWebNamesWithDescription,
+      choices: known().lib.listWebNamesWithDescription,
       default: this.config.get('libraries'),
       when: !this.options.useDefaults
     }]).then((props) => {
@@ -116,12 +116,12 @@ class PluginGenerator extends Base {
   _generateDependencies(useDevelopDependencies) {
     let r = {};
     // merge dependencies
-    this.config.get('modules').filter(known.plugin.isTypeWeb).forEach((m) => {
-      const d = known.plugin.byName(m);
+    this.config.get('modules').filter(known().plugin.isTypeWeb).forEach((m) => {
+      const d = known().plugin.byName(m);
       _.assign(r, (useDevelopDependencies ? d.develop : d).dependencies);
     });
-    this.config.get('libraries').filter(known.lib.isTypeWeb).forEach((m) => {
-      _.assign(r, known.lib.byName(m).dependencies);
+    this.config.get('libraries').filter(known().lib.isTypeWeb).forEach((m) => {
+      _.assign(r, known().lib.byName(m).dependencies);
     });
     return r;
   }
