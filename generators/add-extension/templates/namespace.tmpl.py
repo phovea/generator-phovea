@@ -5,11 +5,11 @@
 ###############################################################################
 
 from phovea_server.ns import Namespace
-from phovea_server.util import jsonfiy
+from phovea_server.util import jsonify
 import logging
 
 app = Namespace(__name__)
-_log = logger.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 @app.route('/')
