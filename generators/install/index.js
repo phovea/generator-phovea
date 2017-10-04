@@ -1,7 +1,6 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
 const path = require('path');
-const yeoman = require('yeoman-environment');
 
 function toPluginRepo(url, useSSH) {
   const match = url.match(/(github:)?([\w\d-_]+\/)?([\w\d-_]+)(#.+)?/);
@@ -47,6 +46,7 @@ class Generator extends Base {
   }
 
   _yo(generator, options) {
+    const yeoman = require('yeoman-environment');
     // call yo internally
     const env = yeoman.createEnv([], {
       cwd: this.cwd
@@ -80,6 +80,7 @@ class Generator extends Base {
       this.before = this.fs.readJSON(this.destinationPath('../package.json'));
       this.log('installing: ', this.pkgs.join(' '));
       this.npmInstall(this.pkgs, {save: true});
+      return;
     }
 
     this.plugins = this.pkgs.map((url) => {
@@ -100,6 +101,7 @@ class Generator extends Base {
   }
 
   end() {
+    const fs = require('fs-extra');
     if (this.plugin && this.fs.exists(this.destinationPath(`package.json`))) {
       // also store the dependency in the plugin
       const child = {dependencies: {}};
@@ -110,7 +112,10 @@ class Generator extends Base {
       } else {
         // copy from package json
         const before = this.before.dependencies;
-        const after = this.fs.readJSON(this.destinationPath('../package.json'));
+        // use plain fs module since the this.fs version isn't uptodate with external changes
+        const after = fs.readJSONSync(this.destinationPath('../package.json'));
+        console.log(before);
+        console.log(after.dependencies);
         const changes = after.dependencies;
         Object.keys(before).forEach((k) => delete changes[k]); // delete old entries
         // integrate new ones
