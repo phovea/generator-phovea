@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
-const {toHTTPRepoUrl, toSSHRepoUrl} = require('../../utils/repo');
+const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -177,9 +177,10 @@ class Generator extends Base {
 
         const defaultApp = this.product.find((v) => v.type === 'web');
         if (defaultApp) {
+          const baseRepo = simplifyRepoUrl(defaultApp.repo);
           fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
             modules: [],
-            defaultApp: defaultApp.repo.slice(defaultApp.repo.lastIndexOf('/') + 1)
+            defaultApp: baseRepo.slice(baseRepo.lastIndexOf('/') + 1)
           });
         }
 
