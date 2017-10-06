@@ -34,8 +34,7 @@ for %%f in (%BASE_DIR%/_backup/*.tar.gz) do (
 exit /B 0
 
 :restore_one
-docker run -v %PREFIX%_%1%:/data -v %BASE_DIR%\_backup:/backup --name data-backup ubuntu /bin/sh -c "cd /data rm -rf * && tar xfz /backup/%1%.tar.gz"
-docker rm data-backup
+docker run -v %PREFIX%_%1%:/data -v %BASE_DIR%\_backup:/backup --rm  ubuntu /bin/sh -c "cd /data rm -rf * && tar xfz /backup/%1%.tar.gz"
 exit /B 0
 
 :backup
@@ -48,6 +47,5 @@ for /F %%v in ('docker volume ls -q --filter "name=%PREFIX%_"') do (
 exit /B 0
 
 :backup_one
-docker run -v %PREFIX%_%1%:/data:ro -v %BASE_DIR%/_backup:/backup --name data-restore ubuntu /bin/sh -c "cd /data && tar -czf /backup/%1%.tar.gz *"
-docker rm data-restore
+docker run -v %PREFIX%_%1%:/data:ro -v %BASE_DIR%/_backup:/backup --rm ubuntu /bin/sh -c "cd /data && tar -czf /backup/%1%.tar.gz *"
 exit /B 0
