@@ -334,7 +334,7 @@ class Generator extends Base {
       .then(this._yo.bind(this, 'workspace', {defaultApp: findDefaultApp()}))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
-      .then(() => this.options.skip.includes('install') ? null : this._spawnOrAbort(this, 'npm', 'install'))
+      .then(() => this.options.skip.includes('install') ? null : this._spawnOrAbort('npm', 'install'))
       .then(this._downloadBackupFiles.bind(this))
       .then(() => {
         const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
