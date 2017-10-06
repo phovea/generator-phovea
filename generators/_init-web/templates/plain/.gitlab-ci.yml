@@ -1,0 +1,28 @@
+image: circleci/node:6-browsers
+
+variables:
+  GIT_DEPTH: "1"
+
+cache:
+  key: "$CI_REPOSITORY_URL-$CI_COMMIT_REF_NAME"
+  paths:
+  - node_modules
+
+stages:
+  - install
+  - build
+
+install-npm-wee:
+  stage: install
+  script:
+  - npm install
+
+dist:
+  stage: build
+  script:
+    - npm run dist
+  allow_failure: false
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - dist
