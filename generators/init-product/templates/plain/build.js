@@ -18,6 +18,7 @@ const pkg = require('./package.json');
  *  * --pushTo ... push docker images to the given registry
  *  * --noDefaultTags ... don't push generated default tag :<timestamp>
  *  * --pushExtra ... push additional custom tag: e.g., --pushExtra=develop
+ *  * --forceLabel ... force to use the label even only a single service exists
  */
 const argv = require('yargs-parser')(process.argv.slice(2));
 
@@ -504,7 +505,7 @@ if (require.main === module) {
   }
   const descs = require('./phovea_product.json');
   const dockerComposePatch = loadPatchFile();
-  const singleService = descs.length === 1;
+  const singleService = descs.length === 1 && (argv.forceLabel === undefined);
   const productName = pkg.name.replace('_product', '');
 
   fs.emptyDirAsync('build')
