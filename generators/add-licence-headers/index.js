@@ -8,23 +8,23 @@ const defaultLicencePath = `./${defaultLicenceFileName}`;
 
 const supportedFileTypes = ['ts', 'py', 'scss'];
 
-// const comments = {
-//   ts: {
-//     begin: '/*',
-//     body: '*',
-//     end: '*/'
-//   },
-//   py: {
-//     begin: '#',
-//     body: '#',
-//     end: '#'
-//   },
-//   scss: {
-//     begin: '/*',
-//     body: '*',
-//     end: '*/'
-//   }
-// };
+const comments = {
+  ts: {
+    begin: '/*',
+    body: '*',
+    end: '*/'
+  },
+  py: {
+    begin: '#',
+    body: '#',
+    end: '#'
+  },
+  scss: {
+    begin: '/*',
+    body: '*',
+    end: '*/'
+  }
+};
 
 /**
  * walk through file system recursively and execute the fileAction whenever a file is encountered
@@ -60,6 +60,8 @@ function isDirectory(path) {
 class Generator extends Base {
   constructor(args, options) {
     super(args, options);
+
+    this.comments = {};
 
     this.option('licencePath', {
       alias: 'l',
@@ -118,6 +120,7 @@ class Generator extends Base {
         throw new Error('No plugins given. Run the generator with the -h option to see the manual.');
       }
       this._readLicenceFile();
+      this._generateComments();
     }).catch((err) => this.log(err));
   }
 
@@ -127,6 +130,29 @@ class Generator extends Base {
     } catch (e) {
       this.log(e);
     }
+  }
+
+  _generateComments() {
+    // get maximum line length by looping through all lines, returning the line length and passing them to Math.max
+    const lineArray = this.licenceText.split('\n');
+    const maxLineLength = Math.max(...lineArray.map((line) => line.length));
+
+    supportedFileTypes.forEach((fileType) => {
+      const commentStyle = comments[fileType];
+      let comment = commentStyle.begin + commentStyle.body.repeat(maxLineLength) + '\n';
+      lineArray.forEach((line) => {
+        if (commentStyle.begin.length > 1) {
+          comment += ' ';
+        }
+        comment += `${commentStyle.body} ${line}\n`;
+      });
+
+      if (commentStyle.begin.length > 1) {
+        comment += ' ';
+      }
+      comment += `${commentStyle.body.repeat(maxLineLength)}${commentStyle.end}`;
+      this.comments[fileType] = comment;
+    });
   }
 
   writing() {
@@ -140,6 +166,9 @@ class Generator extends Base {
 
     const action = (path) => {
       const fileExtension = path.split('.').pop();
+      if (!supportedFileTypes.includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
+        return;
+      }
       console.log('Extension: ', fileExtension);
     };
 
