@@ -26,6 +26,27 @@ const supportedFileTypes = ['ts', 'py', 'scss'];
 //   }
 // };
 
+function walkThroughFileSystem(directory, fileAction) {
+  if (typeof fileAction !== 'function') {
+    throw new Error('No file action provided!');
+  }
+
+  const contents = fs.readdirSync(directory);
+  contents.forEach((element) => {
+    const path = directory + '/' + element;
+    if (isDirectory(path)) {
+      walkThroughFileSystem(path, fileAction);
+    } else {
+      fileAction(path);
+    }
+  });
+}
+
+function isDirectory(path) {
+  const stat = fs.statSync(path);
+  return stat.isDirectory();
+}
+
 class Generator extends Base {
   constructor(args, options) {
     super(args, options);
@@ -98,6 +119,47 @@ class Generator extends Base {
     }
   }
 
+  writing() {
+    const pluginName = this.plugins[0];
+
+    const sourceFolders = this._getSourceFolders(pluginName);
+
+    if (sourceFolders.length === 0) {
+      return;
+    }
+
+    const action = (path) => {
+      const fileExtension = path.split('.').pop();
+      console.log('Extension: ', fileExtension);
+    };
+
+    sourceFolders.forEach((folderName) => {
+      walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
+    });
+  }
+
+  _getSourceFolders(pluginName) {
+    const currentPluginConfig = JSON.parse(fs.readFileSync(this.destinationPath(pluginName + '/.yo-rc.json')));
+    const pluginType = currentPluginConfig['generator-phovea'].type;
+
+    if (pluginType.length === 0) {
+      return;
+    }
+
+    switch (pluginType) {
+      case 'app':
+      case 'lib':
+        return ['src'];
+      case 'slib':
+        return [pluginName];
+      case 'lib-slib':
+      case 'app-slib':
+        return ['src', pluginName];
+      default:
+        return [];
+    }
+  }
+
   /**
    * read workspace contents and only return plugins
    * @private
@@ -106,8 +168,7 @@ class Generator extends Base {
     const folderContents = fs.readdirSync(this.destinationPath());
     return folderContents
       .filter((element) => {
-        const stat = fs.statSync(this.destinationPath(element));
-        return stat.isDirectory() && // the element is a directory
+        return isDirectory(this.destinationPath(element)) && // the element is a directory
           element !== 'node_modules' && // the element is not the node_modules folder
           !element.startsWith('_') && // the element does not start with "_" (e.g. _data, ...)
           !element.startsWith('.') && // the element is not a hidden directory
