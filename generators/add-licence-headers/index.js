@@ -125,14 +125,6 @@ class Generator extends Base {
   }
 
   writing() {
-    const pluginName = this.plugins[0];
-
-    const sourceFolders = this._getSourceFolders(pluginName);
-
-    if (sourceFolders.length === 0) {
-      return;
-    }
-
     const action = (path) => {
       const fileExtension = path.split('.').pop();
       if (!supportedFileTypes.includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
@@ -156,8 +148,16 @@ class Generator extends Base {
     };
 
     try {
-      sourceFolders.forEach((folderName) => {
-        walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
+      this.plugins.forEach((pluginName) => {
+        const sourceFolders = this._getSourceFolders(pluginName);
+
+        if (sourceFolders.length === 0) {
+          return;
+        }
+
+        sourceFolders.forEach((folderName) => {
+          walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
+        });
       });
     } catch (e) {
       this.log(e);
