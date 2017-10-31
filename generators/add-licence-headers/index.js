@@ -12,17 +12,20 @@ const comments = {
   ts: {
     begin: '/*',
     body: '*',
-    end: '*/'
+    end: '*/',
+    aligningSpaces: 1
   },
   py: {
     begin: '#',
     body: '#',
-    end: '#'
+    end: '#',
+    aligningSpaces: 0
   },
   scss: {
     begin: '/*',
     body: '*',
-    end: '*/'
+    end: '*/',
+    aligningSpaces: 1
   }
 };
 
@@ -177,19 +180,27 @@ class Generator extends Base {
     const lineArray = this.licenceText.split('\n');
     const maxLineLength = Math.max(...lineArray.map((line) => line.length));
 
+    const align = (string, threshold, timesSpaces) => {
+      if (!timesSpaces) {
+        timesSpaces = threshold;
+      }
+
+      if (string.length > threshold) {
+        return ' '.repeat(timesSpaces);
+      }
+      return '';
+    };
+
     supportedFileTypes.forEach((fileType) => {
       const commentStyle = comments[fileType];
       let comment = commentStyle.begin + commentStyle.body.repeat(maxLineLength) + '\n';
       lineArray.forEach((line) => {
-        if (commentStyle.begin.length > 1) {
-          comment += ' ';
-        }
-        comment += `${commentStyle.body}${line.length > 0 ? ' ' + line : ''}\n`;
+        // only add a space character when the opening comment contains more than one charcters (e.g. to align the asterisks in .ts files vs. aligning the hashes in .py files)
+        comment += align(commentStyle.begin, commentStyle.aligningSpaces);
+        comment += `${commentStyle.body}${align(line, 0, 1) + line}\n`;
       });
 
-      if (commentStyle.begin.length > 1) {
-        comment += ' ';
-      }
+      comment += align(commentStyle.begin, commentStyle.aligningSpaces);
       comment += `${commentStyle.body.repeat(maxLineLength)}${commentStyle.end}`;
       this.comments[fileType] = comment;
     });
