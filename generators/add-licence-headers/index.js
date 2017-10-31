@@ -124,6 +124,46 @@ class Generator extends Base {
     }).catch((err) => this.log(err));
   }
 
+  writing() {
+    const pluginName = this.plugins[0];
+
+    const sourceFolders = this._getSourceFolders(pluginName);
+
+    if (sourceFolders.length === 0) {
+      return;
+    }
+
+    const action = (path) => {
+      const fileExtension = path.split('.').pop();
+      if (!supportedFileTypes.includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
+        return;
+      }
+      const fileContents = fs.readFileSync(path).toString();
+
+      // TODO: override any comment if the file starts with one (e.g. when the licence changes)
+      // whenever a file starts with our licence header skip for now
+      if (fileContents.startsWith(this.comments[fileExtension])) {
+        return;
+      }
+
+      const newContents = this.comments[fileExtension] + '\n\n' + fileContents;
+      fs.writeFile(path, newContents, (err) => {
+        if (err) {
+          this.log(err);
+        }
+        this.log(`Licence successfully added to ${path}`);
+      });
+    };
+
+    try {
+      sourceFolders.forEach((folderName) => {
+        walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
+      });
+    } catch (e) {
+      this.log(e);
+    }
+  }
+
   _readLicenceFile() {
     try {
       this.licenceText = fs.readFileSync(this.licencePath).toString();
@@ -144,7 +184,7 @@ class Generator extends Base {
         if (commentStyle.begin.length > 1) {
           comment += ' ';
         }
-        comment += `${commentStyle.body} ${line}\n`;
+        comment += `${commentStyle.body}${line.length > 0 ? ' ' + line : ''}\n`;
       });
 
       if (commentStyle.begin.length > 1) {
@@ -153,32 +193,6 @@ class Generator extends Base {
       comment += `${commentStyle.body.repeat(maxLineLength)}${commentStyle.end}`;
       this.comments[fileType] = comment;
     });
-  }
-
-  writing() {
-    const pluginName = this.plugins[0];
-
-    const sourceFolders = this._getSourceFolders(pluginName);
-
-    if (sourceFolders.length === 0) {
-      return;
-    }
-
-    const action = (path) => {
-      const fileExtension = path.split('.').pop();
-      if (!supportedFileTypes.includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
-        return;
-      }
-      console.log('Extension: ', fileExtension);
-    };
-
-    try {
-      sourceFolders.forEach((folderName) => {
-        walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
-      });
-    } catch (e) {
-      this.log(e);
-    }
   }
 
   _getSourceFolders(pluginName) {
