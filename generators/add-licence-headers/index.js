@@ -26,18 +26,28 @@ const supportedFileTypes = ['ts', 'py', 'scss'];
 //   }
 // };
 
-function walkThroughFileSystem(directory, fileAction) {
+/**
+ * walk through file system recursively and execute the fileAction whenever a file is encountered
+ * @param currentDirectoryPath string
+ * @param fileAction function
+ */
+function walkThroughFileSystem(currentDirectoryPath, fileAction) {
   if (typeof fileAction !== 'function') {
     throw new Error('No file action provided!');
   }
 
-  const contents = fs.readdirSync(directory);
+  // read folder contents
+  const contents = fs.readdirSync(currentDirectoryPath);
+
   contents.forEach((element) => {
-    const path = directory + '/' + element;
-    if (isDirectory(path)) {
-      walkThroughFileSystem(path, fileAction);
+    // append the current element to the path and check whether it's a directory or not
+    const newPath = currentDirectoryPath + '/' + element;
+    if (isDirectory(newPath)) {
+      // if a directory is encountered, walk deeper
+      walkThroughFileSystem(newPath, fileAction);
     } else {
-      fileAction(path);
+      // else execute the file action
+      fileAction(newPath);
     }
   });
 }
@@ -133,9 +143,13 @@ class Generator extends Base {
       console.log('Extension: ', fileExtension);
     };
 
-    sourceFolders.forEach((folderName) => {
-      walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
-    });
+    try {
+      sourceFolders.forEach((folderName) => {
+        walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
+      });
+    } catch (e) {
+      this.log(e);
+    }
   }
 
   _getSourceFolders(pluginName) {
