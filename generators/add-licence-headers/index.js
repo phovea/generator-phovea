@@ -6,8 +6,6 @@ const chalk = require('chalk');
 const defaultLicenceFileName = 'licence.txt';
 const defaultLicencePath = `./${defaultLicenceFileName}`;
 
-const supportedFileTypes = ['ts', 'py', 'scss'];
-
 const comments = {
   ts: {
     begin: '/*',
@@ -111,7 +109,7 @@ class Generator extends Base {
         type: 'checkbox',
         name: 'excludedFileTypes',
         message: 'Exclude file types from adding headers',
-        choices: supportedFileTypes,
+        choices: Object.keys(comments),
         when: this.options.excludedFileTypes.length === 0
       }
     ]).then((props) => {
@@ -122,18 +120,20 @@ class Generator extends Base {
       if (this.plugins.length === 0) {
         throw new Error('No plugins given. Run the generator with the -h option to see the manual.');
       }
-      this._readLicenceFile();
-      this._generateComments();
+      // TODO: How to abort the generator correctly?
+      return this._readLicenceFile();
     }).catch((err) => this.log(err));
   }
 
   writing() {
+    this._generateComments();
+
     const action = (path) => {
       const fileExtension = path.split('.').pop();
-      if (!supportedFileTypes.includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
+      if (!Object.keys(comments).includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
         return;
       }
-      const fileContents = fs.readFileSync(path).toString();
+      const fileContents = this.fs.read(path);
 
       // TODO: override any comment if the file starts with one (e.g. when the licence changes)
       // whenever a file starts with our licence header skip for now
@@ -142,12 +142,7 @@ class Generator extends Base {
       }
 
       const newContents = this.comments[fileExtension] + '\n\n' + fileContents;
-      fs.writeFile(path, newContents, (err) => {
-        if (err) {
-          this.log(err);
-        }
-        this.log(`Licence successfully added to ${path}`);
-      });
+      this.fs.write(path, newContents);
     };
 
     try {
@@ -171,7 +166,7 @@ class Generator extends Base {
     try {
       this.licenceText = fs.readFileSync(this.licencePath).toString();
     } catch (e) {
-      this.log(e);
+      return this._abort(e);
     }
   }
 
@@ -191,7 +186,7 @@ class Generator extends Base {
       return '';
     };
 
-    supportedFileTypes.forEach((fileType) => {
+    Object.keys(comments).forEach((fileType) => {
       const commentStyle = comments[fileType];
       let comment = commentStyle.begin + commentStyle.body.repeat(maxLineLength) + '\n';
       lineArray.forEach((line) => {
@@ -242,6 +237,11 @@ class Generator extends Base {
           !element.startsWith('.') && // the element is not a hidden directory
           fs.existsSync(this.destinationPath(element, 'phovea.js')); // the element (directory) contains a phovea.js file
       });
+  }
+
+  _abort(msg) {
+    console.log('ABORTING');
+    return Promise.reject(msg ? msg : 'Step Failed: Aborting');
   }
 }
 
