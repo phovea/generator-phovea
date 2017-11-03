@@ -164,7 +164,7 @@ class Generator extends Base {
 
   _readLicenceFile() {
     try {
-      this.licenceText = fs.readFileSync(this.licencePath).toString();
+      this.licenceText = this.fs.read(this.licencePath);
     } catch (e) {
       return this._abort(e);
     }
