@@ -6,12 +6,12 @@ BASE_NAME=${BASE_DIR##*/}
 PREFIX=${BASE_NAME//_/}
 
 function backup_one {
-  docker run -v ${PREFIX}_$1:/data:ro -v `pwd`/_backup:/backup --rm ubuntu \
+  docker run -v ${PREFIX}_$1:/data:ro -v `pwd`/_backup:/backup --rm busybox \
    /bin/sh -c "cd /data && tar -czf /backup/$1.tar.gz *"
 }
 
 function restore_one {
-  docker run -v ${PREFIX}_$1:/data -v `pwd`/_backup:/backup --rm ubuntu \
+  docker run -v ${PREFIX}_$1:/data -v `pwd`/_backup:/backup --rm busybox \
     /bin/sh -c "cd /data rm -rf * && tar xfz /backup/$1.tar.gz"
 }
 
