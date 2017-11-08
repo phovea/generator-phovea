@@ -1,5 +1,5 @@
 
-import {IResult, ISearchProvider} from 'bob/src/extensions';
+import {IResult, ISearchProvider} from 'dTiles/src/extensions';
 import {getTDPFilteredRows, getTDPLookup} from 'tdp_core/src/rest';
 // import './styles/idtype_color.scss';
 
