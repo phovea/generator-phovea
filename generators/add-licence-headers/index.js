@@ -15,9 +15,9 @@ const comments = {
     aligningSpaces: 1
   },
   py: {
-    begin: '#',
+    begin: '##',
     body: '#',
-    end: '#',
+    end: '##',
     aligningSpaces: 0
   },
   scss: {
@@ -96,7 +96,7 @@ class Generator extends Base {
         }
       });
     } catch (e) {
-      this.log(e);
+      this._abort(e);
     }
   }
 
@@ -151,24 +151,52 @@ class Generator extends Base {
 
   _addComments(path, fileExtension) {
     glob(`**/*.${fileExtension}`, {cwd: path}, (err, files) => {
+      if (err) {
+        throw err;
+      }
+
       if (files.length === 0) {
         return;
       }
 
       files.forEach((file) => {
         const filePath = path + '/' + file;
-        const fileContents = this.fs.read(filePath);
+        let fileContents = this.fs.read(filePath);
 
         // TODO: override any comment if the file starts with one (e.g. when the licence changes)
         // whenever a file starts with our licence header skip for now
         if (fileContents.startsWith(this.comments[fileExtension])) {
+          this.log(`Same header detected in ${filePath}. ${chalk.green('Skipping')}.`);
           return;
         }
+
+        fileContents = this._findAndRemoveHeader(fileContents, fileExtension);
 
         const newContents = this.comments[fileExtension] + '\n\n' + fileContents;
         this.fs.write(filePath, newContents);
       });
     });
+  }
+
+  /**
+   * remove a multiline comment at the beginning of a file (e.g. licence header) if it exists
+   * @param fileContents
+   * @param fileExtension
+   * @returns {string}
+   * @private
+   */
+  _findAndRemoveHeader(fileContents, fileExtension) {
+    if (fileContents.startsWith(comments[fileExtension].begin)) {
+      const linesArray = fileContents.split('\n');
+      let line = linesArray[0];
+      while (line.startsWith(comments[fileExtension].begin) || line.indexOf(comments[fileExtension].body) > -1) {
+        line = linesArray.splice(0, 1)[0];
+      }
+
+      return linesArray.join('\n');
+    }
+
+    return fileContents;
   }
 }
 
