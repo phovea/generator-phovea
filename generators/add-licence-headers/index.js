@@ -2,6 +2,7 @@
 const fs = require('fs');
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
+const glob = require('glob');
 
 const defaultLicenceFileName = 'licence.txt';
 const defaultLicencePath = `./${defaultLicenceFileName}`;
@@ -26,37 +27,6 @@ const comments = {
     aligningSpaces: 1
   }
 };
-
-/**
- * walk through file system recursively and execute the fileAction whenever a file is encountered
- * @param currentDirectoryPath string
- * @param fileAction function
- */
-function walkThroughFileSystem(currentDirectoryPath, fileAction) {
-  if (typeof fileAction !== 'function') {
-    throw new Error('No file action provided!');
-  }
-
-  // read folder contents
-  const contents = fs.readdirSync(currentDirectoryPath);
-
-  contents.forEach((element) => {
-    // append the current element to the path and check whether it's a directory or not
-    const newPath = currentDirectoryPath + '/' + element;
-    if (isDirectory(newPath)) {
-      // if a directory is encountered, walk deeper
-      walkThroughFileSystem(newPath, fileAction);
-    } else {
-      // else execute the file action
-      fileAction(newPath);
-    }
-  });
-}
-
-function isDirectory(path) {
-  const stat = fs.statSync(path);
-  return stat.isDirectory();
-}
 
 class Generator extends Base {
   constructor(args, options) {
@@ -103,7 +73,10 @@ class Generator extends Base {
       }
     ]).then((props) => {
       this.licencePath = props.licencePath || this.options.licencePath;
-      this.excludedFileTypes = props.excludedFileTypes || this.options.excludedFileTypes.split(',');
+      const excludedFileTypes = props.excludedFileTypes || this.options.excludedFileTypes.split(',');
+
+      // filter out excluded file types
+      this.fileTypes = Object.keys(comments).filter((type) => !excludedFileTypes.includes(type));
 
       // TODO: How to abort the generator correctly?
       return this._readLicenceFile();
@@ -113,29 +86,13 @@ class Generator extends Base {
   writing() {
     this._generateComments();
 
-    const action = (path) => {
-      const fileExtension = path.split('.').pop();
-      if (!Object.keys(comments).includes(fileExtension) || this.excludedFileTypes.includes(fileExtension)) {
-        return;
-      }
-      const fileContents = this.fs.read(path);
-
-      // TODO: override any comment if the file starts with one (e.g. when the licence changes)
-      // whenever a file starts with our licence header skip for now
-      if (fileContents.startsWith(this.comments[fileExtension])) {
-        return;
-      }
-
-      const newContents = this.comments[fileExtension] + '\n\n' + fileContents;
-      this.fs.write(path, newContents);
-    };
-
     try {
       const sourceFolders = this._getSourceFolders();
 
       sourceFolders.forEach((folderName) => {
-        if (fs.existsSync(this.destinationPath(folderName))) {
-          walkThroughFileSystem(this.destinationPath(folderName), action);
+        const pluginPath = this.destinationPath(folderName);
+        if (fs.existsSync(pluginPath)) {
+          this.fileTypes.forEach((type) => this._addComments(pluginPath, type));
         }
       });
     } catch (e) {
@@ -190,6 +147,28 @@ class Generator extends Base {
   _abort(msg) {
     console.log('ABORTING');
     return Promise.reject(msg ? msg : 'Step Failed: Aborting');
+  }
+
+  _addComments(path, fileExtension) {
+    glob(`**/*.${fileExtension}`, {cwd: path}, (err, files) => {
+      if (files.length === 0) {
+        return;
+      }
+
+      files.forEach((file) => {
+        const filePath = path + '/' + file;
+        const fileContents = this.fs.read(filePath);
+
+        // TODO: override any comment if the file starts with one (e.g. when the licence changes)
+        // whenever a file starts with our licence header skip for now
+        if (fileContents.startsWith(this.comments[fileExtension])) {
+          return;
+        }
+
+        const newContents = this.comments[fileExtension] + '\n\n' + fileContents;
+        this.fs.write(filePath, newContents);
+      });
+    });
   }
 }
 
