@@ -360,16 +360,13 @@ class Generator extends Base {
 
   _reorder() {
     const pkgs = this.repos.map((d) => {
-      console.log(d, d.cwd);
-      if (this.fs.exists(`${d.cwd}/.yo-rc.json`)) {
-        return this.fs.readJSON(`${d.cwd}/.yo-rc.json`)['generator-phovea'];
-      }
       const pkg = this.fs.readJSON(`${d.cwd}/package.json`);
       return {
         name: pkg.name,
-        modules: Object.keys(pkg.dependencies || {})
+        modules: Object.keys(Object.assign(pkg.dependencies || {}, pkg.optionalDependencies || {}))
       };
     });
+    console.log(pkgs);
     const names = new Set(pkgs.map((d) => d.name));
     const dependencies = pkgs.map((d, i) => {
       const deps = (d.modules || []).filter((dep) => names.has(dep));
@@ -379,6 +376,7 @@ class Generator extends Base {
         data: this.repos[i]
       };
     });
+    console.log(dependencies);
     return topologicalSort(dependencies);
   }
 
