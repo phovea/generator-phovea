@@ -86,10 +86,6 @@ class Generator extends Base {
     });
   }
 
-  initializing() {
-    this.plugins = this._readAvailablePlugins();
-  }
-
   prompting() {
     return this.prompt([
       {
@@ -100,13 +96,6 @@ class Generator extends Base {
       },
       {
         type: 'checkbox',
-        name: 'plugins',
-        message: 'Please select the plugins to add licence headers',
-        choices: this.plugins,
-        when: this.options.plugins.length === 0
-      },
-      {
-        type: 'checkbox',
         name: 'excludedFileTypes',
         message: 'Exclude file types from adding headers',
         choices: Object.keys(comments),
@@ -114,12 +103,8 @@ class Generator extends Base {
       }
     ]).then((props) => {
       this.licencePath = props.licencePath || this.options.licencePath;
-      this.plugins = props.plugins || this.options.plugins.split(',');
       this.excludedFileTypes = props.excludedFileTypes || this.options.excludedFileTypes.split(',');
 
-      if (this.plugins.length === 0) {
-        throw new Error('No plugins given. Run the generator with the -h option to see the manual.');
-      }
       // TODO: How to abort the generator correctly?
       return this._readLicenceFile();
     }).catch((err) => this.log(err));
@@ -146,16 +131,12 @@ class Generator extends Base {
     };
 
     try {
-      this.plugins.forEach((pluginName) => {
-        const sourceFolders = this._getSourceFolders(pluginName);
+      const sourceFolders = this._getSourceFolders();
 
-        if (sourceFolders.length === 0) {
-          return;
+      sourceFolders.forEach((folderName) => {
+        if (fs.existsSync(this.destinationPath(folderName))) {
+          walkThroughFileSystem(this.destinationPath(folderName), action);
         }
-
-        sourceFolders.forEach((folderName) => {
-          walkThroughFileSystem(this.destinationPath(pluginName, folderName), action);
-        });
       });
     } catch (e) {
       this.log(e);
@@ -201,42 +182,9 @@ class Generator extends Base {
     });
   }
 
-  _getSourceFolders(pluginName) {
-    const currentPluginConfig = JSON.parse(fs.readFileSync(this.destinationPath(pluginName + '/.yo-rc.json')));
-    const pluginType = currentPluginConfig['generator-phovea'].type;
-
-    if (pluginType.length === 0) {
-      return;
-    }
-
-    switch (pluginType) {
-      case 'app':
-      case 'lib':
-        return ['src'];
-      case 'slib':
-        return [pluginName];
-      case 'lib-slib':
-      case 'app-slib':
-        return ['src', pluginName];
-      default:
-        return [];
-    }
-  }
-
-  /**
-   * read workspace contents and only return plugins
-   * @private
-   */
-  _readAvailablePlugins() {
-    const folderContents = fs.readdirSync(this.destinationPath());
-    return folderContents
-      .filter((element) => {
-        return isDirectory(this.destinationPath(element)) && // the element is a directory
-          element !== 'node_modules' && // the element is not the node_modules folder
-          !element.startsWith('_') && // the element does not start with "_" (e.g. _data, ...)
-          !element.startsWith('.') && // the element is not a hidden directory
-          fs.existsSync(this.destinationPath(element, 'phovea.js')); // the element (directory) contains a phovea.js file
-      });
+  _getSourceFolders() {
+    const path = this.destinationPath().split('/');
+    return ['src', path[path.length - 1]];
   }
 
   _abort(msg) {
