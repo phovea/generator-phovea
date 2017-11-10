@@ -166,7 +166,6 @@ class Generator extends Base {
         // TODO: override any comment if the file starts with one (e.g. when the licence changes)
         // whenever a file starts with our licence header skip for now
         if (fileContents.startsWith(this.comments[fileExtension])) {
-          this.log(`Same header detected in ${filePath}. ${chalk.green('Skipping')}.`);
           return;
         }
 
