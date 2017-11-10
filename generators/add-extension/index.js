@@ -132,7 +132,9 @@ class Generator extends Base {
       if (!this.fs.exists(source)) {
         source = this.templatePath('template.tmpl.py');
       }
-      this.fs.copyTpl(source, target, d);
+      this.fs.copyTpl(source, target, Object.assign({
+        moduleName: path.basename(target, path.extname(target))
+      }, d));
     }
   }
 }
