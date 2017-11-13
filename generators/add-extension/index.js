@@ -112,9 +112,8 @@ class Generator extends Base {
       if (!this.fs.exists(source)) {
         source = this.templatePath('template.tmpl.ts');
       }
-      this.fs.copyTpl(source, target, Object.assign({
-        moduleName: path.basename(target, path.extname(target))
-      }, d));
+      const config = this._getModuleConfig(target);
+      this.fs.copyTpl(source, target, Object.assign(config, d));
     }
   }
 
@@ -132,10 +131,15 @@ class Generator extends Base {
       if (!this.fs.exists(source)) {
         source = this.templatePath('template.tmpl.py');
       }
-      this.fs.copyTpl(source, target, Object.assign({
-        moduleName: path.basename(target, path.extname(target))
-      }, d));
+      const config = this._getModuleConfig(target);
+      this.fs.copyTpl(source, target, Object.assign(config, d));
     }
+  }
+
+  _getModuleConfig(target) {
+    return {
+      moduleName: path.basename(target, path.extname(target))
+    };
   }
 }
 
