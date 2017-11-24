@@ -41,13 +41,6 @@ class Generator extends Base {
       desc: `Relative path to a ${chalk.blue(defaultLicenceFileName)} file`
     });
 
-    this.option('plugins', {
-      alias: 'p',
-      default: '',
-      type: String,
-      desc: 'Comma separated list (without spaces) of plugins to prepend the licence to'
-    });
-
     this.option('excludedFileTypes', {
       alias: 'e',
       default: '',
