@@ -4,16 +4,6 @@ const BasePluginGenerator = require('../../utils').BasePython;
 class PluginGenerator extends BasePluginGenerator {
 
   initializing() {
-    this.config.defaults({
-      sextensions: [{
-        type: 'namespace',
-        id: 'hello_world',
-        module: 'hello_world',
-        extras: {
-          namespace: '/api/hello_world'
-        }
-      }]
-    });
     super.initializing();
   }
 
