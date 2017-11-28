@@ -178,9 +178,9 @@ class Generator extends Base {
   _findAndRemoveHeader(fileContents, fileExtension) {
     if (fileContents.startsWith(comments[fileExtension].begin)) {
       const linesArray = fileContents.split(os.EOL);
-      let line = linesArray.splice(0, 1)[0];
+      let line = linesArray.shift();
       while (line.startsWith(comments[fileExtension].begin) || line.indexOf(comments[fileExtension].body) > -1) {
-        line = linesArray.splice(0, 1)[0];
+        line = linesArray.shift();
       }
 
       return linesArray.join(os.EOL);
