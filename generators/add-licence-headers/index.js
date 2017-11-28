@@ -4,6 +4,7 @@ const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
+const os = require('os');
 
 const defaultLicenceFileName = 'licence.txt';
 const defaultLicencePath = `./${defaultLicenceFileName}`;
@@ -165,7 +166,7 @@ class Generator extends Base {
 
         fileContents = this._findAndRemoveHeader(fileContents, fileExtension);
 
-        const newContents = this.comments[fileExtension] + '\n\n' + fileContents;
+        const newContents = this.comments[fileExtension] + os.EOL + os.EOL + fileContents;
         this.fs.write(filePath, newContents);
       });
     });
