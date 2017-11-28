@@ -75,7 +75,7 @@ class Generator extends Base {
 
       // TODO: How to abort the generator correctly?
       return this._readLicenceFile();
-    }).catch((err) => this.log(err));
+    }).catch((e) => this._abort(e));
   }
 
   writing() {
@@ -145,30 +145,27 @@ class Generator extends Base {
   }
 
   _addComments(path, fileExtension) {
-    glob(`**/*.${fileExtension}`, {cwd: path}, (err, files) => {
-      if (err) {
-        throw err;
-      }
+    const folderContents = glob.sync(`**/*.${fileExtension}`, {cwd: path});
 
-      if (files.length === 0) {
+    if (folderContents.length === 0) {
+      return;
+    }
+
+    folderContents.forEach((file) => {
+
+      const filePath = path + '/' + file;
+      let fileContents = this.fs.read(filePath);
+
+      // TODO: override any comment if the file starts with one (e.g. when the licence changes)
+      // whenever a file starts with our licence header skip for now
+      if (fileContents.startsWith(this.comments[fileExtension])) {
         return;
       }
 
-      files.forEach((file) => {
-        const filePath = path + '/' + file;
-        let fileContents = this.fs.read(filePath);
+      fileContents = this._findAndRemoveHeader(fileContents, fileExtension);
 
-        // TODO: override any comment if the file starts with one (e.g. when the licence changes)
-        // whenever a file starts with our licence header skip for now
-        if (fileContents.startsWith(this.comments[fileExtension])) {
-          return;
-        }
-
-        fileContents = this._findAndRemoveHeader(fileContents, fileExtension);
-
-        const newContents = this.comments[fileExtension] + os.EOL + os.EOL + fileContents;
-        this.fs.write(filePath, newContents);
-      });
+      const newContents = this.comments[fileExtension] + os.EOL + os.EOL + fileContents;
+      this.fs.write(filePath, newContents);
     });
   }
 
