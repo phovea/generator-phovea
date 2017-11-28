@@ -152,7 +152,6 @@ class Generator extends Base {
     }
 
     folderContents.forEach((file) => {
-
       const filePath = path + '/' + file;
       let fileContents = this.fs.read(filePath);
 
