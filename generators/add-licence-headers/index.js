@@ -85,9 +85,9 @@ class Generator extends Base {
       const sourceFolders = this._getSourceFolders();
 
       sourceFolders.forEach((folderName) => {
-        const pluginPath = this.destinationPath(folderName);
-        if (fs.existsSync(pluginPath)) {
-          this.fileTypes.forEach((type) => this._addComments(pluginPath, type));
+        const sourcePath = this.destinationPath(folderName);
+        if (fs.existsSync(sourcePath)) {
+          this.fileTypes.forEach((type) => this._addComments(sourcePath, type));
         }
       });
     } catch (e) {
