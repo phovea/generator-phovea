@@ -3,6 +3,7 @@ const fs = require('fs');
 const Base = require('yeoman-generator').Base;
 const chalk = require('chalk');
 const glob = require('glob');
+const path = require('path');
 
 const defaultLicenceFileName = 'licence.txt';
 const defaultLicencePath = `./${defaultLicenceFileName}`;
@@ -133,8 +134,8 @@ class Generator extends Base {
   }
 
   _getSourceFolders() {
-    const path = this.destinationPath().split('/');
-    return ['src', path[path.length - 1]];
+    const backendSourcePath = path.basename(this.destinationPath());
+    return ['src', backendSourcePath];
   }
 
   _abort(msg) {
