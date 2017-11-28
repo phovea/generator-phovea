@@ -56,7 +56,7 @@ class Generator extends Base {
       {
         type: 'input',
         name: 'licencePath',
-        message: `Please enter the relative path to the ${chalk.blue(defaultLicenceFileName)} file`,
+        message: `Please enter the relative path to a text file with a licence (defaults to ${chalk.blue(defaultLicencePath)})`,
         when: this.options.licencePath === defaultLicencePath
       },
       {
@@ -67,7 +67,7 @@ class Generator extends Base {
         when: this.options.excludedFileTypes.length === 0
       }
     ]).then((props) => {
-      this.licencePath = props.licencePath || this.options.licencePath;
+      this.licencePath = props.licencePath || this.options.licencePath || defaultLicencePath;
       const excludedFileTypes = props.excludedFileTypes || this.options.excludedFileTypes.split(',');
 
       // filter out excluded file types
@@ -140,7 +140,6 @@ class Generator extends Base {
   }
 
   _abort(msg) {
-    console.log('ABORTING');
     return Promise.reject(msg ? msg : 'Step Failed: Aborting');
   }
 
