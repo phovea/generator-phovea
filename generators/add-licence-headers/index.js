@@ -105,7 +105,7 @@ class Generator extends Base {
 
   _generateComments() {
     // get maximum line length by looping through all lines, returning the line length and passing them to Math.max
-    const lineArray = this.licenceText.split('\n');
+    const lineArray = this.licenceText.split(os.EOL);
     const maxLineLength = Math.max(...lineArray.map((line) => line.length));
 
     const align = (string, threshold, timesSpaces) => {
@@ -121,11 +121,11 @@ class Generator extends Base {
 
     Object.keys(comments).forEach((fileType) => {
       const commentStyle = comments[fileType];
-      let comment = commentStyle.begin + commentStyle.body.repeat(maxLineLength) + '\n';
+      let comment = commentStyle.begin + commentStyle.body.repeat(maxLineLength) + os.EOL;
       lineArray.forEach((line) => {
         // only add a space character when the opening comment contains more than one charcters (e.g. to align the asterisks in .ts files vs. aligning the hashes in .py files)
         comment += align(commentStyle.begin, commentStyle.aligningSpaces);
-        comment += `${commentStyle.body}${align(line, 0, 1) + line}\n`;
+        comment += `${commentStyle.body}${align(line, 0, 1) + line}${os.EOL}`;
       });
 
       comment += align(commentStyle.begin, commentStyle.aligningSpaces);
