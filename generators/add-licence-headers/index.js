@@ -184,7 +184,7 @@ class Generator extends Base {
     }
     const linesArray = fileContents.split(os.EOL);
     let line = linesArray.shift();
-    while (line.startsWith(commentConfig.begin) || line.indexOf(commentConfig.body) > -1) {
+    while (line.startsWith(commentConfig.begin) || line.indexOf(commentConfig.body) === commentConfig.aligningSpaces) {
       line = linesArray.shift();
     }
 
