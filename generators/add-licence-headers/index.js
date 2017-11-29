@@ -150,19 +150,21 @@ class Generator extends Base {
       return;
     }
 
+    const header = this.comments[fileExtension];
+
     folderContents.forEach((file) => {
       const filePath = path + '/' + file;
       let fileContents = this.fs.read(filePath);
 
       // TODO: override any comment if the file starts with one (e.g. when the licence changes)
       // whenever a file starts with our licence header skip for now
-      if (fileContents.startsWith(this.comments[fileExtension])) {
+      if (fileContents.startsWith(header)) {
         return;
       }
 
       fileContents = this._findAndRemoveHeader(fileContents, fileExtension);
 
-      const newContents = this.comments[fileExtension] + os.EOL + os.EOL + fileContents;
+      const newContents = header + os.EOL + os.EOL + fileContents;
       this.fs.write(filePath, newContents);
     });
   }
@@ -175,10 +177,12 @@ class Generator extends Base {
    * @private
    */
   _findAndRemoveHeader(fileContents, fileExtension) {
-    if (fileContents.startsWith(comments[fileExtension].begin)) {
+    const commentConfig = comments[fileExtension];
+
+    if (fileContents.startsWith(commentConfig.begin)) {
       const linesArray = fileContents.split(os.EOL);
       let line = linesArray.shift();
-      while (line.startsWith(comments[fileExtension].begin) || line.indexOf(comments[fileExtension].body) > -1) {
+      while (line.startsWith(commentConfig.begin) || line.indexOf(commentConfig.body) > -1) {
         line = linesArray.shift();
       }
 
