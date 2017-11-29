@@ -179,17 +179,16 @@ class Generator extends Base {
   _findAndRemoveHeader(fileContents, fileExtension) {
     const commentConfig = comments[fileExtension];
 
-    if (fileContents.startsWith(commentConfig.begin)) {
-      const linesArray = fileContents.split(os.EOL);
-      let line = linesArray.shift();
-      while (line.startsWith(commentConfig.begin) || line.indexOf(commentConfig.body) > -1) {
-        line = linesArray.shift();
-      }
-
-      return linesArray.join(os.EOL);
+    if (!fileContents.startsWith(commentConfig.begin)) {
+      return fileContents;
+    }
+    const linesArray = fileContents.split(os.EOL);
+    let line = linesArray.shift();
+    while (line.startsWith(commentConfig.begin) || line.indexOf(commentConfig.body) > -1) {
+      line = linesArray.shift();
     }
 
-    return fileContents;
+    return linesArray.join(os.EOL);
   }
 }
 
