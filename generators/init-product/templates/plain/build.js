@@ -56,10 +56,26 @@ function toRepoUrl(url) {
   return `https://github.com/${url}.git`;
 }
 
+function guessUserName(repo) {
+  // extract the host
+  const host = repo.match(/:\/\/([^/]+)/)[1];
+  const hostClean = host.replace('.', '_').toUpperCase();
+  // e.g. GITHUB_COM_CREDENTIALS
+  const envVar = process.env[`${hostClean}_CREDENTIALS`];
+  if (envVar) {
+    return envVar;
+  }
+  return process.env.PHOVEA_GITHUB_CREDENTIALS;
+
+}
+
 function toRepoUrlWithUser(url) {
   const repo = toRepoUrl(url);
-  const usernameAndPassword = process.env.PHOVEA_GITHUB_CREDENTIALS;
-  if (repo.startsWith('git@') || !usernameAndPassword) { // ssh or no user given
+  if (repo.startsWith('git@')) { // ssh
+    return repo;
+  }
+  const usernameAndPassword = guessUserName(repo);
+  if (!usernameAndPassword) { // ssh or no user given
     return repo;
   }
   return repo.replace('://', `://${usernameAndPassword}@`);
@@ -67,7 +83,7 @@ function toRepoUrlWithUser(url) {
 
 function fromRepoUrl(url) {
   if (url.includes('.git')) {
-    return url.match(/\/(.*)\.git/)[0];
+    return url.match(/\/([^/]+)\.git/)[0];
   }
   return url.slice(url.lastIndexOf('/') + 1);
 }
@@ -487,7 +503,7 @@ function loadPatchFile() {
   const content = fs.readFileSync('./docker-compose-patch.yaml');
   const yaml = require('yamljs');
   const r = yaml.parse(content.toString());
-  if (r.services === undefined) {
+  if (r.services == null) {
     r.services = {};
   }
   return r;
@@ -518,7 +534,7 @@ if (require.main === module) {
         d.data = d.data || [];
         d.name = d.name || fromRepoUrl(d.repo);
         d.label = d.label || d.name;
-        if (dockerComposePatch.services[d.label] !== undefined && dockerComposePatch.services[d.label].image !== undefined) {
+        if (dockerComposePatch.services[d.label] != null && dockerComposePatch.services[d.label].image != null) {
           // use a different base image to build the item
           d.baseImage = dockerComposePatch.services[d.label].image;
           delete dockerComposePatch.services[d.label].image;
