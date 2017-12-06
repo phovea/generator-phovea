@@ -66,7 +66,6 @@ function guessUserName(repo) {
     return envVar;
   }
   return process.env.PHOVEA_GITHUB_CREDENTIALS;
-
 }
 
 function toRepoUrlWithUser(url) {
@@ -503,7 +502,7 @@ function loadPatchFile() {
   const content = fs.readFileSync('./docker-compose-patch.yaml');
   const yaml = require('yamljs');
   const r = yaml.parse(content.toString());
-  if (r.services == null) {
+  if (!r.services) {
     r.services = {};
   }
   return r;
@@ -534,7 +533,7 @@ if (require.main === module) {
         d.data = d.data || [];
         d.name = d.name || fromRepoUrl(d.repo);
         d.label = d.label || d.name;
-        if (dockerComposePatch.services[d.label] != null && dockerComposePatch.services[d.label].image != null) {
+        if (dockerComposePatch.services[d.label] && dockerComposePatch.services[d.label].image) {
           // use a different base image to build the item
           d.baseImage = dockerComposePatch.services[d.label].image;
           delete dockerComposePatch.services[d.label].image;
