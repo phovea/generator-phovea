@@ -3,6 +3,8 @@
  */
 
 const spawnSync = require('child_process').spawnSync;
+const path = require('path');
+const resolve = path.resolve;
 const fs = require('fs');
 
 function gitHead(cwd) {
@@ -24,7 +26,7 @@ function resolvePlugin(repo, version) {
     }
   }
   // not a git repo
-  return version;
+  return version
 }
 
 function toVersion(v) {
@@ -33,8 +35,8 @@ function toVersion(v) {
   const fmt = now
     .replace(/T/, ' ')
     .replace(/\..+/, '')
-    .replace(/[-:]/, '')
-    .replace(' ', '-');
+    .replace(/[-:]/,'')
+    .replace(' ','-');
   return v.replace('SNAPSHOT', fmt);
 }
 
@@ -53,8 +55,17 @@ function _main() {
     repository: (pkg.repository || {}).url
   };
 
+  const l = ('build/source/' + name).split('/');
+  l.forEach((_, i) => {
+    const path = l.slice(0, i + 1).join('/');
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path);
+    }
+  });
+
   fs.writeFileSync('build/source/' + name + '/buildInfo.json', JSON.stringify(buildInfo, null, ' '));
 }
+
 
 if (require.main === module) {
   _main();
