@@ -59,7 +59,7 @@ function toRepoUrl(url) {
 function guessUserName(repo) {
   // extract the host
   const host = repo.match(/:\/\/([^/]+)/)[1];
-  const hostClean = host.replace('.', '_').toUpperCase();
+  const hostClean = host.replace(/\./g, '_').toUpperCase();
   // e.g. GITHUB_COM_CREDENTIALS
   const envVar = process.env[`${hostClean}_CREDENTIALS`];
   if (envVar) {
