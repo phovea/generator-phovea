@@ -57,7 +57,7 @@ class Generator extends Base {
   prompting() {
     const isInstalled = glob('*/package.json', {cwd: this.destinationPath()}).map(path.dirname);
     const apps = this._findApps();
-    return this.prompt([{
+	return this.prompt([{
       type: 'checkbox',
       name: 'modules',
       message: 'Additional Plugins',
@@ -77,7 +77,9 @@ class Generator extends Base {
       }
       if (props.defaultApp) {
         this.props.defaultApp = props.defaultApp;
-      }
+      } else if (apps.length === 1 && !this.props.defaultApp) {
+		this.props.defaultApp = apps[0];
+	  }
     });
   }
 
@@ -86,7 +88,7 @@ class Generator extends Base {
       cwd: this.destinationPath()
     }).filter((p) => {
       const config = this.fs.readJSON(this.destinationPath(p));
-      return config['generator-phovea'].type.includes('app');
+	  return config['generator-phovea'].type.includes('app');
     }).map(path.dirname);
   }
 
