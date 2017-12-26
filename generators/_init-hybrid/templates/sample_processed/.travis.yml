@@ -31,7 +31,7 @@ deploy:
   file_glob: true
   file:
    - dist/<%- name.toLowerCase() %>*.egg
-   - dist/<%- name.toLowerCase() %>.tar.gz
+   - dist/<%- name %>.tar.gz
   on:
     tags: true
 
