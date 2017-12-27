@@ -111,6 +111,8 @@ class PluginGenerator extends Base {
     if (!this.fs.exists(this.destinationPath(config.name + '/__init__.py'))) {
       this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(config.name + '/__init__.py'), stringifyAble(config));
     }
+    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.copy(this.templatePath('docs_gitignore'), this.destinationPath('docs/.gitignore'));
   }
 
   install() {

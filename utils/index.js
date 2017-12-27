@@ -125,6 +125,10 @@ class BaseInitPluginGenerator extends generators.Base {
     if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
       this._patchPackageJSON(config);
     }
+    if (this.fs.exists(this.templatePath('_gitignore'))) {
+      this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    }
+
     this._writeTemplates(config, !this.options.noSamples);
   }
 
