@@ -3,7 +3,6 @@
  */
 
 const spawnSync = require('child_process').spawnSync;
-const path = require('path');
 const fs = require('fs');
 
 function gitHead(cwd) {
