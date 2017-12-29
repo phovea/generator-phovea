@@ -10,6 +10,13 @@
             </list>
           </settings>
         </remote-mappings>
+        <remote-mappings server-id="python@docker-compose://[<%-dockerCompose%>]:api/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/phovea" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>

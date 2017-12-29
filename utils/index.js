@@ -69,8 +69,10 @@ function writeTemplates(config, withSamples) {
     this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
     copyTpl(this.templatePath(prefix + 'processed'), '');
 
-    this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name + '/'), includeDot);
-    copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name + '/');
+    if (config.name) {
+      this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+      copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
+    }
   };
   copy('');
   if (withSamples) {

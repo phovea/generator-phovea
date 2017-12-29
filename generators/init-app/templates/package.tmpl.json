@@ -3,6 +3,6 @@
   "scripts": {
     "predist": "npm run build",
     "predocker": "npm run build",
-    "docker": "docker build -t <%-name%> -f deploy/Dockerfile ."
+    "docker": "docker build -t <%-name.toLowerCase()%> -f deploy/Dockerfile ."
   }
 }

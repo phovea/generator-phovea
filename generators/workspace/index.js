@@ -326,10 +326,23 @@ class Generator extends Base {
       scripts.start = `cd ${this.props.defaultApp} && npm start`;
     }
 
+     if (this.fs.exists(this.destinationPath('docker-compose-patch.yaml'))) {
+      const yaml = require('yamljs');
+      const file = this.fs.read(this.destinationPath('docker-compose-patch.yaml'));
+      const patch = yaml.parse(file);
+      this._patchDockerImages(patch, sdeps.dockerCompose);
+    }
+    {
+      const yaml = require('yamljs');
+      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
+      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2));
+    }
+
     const config = {};
     config.workspace = path.basename(this.destinationPath());
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
-    config.webmodules = plugins;
+    config.webmodules = plugins.filter((d) => this.fs.exists(this.destinationPath(d + '/phovea_registry.js')));
+    config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
 
     writeTemplates.call(this, config, false);
     patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts});
@@ -343,17 +356,7 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 
-    if (this.fs.exists(this.destinationPath('docker-compose-patch.yaml'))) {
-      const yaml = require('yamljs');
-      const file = this.fs.read(this.destinationPath('docker-compose-patch.yaml'));
-      const patch = yaml.parse(file);
-      this._patchDockerImages(patch, sdeps.dockerCompose);
-    }
-    {
-      const yaml = require('yamljs');
-      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
-      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2));
-    }
+
 
     this.fs.copyTpl(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`), config);
     if (!this.fs.exists(this.destinationPath(`.idea/workspace.xml`))) {

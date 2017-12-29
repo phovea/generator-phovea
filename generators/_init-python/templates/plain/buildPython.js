@@ -53,7 +53,7 @@ function _main() {
     repository: (pkg.repository || {}).url
   };
 
-  const l = ('build/source/' + name).split('/');
+  const l = ('build/source/' + name.toLowerCase()).split('/');
   l.forEach((_, i) => {
     const path = l.slice(0, i + 1).join('/');
     if (!fs.existsSync(path)) {
@@ -61,7 +61,7 @@ function _main() {
     }
   });
 
-  fs.writeFileSync('build/source/' + name + '/buildInfo.json', JSON.stringify(buildInfo, null, ' '));
+  fs.writeFileSync('build/source/' + name.toLowerCase() + '/buildInfo.json', JSON.stringify(buildInfo, null, ' '));
 }
 
 if (require.main === module) {
