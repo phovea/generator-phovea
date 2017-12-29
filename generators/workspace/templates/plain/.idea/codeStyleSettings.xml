@@ -5,6 +5,7 @@
       <value>
         <TypeScriptCodeStyleSettings>
           <option name="USE_DOUBLE_QUOTES" value="false" />
+          <option name="IMPORT_PREFER_ABSOLUTE_PATH" value="FALSE" />
         </TypeScriptCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
@@ -19,6 +20,5 @@
       </value>
     </option>
     <option name="USE_PER_PROJECT_SETTINGS" value="true" />
-    <option name="PREFERRED_PROJECT_CODE_STYLE" value="Default" />
   </component>
 </project>

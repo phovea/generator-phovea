@@ -3,9 +3,14 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <%-modules.map((m) => '<sourceFolder url="file://$MODULE_DIR$/' + m + '" isTestSource="false" />').join('\n      ')%>
+      <excludePattern pattern=".cache-loader" />
+      <excludePattern pattern="build" />
+      <excludePattern pattern="dist" />
     </content>
+    <orderEntry type="jdk" jdkName="Remote Python 2.7.13 Docker Compose (api at [$PROJECT_DIR$/docker-compose.yml])" jdkType="Python SDK" />
     <orderEntry type="jdk" jdkName="Remote Python 2.7.12 (ssh://root@localhost:2222/usr/local/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="tsconfig$roots" level="project" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />
