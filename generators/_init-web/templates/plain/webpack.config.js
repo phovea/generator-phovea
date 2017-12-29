@@ -35,7 +35,6 @@ const includeFeature = registry ? (extension, id) => {
   return include.every(test) && !exclude.some(test);
 } : () => true;
 
-
 const tsLoader = [
   {
     loader: 'awesome-typescript-loader'
@@ -67,10 +66,12 @@ const webpackloaders = [
   {test: /\.scss$/, use: 'style-loader!css-loader!sass-loader'},
   {test: /\.css$/, use: 'style-loader!css-loader'},
   {test: /\.tsx?$/, use: tsLoader},
-  {test: /phovea(_registry)?\.js$/, use: [{
-    loader: 'ifdef-loader',
-    options: Object.assign({include: includeFeature}, preCompilerFlags)
-  }]},
+  {
+    test: /phovea(_registry)?\.js$/, use: [{
+      loader: 'ifdef-loader',
+      options: Object.assign({include: includeFeature}, preCompilerFlags)
+    }]
+  },
   {test: /\.json$/, use: 'json-loader'},
   {
     test: /\.(png|jpg)$/,
@@ -236,11 +237,11 @@ function generateWebpack(options) {
     base.plugins.push(new webpack.optimize.MinChunkSizePlugin({
       minChunkSize: 10000 // at least 10.000 characters
     }));
-	//base.plugins.push(new webpack.optimize.ModuleConcatenationPlugin());
+    // base.plugins.push(new webpack.optimize.ModuleConcatenationPlugin());
   } else if (options.isDev) {
     // switch to def settings
     base.module.loaders.find((d) => d.use === tsLoader).use = tsLoaderDev;
-    base.plugins.push(new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true, tsconfig: './tsconfig_dev.json' }));
+    base.plugins.push(new ForkTsCheckerWebpackPlugin({checkSyntacticErrors: true, tsconfig: './tsconfig_dev.json'}));
   }
 
   if (options.library) {
@@ -300,8 +301,8 @@ function generateWebpack(options) {
     // build a commons plugin
     base.plugins.push(new webpack.optimize.CommonsChunkPlugin({
       // The order of this array matters
-      name: "common",
-      filename: "common.js",
+      name: 'common',
+      filename: 'common.js',
       minChunks: 2
     }));
   }
@@ -311,7 +312,7 @@ function generateWebpack(options) {
         async: true,
         children: true,
         deepChildren: true,
-        minChunks: (module, count) => new RegExp(reg, 'i').test(module.resource) && count >= 2,
+        minChunks: (module, count) => new RegExp(reg, 'i').test(module.resource) && count >= 2
       }));
     });
   }
