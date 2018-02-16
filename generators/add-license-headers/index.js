@@ -53,19 +53,17 @@ class Generator extends Base {
 
   prompting() {
     return this.prompt([{
-        type: 'input',
-        name: 'licensePath',
-        message: `Please enter the relative path to a text file with a license (defaults to ${chalk.blue(defaultLicensePath)})`,
-        when: this.options.licensePath === defaultLicensePath
-      },
-      {
-        type: 'checkbox',
-        name: 'excludedFileTypes',
-        message: 'Exclude file types from adding headers',
-        choices: Object.keys(comments),
-        when: this.options.excludedFileTypes.length === 0
-      }
-    ]).then((props) => {
+      type: 'input',
+      name: 'licensePath',
+      message: `Please enter the relative path to a text file with a license (defaults to ${chalk.blue(defaultLicensePath)})`,
+      when: this.options.licensePath === defaultLicensePath
+    }, {
+      type: 'checkbox',
+      name: 'excludedFileTypes',
+      message: 'Exclude file types from adding headers',
+      choices: Object.keys(comments),
+      when: this.options.excludedFileTypes.length === 0
+    }]).then((props) => {
       this.licensePath = props.licensePath || this.options.licensePath || defaultLicensePath;
       const excludedFileTypes = props.excludedFileTypes || this.options.excludedFileTypes.split(',');
 
