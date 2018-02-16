@@ -6,8 +6,8 @@ const glob = require('glob');
 const path = require('path');
 const os = require('os');
 
-const defaultLicenceFileName = 'licence.txt';
-const defaultLicencePath = `./${defaultLicenceFileName}`;
+const defaultLicenseFileName = 'license.txt';
+const defaultLicensePath = `./${defaultLicenseFileName}`;
 
 const comments = {
   ts: {
@@ -36,11 +36,11 @@ class Generator extends Base {
 
     this.comments = {};
 
-    this.option('licencePath', {
+    this.option('licensePath', {
       alias: 'l',
-      default: defaultLicencePath,
+      default: defaultLicensePath,
       type: String,
-      desc: `Relative path to a ${chalk.blue(defaultLicenceFileName)} file`
+      desc: `Relative path to a ${chalk.blue(defaultLicenseFileName)} file`
     });
 
     this.option('excludedFileTypes', {
@@ -52,12 +52,11 @@ class Generator extends Base {
   }
 
   prompting() {
-    return this.prompt([
-      {
+    return this.prompt([{
         type: 'input',
-        name: 'licencePath',
-        message: `Please enter the relative path to a text file with a licence (defaults to ${chalk.blue(defaultLicencePath)})`,
-        when: this.options.licencePath === defaultLicencePath
+        name: 'licensePath',
+        message: `Please enter the relative path to a text file with a license (defaults to ${chalk.blue(defaultLicensePath)})`,
+        when: this.options.licensePath === defaultLicensePath
       },
       {
         type: 'checkbox',
@@ -67,14 +66,14 @@ class Generator extends Base {
         when: this.options.excludedFileTypes.length === 0
       }
     ]).then((props) => {
-      this.licencePath = props.licencePath || this.options.licencePath || defaultLicencePath;
+      this.licensePath = props.licensePath || this.options.licensePath || defaultLicensePath;
       const excludedFileTypes = props.excludedFileTypes || this.options.excludedFileTypes.split(',');
 
       // filter out excluded file types
       this.fileTypes = Object.keys(comments).filter((type) => !excludedFileTypes.includes(type));
 
       // TODO: How to abort the generator correctly?
-      return this._readLicenceFile();
+      return this._readLicenseFile();
     }).catch((e) => this._abort(e));
   }
 
@@ -95,9 +94,9 @@ class Generator extends Base {
     }
   }
 
-  _readLicenceFile() {
+  _readLicenseFile() {
     try {
-      this.licenceText = this.fs.read(this.licencePath);
+      this.licenseText = this.fs.read(this.licensePath);
     } catch (e) {
       return this._abort(e);
     }
@@ -105,7 +104,7 @@ class Generator extends Base {
 
   _generateComments() {
     // get maximum line length by looping through all lines, returning the line length and passing them to Math.max
-    const lineArray = this.licenceText.split(os.EOL);
+    const lineArray = this.licenseText.split(os.EOL);
     const maxLineLength = Math.max(...lineArray.map((line) => line.length));
 
     const align = (string, threshold, timesSpaces) => {
@@ -144,7 +143,9 @@ class Generator extends Base {
   }
 
   _addComments(path, fileExtension) {
-    const folderContents = glob.sync(`**/*.${fileExtension}`, {cwd: path});
+    const folderContents = glob.sync(`**/*.${fileExtension}`, {
+      cwd: path
+    });
 
     if (folderContents.length === 0) {
       return;
@@ -156,8 +157,8 @@ class Generator extends Base {
       const filePath = path + '/' + file;
       let fileContents = this.fs.read(filePath);
 
-      // TODO: override any comment if the file starts with one (e.g. when the licence changes)
-      // whenever a file starts with our licence header skip for now
+      // TODO: override any comment if the file starts with one (e.g. when the license changes)
+      // whenever a file starts with our license header skip for now
       if (fileContents.startsWith(header)) {
         return;
       }
@@ -170,7 +171,7 @@ class Generator extends Base {
   }
 
   /**
-   * remove a multiline comment at the beginning of a file (e.g. licence header) if it exists
+   * remove a multiline comment at the beginning of a file (e.g. license header) if it exists
    * @param fileContents
    * @param fileExtension
    * @returns {string}
@@ -183,9 +184,22 @@ class Generator extends Base {
       return fileContents;
     }
     const linesArray = fileContents.split(os.EOL);
-    let line = linesArray.shift();
-    while (line.startsWith(commentConfig.begin) || line.indexOf(commentConfig.body) === commentConfig.aligningSpaces) {
-      line = linesArray.shift();
+
+    // trim empty lines from top
+    while (linesArray.length > 0 && linesArray[0].trim().length === 0) {
+      linesArray.shift();
+    }
+
+    // remove old header
+    let line = linesArray[0];
+    while (line && (line.startsWith(commentConfig.begin) || line[commentConfig.aligningSpaces] === commentConfig.body)) {
+      linesArray.shift();
+      line = linesArray[0];
+    }
+
+    // trim empty lines from top
+    while (linesArray.length > 0 && linesArray[0].trim().length === 0) {
+      linesArray.shift();
     }
 
     return linesArray.join(os.EOL);
