@@ -1,14 +1,24 @@
 {
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/CVS": true,
-        "**/.DS_Store": true,
-        "**/*.pyc": true,
-        "*/src/**.js": true,
-        "**/*.map": true,
-        "*/build": true,
-        "*/.cache-loader": true
-      },
+  "beautify.options": {
+    "end_with_newline": true,
+    "preserve_newlines": true,
+    "space_in_paren": true,
+    "space_around_selector_separator": true
+  },
+  "beautify.tabSize": 2,
+  "typescriptHero.imports.insertSpaceBeforeAndAfterImportBraces": false,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "*/build/": true,
+    "**/*.pyc": true,
+    "*/src/**/*.js": true,
+    "src/**/*.js": true,
+    "**/*.map": true,
+    "**/.cache-loader": true
+  }
 }
