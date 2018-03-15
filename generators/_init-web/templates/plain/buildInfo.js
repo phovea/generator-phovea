@@ -147,8 +147,10 @@ function metaData(pkg) {
   pkg = pkg || require(`./package.json`);
   return {
     name: pkg.name,
+    displayName: pkg.displayName,
     version: pkg.version,
     repository: pkg.repository.url,
+    homepage: pkg.homepage,
     description: pkg.description,
     screenshot: resolveScreenshot()
   };
