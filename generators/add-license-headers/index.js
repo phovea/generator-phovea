@@ -162,7 +162,7 @@ class Generator extends Base {
 
       fileContents = this._findAndRemoveHeader(fileContents, fileExtension);
 
-      const newContents = header + os.EOL + os.EOL + fileContents;
+      const newContents = header + os.EOL + os.EOL + os.EOL + fileContents;
       this.fs.write(filePath, newContents);
     });
   }
