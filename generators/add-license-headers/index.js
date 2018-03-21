@@ -133,7 +133,7 @@ class Generator extends Base {
 
   _getSourceFolders() {
     const backendSourcePath = path.basename(this.destinationPath());
-    return ['src', backendSourcePath];
+    return ['src', backendSourcePath, backendSourcePath.toLowerCase()];
   }
 
   _abort(msg) {
@@ -155,7 +155,6 @@ class Generator extends Base {
       const filePath = path + '/' + file;
       let fileContents = this.fs.read(filePath);
 
-      // TODO: override any comment if the file starts with one (e.g. when the license changes)
       // whenever a file starts with our license header skip for now
       if (fileContents.startsWith(header)) {
         return;
