@@ -347,7 +347,7 @@ function buildWebApp(p, dir) {
   // let act = Promise.resolve(null);
   if (hasAdditional) {
     act = act
-      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir))
+      .then(() => yo('workspace', {noAdditionals: true, defaultApp: p.name}, dir))
       .then(() => npm(dir, 'install'));
     // test all modules
     if (hasAdditional && !argv.skipTests) {
