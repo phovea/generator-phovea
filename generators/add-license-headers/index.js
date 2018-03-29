@@ -6,7 +6,7 @@ const glob = require('glob');
 const path = require('path');
 const os = require('os');
 
-const defaultLicenseFileName = 'license.txt';
+const defaultLicenseFileName = 'LICENSE_FILE_HEADER.txt';
 const defaultLicensePath = `./${defaultLicenseFileName}`;
 
 const comments = {
