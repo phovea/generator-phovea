@@ -102,7 +102,7 @@ class Generator extends Base {
 
   _generateComments() {
     // get maximum line length by looping through all lines, returning the line length and passing them to Math.max
-    const lineArray = this.licenseText.split(os.EOL);
+    const lineArray = this.licenseText.split(/\r?\n/);
     const maxLineLength = Math.max(...lineArray.map((line) => line.length));
 
     const align = (string, threshold, timesSpaces) => {
@@ -180,7 +180,7 @@ class Generator extends Base {
     if (!fileContents.startsWith(commentConfig.begin)) {
       return fileContents;
     }
-    const linesArray = fileContents.split(os.EOL);
+    const linesArray = fileContents.split(/\r?\n/);
 
     // trim empty lines from top
     while (linesArray.length > 0 && linesArray[0].trim().length === 0) {
