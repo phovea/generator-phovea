@@ -29,6 +29,7 @@ const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
 const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth())}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
 pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
+const productName = pkg.name.replace('_product', '');
 
 /**
  * generates a repo url to clone depending on the argv.useSSH option
@@ -225,7 +226,7 @@ function dockerSave(image, target) {
   });
 }
 
-function dockerRemoveImages(productName) {
+function dockerRemoveImages() {
   if (argv.skipCleanUp) {
     return Promise.resolve();
   }
@@ -606,52 +607,69 @@ if (require.main === module) {
     env.PHOVEA_SKIP_TESTS = true;
   }
   if (argv.quiet) {
-    // if skipTest option is set, skip tests
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
   const dockerComposePatch = loadPatchFile();
   const descs = fillDefaults(require('./phovea_product.json'), dockerComposePatch);
 
-  const productName = pkg.name.replace('_product', '');
+  let step = Promise.resolve();
 
-  fs.emptyDirAsync('build')
-    .then(dockerRemoveImages.bind(this, productName))
-    // move my own .yo-rc.json to avoid a conflict
-    .then(fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'))
-    .then(() => {
-      const buildOne = (d, i) => {
-        // include hint in the tmp directory which one is it
-        let wait = buildImpl(d, `./tmp${i}_${d.name.replace(/\s+/, '').slice(0, 5)}`);
-        wait.catch((error) => {
-          d.error = error;
-          console.error('ERROR building ', d, error);
-        });
-        return wait;
-      };
-      if (argv.serial) {
-        let r = Promise.resolve([]);
-        for (let i = 0; i < descs.length; ++i) {
-          r = r.then((arr) => buildOne(descs[i], i).then((f) => arr.concat(f)));
-        }
-        return r;
-      }
-      return Promise.all(descs.map(buildOne));
-    })
-    .then((composeFiles) => buildCompose(descs, dockerComposePatch, composeFiles.filter((d) => Boolean(d))))
-    .then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)))
-    .then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'))
-    .then(() => {
-      console.log(chalk.bold('summary: '));
-      const maxLength = Math.max(...descs.map((d) => d.name.length));
-      descs.forEach((d) => console.log(` ${d.name}${'.'.repeat(3 + (maxLength - d.name.length))}` + (d.error ? chalk.red('ERROR') : chalk.green('SUCCESS'))));
-      const anyErrors = descs.some((d) => d.error);
-      if (anyErrors) {
-        process.exit(1);
-      }
-    }).catch((error) => {
-      console.error('ERROR extra building ', error);
-      // rename back
-      fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json');
-      process.exit(1);
+  // 1. clean build directory
+  step = step.then(() => fs.emptyDirAsync('build'));
+
+  // 2. remove old docker images
+  step = step.then(dockerRemoveImages);
+
+  // 3. move my own .yo-rc.json to avoid a conflict
+  step = step.then(() => fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'));
+
+  // 4. build
+  const buildOne = (d, i) => {
+    // include hint in the tmp directory which one is it
+    let wait = buildImpl(d, `./tmp${i}_${d.name.replace(/\s+/, '').slice(0, 5)}`);
+    wait.catch((error) => {
+      d.error = error;
+      console.error('ERROR building ', d, error);
     });
+    return wait;
+  };
+  if (argv.serial) {
+    // initial value
+    step = step.then(Promise.resolve([]));
+    for (let i = 0; i < descs.length; ++i) {
+      step = step.then((arr) => buildOne(descs[i], i).then((f) => arr.concat(f)));
+    }
+  } else {
+    // parallel using Promise.all
+    step = step.then(() => Promise.all(descs.map(buildOne)));
+  }
+  // result of the promise is an array of partial docker compose files
+
+  // 5. build compose file
+  step = step.then((composeFiles) => buildCompose(descs, dockerComposePatch, (composeFiles || []).filter((d) => Boolean(d))));
+
+  // 6. push images
+  step = step.then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)));
+
+  // 7. rename back
+  step = step.then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'));
+
+  // 8. summary
+  step = step.then(() => {
+    console.log(chalk.bold('summary: '));
+    const maxLength = Math.max(...descs.map((d) => d.name.length));
+    descs.forEach((d) => console.log(` ${d.name}${'.'.repeat(3 + (maxLength - d.name.length))}` + (d.error ? chalk.red('ERROR') : chalk.green('SUCCESS'))));
+    const anyErrors = descs.some((d) => d.error);
+    if (anyErrors) {
+      process.exit(1);
+    }
+  });
+
+  // XX. catch all error handling
+  step.catch((error) => {
+    console.error('ERROR extra building ', error);
+    // rename back
+    fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json');
+    process.exit(1);
+  });
 }
