@@ -118,10 +118,11 @@ function downloadDataFile(desc, destDir, cwd) {
       url: desc
     };
   }
+  desc.type = desc.type || (desc.url ? 'url' : (desc.repo ? 'repo': 'unknown'));
   switch (desc.type) {
     case 'url': {
-      const destName = toDownloadName(desc.url);
-      return fs.ensureDirAsync(destDir).then(() => downloadDataUrl(desc.url, path.join(destDir, destName)));
+      desc.name = desc.name || toDownloadName(desc.url);
+      return fs.ensureDirAsync(destDir).then(() => downloadDataUrl(desc.url, `${destDir}/${desc.name}`));
     }
     case 'repo': {
       desc.name = desc.name || fromRepoUrl(desc.repo);
