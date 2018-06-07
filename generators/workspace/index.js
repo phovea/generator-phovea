@@ -356,7 +356,10 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
 
-    if ()
+    if (this.fs.exists(this.destinationPath('docker_script_patch.sh'))) {
+      // push patch to the beginning
+      sdeps.dockerScripts.unshift(this.fs.read(this.destinationPath('docker_script_patch.sh')));
+    }
 
     this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 

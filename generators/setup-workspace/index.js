@@ -173,10 +173,13 @@ class Generator extends Base {
         this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
 
         // pass through the docker overrides
-        for (const file of ['docker-compose-patch.yaml', 'docker-compose-patch.yml', 'docker_script.sh']) {
+        for (const file of ['docker-compose-patch.yaml', 'docker-compose-patch.yml']) {
           if (fs.existsSync(`${this.cwd}/${name}/${file}`)) {
             fs.copySync(`${this.cwd}/${name}/${file}`, this.destinationPath(`${this.cwd}/${file}`));
           }
+        }
+        if (fs.existsSync(`${this.cwd}/${name}/docker_script.sh`)) {
+          fs.copySync(`${this.cwd}/${name}/docker_script.sh`, this.destinationPath(`${this.cwd}/docker_script_patch.sh`));
         }
         // generic copy helper
         if (fs.existsSync(`${this.cwd}/${name}/ws`)) {
