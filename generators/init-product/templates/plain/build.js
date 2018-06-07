@@ -527,10 +527,11 @@ function pushImages(images) {
 }
 
 function loadPatchFile() {
-  if (!fs.existsSync('./docker-compose-patch.yaml')) {
+  const existsYaml = fs.existsSync('./docker-compose-patch.yaml');
+  if (!existsYaml && !fs.existsSync('./docker-compose-patch.yml')) {
     return {services: {}};
   }
-  const content = fs.readFileSync('./docker-compose-patch.yaml');
+  const content = fs.readFileSync(existsYaml ? './docker-compose-patch.yaml' : './docker-compose-patch.yml');
   const yaml = require('yamljs');
   const r = yaml.parse(content.toString());
   if (!r.services) {

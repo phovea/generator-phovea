@@ -332,6 +332,12 @@ class Generator extends Base {
       const patch = yaml.parse(file);
       this._patchDockerImages(patch, sdeps.dockerCompose);
     }
+    if (this.fs.exists(this.destinationPath('docker-compose-patch.yml'))) {
+      const yaml = require('yamljs');
+      const file = this.fs.read(this.destinationPath('docker-compose-patch.yml'));
+      const patch = yaml.parse(file);
+      this._patchDockerImages(patch, sdeps.dockerCompose);
+    }
     {
       const yaml = require('yamljs');
       this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
