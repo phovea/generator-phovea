@@ -95,7 +95,7 @@ function downloadDataUrl(url, dest) {
   console.log(chalk.blue('download file', url));
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    http.get(url, (response) => {
+    const request = http.get(url, (response) => {
       response.pipe(file);
       file.on('finish', () => {
         file.close(resolve);
@@ -263,11 +263,26 @@ function cloneRepo(p, cwd) {
   p.name = p.name || fromRepoUrl(p.repo);
   p.repo = p.repo || `phovea/${p.name}`;
   p.branch = p.branch || 'master';
-  console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
-  return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
+
+  if (/^[0-9a-f]+$/gi.test(p.branch)) {
+    // clone a specific commit
+    console.log(cwd, chalk.blue(`running git clone -n ${toRepoUrl(p.repo)} ${p.name}`));
+    return spawn('git', ['clone', '-n', toRepoUrlWithUser(p.repo), p.name], {cwd}).then(() => {
+      console.log(cwd, chalk.blue(`running git checkout ${p.branch}`));
+      return spawn('git', ['checkout', p.branch], {cwd: cwd + '/' + p.name});
+    });
+  } else {
+    console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
+    return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
+  }
 }
 
 function resolvePluginType(p, dir) {
+  if (!fs.existsSync(`${dir}/${p.name}/.yo-rc.json`)) {
+    p.pluginType = 'lib';
+    p.isHybridType = false;
+    return;
+  }
   return fs.readJSONAsync(`${dir}/${p.name}/.yo-rc.json`).then((json) => {
     p.pluginType = json['generator-phovea'].type;
     p.isHybridType = p.pluginType.includes('-');
@@ -334,6 +349,7 @@ function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
     .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
     .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    .then(() => !argv.pushExtra ? null : docker(`${dir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`))
     .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
     .then(mergeCompose);
@@ -347,7 +363,7 @@ function buildWebApp(p, dir) {
   // let act = Promise.resolve(null);
   if (hasAdditional) {
     act = act
-      .then(() => yo('workspace', {noAdditionals: true, defaultApp: p.name}, dir))
+      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir))
       .then(() => npm(dir, 'install'));
     // test all modules
     if (hasAdditional && !argv.skipTests) {
@@ -365,6 +381,19 @@ function buildWebApp(p, dir) {
     .then(postBuild.bind(null, p, dir, true));
 }
 
+function patchWorkspace(dir) {
+  // prepend docker_script in the workspace
+  if (!fs.existsSync('./docker_script.sh')) {
+    return;
+  }
+  console.log('patch workspace and prepend docker_script.sh');
+  let content = fs.readFileSync('./docker_script.sh').toString();
+  if (fs.existsSync(dir + '/docker_script.sh')) {
+    content += '\n' + fs.readFileSync(dir + '/docker_script.sh').toString();
+  }
+  fs.writeFileSync(dir + '/docker_script.sh', content);
+}
+
 function buildServerApp(p, dir) {
   console.log(dir, chalk.blue('building service package:'), p.label);
   const name = p.name;
@@ -372,6 +401,8 @@ function buildServerApp(p, dir) {
   let act = preBuild(p, dir);
   act = act
     .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir));
+
+  act = act.then(() => patchWorkspace(dir));
 
   if (!argv.skipTests) {
     act = act
