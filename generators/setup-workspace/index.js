@@ -154,16 +154,27 @@ class Generator extends Base {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
       this.log(r);
-      return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
+      return this._abort(`failed: "${cmd} ${argline.join(' ')}" - status code: ${r.status}`);
     }
     return Promise.resolve(cmd);
   }
 
   _cloneRepo(repo, branch, extras) {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
-    const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+    if (!/^[0-9a-f]+$/gi.test(branch)) {
+      // regular branch
+      const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+      this.log(chalk.blue(`clone repository:`), `git ${line}`);
+      return this._spawnOrAbort('git', line.split(' '));
+    }
+    // clone a specific commit
+    const line = `clone ${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(' '));
+    return this._spawnOrAbort('git', line.split(' ')).then(() => {
+      const line = `checkout ${branch}`;
+      this.log(chalk.blue(`checkout commit:`), `git ${line}`);
+      return this._spawnOrAbort('git', line.split(' '))
+    });
   }
 
   _getProduct() {
