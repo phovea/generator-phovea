@@ -30,6 +30,11 @@ const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth())}${prefix(now
 pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 
+/**
+ * generates a repo url to clone depending on the argv.useSSH option
+ * @param {string} url the repo url either in git@ for https:// form
+ * @returns the clean repo url
+ */
 function toRepoUrl(url) {
   if (url.startsWith('git@')) {
     if (argv.useSSH) {
@@ -56,6 +61,10 @@ function toRepoUrl(url) {
   return `https://github.com/${url}.git`;
 }
 
+/**
+ * guesses the credentials environment variable based on the given repository hostname
+ * @param {string} repo
+ */
 function guessUserName(repo) {
   // extract the host
   const host = repo.match(/:\/\/([^/]+)/)[1];
@@ -85,6 +94,18 @@ function fromRepoUrl(url) {
     return url.match(/\/([^/]+)\.git/)[0];
   }
   return url.slice(url.lastIndexOf('/') + 1);
+}
+
+/**
+ * deep merge with array union
+ * @param {*} target
+ * @param {*} source
+ */
+function mergeWith(target, source) {
+  const _ = require('lodash');
+  const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
+  _.mergeWith(target, source, mergeArrayUnion);
+  return target;
 }
 
 function downloadDataUrl(url, dest) {
@@ -145,6 +166,7 @@ function downloadDataFile(desc, destDir, cwd) {
  * @param cmd command as array
  * @param args arguments
  * @param opts options
+ * @returns a promise with the result code or a reject with the error string
  */
 function spawn(cmd, args, opts) {
   const spawn = require('child_process').spawn;
@@ -290,6 +312,11 @@ function resolvePluginType(p, dir) {
   });
 }
 
+/**
+ * common pre build steps
+ * @param {object} p product to build
+ * @param {string} dir working directory
+ */
 function preBuild(p, dir) {
   const hasAdditional = p.additional.length > 0;
   let act = fs.emptyDirAsync(dir)
@@ -346,12 +373,23 @@ function patchDockerfile(p, dockerFile) {
   });
 }
 
+/**
+ * common post build steps
+ * @param {object} p product to build
+ * @param {string} dir working directory
+ * @param {boolean} buildInSubDir flag wehtehr it was build in a sub directory
+ */
 function postBuild(p, dir, buildInSubDir) {
   return Promise.resolve(null)
+    // patch the docker file with the with an optional given baseImage
     .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
+    // create the container image
     .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    // tag the container image
     .then(() => !argv.pushExtra ? null : docker(`${dir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`))
+    // optional save the container image as a tar.gz
     .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
+    // merge a big compose file including all
     .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
     .then(mergeCompose);
 }
@@ -363,14 +401,17 @@ function buildWebApp(p, dir) {
   let act = preBuild(p, dir);
   // let act = Promise.resolve(null);
   if (hasAdditional) {
+    // workspace mode
     act = act
-      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir))
+      // create workspace
+      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir))
       .then(() => npm(dir, 'install'));
     // test all modules
     if (hasAdditional && !argv.skipTests) {
       act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`))));
     }
     act = act
+      // trigger build
       .then(() => npm(dir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`));
   } else {
     act = act
@@ -378,6 +419,7 @@ function buildWebApp(p, dir) {
       .then(() => npm(dir + '/' + name, `run dist${p.isHybridType ? ':web' : ''}`));
   }
   return act
+    // move file to right directory
     .then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`))
     .then(postBuild.bind(null, p, dir, true));
 }
@@ -401,8 +443,10 @@ function buildServerApp(p, dir) {
 
   let act = preBuild(p, dir);
   act = act
-    .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'targid_boehringer'}, dir));
+    // create workspace
+    .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir));
 
+  // customize workspace
   act = act.then(() => patchWorkspace(dir));
 
   if (!argv.skipTests) {
@@ -447,13 +491,6 @@ function buildImpl(d, dir) {
       console.error(chalk.red('unknown product type: ' + d.type));
       return Promise.resolve(null);
   }
-}
-
-function mergeWith(target, source) {
-  const _ = require('lodash');
-  const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
-  _.mergeWith(target, source, mergeArrayUnion);
-  return target;
 }
 
 function mergeCompose(composePartials) {
@@ -541,6 +578,27 @@ function loadPatchFile() {
   return r;
 }
 
+function fillDefaults(descs, dockerComposePatch) {
+  const singleService = descs.length === 1 && (argv.forceLabel === undefined);
+
+  for (const d of descs) {
+    // default values
+    d.additional = d.additional || [];
+    d.data = d.data || [];
+    d.name = d.name || fromRepoUrl(d.repo);
+    d.label = d.label || d.name;
+    d.image = d.image || `${productName}${singleService ? '': `/${d.label}`}:${pkg.version}`;
+    // incorporate patch file
+    if (dockerComposePatch.services[d.label] && dockerComposePatch.services[d.label].image) {
+      // use a different base image to build the item
+      d.baseImage = dockerComposePatch.services[d.label].image;
+      delete dockerComposePatch.services[d.label].image;
+    }
+  }
+
+  return descs;
+}
+
 if (require.main === module) {
   if (argv.skipTests) {
     // if skipTest option is set, skip tests
@@ -551,9 +609,9 @@ if (require.main === module) {
     // if skipTest option is set, skip tests
     console.log(chalk.blue('will try to keep my mouth shut...'));
   }
-  const descs = require('./phovea_product.json');
   const dockerComposePatch = loadPatchFile();
-  const singleService = descs.length === 1 && (argv.forceLabel === undefined);
+  const descs = fillDefaults(require('./phovea_product.json'), dockerComposePatch);
+
   const productName = pkg.name.replace('_product', '');
 
   fs.emptyDirAsync('build')
@@ -562,21 +620,8 @@ if (require.main === module) {
     .then(fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'))
     .then(() => {
       const buildOne = (d, i) => {
-        d.additional = d.additional || []; // default values
-        d.data = d.data || [];
-        d.name = d.name || fromRepoUrl(d.repo);
-        d.label = d.label || d.name;
-        if (dockerComposePatch.services[d.label] && dockerComposePatch.services[d.label].image) {
-          // use a different base image to build the item
-          d.baseImage = dockerComposePatch.services[d.label].image;
-          delete dockerComposePatch.services[d.label].image;
-        }
-        if (singleService) {
-          d.image = `${productName}:${pkg.version}`;
-        } else {
-          d.image = `${productName}/${d.label}:${pkg.version}`;
-        }
-        let wait = buildImpl(d, './tmp' + i);
+        // include hint in the tmp directory which one is it
+        let wait = buildImpl(d, `./tmp${i}_${d.name.replace(/\s+/, '').slice(0, 5)}`);
         wait.catch((error) => {
           d.error = error;
           console.error('ERROR building ', d, error);
@@ -605,6 +650,8 @@ if (require.main === module) {
       }
     }).catch((error) => {
       console.error('ERROR extra building ', error);
+      // rename back
+      fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json');
       process.exit(1);
     });
 }
