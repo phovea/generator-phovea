@@ -767,22 +767,22 @@ if (require.main === module) {
       }
     }
 
-    // preapre, test, (data), build, image, save
-    if (isWeb && hasAdditional) {
-      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p).then(() => installWebDependencies(p)));
-    } else if (isWeb) {
-      steps[`prepare:${suffix}`] = () => catchProductBuild(p, installWebDependencies(p));
-    } else { // server
-      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p));
-    }
+    const needsWorskpace = (isWeb && hasAdditional) || isServer;
+    steps[`prepare:${suffix}`] = needsWorskpace ? () => catchProductBuild(p, createWorkspace(p)) : null;
 
-    steps[`test:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => catchProductBuild(p, installPythonTestDependencies(p));
+    if (isWeb) {
+      steps[`install:${suffix}`] = () => catchProductBuild(p, installWebDependencies(p));
+    } else { // server
+      steps[`install:${suffix}`] = argv.skipTests ? () => null : () => catchProductBuild(p, installPythonTestDependencies(p));
+    }
+    steps[`test:${suffix}`] = isWeb && hasAdditional ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => null;
     steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildWeb(p))) : () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildServer(p)));
     steps[`data:${suffix}`] = () => catchProductBuild(p, downloadServerDataFiles(p));
     steps[`image:${suffix}`] = () => catchProductBuild(p, buildDockerImage(p));
     steps[`save:${suffix}`] = () => catchProductBuild(p, dockerSave(p.image, `build/${p.label}_image.tar.gz`));
 
     subSteps.push(`prepare:${suffix}`);
+    subSteps.push(`install:${suffix}`);
     if (!argv.skipTests) {
       subSteps.push(`test:${suffix}`);
     }
@@ -804,7 +804,7 @@ if (require.main === module) {
   // create some meta steps
   {
     const stepNames = Object.keys(steps);
-    for (const meta of ['clone', 'prepare', 'build', 'test', 'image', 'product']) {
+    for (const meta of ['clone', 'prepare', 'build', 'test', 'image', 'product', 'install']) {
       const sub = stepNames.filter((d) => d.startsWith(`${meta}:`));
       if (sub.length <= 0) {
         continue;
