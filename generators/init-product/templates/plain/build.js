@@ -174,13 +174,20 @@ function spawn(cmd, args, opts) {
   const spawn = require('child_process').spawn;
   const _ = require('lodash');
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, typeof args === 'string' ? args.split(' ') : args, _.merge({stdio: argv.quiet ? 'ignore' : ['ignore', 1, 2]}, opts));
+    const p = spawn(cmd, typeof args === 'string' ? args.split(' ') : args, _.merge({stdio: argv.quiet ? ['ignore', 'pipe', 'pipe'] : ['ignore', 1, 2]}, opts));
+    const out = [];
+    p.stdout.on('data', (chunk) => out.push(chunk));
+    p.stderr.on('data', (chunk) => out.push(chunk));
     p.on('close', (code, signal) => {
       if (code === 0) {
         console.info(cmd, 'ok status code', code, signal);
         resolve(code);
       } else {
         console.error(cmd, 'status code', code, signal);
+        if (args.quiet) {
+          // log output what has been captured
+          console.log(out.join('\n'));
+        }
         reject(`${cmd} failed with status code ${code} ${signal}`);
       }
     });
