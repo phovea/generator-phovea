@@ -173,7 +173,7 @@ class Generator extends Base {
     return this._spawnOrAbort('git', line.split(' ')).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.blue(`checkout commit:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(' '))
+      return this._spawnOrAbort('git', line.split(' '));
     });
   }
 

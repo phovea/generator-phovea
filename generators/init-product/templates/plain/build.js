@@ -19,7 +19,6 @@ pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 const productName = pkg.name.replace('_product', '');
 
-
 function showHelp(steps, chain) {
   console.info(`node build.js <options> -- step1 step2
 possible options:
@@ -39,14 +38,14 @@ possible options:
 arguments: (starting with --!) optional list of steps to execute in the given order (expert mode) by default the default chain is executed
  `);
 
- steps = Object.keys(steps);
- const primary = steps.filter((d) => !d.includes(':')).sort((a,b) => a.localeCompare(b));
- const secondary = steps.filter((d) => d.includes(':')).sort((a,b) => a.localeCompare(b));
+  steps = Object.keys(steps);
+  const primary = steps.filter((d) => !d.includes(':')).sort((a, b) => a.localeCompare(b));
+  const secondary = steps.filter((d) => d.includes(':')).sort((a, b) => a.localeCompare(b));
 
- console.info('possible primary steps:\n ', primary.join('\n  '));
- console.info('possible secondary steps:\n ', secondary.join('\n  '));
+  console.info('possible primary steps:\n ', primary.join('\n  '));
+  console.info('possible secondary steps:\n ', secondary.join('\n  '));
 
- console.info('default chain:\n', JSON.stringify(chain, null, ' '));
+  console.info('default chain:\n', JSON.stringify(chain, null, ' '));
 }
 
 /**
@@ -135,7 +134,7 @@ function downloadDataUrl(url, dest) {
   console.log(chalk.blue('download file', url));
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    const request = http.get(url, (response) => {
+    http.get(url, (response) => {
       response.pipe(file);
       file.on('finish', () => {
         file.close(resolve);
@@ -158,7 +157,7 @@ function downloadDataFile(desc, destDir, cwd) {
       url: desc
     };
   }
-  desc.type = desc.type || (desc.url ? 'url' : (desc.repo ? 'repo': 'unknown'));
+  desc.type = desc.type || (desc.url ? 'url' : (desc.repo ? 'repo' : 'unknown'));
   switch (desc.type) {
     case 'url': {
       desc.name = desc.name || toDownloadName(desc.url);
@@ -328,10 +327,10 @@ function cloneRepo(p, cwd) {
       console.log(cwd, chalk.blue(`running git checkout ${p.branch}`));
       return spawn('git', ['checkout', p.branch], {cwd: cwd + '/' + p.name});
     });
-  } else {
-    console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
-    return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
   }
+
+  console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
+  return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
 }
 
 function resolvePluginType(p, dir) {
@@ -415,7 +414,9 @@ function buildComposePartials(descs) {
   // merge a big compose file including all
   return Promise.all(validDescs.map((p) => {
     return Promise.all([loadComposeFile(p.tmpDir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(p.tmpDir, pi))))
-      .then((partials) => p.composePartial = mergeCompose(partials));
+      .then((partials) => {
+        p.composePartial = mergeCompose(partials);
+      });
   }));
 }
 
@@ -509,7 +510,7 @@ function fillDefaults(descs, dockerComposePatch) {
     d.name = d.name || (d.repo ? fromRepoUrl(d.repo) : d.label);
     d.label = d.label || d.name;
     d.symlink = d.symlink || null; // default value
-    d.image = d.image || `${productName}${singleService ? '': `/${d.label}`}:${pkg.version}`;
+    d.image = d.image || `${productName}${singleService ? '' : `/${d.label}`}:${pkg.version}`;
     // incorporate patch file
     if (dockerComposePatch.services[d.label] && dockerComposePatch.services[d.label].image) {
       // use a different base image to build the item
@@ -559,16 +560,18 @@ function asChain(steps, chain) {
     return () => {
       console.log('run parallel sub chain: ', JSON.stringify(c, null, ' '));
       return Promise.all(sub.map((d) => d())); // run sub lazy combined with all
-    }
-  }
+    };
+  };
   return chain.map(callable);
 }
 
 function runChain(chain, catchErrors) {
   let start = null;
-  let step = new Promise((resolve) => start = resolve);
+  let step = new Promise((resolve) => {
+    start = resolve;
+  });
 
-  for(const c of chain) {
+  for (const c of chain) {
     step = step.then(c);
   }
 
@@ -576,13 +579,13 @@ function runChain(chain, catchErrors) {
 
   return () => {
     start(); // resolve first to start chain
-    return step; //return last result
+    return step; // return last result
   };
 }
 
 function strObject(items) {
   const obj = {};
-  for(const item of items) {
+  for (const item of items) {
     obj[item] = item;
   }
   return obj;
@@ -595,7 +598,7 @@ function buildDockerImage(p) {
     // create the container image
     .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
     // tag the container image
-    .then(() => !argv.pushExtra ? null : docker(`${p.tmpDir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`));
+    .then(() => argv.pushExtra ? docker(`${p.tmpDir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`) : null);
 }
 
 function createWorkspace(p) {
@@ -628,21 +631,21 @@ function buildWeb(p) {
   if (hasAdditional) {
     step = npm(p.tmpDir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`);
   } else {
-    step = npm(`${p.tmpDir}/${p.name}`, `run dist${p.isHybridType ? ':web' : ''}`)
+    step = npm(`${p.tmpDir}/${p.name}`, `run dist${p.isHybridType ? ':web' : ''}`);
   }
   // move to target directory
   return step.then(() => fs.renameAsync(`${p.tmpDir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`));
 }
 
 function installPythonTestDependencies(p) {
-  console.log(chalk.yellow('create test environment'))
+  console.log(chalk.yellow('create test environment'));
   return spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: p.tmpDir})
   .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
 }
 
 function buildServer(p) {
   let act = npm(`${p.tmpDir}/${p.name}`, `run build${p.isHybridType ? ':python' : ''}`);
-  for(const pi of p.additional) {
+  for (const pi of p.additional) {
     act = act.then(() => npm(`${p.tmpDir}/${pi.name}`, `run build${pi.isHybridType ? ':python' : ''}`));
   }
 
@@ -666,14 +669,14 @@ function downloadServerDataFiles(p) {
   }
   // serial
   let act = Promise.resolve();
-  for(const d of p.data) {
+  for (const d of p.data) {
     act = act.then(() => downloadDataFile(d, `${p.tmpDir}/build/source/_data`, p.tmpDir));
   }
   return act;
 }
 
 function cleanWorkspace(descs) {
-  console.log(chalk.yellow('clean workspace'))
+  console.log(chalk.yellow('clean workspace'));
   return Promise.all([fs.emptyDirAsync('build')].concat(descs.map((d) => fs.emptyDirAsync(d.tmpDir))));
 }
 
@@ -689,8 +692,6 @@ if (require.main === module) {
   const dockerComposePatch = loadPatchFile();
   const descs = fillDefaults(require('./phovea_product.json'), dockerComposePatch);
 
-  let step = Promise.resolve();
-
   if (fs.existsSync('.yo-rc.json')) {
     fs.renameSync('.yo-rc.json', '.yo-rc_tmp.json');
   }
@@ -698,7 +699,7 @@ if (require.main === module) {
 
   const cleanUp = () => {
     if (fs.existsSync('.yo-rc_tmp.json')) {
-      fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json')
+      fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json');
     }
   };
 
@@ -726,7 +727,7 @@ if (require.main === module) {
         process.exit(1);
       }
     }
-  }
+  };
 
   const webTypes = ['static', 'web'];
   const serverTypes = ['api', 'service'];
@@ -754,7 +755,7 @@ if (require.main === module) {
     if (hasAdditional) {
       // clone extras
       const cloneKeys = [];
-      for(const pi of p.additional) {
+      for (const pi of p.additional) {
         const key = `clone:${suffix}:${pi.name}`;
         steps[key] = () => catchProductBuild(p, cloneRepo(pi, p.tmpDir));
         cloneKeys.push(key);
@@ -800,7 +801,6 @@ if (require.main === module) {
     chainProducts.push(subSteps);
   }
 
-
   // create some meta steps
   {
     const stepNames = Object.keys(steps);
@@ -835,7 +835,6 @@ if (require.main === module) {
     chain.push('push');
   }
   chain.push('summary');
-
 
   // XX. catch all error handling
   const catchErrors = (error) => {
