@@ -19,6 +19,7 @@ const pkg = require('./package.json');
  *  * --noDefaultTags ... don't push generated default tag :<timestamp>
  *  * --pushExtra ... push additional custom tag: e.g., --pushExtra=develop
  *  * --forceLabel ... force to use the label even only a single service exists
+ *  * --dryRun ... just compute chain no execution
  */
 const argv = require('yargs-parser')(process.argv.slice(2));
 
@@ -478,21 +479,6 @@ function buildServerApp(p, dir) {
     .then(postBuild.bind(null, p, dir, false));
 }
 
-function buildImpl(d, dir) {
-  switch (d.type) {
-    case 'static':
-    case 'web':
-      return buildWebApp(d, dir);
-    case 'api':
-      d.name = d.name || 'phovea_server';
-      return buildServerApp(d, dir);
-    case 'service':
-      return buildServerApp(d, dir);
-    default:
-      console.error(chalk.red('unknown product type: ' + d.type));
-      return Promise.resolve(null);
-  }
-}
 
 function mergeCompose(composePartials) {
   let dockerCompose = {};
@@ -600,6 +586,55 @@ function fillDefaults(descs, dockerComposePatch) {
   return descs;
 }
 
+function asChain(steps, chain) {
+  if (chain.length === 0) {
+    return [];
+  }
+  const possibleSteps = Object.keys(steps);
+
+  const callable = (c) => {
+    if (typeof c === 'string') {
+      // simple
+      if (!possibleSteps.includes(c)) {
+        console.error('invalid step:', c);
+        throw new Error('invalid step: ' + c);
+      }
+      return steps[c];
+    }
+
+    if (Array.isArray(c)) { // sequential sub started
+      const sub = c.map(callable);
+      return () => {
+        let step = Promise.resolve();
+        for (const s in sub) {
+          step = step.then(s);
+        }
+        return step;
+      };
+    }
+    // parallel = object
+    const sub = Object.keys(c).map((ci) => callable(ci));
+    return () => Promise.all(sub.map((d) => d())); // run sub lazy combined with all
+  }
+  return chain.map(callable);
+}
+
+function runChain(chain, catchErrors) {
+  let start = null;
+  let step = new Promise((resolve) => start = resolve);
+
+  for(const c of chain) {
+    step = step.then(c);
+  }
+
+  step.catch(catchErrors);
+
+  return () => {
+    start(); // resolve first to start chain
+    return step; //return last result
+  };
+}
+
 if (require.main === module) {
   if (argv.skipTests) {
     // if skipTest option is set, skip tests
@@ -614,62 +649,94 @@ if (require.main === module) {
 
   let step = Promise.resolve();
 
-  // 1. clean build directory
-  step = step.then(() => fs.emptyDirAsync('build'));
+  if (fs.existsSync('.yo-rc.json')) {
+    fs.renameSync('.yo-rc.json', '.yo-rc_tmp.json');
+  }
 
-  // 2. remove old docker images
-  step = step.then(dockerRemoveImages);
-
-  // 3. move my own .yo-rc.json to avoid a conflict
-  step = step.then(() => fs.renameAsync('.yo-rc.json', '.yo-rc_tmp.json'));
-
-  // 4. build
-  const buildOne = (d, i) => {
-    // include hint in the tmp directory which one is it
-    let wait = buildImpl(d, `./tmp${i}_${d.name.replace(/\s+/, '').slice(0, 5)}`);
-    wait.catch((error) => {
-      d.error = error;
-      console.error('ERROR building ', d, error);
-    });
-    return wait;
-  };
-  if (argv.serial) {
-    // initial value
-    step = step.then(Promise.resolve([]));
-    for (let i = 0; i < descs.length; ++i) {
-      step = step.then((arr) => buildOne(descs[i], i).then((f) => arr.concat(f)));
+  const cleanUp = () => {
+    if (fs.existsSync('.yo-rc_tmp.json')) {
+      fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json')
     }
+  }
+
+  const steps = {
+    clean: () => Promise.all([fs.emptyDirAsync('build'), dockerRemoveImages()]),
+    compose: (composeFiles) => buildCompose(descs, dockerComposePatch, (composeFiles || []).filter((d) => Boolean(d))),
+    push: () => pushImages(descs.filter((d) => !d.error).map((d) => d.image)),
+    summary: () => {
+      console.log(chalk.bold('summary: '));
+      const maxLength = Math.max(...descs.map((d) => d.name.length));
+      descs.forEach((d) => console.log(` ${d.name}${'.'.repeat(3 + (maxLength - d.name.length))}` + (d.error ? chalk.red('ERROR') : chalk.green('SUCCESS'))));
+      const anyErrors = descs.some((d) => d.error);
+      cleanUp();
+      if (anyErrors) {
+        process.exit(1);
+      }
+    },
+  }
+
+  const types = {
+    static: buildWebApp,
+    web: buildWebApp,
+    api: buildServerApp,
+    service: buildServerApp
+  };
+
+  const chainProducts = [];
+  for (let i = 0; i < descs.length; ++i) {
+    const p = descs[i];
+    const suffix = p.name;
+
+    // include hint in the tmp directory which one is it
+    const dir = `./tmp${i}_${p.name.replace(/\s+/, '').slice(0, 5)}`;
+
+    if (!(p.type in types)) {
+      console.error(chalk.red('unknown product type: ' + p.type));
+      continue;
+    }
+
+    steps[`build:${suffix}`] = () => {
+      const built = types[p.type](p, dir);
+      // no chaining to keep error
+      built.catch((error) => {
+        p.error = error;
+        console.error('ERROR building ', p.name, error);
+      });
+
+      return built;
+    };
+    chainProducts.push(`build:${suffix}`);
+  }
+
+  const chain = ['clean'];
+
+  if (argv.serial) {
+    chain.push(...chainProducts); // serially
   } else {
-    // parallel using Promise.all
-    step = step.then(() => Promise.all(descs.map(buildOne)));
+    const par = {};
+    for(const c of chainProducts) {
+      par[c] = c;
+    }
+    chain.push(par); // as object = parallel
   }
   // result of the promise is an array of partial docker compose files
 
-  // 5. build compose file
-  step = step.then((composeFiles) => buildCompose(descs, dockerComposePatch, (composeFiles || []).filter((d) => Boolean(d))));
+  chain.push('compose', 'push', 'summary');
 
-  // 6. push images
-  step = step.then(() => pushImages(descs.filter((d) => !d.error).map((d) => d.image)));
-
-  // 7. rename back
-  step = step.then(() => fs.renameAsync('.yo-rc_tmp.json', '.yo-rc.json'));
-
-  // 8. summary
-  step = step.then(() => {
-    console.log(chalk.bold('summary: '));
-    const maxLength = Math.max(...descs.map((d) => d.name.length));
-    descs.forEach((d) => console.log(` ${d.name}${'.'.repeat(3 + (maxLength - d.name.length))}` + (d.error ? chalk.red('ERROR') : chalk.green('SUCCESS'))));
-    const anyErrors = descs.some((d) => d.error);
-    if (anyErrors) {
-      process.exit(1);
-    }
-  });
 
   // XX. catch all error handling
-  step.catch((error) => {
+  const catchErrors = (error) => {
     console.error('ERROR extra building ', error);
     // rename back
-    fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json');
+    cleanUp();
     process.exit(1);
-  });
+  };
+
+
+  console.log(chalk.blue('executing chain:'), JSON.stringify(chain));
+  const toExecute = asChain(steps, chain);
+  const launch = runChain(toExecute, catchErrors);
+  if (!argv.dryRun) {
+    launch();
+  }
 }
