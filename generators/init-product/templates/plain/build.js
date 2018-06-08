@@ -374,8 +374,19 @@ function mergeCompose(composePartials) {
   return dockerCompose;
 }
 
+function buildComposePartials(descs) {
+  const validDescs = descs.filter((d) => !d.error);
+
+  // merge a big compose file including all
+  return Promise.all(validDescs.map((p) => {
+    return Promise.all([loadComposeFile(p.tmpDir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(p.tmpDir, pi))))
+      .then((partials) => p.composePartial = mergeCompose(partials));
+  }));
+}
+
 function buildCompose(descs, dockerComposePatch) {
   console.log('create docker-compose.yml');
+
   const dockerCompose = mergeCompose(descs.map((d) => d.composePartial).filter(Boolean));
   const services = dockerCompose.services;
   // link the api server types to the web types and server to the api
@@ -456,7 +467,7 @@ function loadPatchFile() {
 function fillDefaults(descs, dockerComposePatch) {
   const singleService = descs.length === 1 && (argv.forceLabel === undefined);
 
-  for (const d of descs) {
+  descs.forEach((d, i) => {
     // default values
     d.additional = d.additional || [];
     d.data = d.data || [];
@@ -469,7 +480,9 @@ function fillDefaults(descs, dockerComposePatch) {
       d.baseImage = dockerComposePatch.services[d.label].image;
       delete dockerComposePatch.services[d.label].image;
     }
-  }
+    // include hint in the tmp directory which one is it
+    d.tmpDir = `./tmp${i}_${d.name.replace(/\s+/, '').slice(0, 5)}`;
+  });
 
   return descs;
 }
@@ -481,13 +494,17 @@ function asChain(steps, chain) {
   const possibleSteps = Object.keys(steps);
 
   const callable = (c) => {
+    if (typeof c === 'function') {
+      return c;
+    }
+
     if (typeof c === 'string') {
-      // simple
+      // simple lookup
       if (!possibleSteps.includes(c)) {
         console.error('invalid step:', c);
         throw new Error('invalid step: ' + c);
       }
-      return steps[c];
+      return callable(steps[c]);
     }
 
     if (Array.isArray(c)) { // sequential sub started
@@ -501,7 +518,7 @@ function asChain(steps, chain) {
       };
     }
     // parallel = object
-    const sub = Object.keys(c).map((ci) => callable(ci));
+    const sub = Object.keys(c).map((ci) => callable(c[ci]));
     return () => Promise.all(sub.map((d) => d())); // run sub lazy combined with all
   }
   return chain.map(callable);
@@ -523,114 +540,86 @@ function runChain(chain, catchErrors) {
   };
 }
 
-
-/**
- * common pre build steps
- * @param {object} p product to build
- * @param {string} dir working directory
- */
-function preBuild(p, dir) {
-  const hasAdditional = p.additional.length > 0;
-  let act = fs.emptyDirAsync(dir)
-    .then(() => cloneRepo(p, dir))
-    .then(() => resolvePluginType(p, dir));
-  if (hasAdditional) {
-    act = act
-      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir).then(resolvePluginType.bind(this, pi, dir)))));
+function strObject(items) {
+  const obj = {};
+  for(const item of items) {
+    obj[item] = item;
   }
-  return act;
+  return obj;
 }
 
-/**
- * common post build steps
- * @param {object} p product to build
- * @param {string} dir working directory
- * @param {boolean} buildInSubDir flag wehtehr it was build in a sub directory
- */
-function postBuild(p, dir, buildInSubDir) {
-  return Promise.resolve(null)
-    // patch the docker file with the with an optional given baseImage
-    .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
+function buildDockerImage(p) {
+  const buildInSubDir = p.type === 'web' || p.type === 'static';
+  // patch the docker file with the with an optional given baseImage
+  return patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`)
     // create the container image
-    .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
     // tag the container image
-    .then(() => !argv.pushExtra ? null : docker(`${dir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`))
-    // optional save the container image as a tar.gz
-    .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
-    // merge a big compose file including all
-    .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
-    .then((partials) => p.composePartial = mergeCompose(partials));
+    .then(() => !argv.pushExtra ? null : docker(`${p.tmpDir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`));
 }
 
-function buildWebApp(p, dir) {
-  console.log(dir, chalk.blue('building web application:'), p.label);
-  const name = p.name;
+function createWorkspace(p) {
+  return yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, p.tmpDir)
+    .then(() => patchWorkspace(p.tmpDir));
+}
+
+function installWebDependencies(p) {
+  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'install');
+}
+
+function testWebAdditionals(p) {
+  return Promise.all(p.additional.map((pi) => npm(p.tmpDir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`)));
+}
+
+function buildWeb(p) {
   const hasAdditional = p.additional.length > 0;
-  let act = preBuild(p, dir);
-  // let act = Promise.resolve(null);
+
+  let step;
   if (hasAdditional) {
-    // workspace mode
-    act = act
-      // create workspace
-      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir))
-      .then(() => npm(dir, 'install'));
-    // test all modules
-    if (hasAdditional && !argv.skipTests) {
-      act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`))));
-    }
-    act = act
-      // trigger build
-      .then(() => npm(dir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`));
+    step = npm(p.tmpDir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`);
   } else {
-    act = act
-      .then(() => npm(dir + '/' + name, 'install'))
-      .then(() => npm(dir + '/' + name, `run dist${p.isHybridType ? ':web' : ''}`));
+    step = npm(`${p.tmpDir}/${p.name}`, `run dist${p.isHybridType ? ':web' : ''}`)
   }
-  return act
-    // move file to right directory
-    .then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`))
-    .then(postBuild.bind(null, p, dir, true));
+  // move to target directory
+  return step.then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`));
 }
 
+function installPythonTestDependencies(p) {
+  console.log(chalk.yellow('create test environment'))
+  return spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: p.tmpDir})
+  .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
+}
 
-function buildServerApp(p, dir) {
-  console.log(dir, chalk.blue('building service package:'), p.label);
-  const name = p.name;
-
-  let act = preBuild(p, dir);
-  act = act
-    // create workspace
-    .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir));
-
-  // customize workspace
-  act = act.then(() => patchWorkspace(dir));
-
-  if (!argv.skipTests) {
-    act = act
-      .then(() => console.log(chalk.yellow('create test environment')))
-      .then(() => spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: dir}))
-      .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: dir}));
+function buildServer(p) {
+  let act = npm(`${p.tmpDir}/${p.name}`, `run build${p.isHybridType ? ':python' : ''}`);
+  for(const pi of p.additional) {
+    act = act.then(() => npm(`${p.tmpDir}/${pi.name}`, `run build${pi.isHybridType ? ':python' : ''}`));
   }
-
-  act = act
-    .then(() => npm(dir + '/' + name, `run build${p.isHybridType ? ':python' : ''}`))
-    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python' : ''}`))));
 
   // copy all together
   act = act
-    .then(() => fs.ensureDirAsync(`${dir}/build/source`))
-    .then(() => fs.copyAsync(`${dir}/${name}/build/source`, `${dir}/build/source/`))
-    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${dir}/${pi.name}/build/source`, `${dir}/build/source/`))));
-
-  // copy data packages
-  act = act.then(() => Promise.all(p.data.map((d) => downloadDataFile(d, `${dir}/build/source/_data`, dir))));
-  // let act = Promise.resolve([]);
+    .then(() => fs.ensureDirAsync(`${p.tmpDir}/build/source`))
+    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/build/source`, `${p.tmpDir}/build/source/`))
+    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${p.tmpDir}/${pi.name}/build/source`, `${p.tmpDir}/build/source/`))));
 
   // copy main deploy thing and create a docker out of it
-  return act
-    .then(() => fs.ensureDirAsync(`${dir}/deploy`))
-    .then(() => fs.copyAsync(`${dir}/${name}/deploy`, `${dir}/deploy/`))
-    .then(postBuild.bind(null, p, dir, false));
+  act = act
+  .then(() => fs.ensureDirAsync(`${dir}/deploy`))
+  .then(() => fs.copyAsync(`${dir}/${name}/deploy`, `${dir}/deploy/`));
+
+  return act;
+}
+
+function downloadServerDataFiles(p) {
+  if (!argv.serial) {
+    return Promise.all(p.data.map((d) => downloadDataFile(d, `${p.tmpDir}/build/source/_data`, p.tmpDir)));
+  }
+  // serial
+  let act = Promise.resolve();
+  for(const d of p.data) {
+    act = act.then(() => downloadDataFile(d, `${p.tmpDir}/build/source/_data`, p.tmpDir));
+  }
+  return act;
 }
 
 if (require.main === module) {
@@ -655,12 +644,21 @@ if (require.main === module) {
     if (fs.existsSync('.yo-rc_tmp.json')) {
       fs.renameSync('.yo-rc_tmp.json', '.yo-rc.json')
     }
-  }
+  };
+
+  const catchProductBuild = (p, act) => {
+    // no chaining to keep error
+    act.catch((error) => {
+      p.error = error;
+      console.error('ERROR building ', p.name, error);
+    });
+    return act;
+  };
 
   const steps = {
-    clean: () => fs.emptyDirAsync('build'),
+    clean: () => Promise.all([fs.emptyDirAsync('build')].concat(descs.map((d) => d.tmpDir))),
     prune: dockerRemoveImages,
-    compose: () => buildCompose(descs, dockerComposePatch),
+    compose: () => buildComposePartials(descs).then(() => buildCompose(descs, dockerComposePatch)),
     push: () => pushImages(descs.filter((d) => !d.error).map((d) => d.image)),
     summary: () => {
       console.log(chalk.bold('summary: '));
@@ -674,37 +672,82 @@ if (require.main === module) {
     },
   }
 
-  const types = {
-    static: buildWebApp,
-    web: buildWebApp,
-    api: buildServerApp,
-    service: buildServerApp
-  };
+  const webTypes = ['static', 'web'];
+  const serverTypes = ['api', 'service'];
 
   const chainProducts = [];
   for (let i = 0; i < descs.length; ++i) {
     const p = descs[i];
     const suffix = p.name;
+    const hasAdditional = p.additional.length > 0;
+    const isWeb = webTypes.includes(p.type);
+    const isServer = serverTypes.includes(p.type);
 
-    // include hint in the tmp directory which one is it
-    const dir = `./tmp${i}_${p.name.replace(/\s+/, '').slice(0, 5)}`;
-
-    if (!(p.type in types)) {
+    if (!isWeb && !isServer) {
       console.error(chalk.red('unknown product type: ' + p.type));
       continue;
     }
 
-    steps[`build:${suffix}`] = () => {
-      const built = types[p.type](p, dir);
-      // no chaining to keep error
-      built.catch((error) => {
-        p.error = error;
-        console.error('ERROR building ', p.name, error);
-      });
+    // clone repo
+    const subSteps = [];
+    steps[`clone:${suffix}`] = () => catchProductBuild(p, cloneRepo(p, p.tmpDir));
+    subSteps.push(`clone:${suffix}`);
 
-      return built;
-    };
-    chainProducts.push(`build:${suffix}`);
+    if (hasAdditional) {
+      // clone extras
+      const cloneKeys = [];
+      for(const pi of p.additional) {
+        const key = `clone:${suffix}:${pi.name}`;
+        steps[key] = () => catchProductBuild(p, cloneRepo(pi, p.tmpDir));
+        cloneKeys.push(key);
+      }
+
+      if (argv.serial) {
+        subSteps.push(...cloneKeys);
+      } else {
+        subSteps.push(strObject(cloneKeys));
+      }
+    }
+
+    // resolve plugin types
+    if (hasAdditional) {
+      steps[`resolve:${suffix}`] = () => catchProductBuild(p, Promise.all([resolvePluginType(p, p.tmpDir)].concat(p.additional.map((pi) => resolvePluginType(pi, p.tmpDir)))));
+    } else {
+      steps[`resolve:${suffix}`] = () => catchProductBuild(p, resolvePluginType(p, p.tmpDir));
+    }
+    subSteps.push(`resolve:${suffix}`);
+
+    // preapre, test, (data), build, image, save
+    if (isWeb && hasAdditional) {
+      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p).then(() => this.installWebDependencies(p)));
+    } else if (isWeb) {
+      steps[`prepare:${suffix}`] = () => catchProductBuild(p, this.installWebDependencies(p));
+    } else { // server
+      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p));
+    }
+
+    steps[`test:${suffix}`] = isWeb ? () => catchProductBuild(p, testWebAdditionals(p)) : () => catchProductBuild(p, installPythonTestDependencies(p));
+    steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, buildWeb(p)) : () => catchProductBuild(p, buildServer(p));
+    steps[`data:${suffix}`] = () => catchProductBuild(p, downloadServerDataFiles(p));
+    steps[`image:${suffix}`] = () => catchProductBuild(p, buildDockerImage(p));
+    steps[`save:${suffix}`] = () => catchProductBuild(p, dockerSave(p.image, `build/${p.label}_image.tar.gz`));
+
+    subSteps.push(`prepare:${suffix}`);
+    if (!argv.skipTests) {
+      subSteps.push(`test:${suffix}`);
+    }
+    subSteps.push(`build:${suffix}`);
+    if (isServer && p.data.length > 0) {
+      subSteps.push(`data:${suffix}`);
+    }
+    subSteps.push(`image:${suffix}`);
+    if (!argv.skipSaveImage) {
+      subSteps.push(`save:${suffix}`);
+    }
+
+    steps[`product:${suffix}`] = subSteps;
+    subSteps.name = p.name;
+    chainProducts.push(subSteps);
   }
 
   const chain = ['clean'];
@@ -717,9 +760,9 @@ if (require.main === module) {
     chain.push(...chainProducts); // serially
   } else {
     const par = {};
-    for(const c of chainProducts) {
-      par[c] = c;
-    }
+    chainProducts.forEach((c) => {
+      par[c.name] = c;
+    });
     chain.push(par); // as object = parallel
   }
   // result of the promise is an array of partial docker compose files
