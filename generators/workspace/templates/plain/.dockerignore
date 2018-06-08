@@ -1,3 +1,5 @@
 # copy just the ones that are actually copied
 /*/*
 !/_docker_data/*
+!/build/*
+!/deploy/*
