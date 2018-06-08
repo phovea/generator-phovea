@@ -310,9 +310,16 @@ function yo(generator, options, cwd) {
 
 function cloneRepo(p, cwd) {
   // either of them has to be defined
-  p.name = p.name || fromRepoUrl(p.repo);
+  p.name = p.name || (p.repo ? fromRepoUrl(p.repo) : '');
   p.repo = p.repo || `phovea/${p.name}`;
   p.branch = p.branch || 'master';
+
+  if (p.symlink && fs.existsSync(p.symlink)) {
+    console.log(cwd, chalk.yellow(`symlink ${path.resolve(p.symlink)} -> ${cwd}/${p.name}`));
+    // use a symlink instead
+    // see https://nodejs.org/api/fs.html#fs_fs_symlinksync_target_path_type
+    return fs.ensureSymlinkAsync(path.resolve(p.symlink), `${cwd}/${p.name}`, 'junction'); // for windows
+  }
 
   if (/^[0-9a-f]+$/gi.test(p.branch)) {
     // clone a specific commit
@@ -499,8 +506,9 @@ function fillDefaults(descs, dockerComposePatch) {
     // default values
     d.additional = d.additional || [];
     d.data = d.data || [];
-    d.name = d.name || fromRepoUrl(d.repo);
+    d.name = d.name || (d.repo ? fromRepoUrl(d.repo) : d.label);
     d.label = d.label || d.name;
+    d.symlink = d.symlink || null; // default value
     d.image = d.image || `${productName}${singleService ? '': `/${d.label}`}:${pkg.version}`;
     // incorporate patch file
     if (dockerComposePatch.services[d.label] && dockerComposePatch.services[d.label].image) {

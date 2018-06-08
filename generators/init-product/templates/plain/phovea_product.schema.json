@@ -52,6 +52,16 @@
           "Caleydo/ordino"
         ]
       },
+      "symlink": {
+        "$id": "phovea_product/items/properties/symlink",
+        "type": "string",
+        "title": "location relative to the product directory which contains the clone repository",
+        "description": "Note symbolic links will be created to ensure the proper structure",
+        "default": "",
+        "examples": [
+          "../myclone"
+        ]
+      },
       "branch": {
         "$id": "phovea_product/items/properties/branch",
         "type": "string",
@@ -93,6 +103,16 @@
               "default": "",
               "examples": [
                 "Caleydo/ordino"
+              ]
+            },
+            "symlink": {
+              "$id": "phovea_product/items/properties/symlink",
+              "type": "string",
+              "title": "location relative to the product directory which contains the clone repository",
+              "description": "Note symbolic links will be created to ensure the proper structure",
+              "default": "",
+              "examples": [
+                "../myclone"
               ]
             },
             "branch": {
