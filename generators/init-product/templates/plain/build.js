@@ -174,7 +174,7 @@ function spawn(cmd, args, opts) {
   const spawn = require('child_process').spawn;
   const _ = require('lodash');
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, typeof args === 'string' ? args.split(' ') : args, _.merge({stdio: ['ignore', 1, 2]}, opts));
+    const p = spawn(cmd, typeof args === 'string' ? args.split(' ') : args, _.merge({stdio: argv.quiet ? 'ignore' : ['ignore', 1, 2]}, opts));
     p.on('close', (code, signal) => {
       if (code === 0) {
         console.info(cmd, 'ok status code', code, signal);
@@ -510,8 +510,9 @@ function asChain(steps, chain) {
     if (Array.isArray(c)) { // sequential sub started
       const sub = c.map(callable);
       return () => {
+        console.log('run sequential sub chain: ', JSON.stringify(c, null, ' '));
         let step = Promise.resolve();
-        for (const s in sub) {
+        for (const s of sub) {
           step = step.then(s);
         }
         return step;
@@ -519,7 +520,10 @@ function asChain(steps, chain) {
     }
     // parallel = object
     const sub = Object.keys(c).map((ci) => callable(c[ci]));
-    return () => Promise.all(sub.map((d) => d())); // run sub lazy combined with all
+    return () => {
+      console.log('run parallel sub chain: ', JSON.stringify(c, null, ' '));
+      return Promise.all(sub.map((d) => d())); // run sub lazy combined with all
+    }
   }
   return chain.map(callable);
 }
@@ -551,7 +555,7 @@ function strObject(items) {
 function buildDockerImage(p) {
   const buildInSubDir = p.type === 'web' || p.type === 'static';
   // patch the docker file with the with an optional given baseImage
-  return patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`)
+  return Promise.resolve(patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
     // create the container image
     .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
     // tag the container image
@@ -565,6 +569,16 @@ function createWorkspace(p) {
 
 function installWebDependencies(p) {
   return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'install');
+}
+
+function resolvePluginTypes(p) {
+  if (p.pluginType) {
+    return Promise.resolve(); // already resolved
+  }
+  if (p.additional.length === 0) {
+    return resolvePluginType(p, p.tmpDir);
+  }
+  return Promise.all([resolvePluginType(p, p.tmpDir)].concat(p.additional.map((pi) => resolvePluginType(pi, p.tmpDir))));
 }
 
 function testWebAdditionals(p) {
@@ -581,7 +595,7 @@ function buildWeb(p) {
     step = npm(`${p.tmpDir}/${p.name}`, `run dist${p.isHybridType ? ':web' : ''}`)
   }
   // move to target directory
-  return step.then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`));
+  return step.then(() => fs.renameAsync(`${p.tmpDir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`));
 }
 
 function installPythonTestDependencies(p) {
@@ -604,8 +618,8 @@ function buildServer(p) {
 
   // copy main deploy thing and create a docker out of it
   act = act
-  .then(() => fs.ensureDirAsync(`${dir}/deploy`))
-  .then(() => fs.copyAsync(`${dir}/${name}/deploy`, `${dir}/deploy/`));
+  .then(() => fs.ensureDirAsync(`${p.tmpDir}/deploy`))
+  .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/deploy`, `${p.tmpDir}/deploy/`));
 
   return act;
 }
@@ -620,6 +634,11 @@ function downloadServerDataFiles(p) {
     act = act.then(() => downloadDataFile(d, `${p.tmpDir}/build/source/_data`, p.tmpDir));
   }
   return act;
+}
+
+function cleanWorkspace(descs) {
+  console.log(chalk.yellow('clean workspace'))
+  return Promise.all([fs.emptyDirAsync('build')].concat(descs.map((d) => fs.emptyDirAsync(d.tmpDir))));
 }
 
 if (require.main === module) {
@@ -656,7 +675,7 @@ if (require.main === module) {
   };
 
   const steps = {
-    clean: () => Promise.all([fs.emptyDirAsync('build')].concat(descs.map((d) => d.tmpDir))),
+    clean: () => cleanWorkspace(descs),
     prune: dockerRemoveImages,
     compose: () => buildComposePartials(descs).then(() => buildCompose(descs, dockerComposePatch)),
     push: () => pushImages(descs.filter((d) => !d.error).map((d) => d.image)),
@@ -669,7 +688,7 @@ if (require.main === module) {
       if (anyErrors) {
         process.exit(1);
       }
-    },
+    }
   }
 
   const webTypes = ['static', 'web'];
@@ -709,25 +728,17 @@ if (require.main === module) {
       }
     }
 
-    // resolve plugin types
-    if (hasAdditional) {
-      steps[`resolve:${suffix}`] = () => catchProductBuild(p, Promise.all([resolvePluginType(p, p.tmpDir)].concat(p.additional.map((pi) => resolvePluginType(pi, p.tmpDir)))));
-    } else {
-      steps[`resolve:${suffix}`] = () => catchProductBuild(p, resolvePluginType(p, p.tmpDir));
-    }
-    subSteps.push(`resolve:${suffix}`);
-
     // preapre, test, (data), build, image, save
     if (isWeb && hasAdditional) {
-      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p).then(() => this.installWebDependencies(p)));
+      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p).then(() => installWebDependencies(p)));
     } else if (isWeb) {
-      steps[`prepare:${suffix}`] = () => catchProductBuild(p, this.installWebDependencies(p));
+      steps[`prepare:${suffix}`] = () => catchProductBuild(p, installWebDependencies(p));
     } else { // server
       steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p));
     }
 
-    steps[`test:${suffix}`] = isWeb ? () => catchProductBuild(p, testWebAdditionals(p)) : () => catchProductBuild(p, installPythonTestDependencies(p));
-    steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, buildWeb(p)) : () => catchProductBuild(p, buildServer(p));
+    steps[`test:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => catchProductBuild(p, installPythonTestDependencies(p));
+    steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildWeb(p))) : () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildServer(p)));
     steps[`data:${suffix}`] = () => catchProductBuild(p, downloadServerDataFiles(p));
     steps[`image:${suffix}`] = () => catchProductBuild(p, buildDockerImage(p));
     steps[`save:${suffix}`] = () => catchProductBuild(p, dockerSave(p.image, `build/${p.label}_image.tar.gz`));
@@ -767,7 +778,11 @@ if (require.main === module) {
   }
   // result of the promise is an array of partial docker compose files
 
-  chain.push('compose', 'push', 'summary');
+  chain.push('compose');
+  if (argv.pushTo) {
+    chain.push('push');
+  }
+  chain.push('summary');
 
 
   // XX. catch all error handling
@@ -779,10 +794,11 @@ if (require.main === module) {
   };
 
 
-  console.log(chalk.blue('executing chain:'), JSON.stringify(chain));
+  console.log(chalk.blue('executing chain:'), JSON.stringify(chain, null, ' '));
   const toExecute = asChain(steps, chain);
   const launch = runChain(toExecute, catchErrors);
   if (!argv.dryRun) {
+    console.log('start');
     launch();
   }
 }
