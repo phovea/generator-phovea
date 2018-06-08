@@ -21,8 +21,8 @@ const productName = pkg.name.replace('_product', '');
 
 
 function showHelp(steps, chain) {
-  console.info(`node build.js ...
-possible arguments:
+  console.info(`node build.js <options> -- step1 step2
+possible options:
  * --quiet         ... reduce log messages
  * --serial        ... build elements sequentially
  * --skipTests     ... skip tests
@@ -35,6 +35,8 @@ possible arguments:
  * --forceLabel    ... force to use the label even only a single service exists
  * --dryRun        ... just compute chain no execution
  * --help          ... show this help message
+
+arguments: (starting with --!) optional list of steps to execute in the given order (expert mode) by default the default chain is executed
  `);
 
  steps = Object.keys(steps);
@@ -191,8 +193,12 @@ function spawn(cmd, args, opts) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, typeof args === 'string' ? args.split(' ') : args, _.merge({stdio: argv.quiet ? ['ignore', 'pipe', 'pipe'] : ['ignore', 1, 2]}, opts));
     const out = [];
-    p.stdout.on('data', (chunk) => out.push(chunk));
-    p.stderr.on('data', (chunk) => out.push(chunk));
+    if (p.stdout) {
+      p.stdout.on('data', (chunk) => out.push(chunk));
+    }
+    if (p.stderr) {
+      p.stderr.on('data', (chunk) => out.push(chunk));
+    }
     p.on('close', (code, signal) => {
       if (code === 0) {
         console.info(cmd, 'ok status code', code, signal);
@@ -680,6 +686,7 @@ if (require.main === module) {
   if (fs.existsSync('.yo-rc.json')) {
     fs.renameSync('.yo-rc.json', '.yo-rc_tmp.json');
   }
+  fs.ensureDirSync('build');
 
   const cleanUp = () => {
     if (fs.existsSync('.yo-rc_tmp.json')) {
@@ -728,6 +735,8 @@ if (require.main === module) {
       console.error(chalk.red('unknown product type: ' + p.type));
       continue;
     }
+
+    fs.ensureDirSync(p.tmpDir);
 
     // clone repo
     const subSteps = [];
@@ -779,7 +788,7 @@ if (require.main === module) {
     }
 
     steps[`product:${suffix}`] = subSteps;
-    subSteps.name = p.name;
+    subSteps.name = `product:${suffix}`;
     chainProducts.push(subSteps);
   }
 
@@ -834,11 +843,15 @@ if (require.main === module) {
     process.exit(0);
   }
 
+  if (argv._.length > 0) {
+    // explicit chain replace computed one
+    chain.splice(0, chain.length, ...argv._);
+  }
+
   console.log(chalk.blue('executing chain:'), JSON.stringify(chain, null, ' '));
   const toExecute = asChain(steps, chain);
   const launch = runChain(toExecute, catchErrors);
   if (!argv.dryRun) {
-    console.log('start');
     launch();
   }
 }
