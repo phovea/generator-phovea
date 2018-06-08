@@ -7,20 +7,7 @@ const path = require('path');
 const fs = Promise.promisifyAll(require('fs-extra'));
 const chalk = require('chalk');
 const pkg = require('./package.json');
-/**
- * arguments:
- *  * --quiet ... reduce log messages
- *  * --serial ... build elements sequentially
- *  * --skipTests
- *  * --useSSH
- *  * --skipCleanUp ... skip cleaning up old docker images
- *  * --skipSaveImage ... skip saving the generated docker images
- *  * --pushTo ... push docker images to the given registry
- *  * --noDefaultTags ... don't push generated default tag :<timestamp>
- *  * --pushExtra ... push additional custom tag: e.g., --pushExtra=develop
- *  * --forceLabel ... force to use the label even only a single service exists
- *  * --dryRun ... just compute chain no execution
- */
+// see show help
 const argv = require('yargs-parser')(process.argv.slice(2));
 
 const quiet = argv.quiet !== undefined;
@@ -31,6 +18,34 @@ const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth())}${prefix(now
 pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 const productName = pkg.name.replace('_product', '');
+
+
+function showHelp(steps, chain) {
+  console.info(`node build.js ...
+possible arguments:
+ * --quiet         ... reduce log messages
+ * --serial        ... build elements sequentially
+ * --skipTests     ... skip tests
+ * --useSSH        ... clone via ssh instead of https
+ * --skipCleanUp   ... skip cleaning up old docker images
+ * --skipSaveImage ... skip saving the generated docker images
+ * --pushTo        ... push docker images to the given registry
+ * --noDefaultTags ... don't push generated default tag :<timestamp>
+ * --pushExtra     ... push additional custom tag: e.g., --pushExtra=develop
+ * --forceLabel    ... force to use the label even only a single service exists
+ * --dryRun        ... just compute chain no execution
+ * --help          ... show this help message
+ `);
+
+ steps = Object.keys(steps);
+ const primary = steps.filter((d) => !d.includes(':')).sort((a,b) => a.localeCompare(b));
+ const secondary = steps.filter((d) => d.includes(':')).sort((a,b) => a.localeCompare(b));
+
+ console.info('possible primary steps:\n ', primary.join('\n  '));
+ console.info('possible secondary steps:\n ', secondary.join('\n  '));
+
+ console.info('default chain:\n', JSON.stringify(chain, null, ' '));
+}
 
 /**
  * generates a repo url to clone depending on the argv.useSSH option
@@ -768,6 +783,19 @@ if (require.main === module) {
     chainProducts.push(subSteps);
   }
 
+
+  // create some meta steps
+  {
+    const stepNames = Object.keys(steps);
+    for (const meta of ['clone', 'prepare', 'build', 'test', 'image', 'product']) {
+      const sub = stepNames.filter((d) => d.startsWith(`${meta}:`));
+      if (sub.length <= 0) {
+        continue;
+      }
+      steps[meta] = argv.serial ? sub : strObject(sub);
+    }
+  }
+
   const chain = ['clean'];
 
   if (!argv.skipCleanUp) {
@@ -800,6 +828,11 @@ if (require.main === module) {
     process.exit(1);
   };
 
+  if (argv.help) {
+    showHelp(steps, chain);
+    cleanUp();
+    process.exit(0);
+  }
 
   console.log(chalk.blue('executing chain:'), JSON.stringify(chain, null, ' '));
   const toExecute = asChain(steps, chain);
