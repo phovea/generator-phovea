@@ -228,9 +228,6 @@ function dockerSave(image, target) {
 }
 
 function dockerRemoveImages() {
-  if (argv.skipCleanUp) {
-    return Promise.resolve();
-  }
   console.log(chalk.blue(`docker images | grep ${productName} | awk '{print $1":"$2}') | xargs --no-run-if-empty docker rmi`));
   const spawn = require('child_process').spawn;
   const opts = {env};
@@ -314,23 +311,6 @@ function resolvePluginType(p, dir) {
   });
 }
 
-/**
- * common pre build steps
- * @param {object} p product to build
- * @param {string} dir working directory
- */
-function preBuild(p, dir) {
-  const hasAdditional = p.additional.length > 0;
-  let act = fs.emptyDirAsync(dir)
-    .then(() => cloneRepo(p, dir))
-    .then(() => resolvePluginType(p, dir));
-  if (hasAdditional) {
-    act = act
-      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir).then(resolvePluginType.bind(this, pi, dir)))));
-  }
-  return act;
-}
-
 function loadComposeFile(dir, p) {
   const composeFile = `${dir}/${p.name}/deploy/docker-compose.partial.yml`;
   if (fs.existsSync(composeFile)) {
@@ -375,57 +355,6 @@ function patchDockerfile(p, dockerFile) {
   });
 }
 
-/**
- * common post build steps
- * @param {object} p product to build
- * @param {string} dir working directory
- * @param {boolean} buildInSubDir flag wehtehr it was build in a sub directory
- */
-function postBuild(p, dir, buildInSubDir) {
-  return Promise.resolve(null)
-    // patch the docker file with the with an optional given baseImage
-    .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
-    // create the container image
-    .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
-    // tag the container image
-    .then(() => !argv.pushExtra ? null : docker(`${dir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`))
-    // optional save the container image as a tar.gz
-    .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
-    // merge a big compose file including all
-    .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
-    .then(mergeCompose);
-}
-
-function buildWebApp(p, dir) {
-  console.log(dir, chalk.blue('building web application:'), p.label);
-  const name = p.name;
-  const hasAdditional = p.additional.length > 0;
-  let act = preBuild(p, dir);
-  // let act = Promise.resolve(null);
-  if (hasAdditional) {
-    // workspace mode
-    act = act
-      // create workspace
-      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir))
-      .then(() => npm(dir, 'install'));
-    // test all modules
-    if (hasAdditional && !argv.skipTests) {
-      act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`))));
-    }
-    act = act
-      // trigger build
-      .then(() => npm(dir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`));
-  } else {
-    act = act
-      .then(() => npm(dir + '/' + name, 'install'))
-      .then(() => npm(dir + '/' + name, `run dist${p.isHybridType ? ':web' : ''}`));
-  }
-  return act
-    // move file to right directory
-    .then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`))
-    .then(postBuild.bind(null, p, dir, true));
-}
-
 function patchWorkspace(dir) {
   // prepend docker_script in the workspace
   if (!fs.existsSync('./docker_script.sh')) {
@@ -439,56 +368,15 @@ function patchWorkspace(dir) {
   fs.writeFileSync(dir + '/docker_script.sh', content);
 }
 
-function buildServerApp(p, dir) {
-  console.log(dir, chalk.blue('building service package:'), p.label);
-  const name = p.name;
-
-  let act = preBuild(p, dir);
-  act = act
-    // create workspace
-    .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir));
-
-  // customize workspace
-  act = act.then(() => patchWorkspace(dir));
-
-  if (!argv.skipTests) {
-    act = act
-      .then(() => console.log(chalk.yellow('create test environment')))
-      .then(() => spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: dir}))
-      .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: dir}));
-  }
-
-  act = act
-    .then(() => npm(dir + '/' + name, `run build${p.isHybridType ? ':python' : ''}`))
-    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python' : ''}`))));
-
-  // copy all together
-  act = act
-    .then(() => fs.ensureDirAsync(`${dir}/build/source`))
-    .then(() => fs.copyAsync(`${dir}/${name}/build/source`, `${dir}/build/source/`))
-    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${dir}/${pi.name}/build/source`, `${dir}/build/source/`))));
-
-  // copy data packages
-  act = act.then(() => Promise.all(p.data.map((d) => downloadDataFile(d, `${dir}/build/source/_data`, dir))));
-  // let act = Promise.resolve([]);
-
-  // copy main deploy thing and create a docker out of it
-  return act
-    .then(() => fs.ensureDirAsync(`${dir}/deploy`))
-    .then(() => fs.copyAsync(`${dir}/${name}/deploy`, `${dir}/deploy/`))
-    .then(postBuild.bind(null, p, dir, false));
-}
-
-
 function mergeCompose(composePartials) {
   let dockerCompose = {};
   composePartials.forEach((c) => mergeWith(dockerCompose, c));
   return dockerCompose;
 }
 
-function buildCompose(descs, dockerComposePatch, composePartials) {
+function buildCompose(descs, dockerComposePatch) {
   console.log('create docker-compose.yml');
-  const dockerCompose = mergeCompose(composePartials);
+  const dockerCompose = mergeCompose(descs.map((d) => d.composePartial).filter(Boolean));
   const services = dockerCompose.services;
   // link the api server types to the web types and server to the api
   const web = descs.filter((d) => d.type === 'web').map((d) => d.label);
@@ -635,6 +523,116 @@ function runChain(chain, catchErrors) {
   };
 }
 
+
+/**
+ * common pre build steps
+ * @param {object} p product to build
+ * @param {string} dir working directory
+ */
+function preBuild(p, dir) {
+  const hasAdditional = p.additional.length > 0;
+  let act = fs.emptyDirAsync(dir)
+    .then(() => cloneRepo(p, dir))
+    .then(() => resolvePluginType(p, dir));
+  if (hasAdditional) {
+    act = act
+      .then(() => Promise.all(p.additional.map((pi) => cloneRepo(pi, dir).then(resolvePluginType.bind(this, pi, dir)))));
+  }
+  return act;
+}
+
+/**
+ * common post build steps
+ * @param {object} p product to build
+ * @param {string} dir working directory
+ * @param {boolean} buildInSubDir flag wehtehr it was build in a sub directory
+ */
+function postBuild(p, dir, buildInSubDir) {
+  return Promise.resolve(null)
+    // patch the docker file with the with an optional given baseImage
+    .then(() => patchDockerfile(p, `${dir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
+    // create the container image
+    .then(() => docker(`${dir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    // tag the container image
+    .then(() => !argv.pushExtra ? null : docker(`${dir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`))
+    // optional save the container image as a tar.gz
+    .then(() => argv.skipSaveImage ? null : dockerSave(p.image, `build/${p.label}_image.tar.gz`))
+    // merge a big compose file including all
+    .then(() => Promise.all([loadComposeFile(dir, p).then(patchComposeFile.bind(null, p))].concat(p.additional.map((pi) => loadComposeFile(dir, pi)))))
+    .then((partials) => p.composePartial = mergeCompose(partials));
+}
+
+function buildWebApp(p, dir) {
+  console.log(dir, chalk.blue('building web application:'), p.label);
+  const name = p.name;
+  const hasAdditional = p.additional.length > 0;
+  let act = preBuild(p, dir);
+  // let act = Promise.resolve(null);
+  if (hasAdditional) {
+    // workspace mode
+    act = act
+      // create workspace
+      .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir))
+      .then(() => npm(dir, 'install'));
+    // test all modules
+    if (hasAdditional && !argv.skipTests) {
+      act = act.then(() => Promise.all(p.additional.map((pi) => npm(dir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`))));
+    }
+    act = act
+      // trigger build
+      .then(() => npm(dir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`));
+  } else {
+    act = act
+      .then(() => npm(dir + '/' + name, 'install'))
+      .then(() => npm(dir + '/' + name, `run dist${p.isHybridType ? ':web' : ''}`));
+  }
+  return act
+    // move file to right directory
+    .then(() => fs.renameAsync(`${dir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`))
+    .then(postBuild.bind(null, p, dir, true));
+}
+
+
+function buildServerApp(p, dir) {
+  console.log(dir, chalk.blue('building service package:'), p.label);
+  const name = p.name;
+
+  let act = preBuild(p, dir);
+  act = act
+    // create workspace
+    .then(() => yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, dir));
+
+  // customize workspace
+  act = act.then(() => patchWorkspace(dir));
+
+  if (!argv.skipTests) {
+    act = act
+      .then(() => console.log(chalk.yellow('create test environment')))
+      .then(() => spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: dir}))
+      .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: dir}));
+  }
+
+  act = act
+    .then(() => npm(dir + '/' + name, `run build${p.isHybridType ? ':python' : ''}`))
+    .then(() => Promise.all(p.additional.map((pi) => npm(dir + '/' + pi.name, `run build${pi.isHybridType ? ':python' : ''}`))));
+
+  // copy all together
+  act = act
+    .then(() => fs.ensureDirAsync(`${dir}/build/source`))
+    .then(() => fs.copyAsync(`${dir}/${name}/build/source`, `${dir}/build/source/`))
+    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${dir}/${pi.name}/build/source`, `${dir}/build/source/`))));
+
+  // copy data packages
+  act = act.then(() => Promise.all(p.data.map((d) => downloadDataFile(d, `${dir}/build/source/_data`, dir))));
+  // let act = Promise.resolve([]);
+
+  // copy main deploy thing and create a docker out of it
+  return act
+    .then(() => fs.ensureDirAsync(`${dir}/deploy`))
+    .then(() => fs.copyAsync(`${dir}/${name}/deploy`, `${dir}/deploy/`))
+    .then(postBuild.bind(null, p, dir, false));
+}
+
 if (require.main === module) {
   if (argv.skipTests) {
     // if skipTest option is set, skip tests
@@ -660,8 +658,9 @@ if (require.main === module) {
   }
 
   const steps = {
-    clean: () => Promise.all([fs.emptyDirAsync('build'), dockerRemoveImages()]),
-    compose: (composeFiles) => buildCompose(descs, dockerComposePatch, (composeFiles || []).filter((d) => Boolean(d))),
+    clean: () => fs.emptyDirAsync('build'),
+    prune: dockerRemoveImages,
+    compose: () => buildCompose(descs, dockerComposePatch),
     push: () => pushImages(descs.filter((d) => !d.error).map((d) => d.image)),
     summary: () => {
       console.log(chalk.bold('summary: '));
@@ -709,6 +708,10 @@ if (require.main === module) {
   }
 
   const chain = ['clean'];
+
+  if (!argv.skipCleanUp) {
+    chain.push('prune');
+  }
 
   if (argv.serial) {
     chain.push(...chainProducts); // serially
