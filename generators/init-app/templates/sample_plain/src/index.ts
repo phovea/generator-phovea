@@ -3,7 +3,7 @@
  */
 
 import 'file-loader?name=index.html!extract-loader!html-loader?interpolate!./index.html';
-import 'file-loader?name=404.html-loader!./404.html';
+import 'file-loader?name=404.html!./404.html';
 import 'file-loader?name=robots.txt!./robots.txt';
 import 'phovea_ui/src/_bootstrap';
 import './style.scss';
