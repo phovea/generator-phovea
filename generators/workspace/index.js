@@ -326,9 +326,10 @@ class Generator extends Base {
       scripts.start = `cd ${this.props.defaultApp} && npm start`;
     }
 
-    if (this.fs.exists(this.destinationPath('docker-compose-patch.yaml'))) {
+    const patchYamlExists = this.fs.exists(this.destinationPath('docker-compose-patch.yaml'));
+    if (patchYamlExists || this.fs.exists(this.destinationPath('docker-compose-patch.yml'))) {
       const yaml = require('yamljs');
-      const file = this.fs.read(this.destinationPath('docker-compose-patch.yaml'));
+      const file = this.fs.read(this.destinationPath(patchYamlExists ? 'docker-compose-patch.yaml' : 'docker-compose-patch.yml'));
       const patch = yaml.parse(file);
       this._patchDockerImages(patch, sdeps.dockerCompose);
     }
@@ -354,6 +355,12 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.sort().join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
+
+    if (this.fs.exists(this.destinationPath('docker_script_patch.sh'))) {
+      // push patch to the beginning
+      sdeps.dockerScripts.unshift(this.fs.read(this.destinationPath('docker_script_patch.sh')));
+    }
+
     this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 
     this.fs.copyTpl(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`), config);

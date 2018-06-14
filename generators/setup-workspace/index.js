@@ -154,16 +154,27 @@ class Generator extends Base {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
       this.log(r);
-      return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
+      return this._abort(`failed: "${cmd} ${argline.join(' ')}" - status code: ${r.status}`);
     }
     return Promise.resolve(cmd);
   }
 
   _cloneRepo(repo, branch, extras) {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
-    const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+    if (!/^[0-9a-f]+$/gi.test(branch)) {
+      // regular branch
+      const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+      this.log(chalk.blue(`clone repository:`), `git ${line}`);
+      return this._spawnOrAbort('git', line.split(' '));
+    }
+    // clone a specific commit
+    const line = `clone ${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(' '));
+    return this._spawnOrAbort('git', line.split(' ')).then(() => {
+      const line = `checkout ${branch}`;
+      this.log(chalk.blue(`checkout commit:`), `git ${line}`);
+      return this._spawnOrAbort('git', line.split(' '));
+    });
   }
 
   _getProduct() {
@@ -173,9 +184,15 @@ class Generator extends Base {
         this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
 
         // pass through the docker overrides
-        if (fs.existsSync(`${this.cwd}/${name}/docker-compose-patch.yaml`)) {
-          fs.copySync(`${this.cwd}/${name}/docker-compose-patch.yaml`, this.destinationPath(`${this.cwd}/docker-compose-patch.yaml`));
+        for (const file of ['docker-compose-patch.yaml', 'docker-compose-patch.yml']) {
+          if (fs.existsSync(`${this.cwd}/${name}/${file}`)) {
+            fs.copySync(`${this.cwd}/${name}/${file}`, this.destinationPath(`${this.cwd}/${file}`));
+          }
         }
+        if (fs.existsSync(`${this.cwd}/${name}/docker_script.sh`)) {
+          fs.copySync(`${this.cwd}/${name}/docker_script.sh`, this.destinationPath(`${this.cwd}/docker_script_patch.sh`));
+        }
+        // generic copy helper
         if (fs.existsSync(`${this.cwd}/${name}/ws`)) {
           fs.copySync(`${this.cwd}/${name}/ws`, this.destinationPath(`${this.cwd}`));
         }

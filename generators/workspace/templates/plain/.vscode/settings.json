@@ -1,24 +1,33 @@
 {
-  "beautify.options": {
-    "end_with_newline": true,
-    "preserve_newlines": true,
-    "space_in_paren": true,
-    "space_around_selector_separator": true
-  },
-  "beautify.tabSize": 2,
-  "typescriptHero.imports.insertSpaceBeforeAndAfterImportBraces": false,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-  "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/.DS_Store": true,
-    "*/build/": true,
-    "**/*.pyc": true,
-    "*/src/**/*.js": true,
-    "src/**/*.js": true,
-    "**/*.map": true,
-    "**/.cache-loader": true
-  }
+    "files.autoSave": "onFocusChange",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/*.pyc": true,
+        "*/src/**/*.js": true,
+        "src/**/*.js": true,
+        "*/src/**/*.d.ts": true,
+        "src/**/*.d.ts": true,
+        "**/*.map": true,
+        "**/.cache-loader": true
+    },
+    "diffEditor.ignoreTrimWhitespace": false,
+    "python.linting.pylintEnabled": false,
+    "editor.formatOnSave": false,
+    "beautify.tabSize": 2,
+    "beautify.options": {
+        "end_with_newline": true,
+        "preserve_newlines": true,
+        "space_in_paren": true,
+        "space_around_selector_separator": true
+    },
+    "tsimporter.spaceBetweenBraces": false,
+    "tsimporter.noStatusBar": true,
+    "typescriptHero.imports.insertSpaceBeforeAndAfterImportBraces": false,
+    "typescriptHero.codeOutline.enabled": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false
 }
