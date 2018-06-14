@@ -154,7 +154,7 @@ class Generator extends Base {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
       this.log(r);
-      return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
+      return this._abort('failed: ' + cmd + ' - status code: ' + r.status + ' args: ' + argline);
     }
     return Promise.resolve(cmd);
   }
