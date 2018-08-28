@@ -252,14 +252,14 @@ class Generator extends Base {
         }
         // more intelligent guessing to catch tags
         Array.from(requirements.keys()).forEach((k) => {
-          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`)) {
+          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
             requirements.delete(k);
           }
         });
       } else {
         // more intelligent guessing
         Array.from(requirements.keys()).forEach((k) => {
-          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`)) {
+          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
             requirements.delete(k);
           }
         });
