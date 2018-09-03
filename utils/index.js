@@ -4,7 +4,7 @@ const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
 
-function patchPackageJSON(config, unset, extra) {
+function patchPackageJSON(config, unset, extra, replaceExtra) {
   const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
   let pkgPatch;
@@ -14,7 +14,11 @@ function patchPackageJSON(config, unset, extra) {
     pkgPatch = {};
   }
   merge(pkg, pkgPatch);
-  merge(pkg, extra || {});
+  if (replaceExtra && extra) {
+    Object.assign(pkg, extra);
+  } else {
+    merge(pkg, extra || {});
+  }
 
   (unset || []).forEach((d) => delete pkg[d]);
 
