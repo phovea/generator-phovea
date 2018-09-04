@@ -125,8 +125,10 @@ class Generator extends Base {
     if (this.props.defaultApp) {
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
-      extend(dependencies, pkg.dependencies);
-      extend(devDependencies, pkg.devDependencies);
+      if (pkg) {
+        extend(dependencies, pkg.dependencies);
+        extend(devDependencies, pkg.devDependencies);
+      }
     }
 
     // remove all plugins that are locally installed
@@ -136,9 +138,8 @@ class Generator extends Base {
         Object.keys(k.dependencies).forEach((pi) => {
           delete dependencies[pi];
         });
-      } else {
-        delete dependencies[p];
       }
+      delete dependencies[p];
     });
 
     return {plugins, dependencies, devDependencies, scripts};
