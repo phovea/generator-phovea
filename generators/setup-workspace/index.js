@@ -174,7 +174,7 @@ class Generator extends Base {
       const line = `checkout ${branch}`;
       this.log(chalk.blue(`checkout commit:`), `git ${line}`);
       let repoName = simplifyRepoUrl(repo);
-      repoName = repoName.slice(repoName.lastIndexOf('/') + 1)
+      repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
       return this._spawnOrAbort('git', line.split(/ +/), {cwd: `${this.cwd}/${repoName}`});
     });
   }
