@@ -317,8 +317,8 @@ class Generator extends Base {
 
     return {
       plugins: plugins,
-      requirements: Object.entries(requirements).map((kv) => `${kv[0]}${kv[1]}`),
-      devRequirements: Object.entries(devRequirements).map((kv) => `${kv[0]}${kv[1]}`),
+      requirements: Object.keys(requirements).map((k) => `${k}${requirements[k]}`),
+      devRequirements: Object.keys(devRequirements).map((k) => `${k}${devRequirements[k]}`),
       dockerPackages: [...dockerPackages.values()],
       dockerScripts: dockerScripts,
       scripts: scripts,
