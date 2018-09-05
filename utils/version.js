@@ -15,7 +15,7 @@ module.exports.mergeVersions = (name, versions) => {
   }
   // first try to find a good intersection
   try {
-    return intersect(...versions);
+    return intersect(...versions).toString();
   } catch(e) {
     // map to base version, sort descending take first
     const max = versions.map(semver.coerce).sort(semver.rcompare)[0] || versions[versions.length - 1];
@@ -38,6 +38,10 @@ function toSemVer(version) {
 }
 
 function toPipVersion(version) {
+  if (!version) {
+    return null;
+  }
+  version = version.toString();
   if (version.startsWith('~')) {
     return `~=${version.slice(1)}`;
   }
@@ -65,7 +69,7 @@ module.exports.mergePipVersions = (name, versions) => {
   const nodeVersions = versions.map(toSemVer);
   // first try to find a good intersection
   try {
-    return toPipVersion(intersect(...nodeVersions));
+    return toPipVersion(intersect(...nodeVersions).toString());
   } catch(e) {
     // map to base version, sort descending take first
     const max = toPipVersion(nodeVersions.map(semver.coerce).sort(semver.rcompare)[0]) || versions[versions.length - 1];
