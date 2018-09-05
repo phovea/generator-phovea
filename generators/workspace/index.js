@@ -109,7 +109,7 @@ class Generator extends Base {
           target[key] = [value];
         }
       });
-    }
+    };
 
     // generate dependencies
     let dependencies = {};
@@ -192,7 +192,7 @@ class Generator extends Base {
           target[key] = [value];
         }
       });
-    }
+    };
 
     plugins.forEach((p) => {
       // generate dependencies

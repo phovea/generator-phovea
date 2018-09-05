@@ -16,13 +16,13 @@ module.exports.mergeVersions = (name, versions) => {
   // first try to find a good intersection
   try {
     return intersect(...versions).toString();
-  } catch(e) {
+  } catch (e) {
     // map to base version, sort descending take first
     const max = versions.map(semver.coerce).sort(semver.rcompare)[0] || versions[versions.length - 1];
     console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
     return max.toString();
   }
-}
+};
 
 function toSemVer(version) {
   if (version.startsWith('~=')) {
@@ -52,7 +52,7 @@ function toPipVersion(version) {
   // fix
   return `==${version}`;
 }
-
+//
 module.exports.mergePipVersions = (name, versions) => {
   versions = Array.from(new Set(versions)).filter(Boolean); // unique + not empty entries
   if (versions.length === 0) {
@@ -70,10 +70,10 @@ module.exports.mergePipVersions = (name, versions) => {
   // first try to find a good intersection
   try {
     return toPipVersion(intersect(...nodeVersions).toString());
-  } catch(e) {
+  } catch (e) {
     // map to base version, sort descending take first
     const max = toPipVersion(nodeVersions.map(semver.coerce).sort(semver.rcompare)[0]) || versions[versions.length - 1];
     console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
     return max.toString();
   }
-}
+};
