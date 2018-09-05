@@ -19,7 +19,7 @@ module.exports.mergeVersions = (name, versions) => {
   } catch(e) {
     // map to base version, sort descending take first
     const max = versions.map(semver.coerce).sort(semver.rcompare)[0] || versions[versions.length - 1];
-    console.warn(`cannot find common intersecting version for ${name} = ${versions}, taking max "${max}" for now`);
+    console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
     return max.toString();
   }
 }
@@ -69,7 +69,7 @@ module.exports.mergePipVersions = (name, versions) => {
   } catch(e) {
     // map to base version, sort descending take first
     const max = toPipVersion(nodeVersions.map(semver.coerce).sort(semver.rcompare)[0]) || versions[versions.length - 1];
-    console.warn(`cannot find common intersecting version for ${name} = ${versions}, taking max "${max}" for now`);
+    console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
     return max.toString();
   }
 }
