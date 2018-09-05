@@ -9,7 +9,8 @@ const _ = require('lodash');
 const known = () => require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
-const mergeVersions = require('../../utils/version').mergeVersions;
+const {mergeVersions, mergePipVersions} = require('../../utils/version');
+const {parseRequirements} = require('../../utils/pip');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -174,13 +175,24 @@ class Generator extends Base {
     });
     const plugins = files.map(path.dirname);
 
-    const requirements = new Set();
-    const devRequirements = new Set();
+    const requirements = {};
+    const devRequirements = {};
     const dockerPackages = new Set();
     const dockerScripts = [];
     let dockerCompose = {};
     let dockerComposeDebug = {};
     let scripts = {};
+
+    const integrateMulti = (target, source) => {
+      Object.keys(source || {}).forEach((key) => {
+        const value = source[key];
+        if (key in target) {
+          target[key].push(value);
+        } else {
+          target[key] = [value];
+        }
+      });
+    }
 
     plugins.forEach((p) => {
       // generate dependencies
@@ -190,8 +202,9 @@ class Generator extends Base {
           set.add(ri.trim());
         });
       };
-      addAll('requirements.txt', requirements);
-      addAll('requirements_dev.txt', devRequirements);
+      integrateMulti(requirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements.txt`), {defaults: ''})));
+      integrateMulti(devRequirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements_dev.txt`), {defaults: ''})));
+
       addAll('docker_packages.txt', dockerPackages);
       const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});
       if (script) {
@@ -260,7 +273,7 @@ class Generator extends Base {
     additionalPlugins.forEach((p) => {
       const k = known().plugin.byName(p);
       if (k && k.requirements) {
-        Object.keys(k.requirements).forEach((ri) => requirements.add(ri + k.requirements[ri]));
+        integrateMulti(requirements, k.requirements);
       }
       if (k && k.dockerPackages) {
         Object.keys(k.dockerPackages).forEach((ri) => dockerPackages.add(ri + k.dockerPackages[ri]));
@@ -270,37 +283,42 @@ class Generator extends Base {
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const k = known().plugin.byName(p);
+
+      delete requirements[p];
+      delete requirements[p.replace('_', '-')];
+
       if (k) {
         if (k.requirements) {
           Object.keys(k.requirements).forEach((pi) => {
-            requirements.delete(pi + k.requirements[pi]);
+            delete requirements[pi];
           });
         }
         if (k.develop && k.develop.requirements) {
           Object.keys(k.develop.requirements).forEach((pi) => {
-            requirements.delete(pi + k.develop.requirements[pi]);
+            delete requirements[pi];
           });
         }
-        // more intelligent guessing to catch tags
-        Array.from(requirements.keys()).forEach((k) => {
-          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
-            requirements.delete(k);
-          }
-        });
-      } else {
-        // more intelligent guessing
-        Array.from(requirements.keys()).forEach((k) => {
-          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
-            requirements.delete(k);
-          }
-        });
       }
+
+      // more intelligent guessing
+      Object.keys(requirements).forEach((k) => {
+        if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
+          delete requirements[k];
+        }
+      });
+    });
+
+    Object.keys(requirements).forEach((key) => {
+      requirements[key] = mergePipVersions(key, requirements[key]);
+    });
+    Object.keys(devRequirements).forEach((key) => {
+      devRequirements[key] = mergeVersions(key, devRequirements[key]);
     });
 
     return {
       plugins: plugins,
-      requirements: [...requirements.values()],
-      devRequirements: [...devRequirements.values()],
+      requirements: Object.entries(requirements).map((kv) => `${kv[0]}${kv[1]}`),
+      devRequirements: Object.entries(devRequirements).map((kv) => `${kv[0]}${kv[1]}`),
       dockerPackages: [...dockerPackages.values()],
       dockerScripts: dockerScripts,
       scripts: scripts,
