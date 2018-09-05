@@ -122,6 +122,15 @@ class Generator extends Base {
       }
     });
 
+    if (this.props.defaultApp) {
+      // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
+      const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
+      if (pkg) {
+        extend(dependencies, pkg.dependencies);
+        extend(devDependencies, pkg.devDependencies);
+      }
+    }
+
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const k = known().plugin.byName(p);
@@ -129,9 +138,8 @@ class Generator extends Base {
         Object.keys(k.dependencies).forEach((pi) => {
           delete dependencies[pi];
         });
-      } else {
-        delete dependencies[p];
       }
+      delete dependencies[p];
     });
 
     return {plugins, dependencies, devDependencies, scripts};
@@ -346,7 +354,8 @@ class Generator extends Base {
     config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
 
     writeTemplates.call(this, config, false);
-    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts});
+    // replace the added entries
+    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts}, true);
 
     if (!this.fs.exists(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));

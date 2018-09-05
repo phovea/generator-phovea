@@ -165,15 +165,17 @@ class Generator extends Base {
       // regular branch
       const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
       this.log(chalk.blue(`clone repository:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(' '));
+      return this._spawnOrAbort('git', line.split(/ +/));
     }
     // clone a specific commit
     const line = `clone ${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(' ')).then(() => {
+    return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.blue(`checkout commit:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(' '));
+      let repoName = simplifyRepoUrl(repo);
+      repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
+      return this._spawnOrAbort('git', line.split(/ +/), {cwd: `${this.cwd}/${repoName}`});
     });
   }
 
