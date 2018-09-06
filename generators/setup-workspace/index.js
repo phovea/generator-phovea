@@ -26,12 +26,15 @@ function toCWD(basename) {
 }
 
 function findDefaultApp(product) {
+  if (this.defaultApp) {
+    return this.defaultApp;
+  }
   if (!product) {
     return null;
   }
   for (let p of product) {
     if (p.type === 'web') {
-      return p.repo.slice(p.repo.lastIndexOf('/') + 1);
+      return p.repo.slice(p.repo.lastIndexOf('/') + 1).replace('.git', '');
     }
   }
   return null;
@@ -202,9 +205,11 @@ class Generator extends Base {
         const defaultApp = this.product.find((v) => v.type === 'web');
         if (defaultApp) {
           const baseRepo = simplifyRepoUrl(defaultApp.repo);
+          const defaultAppName = baseRepo.slice(baseRepo.lastIndexOf('/') + 1);
+          this.defaultApp = defaultAppName;
           fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
             modules: [],
-            defaultApp: baseRepo.slice(baseRepo.lastIndexOf('/') + 1)
+            defaultApp: defaultAppName
           });
         }
 
@@ -370,10 +375,14 @@ class Generator extends Base {
 
   end() {
     this.log('\n\nnext steps: ');
-    this.log(chalk.yellow(` cd ${this.cwd}`));
-    this.log(chalk.green(' Open PyCharm and select:'), this.destinationPath(this.cwd));
-    this.log(chalk.yellow(' docker-compose up -d'));
-    this.log(chalk.yellow(` npm run start:${findDefaultApp(this.product)}`));
+    this.log(chalk.green('1. switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
+    this.log(chalk.green('2. Open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
+    this.log(chalk.green('   in case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
+    this.log(chalk.green('3. start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
+    this.log(chalk.green('4. start client application in the foreground: '), chalk.yellow('npm start'));
+    this.log(chalk.green('5. open web browser and access: '), chalk.yellow('http://localhost:8080'));
+
+    this.log(chalk.green('X. look at last 50 server log messages (-f ... auto update): '), chalk.yellow('docker-compose logs -f --tail=50 api'));
   }
 }
 
