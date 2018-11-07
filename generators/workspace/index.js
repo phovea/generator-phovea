@@ -302,7 +302,8 @@ class Generator extends Base {
 
       // more intelligent guessing
       Object.keys(requirements).forEach((k) => {
-        if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
+        const full = k + requirements[k];
+        if (full.includes(`/${p}.git@`) || full.startsWith(`${p}==`) || full.replace(/-/gm, '_').startsWith(`${p}==`)) {
           delete requirements[k];
         }
       });
