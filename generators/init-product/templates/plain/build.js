@@ -402,11 +402,11 @@ function patchWorkspace(p) {
   }
 
   if (argv.injectVersion) {
-    const package = `${p.tmpDir}/${p.name}/package.json`;
-    if (fs.existsSync(package)) {
-      const ppkg = require(package);
+    const pkgfile = `${p.tmpDir}/${p.name}/package.json`;
+    if (fs.existsSync(pkgfile)) {
+      const ppkg = require(pkgfile);
       ppkg.version = pkg.version;
-      fs.writeJSONSync(package, ppkg);
+      fs.writeJSONSync(pkgfile, ppkg);
     } else {
       console.warn('cannot inject version, main package.json not found');
     }
