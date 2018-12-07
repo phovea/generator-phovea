@@ -418,7 +418,7 @@ function patchWorkspace(p) {
     let registry = fs.readFileSync(p.tmpDir + '/phovea_registry.js').toString();
     fs.copyFileSync('./phovea.js', p.tmpDir + '/phovea.js');
 
-    oldRegistry += `\n\n
+    registry += `\n\n
     import {register} from 'phovea_core/src/plugin';
     register('__product',require('./phovea.js'));
     `;
