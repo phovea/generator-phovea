@@ -26,9 +26,6 @@ function toCWD(basename) {
 }
 
 function findDefaultApp(product) {
-  if (this.defaultApp) {
-    return this.defaultApp;
-  }
   if (!product) {
     return null;
   }
