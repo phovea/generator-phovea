@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 28.11.2016.
  */
 
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
@@ -125,7 +125,7 @@ class PluginGenerator extends Base {
     const config = this.config.getAll();
     patchPackageJSON.call(this, config);
     writeTemplates.call(this, config);
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea_product.json'))) {
       this.fs.writeJSON(this.destinationPath('phovea_product.json'), this.services);

@@ -1,6 +1,6 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
 const known = () => require('../../utils/known');
@@ -131,7 +131,7 @@ class PluginGenerator extends Base {
     patchPackageJSON.call(this, config, [], {
       dependencies: this._generateDependencies(useDevVersion.call(this))
     });
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea.js'))) {

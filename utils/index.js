@@ -1,5 +1,5 @@
 'use strict';
-const generators = require('yeoman-generator');
+const Base = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
@@ -70,11 +70,15 @@ function writeTemplates(config, withSamples) {
   };
 
   const copy = (prefix) => {
-    this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+    if (this.fs.exists(this.templatePath(prefix + 'plain'))) {
+      this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+    }
     copyTpl(this.templatePath(prefix + 'processed'), '');
 
     if (config.name) {
-      this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+      if (this.fs.exists(this.templatePath(prefix + 'pluginname_plain'))) {
+        this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+      }
       copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
     }
   };
@@ -90,7 +94,7 @@ function useDevVersion() {
   return (pkg.version || '').includes('-');
 }
 
-class BaseInitPluginGenerator extends generators.Base {
+class BaseInitPluginGenerator extends Base {
 
   constructor(args, options, basetype) {
     super(args, options);
@@ -132,7 +136,7 @@ class BaseInitPluginGenerator extends generators.Base {
       this._patchPackageJSON(config);
     }
     if (this.fs.exists(this.templatePath('_gitignore'))) {
-      this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+      this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     }
 
     this._writeTemplates(config, !this.options.noSamples);

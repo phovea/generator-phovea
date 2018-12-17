@@ -1,9 +1,9 @@
 'use strict';
-const generators = require('yeoman-generator');
+const Base = require('yeoman-generator');
 
 const plugins = require('../../utils/types').plugin;
 
-class ChooseGenerator extends generators.Base {
+class ChooseGenerator extends Base {
 
   constructor(args, options) {
     super(args, options);
