@@ -209,7 +209,7 @@ function spawn(cmd, args, opts) {
           // log output what has been captured
           console.log(out.join('\n'));
         }
-        reject(`${cmd} failed with status code ${code} ${signal}`);
+        reject(new Error(`${cmd} failed with status code ${code} ${signal}`));
       }
     });
   });
@@ -664,7 +664,7 @@ function buildWeb(p) {
 function installPythonTestDependencies(p) {
   console.log(chalk.yellow('create test environment'));
   return spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: p.tmpDir})
-  .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
+    .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
 }
 
 function buildServer(p) {
@@ -681,8 +681,8 @@ function buildServer(p) {
 
   // copy main deploy thing and create a docker out of it
   act = act
-  .then(() => fs.ensureDirAsync(`${p.tmpDir}/deploy`))
-  .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/deploy`, `${p.tmpDir}/deploy/`));
+    .then(() => fs.ensureDirAsync(`${p.tmpDir}/deploy`))
+    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/deploy`, `${p.tmpDir}/deploy/`));
 
   return act;
 }

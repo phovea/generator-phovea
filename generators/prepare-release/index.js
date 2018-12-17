@@ -233,7 +233,7 @@ class Generator extends Base {
         } else if (dep.startsWith('-e git+http')) {
           ctx.requirements[dep] = depVersion;
           // 2 strategies if it is local use the one in the current setup (has to be before) else ask npm
-          const repo = dep.match(/-e git\+https?:\/\/([^/]+)\/([\w\d-_/]+)\.git/)[2];  // remove prefix and suffix (.git)
+          const repo = dep.match(/-e git\+https?:\/\/([^/]+)\/([\w\d-_/]+)\.git/)[2]; // remove prefix and suffix (.git)
           const key = toCWD(repo);
           const local = this.repos.find((d) => d.name === key);
           if (local && local.private) {

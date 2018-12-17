@@ -2,7 +2,6 @@
  * Created by Samuel Gratzl on 28.11.2016.
  */
 
-const _ = require('lodash');
 const Base = require('yeoman-generator').Base;
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
@@ -75,7 +74,8 @@ class PluginGenerator extends Base {
         {name: 'Web', value: 'web'},
         {name: 'Web without Rest-API connection', value: 'static'},
         {name: 'Rest-API', value: 'api'},
-        {name: 'Service', value: 'service'}],
+        {name: 'Service', value: 'service'}
+      ],
       default: 'web'
     }, {
       name: 'label',
