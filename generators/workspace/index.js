@@ -9,6 +9,8 @@ const _ = require('lodash');
 const known = () => require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
+const {mergeVersions, mergePipVersions} = require('../../utils/version');
+const {parseRequirements} = require('../../utils/pip');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -98,27 +100,42 @@ class Generator extends Base {
     });
     const plugins = files.map(path.dirname);
 
+    const integrateMulti = (target, source) => {
+      Object.keys(source || {}).forEach((key) => {
+        const value = source[key];
+        if (key in target) {
+          target[key].push(value);
+        } else {
+          target[key] = [value];
+        }
+      });
+    };
+
     // generate dependencies
     let dependencies = {};
     let devDependencies = {};
     let scripts = {};
     plugins.forEach((p) => {
       const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
-      extend(dependencies, pkg.dependencies);
-      extend(devDependencies, pkg.devDependencies);
+      integrateMulti(dependencies, pkg.dependencies);
+      integrateMulti(devDependencies, pkg.devDependencies);
 
       // no pre post test tasks
       Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
         // generate scoped tasks
         scripts[`${s}:${p}`] = `cd ${p} && npm run ${s}`;
       });
+      if (pkg.scripts.start) {
+        // start script, generate one with the package name
+        scripts[p] = `cd ${p} && npm start`;
+      }
     });
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
       const k = known().plugin.byName(p);
       if (k && k.dependencies) {
-        extend(dependencies, k.dependencies);
+        integrateMulti(dependencies, k.dependencies);
       }
     });
 
@@ -126,8 +143,8 @@ class Generator extends Base {
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
       if (pkg) {
-        extend(dependencies, pkg.dependencies);
-        extend(devDependencies, pkg.devDependencies);
+        integrateMulti(dependencies, pkg.dependencies);
+        integrateMulti(devDependencies, pkg.devDependencies);
       }
     }
 
@@ -142,6 +159,13 @@ class Generator extends Base {
       delete dependencies[p];
     });
 
+    Object.keys(dependencies).forEach((key) => {
+      dependencies[key] = mergeVersions(key, dependencies[key]);
+    });
+    Object.keys(devDependencies).forEach((key) => {
+      devDependencies[key] = mergeVersions(key, devDependencies[key]);
+    });
+
     return {plugins, dependencies, devDependencies, scripts};
   }
 
@@ -151,13 +175,24 @@ class Generator extends Base {
     });
     const plugins = files.map(path.dirname);
 
-    const requirements = new Set();
-    const devRequirements = new Set();
+    const requirements = {};
+    const devRequirements = {};
     const dockerPackages = new Set();
     const dockerScripts = [];
     let dockerCompose = {};
     let dockerComposeDebug = {};
     let scripts = {};
+
+    const integrateMulti = (target, source) => {
+      Object.keys(source || {}).forEach((key) => {
+        const value = source[key];
+        if (key in target) {
+          target[key].push(value);
+        } else {
+          target[key] = [value];
+        }
+      });
+    };
 
     plugins.forEach((p) => {
       // generate dependencies
@@ -167,8 +202,9 @@ class Generator extends Base {
           set.add(ri.trim());
         });
       };
-      addAll('requirements.txt', requirements);
-      addAll('requirements_dev.txt', devRequirements);
+      integrateMulti(requirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements.txt`), {defaults: ''})));
+      integrateMulti(devRequirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements_dev.txt`), {defaults: ''})));
+
       addAll('docker_packages.txt', dockerPackages);
       const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});
       if (script) {
@@ -237,7 +273,7 @@ class Generator extends Base {
     additionalPlugins.forEach((p) => {
       const k = known().plugin.byName(p);
       if (k && k.requirements) {
-        Object.keys(k.requirements).forEach((ri) => requirements.add(ri + k.requirements[ri]));
+        integrateMulti(requirements, k.requirements);
       }
       if (k && k.dockerPackages) {
         Object.keys(k.dockerPackages).forEach((ri) => dockerPackages.add(ri + k.dockerPackages[ri]));
@@ -247,37 +283,43 @@ class Generator extends Base {
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const k = known().plugin.byName(p);
+
+      delete requirements[p];
+      delete requirements[p.replace('_', '-')];
+
       if (k) {
         if (k.requirements) {
           Object.keys(k.requirements).forEach((pi) => {
-            requirements.delete(pi + k.requirements[pi]);
+            delete requirements[pi];
           });
         }
         if (k.develop && k.develop.requirements) {
           Object.keys(k.develop.requirements).forEach((pi) => {
-            requirements.delete(pi + k.develop.requirements[pi]);
+            delete requirements[pi];
           });
         }
-        // more intelligent guessing to catch tags
-        Array.from(requirements.keys()).forEach((k) => {
-          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
-            requirements.delete(k);
-          }
-        });
-      } else {
-        // more intelligent guessing
-        Array.from(requirements.keys()).forEach((k) => {
-          if (k.includes(`/${p}.git@`) || k.startsWith(`${p}==`) || k.replace(/-/gm, '_').startsWith(`${p}==`)) {
-            requirements.delete(k);
-          }
-        });
       }
+
+      // more intelligent guessing
+      Object.keys(requirements).forEach((k) => {
+        const full = k + requirements[k];
+        if (full.includes(`/${p}.git@`) || full.startsWith(`${p}==`) || full.replace(/-/gm, '_').startsWith(`${p}==`)) {
+          delete requirements[k];
+        }
+      });
+    });
+
+    Object.keys(requirements).forEach((key) => {
+      requirements[key] = mergePipVersions(key, requirements[key]);
+    });
+    Object.keys(devRequirements).forEach((key) => {
+      devRequirements[key] = mergeVersions(key, devRequirements[key]);
     });
 
     return {
       plugins: plugins,
-      requirements: [...requirements.values()],
-      devRequirements: [...devRequirements.values()],
+      requirements: Object.keys(requirements).map((k) => `${k}${requirements[k]}`),
+      devRequirements: Object.keys(devRequirements).map((k) => `${k}${devRequirements[k]}`),
       dockerPackages: [...dockerPackages.values()],
       dockerScripts: dockerScripts,
       scripts: scripts,

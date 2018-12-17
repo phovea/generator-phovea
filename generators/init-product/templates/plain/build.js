@@ -25,6 +25,7 @@ possible options:
  * --quiet         ... reduce log messages
  * --serial        ... build elements sequentially
  * --skipTests     ... skip tests
+ * --injectVersion ... injects the product version into the package.json of the built component
  * --useSSH        ... clone via ssh instead of https
  * --skipCleanUp   ... skip cleaning up old docker images
  * --skipSaveImage ... skip saving the generated docker images
@@ -389,17 +390,40 @@ function patchDockerfile(p, dockerFile) {
   });
 }
 
-function patchWorkspace(dir) {
+function patchWorkspace(p) {
   // prepend docker_script in the workspace
-  if (!fs.existsSync('./docker_script.sh')) {
-    return;
+  if (fs.existsSync('./docker_script.sh')) {
+    console.log('patch workspace and prepend docker_script.sh');
+    let content = fs.readFileSync('./docker_script.sh').toString();
+    if (fs.existsSync(p.tmpDir + '/docker_script.sh')) {
+      content += '\n' + fs.readFileSync(p.tmpDir + '/docker_script.sh').toString();
+    }
+    fs.writeFileSync(p.tmpDir + '/docker_script.sh', content);
   }
-  console.log('patch workspace and prepend docker_script.sh');
-  let content = fs.readFileSync('./docker_script.sh').toString();
-  if (fs.existsSync(dir + '/docker_script.sh')) {
-    content += '\n' + fs.readFileSync(dir + '/docker_script.sh').toString();
+
+  if (argv.injectVersion) {
+    const pkgfile = `${p.tmpDir}/${p.name}/package.json`;
+    if (fs.existsSync(pkgfile)) {
+      const ppkg = require(pkgfile);
+      ppkg.version = pkg.version;
+      fs.writeJSONSync(pkgfile, ppkg);
+    } else {
+      console.warn('cannot inject version, main package.json not found');
+    }
   }
-  fs.writeFileSync(dir + '/docker_script.sh', content);
+
+  // inject extra phovea.js
+  if (fs.existsSync('./phovea.js')) {
+    console.log('patch workspace and add workspace phovea.js');
+    let registry = fs.readFileSync(p.tmpDir + '/phovea_registry.js').toString();
+    fs.copyFileSync('./phovea.js', p.tmpDir + '/phovea.js');
+
+    registry += `\n\n
+    import {register} from 'phovea_core/src/plugin';
+    register('__product',require('./phovea.js'));
+    `;
+    fs.writeFileSync(p.tmpDir + '/phovea_registry.js', registry);
+  }
 }
 
 function mergeCompose(composePartials) {
@@ -603,7 +627,7 @@ function buildDockerImage(p) {
 
 function createWorkspace(p) {
   return yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, p.tmpDir)
-    .then(() => patchWorkspace(p.tmpDir));
+    .then(() => patchWorkspace(p));
 }
 
 function installWebDependencies(p) {
