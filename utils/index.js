@@ -2,7 +2,7 @@
 const Base = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
-const glob = require('glob').sync;
+const fs = require('fs');
 
 function patchPackageJSON(config, unset, extra, replaceExtra) {
   const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
@@ -59,27 +59,21 @@ function writeTemplates(config, withSamples) {
 
   const pattern = stringifyAble(config);
 
-  const copyTpl = (base, dbase) => {
-    // see https://github.com/SBoudrias/mem-fs-editor/issues/25
-    // copyTpl doesn't support glob options
-    const f = glob(base + '/**/*', {dot: true});
-    f.forEach((fi) => {
-      const rel = path.relative(base, fi);
-      this.fs.copyTpl(fi, this.destinationPath(dbase + rel), pattern);
-    });
-  };
-
   const copy = (prefix) => {
-    if (this.fs.exists(this.templatePath(prefix + 'plain'))) {
+    if (fs.existsSync(this.templatePath(prefix + 'plain'))) {
       this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
     }
-    copyTpl(this.templatePath(prefix + 'processed'), '');
+    if (fs.existsSync(this.templatePath(prefix + 'processed'))) {
+      this.fs.copyTpl(this.templatePath(prefix + 'processed/**/*'), this.destinationPath(), pattern, includeDot);
+    }
 
     if (config.name) {
-      if (this.fs.exists(this.templatePath(prefix + 'pluginname_plain'))) {
+      if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
         this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
       }
-      copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
+      if (fs.existsSync(this.templatePath(prefix + 'pluginname_processed'))) {
+        this.fs.copyTpl(this.templatePath(prefix + 'pluginname_processed/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), pattern, includeDot);
+      }
     }
   };
   copy('');
