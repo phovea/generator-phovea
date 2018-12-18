@@ -16,6 +16,12 @@ const comments = {
     end: '*/',
     aligningSpaces: 1
   },
+  tsx: {
+    begin: '/*',
+    body: '*',
+    end: '*/',
+    aligningSpaces: 1
+  },
   py: {
     begin: '##',
     body: '#',
