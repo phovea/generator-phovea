@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/phovea
     docker:
-      - image: caleydo/phovea_circleci_python:v1.0
+      - image: caleydo/phovea_circleci_python:v2.0
       - image: docker:17.05.0-ce-git
     tags:
       - /v\d+.\d+.\d+.*/
