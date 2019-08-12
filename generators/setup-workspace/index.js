@@ -126,16 +126,17 @@ class Generator extends Base {
     });
   }
 
-  _yo(generator, options) {
+  _yo(generator, options, args) {
     // call yo internally
     const env = yeoman.createEnv([], {
       cwd: this.cwd
     }, this.env.adapter);
     env.register(require.resolve('../' + generator), 'phovea:' + generator);
+    const _args = Array.isArray(args) ? args.join(' ') : args || '';
     return new Promise((resolve, reject) => {
       try {
         this.log('running yo phovea:' + generator);
-        env.run('phovea:' + generator, options || {}, () => {
+        env.run(`phovea:${generator} ${_args}`, options || {}, () => {
           // wait a second after running yo to commit the files correctly
           setTimeout(() => resolve(), 500);
         });
@@ -169,52 +170,11 @@ class Generator extends Base {
 
   _cloneRepo(repo, branch, extras) {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
-    if (!version.isGitCommit(branch)) {
-      // modify branch name, if it is an advance version tag
-      // otherwise just use the branch name as it is
-      if (version.isAdvancedVersionTag(branch)) {
-        this.log(chalk.white(`found branch with version range`), chalk.green(branch), chalk.white(`for`), chalk.green(repoUrl));
-
-        const line = `ls-remote --tags ${repoUrl}`;
-        this.log(chalk.white(`fetching possible version tags:`), `git ${line}`);
-        const r = this._spawn('git', line.split(/ +/));
-
-        if (failed(r)) {
-          this.log(chalk.red(`failed to fetch list of tags from git repository`), `status code: ${r.status}`);
-          this.log(r.stderr.toString());
-          return this._abort(`failed to fetch list of tags from git repository - status code: ${r.status}`);
-        }
-
-        const gitLog = r.stdout.toString();
-        const gitVersions = version.extractVersionsFromGitLog(gitLog);
-        this.log(chalk.white(`found the following version tags: `), gitVersions);
-
-        const highestVersion = version.findHighestVersion(gitVersions, branch);
-        if (!highestVersion) {
-          this.log(chalk.red(`failed to find git version tag for given version range`));
-          return this._abort(`failed to find git version tag for given version range`);
-        }
-
-        this.log(chalk.white(`use version tag`), chalk.green(highestVersion), chalk.white(`as branch name`));
-        branch = highestVersion;
-      }
-
-      const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
-      this.log(chalk.white(`clone repository:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(/ +/));
-    }
-    // clone a specific commit
-    const line = `clone ${extras || ''} ${repoUrl}`;
-    this.log(chalk.white(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
-      const line = `checkout ${branch}`;
-      this.log(chalk.white(`checkout commit:`), `git ${line}`);
-      let repoName = simplifyRepoUrl(repo);
-      repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
-      return this._spawnOrAbort('git', line.split(/ +/), {
-        cwd: `${this.cwd}/${repoName}`
-      });
-    });
+    return this._yo(`clone-repo`, {
+      branch,
+      extras,
+      cwd: this.cwd
+    }, repoUrl); // repository URL as argument
   }
 
   _getProduct() {
