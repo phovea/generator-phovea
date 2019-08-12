@@ -88,10 +88,11 @@ class Generator extends Base {
       when: this.options.extras === undefined
     }]).then((props) => {
       this.cwd = this.options.cwd || undefined;
-      this.cloneDirName = (this.options.dir !== '') ? ` ${this.options.dir}` : this.options.dir; // add space at the beginning
+      this.cloneDirName = (this.options.dir === '') ? this.options.dir : ` ${this.options.dir}`; // add space at the beginning
       this.options.repository = props.repository || this.args[0];
       this.options.branch = props.branch || this.options.branch;
       this.options.extras = props.extras || this.options.extras;
+      this.options.extras = (this.options.extras === '') ? this.options.extras : ` ${this.options.extras}`; // add space at the beginning
     });
   }
 
