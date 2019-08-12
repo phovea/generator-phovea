@@ -9,7 +9,6 @@ const {
   toSSHRepoUrl,
   simplifyRepoUrl
 } = require('../../utils/repo');
-const version = require('../../utils/version');
 
 function toBaseName(name) {
   if (name.includes('/')) {
