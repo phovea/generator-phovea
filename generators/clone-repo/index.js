@@ -48,7 +48,15 @@ class Generator extends Base {
       type: String
     });
 
+    // no prompt implemented
     this.option('cwd', {
+      defaults: '',
+      type: String
+    });
+
+    // no prompt implemented
+    this.option('dir', {
+      alias: 'd',
       defaults: '',
       type: String
     });
@@ -79,7 +87,8 @@ class Generator extends Base {
       default: this.options.extras || undefined,
       when: this.options.extras === undefined
     }]).then((props) => {
-      this.cwd = this.options.cwd;
+      this.cwd = this.options.cwd || undefined;
+      this.cloneDirName = (this.options.dir !== '') ? ` ${this.options.dir}` : this.options.dir; // add space at the beginning
       this.options.repository = props.repository || this.args[0];
       this.options.branch = props.branch || this.options.branch;
       this.options.extras = props.extras || this.options.extras;
@@ -87,10 +96,10 @@ class Generator extends Base {
   }
 
   writing() {
-    return this._cloneRepo(this.options.repository, this.options.branch, this.options.extras);
+    return this._cloneRepo(this.options.repository, this.options.branch, this.options.extras, this.cloneDirName);
   }
 
-  _cloneRepo(repoUrl, branch, extras) {
+  _cloneRepo(repoUrl, branch, extras, cloneDirName) {
     if (!version.isGitCommit(branch)) {
       // modify branch name, if it is an advance version tag
       // otherwise just use the branch name as it is
@@ -121,12 +130,12 @@ class Generator extends Base {
         branch = highestVersion;
       }
 
-      const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
+      const line = `clone -b ${branch}${extras || ''} ${repoUrl}${cloneDirName}`;
       this.log(chalk.white(`clone repository:`), `git ${line}`);
       return this._spawnOrAbort('git', line.split(/ +/));
     }
     // clone a specific commit
-    const line = `clone ${extras || ''} ${repoUrl}`;
+    const line = `clone ${extras || ''} ${repoUrl}${cloneDirName}`;
     this.log(chalk.white(`clone repository:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
       const line = `checkout ${branch}`;
@@ -157,7 +166,7 @@ class Generator extends Base {
       this.log(r.stderr.toString());
       return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
     }
-    return Promise.resolve(cmd);
+    return Promise.resolve(r);
   }
 
 }
