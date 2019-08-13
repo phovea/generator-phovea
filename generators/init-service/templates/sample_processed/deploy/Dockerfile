@@ -1,6 +1,6 @@
 FROM caleydo/phovea_python:v1.1
 
-MAINTAINER Samuel Gratzl <samuel.gratzl@datavisyn.io>
+LABEL maintainer="The Caleydo Team"
 WORKDIR /phovea
 RUN printf "from phovea_server import launch\nlaunch.run()\n" > /phovea/launch.py
 
