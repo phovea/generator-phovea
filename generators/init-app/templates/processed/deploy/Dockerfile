@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-LABEL maintainer="The Caleydo Team"
+LABEL maintainer="contact@caleydo.org"
 
 ENV PHOVEA_API_SERVER=api
 ENV PHOVEA_NGINX_PORT=80
