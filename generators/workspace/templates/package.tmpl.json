@@ -10,9 +10,8 @@
   "license": "BSD-3-Clause",
   "private": true,
   "engines": {
-    "npm": ">= 3",
-    "node": ">= 6",
-    "iojs": ">= 3"
+    "npm": ">= 6.4",
+    "node": ">= 8.16"
   },
   "scripts": {
     "compile": "tsc",

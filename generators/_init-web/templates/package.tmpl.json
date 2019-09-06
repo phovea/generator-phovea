@@ -7,8 +7,8 @@
     "build"
   ],
   "engines": {
-    "npm": ">= 3",
-    "node": ">= 6"
+    "npm": ">= 6.4",
+    "node": ">= 8.16"
   },
   "scripts": {
     "compile": "tsc",
