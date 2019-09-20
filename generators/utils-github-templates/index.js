@@ -1,6 +1,5 @@
 'use strict';
 const Base = require('yeoman-generator').Base;
-const chalk = require('chalk');
 const path = require('path');
 const plugins = require('../../utils/list-plugins');
 
