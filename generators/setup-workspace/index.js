@@ -171,7 +171,7 @@ class SetupWorkspaceGenerator extends Generator {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
-      extras,
+      extras: extras || '',
       cwd: this.cwd
     }, repoUrl); // repository URL as argument
   }
