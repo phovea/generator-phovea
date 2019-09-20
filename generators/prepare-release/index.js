@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const {parseRequirements} = require('../../utils/pip');

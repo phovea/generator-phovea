@@ -1,6 +1,6 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
 const known = () => require('../../utils/known');

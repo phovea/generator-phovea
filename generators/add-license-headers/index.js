@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');

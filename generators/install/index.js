@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const path = require('path');
 
 function toPluginRepo(url, useSSH) {

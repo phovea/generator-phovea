@@ -1,9 +1,7 @@
 /**
  * Created by Samuel Gratzl on 28.11.2016.
  */
-
-const _ = require('lodash');
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');

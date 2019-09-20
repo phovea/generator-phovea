@@ -1,13 +1,12 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 const {parseRequirements} = require('../../utils/pip');
 
 const known = () => require('../../utils/known');
 
 class Generator extends Base {
-
   constructor(args, options) {
     super(args, options);
 

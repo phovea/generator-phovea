@@ -1,7 +1,7 @@
 'use strict';
 const _ = require('lodash');
 const parseAuthor = require('parse-author');
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 const originUrl = require('git-remote-origin-url');
 

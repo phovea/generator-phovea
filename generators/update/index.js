@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator')
+const Base = require('yeoman-generator');
 
 function extractFromReadme(content) {
   const safe = (p) => p ? p[1] : '';
