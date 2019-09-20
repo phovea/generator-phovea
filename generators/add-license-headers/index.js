@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
@@ -36,7 +36,7 @@ const comments = {
   }
 };
 
-class AddLicenseGenerator extends Generator {
+class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
@@ -209,4 +209,4 @@ class AddLicenseGenerator extends Generator {
   }
 }
 
-module.exports = AddLicenseGenerator;
+module.exports = Generator;

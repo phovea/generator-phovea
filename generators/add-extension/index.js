@@ -1,5 +1,5 @@
 'use strict';
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 
 const plugins = require('../../utils/types').plugin;
 const stringifyAble = require('../../utils').stringifyAble;
@@ -33,7 +33,7 @@ function toJSONFromText(text) {
   return r;
 }
 
-class AddExtensionGenerator extends Generator {
+class Generator extends Base {
   constructor(args, options) {
     super(args, options);
     this.basetype = 'web';
@@ -143,4 +143,4 @@ class AddExtensionGenerator extends Generator {
   }
 }
 
-module.exports = AddExtensionGenerator;
+module.exports = Generator;

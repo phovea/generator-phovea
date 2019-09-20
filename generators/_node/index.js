@@ -1,13 +1,13 @@
 'use strict';
 const _ = require('lodash');
 const parseAuthor = require('parse-author');
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 const originUrl = require('git-remote-origin-url');
 
 // based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
 
-class PackageJSONGenerator extends Generator {
+class PackageJSONGenerator extends Base {
 
   constructor(args, options) {
     super(args, options);

@@ -1,6 +1,6 @@
 'use strict';
 const _ = require('lodash');
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
 const known = () => require('../../utils/known');
@@ -49,7 +49,7 @@ function toLibraryExternals(moduleNames, libraryNames) {
   return Array.from(new Set(r));
 }
 
-class PluginGenerator extends Generator {
+class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
@@ -148,6 +148,6 @@ class PluginGenerator extends Generator {
   }
 }
 
-module.exports = PluginGenerator;
+module.exports = Generator;
 module.exports.toLibraryAliasMap = toLibraryAliasMap;
 module.exports.toLibraryExternals = toLibraryExternals;

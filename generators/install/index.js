@@ -1,5 +1,5 @@
 'use strict';
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 const path = require('path');
 
 function toPluginRepo(url, useSSH) {
@@ -12,7 +12,7 @@ function toPluginRepo(url, useSSH) {
   };
 }
 
-class InstallGenerator extends Generator {
+class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
@@ -126,4 +126,4 @@ class InstallGenerator extends Generator {
   }
 }
 
-module.exports = InstallGenerator;
+module.exports = Generator;

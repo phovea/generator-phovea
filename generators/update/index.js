@@ -1,5 +1,5 @@
 'use strict';
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 
 function extractFromReadme(content) {
   const safe = (p) => p ? p[1] : '';
@@ -11,7 +11,7 @@ function extractFromReadme(content) {
   return {longDescription, readme};
 }
 
-class UpdateGenerator extends Generator {
+class Generator extends Base {
 
   initializing() {
     this.isWorkspace = this.fs.exists(this.destinationPath('.yo-rc-workspace.json'));
@@ -61,4 +61,4 @@ class UpdateGenerator extends Generator {
   }
 }
 
-module.exports = UpdateGenerator;
+module.exports = Generator;

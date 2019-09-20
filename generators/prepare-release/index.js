@@ -1,5 +1,5 @@
 'use strict';
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const {parseRequirements} = require('../../utils/pip');
@@ -53,7 +53,7 @@ function topologicalSort(nodes) {
   return l.map((n) => n.data);
 }
 
-class PrepeareReleaseGenerator extends Generator {
+class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
@@ -416,4 +416,4 @@ class PrepeareReleaseGenerator extends Generator {
   }
 }
 
-module.exports = PrepeareReleaseGenerator;
+module.exports = Generator;

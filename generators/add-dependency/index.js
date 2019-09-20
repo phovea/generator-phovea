@@ -1,12 +1,12 @@
 'use strict';
-const Generator = require('yeoman-generator');
+const Base = require('yeoman-generator')
 const chalk = require('chalk');
 
 const known = require('../../utils/known');
 const plugins = known.plugin;
 const libs = known.lib;
 
-class AddDependencyGenerator extends Generator {
+class Generator extends Base {
 
   prompting() {
     const type = this.config.get('type');
@@ -57,4 +57,4 @@ class AddDependencyGenerator extends Generator {
   }
 }
 
-module.exports = AddDependencyGenerator;
+module.exports = Generator;
