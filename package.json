@@ -49,6 +49,7 @@
     "yeoman-generator": "0.24.1"
   },
   "devDependencies": {
+    "@types/yeoman-generator": "0.0.24-alpha",
     "eslint": "3.12.2",
     "eslint-config-xo-space": "0.15.0",
     "gulp": "3.9.1",
