@@ -1,5 +1,5 @@
 'use strict';
-const generators = require('yeoman-generator');
+const Generator = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
@@ -90,7 +90,7 @@ function useDevVersion() {
   return (pkg.version || '').includes('-');
 }
 
-class BaseInitPluginGenerator extends generators.Base {
+class BaseInitPluginGenerator extends Generator {
 
   constructor(args, options, basetype) {
     super(args, options);

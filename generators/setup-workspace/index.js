@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
@@ -76,7 +76,7 @@ function toDownloadName(url) {
   return url.substring(url.lastIndexOf('/') + 1);
 }
 
-class Generator extends Base {
+class SetupWorkspaceGenerator extends Generator {
 
   constructor(args, options) {
     super(args, options);
@@ -384,4 +384,4 @@ class Generator extends Base {
   }
 }
 
-module.exports = Generator;
+module.exports = SetupWorkspaceGenerator;

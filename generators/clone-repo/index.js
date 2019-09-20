@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const {
   simplifyRepoUrl
@@ -14,7 +14,7 @@ function failed(spawnResult) {
  * Clone a given repository and supports version ranges for git tags.
  * @see https://docs.npmjs.com/misc/semver#advanced-range-syntax
  */
-class Generator extends Base {
+class CloneRepoGenerator extends Generator {
 
   constructor(args, options) {
     super(args, options);
@@ -172,4 +172,4 @@ class Generator extends Base {
 
 }
 
-module.exports = Generator;
+module.exports = CloneRepoGenerator;

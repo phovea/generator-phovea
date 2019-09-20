@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Generator = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
@@ -51,7 +51,7 @@ function resolveAllNeighbors(useSSH, types) {
   return resolveNeighbors.call(this, plugins, useSSH, types);
 }
 
-class Generator extends Base {
+class CloneGenerator extends Generator {
   constructor(args, options) {
     super(args, options);
 
@@ -142,6 +142,6 @@ class Generator extends Base {
   }
 }
 
-module.exports = Generator;
+module.exports = CloneGenerator;
 module.exports.resolveNeighbors = resolveNeighbors;
 module.exports.resolveAllNeighbors = resolveAllNeighbors;

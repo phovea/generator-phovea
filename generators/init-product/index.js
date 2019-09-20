@@ -3,7 +3,7 @@
  */
 
 const _ = require('lodash');
-const Base = require('yeoman-generator').Base;
+const Generator = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
@@ -21,7 +21,7 @@ function buildPossibleAdditionalPlugins(type) {
   return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
 }
 
-class PluginGenerator extends Base {
+class PluginGenerator extends Generator {
 
   initializing() {
     this.services = [];

@@ -1,8 +1,8 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Generator = require('yeoman-generator');
 const resolveAllNeighbors = require('../clone').resolveAllNeighbors;
 
-class Generator extends Base {
+class ResolveGenerator extends Generator {
   constructor(args, options) {
     super(args, options);
 
@@ -74,4 +74,4 @@ class Generator extends Base {
   }
 }
 
-module.exports = Generator;
+module.exports = ResolveGenerator;

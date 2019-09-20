@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Generator = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const chalk = require('chalk');
@@ -41,7 +41,7 @@ function rewriteDockerCompose(compose) {
   return compose;
 }
 
-class Generator extends Base {
+class WorkspaceGenerator extends Generator {
 
   constructor(args, options) {
     super(args, options);
@@ -433,4 +433,4 @@ class Generator extends Base {
   }
 }
 
-module.exports = Generator;
+module.exports = WorkspaceGenerator;
