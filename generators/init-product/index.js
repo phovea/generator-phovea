@@ -125,7 +125,7 @@ class PluginGenerator extends Generator {
     const config = this.config.getAll();
     patchPackageJSON.call(this, config);
     writeTemplates.call(this, config);
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea_product.json'))) {
       this.fs.writeJSON(this.destinationPath('phovea_product.json'), this.services);

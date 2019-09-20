@@ -131,7 +131,7 @@ class PluginGenerator extends Generator {
     patchPackageJSON.call(this, config, [], {
       dependencies: this._generateDependencies(useDevVersion.call(this))
     });
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea.js'))) {
