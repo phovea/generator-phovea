@@ -70,11 +70,21 @@ function writeTemplates(config, withSamples) {
   };
 
   const copy = (prefix) => {
-    this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+    this.fs.exists(this.templatePath(prefix + 'plain'), (exists) => {
+      if(exists === false) {
+        return;
+      }
+      this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+    });
     copyTpl(this.templatePath(prefix + 'processed'), '');
 
     if (config.name) {
-      this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+      this.fs.exists(this.templatePath(prefix + 'pluginname_plain'), (exists) => {
+        if(exists === false) {
+          return;
+        }
+        this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+      });
       copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
     }
   };
@@ -132,7 +142,7 @@ class BaseInitPluginGenerator extends Generator {
       this._patchPackageJSON(config);
     }
     if (this.fs.exists(this.templatePath('_gitignore'))) {
-      this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+      this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     }
 
     this._writeTemplates(config, !this.options.noSamples);
