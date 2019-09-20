@@ -142,6 +142,12 @@ class PackageJSONGenerator extends Base {
     this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
   }
 
+  default() {
+    this.composeWith(`phovea:utils-github-templates`, {}, {
+      local: require.resolve(`../utils-github-templates`)
+    });
+  }
+
   end() {
     this.spawnCommandSync('git', ['init'], {
       cwd: this.destinationPath()
