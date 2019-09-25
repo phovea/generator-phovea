@@ -26,7 +26,8 @@
     "yeoman-generator"
   ],
   "engines": {
-    "node": ">=6.0.0"
+    "npm": ">= 6.4",
+    "node": ">= 8.16"
   },
   "dependencies": {
     "chalk": "1.1.3",
