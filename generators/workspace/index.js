@@ -313,7 +313,7 @@ class Generator extends Base {
       requirements[key] = mergePipVersions(key, requirements[key]);
     });
     Object.keys(devRequirements).forEach((key) => {
-      devRequirements[key] = mergeVersions(key, devRequirements[key]);
+      devRequirements[key] = mergePipVersions(key, devRequirements[key]);
     });
 
     return {
