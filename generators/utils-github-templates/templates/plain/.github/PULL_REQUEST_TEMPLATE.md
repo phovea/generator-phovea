@@ -12,6 +12,10 @@ Closes <list issues numbers here>
 * [ ] Build is successful
 * [ ] [Summary of changes](#summary-of-changes) written
 * [ ] Wiki documentation written
+* [ ] Add type label (e.g., *bug*, *enhancement*) to this pull request
+* [ ] Add next version label (e.g., `next-version: minor`) to this PR following [semver](https://semver.org/)
+* [ ] Assign at least one reviewer
+* [ ] Assign at least one assignee
 
 
 ### Summary of changes
