@@ -50,10 +50,9 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 ### Prepeare next develop release
 
 * [ ] Merge `master` into `develop` branch
-* [ ] Update version in *package.json* to `<release version + 1>-SNAPSHOT`
+* [ ] Update version in *package.json* and *package-lock.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Revert dependencies in *package.json* to develop branches (e.g., `"phovea_core": "github:phovea/phovea_core#develop"`)
 * [ ] Revert dependencies in *requirements.txt* to develop branches (e.g., `-e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server`)
-* [ ] Run `npm install` on release branch to update _package-lock.json_
 * [ ] Commit and push changes
  
 ### 🏁 Finish line
