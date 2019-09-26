@@ -7,17 +7,17 @@
 
 ### Release preperation
 
-* [x] Create new `release-x.x.x` branch (based on `develop` branch)
-* [ ] Check selected branches (from `release-x.x.x` into `master` branch)
+* [ ] Create new `release-x.x.x` branch (based on `develop` branch)
 * [ ] Collect changes and write [release notes](#release-notes)
+* [ ] Draft release PR in GitHub
 
 ### Release dependencies first
 
 In case of dependent Phovea/TDP repositories follow [dependency tree](https://wiki.datavisyn.io/phovea/fundamentals/development-process#dependency-hierarchy) from the top:
 
 * [ ] Release dependent repositories if they contain changes first before proceeding here
-* [ ] Replace git dependencies in *package.json* with new version range (e.g., `"phovea_core": "~2.3.1"`)
-* [ ] Replace git dependencies in *requirements.txt* with new version range (e.g., `phovea_server>=2.3.0,<2.4`)
+* [ ] Replace git dependencies in *package.json* with new version range (e.g., `"phovea_core": "^2.3.1"`)
+* [ ] Replace git dependencies in *requirements.txt* with new version range (e.g., `phovea_server>=2.3.0,<3.0.0`)
 * [ ] Commit and push new dependencies
 * [ ] Wait until build is successful
 * [ ] Repeat with other repositories/dependencies or proceed with next section
@@ -27,6 +27,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Check version numbers of dependencies again
 * [ ] Check if build is successful
 * [ ] Update this version number following [semver](https://semver.org)
+* [ ] Run `npm install` on release branch to update _package-lock.json_
 * [ ] Commit and push *package.json* and *package-lock.json* with new version number
 * [ ] Wait until build is successful
 * [ ] Assign reviewer and wait for final review
@@ -37,12 +38,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] `npm run build` to build the bundles
 * [ ] `npm login caleydo-bot`
 * [ ] `npm publish`
-
-### Publish pip release
-
-* [ ] Ensure only two files are in the *dist* directory
-* [ ] **🚧 TODO is there any login 🚧**
-* [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
+* [ ] Check release on [npmjs.com](https://www.npmjs.com)
 
 ### Create GitHub release
 
