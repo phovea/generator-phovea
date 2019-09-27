@@ -40,6 +40,12 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] `npm publish`
 * [ ] Check release on [npmjs.com](https://www.npmjs.com)
 
+### Publish pip release
+
+ * [ ] Ensure only two files are in the *dist* directory
+* [ ] **🚧 TODO is there any login 🚧**
+* [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
+
 ### Create GitHub release
 
 * [ ] Draft a new release (Code -> Releases -> Draft a new release)
