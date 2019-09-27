@@ -5,9 +5,9 @@
 
 ## Checklists
 
-### Release preperation
+### Release preparation
 
-* [ ] Create new `release-x.x.x` branch (based on `develop` branch)
+* [x] Create new `release-x.x.x` branch (based on `develop` branch)
 * [ ] Collect changes and write [release notes](#release-notes)
 * [ ] Draft release PR in GitHub
 
@@ -33,18 +33,24 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Assign reviewer and wait for final review
 * [ ] Merge this pull request into master branch
 
+### Publish pip release
+
+* [ ] Create a directory called _dist_ in your local repo
+* [ ] Open last successful circle CI Build for this PR
+* [ ] Go to _Artifacts_ and open `home/phovea/dist`
+* [ ] Download the two files into the _dist_ directory
+* [ ] Ensure only two files are in the *dist* directory (*.whl and *.tar.gz)
+* [ ] Ensure that both files contain the new version number
+* [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
+* [ ] Login with `caleydo-bot`
+* [ ] Check release on [pipy.org](https://pypi.org/)
+
 ### Publish npm release
 
 * [ ] `npm run build` to build the bundles
 * [ ] `npm login caleydo-bot`
 * [ ] `npm publish`
 * [ ] Check release on [npmjs.com](https://www.npmjs.com)
-
-### Publish pip release
-
- * [ ] Ensure only two files are in the *dist* directory
-* [ ] **🚧 TODO is there any login 🚧**
-* [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
 
 ### Create GitHub release
 
