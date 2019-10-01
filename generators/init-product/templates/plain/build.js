@@ -290,17 +290,19 @@ function createQuietTerminalAdapter() {
  * runs yo internally
  * @param generator
  * @param options
- * @param cwd
+ * @param {string} cwd
+ * @param {string[]|string} args
  */
-function yo(generator, options, cwd) {
+function yo(generator, options, cwd, args) {
   const yeoman = require('yeoman-environment');
   // call yo internally
   const yeomanEnv = yeoman.createEnv([], {cwd, env}, quiet ? createQuietTerminalAdapter() : undefined);
   yeomanEnv.register(require.resolve('generator-phovea/generators/' + generator), 'phovea:' + generator);
+  const _args = Array.isArray(args) ? args.join(' ') : args || '';
   return new Promise((resolve, reject) => {
     try {
       console.log(cwd, chalk.blue('running yo phovea:' + generator));
-      yeomanEnv.run('phovea:' + generator, options, resolve);
+      yeomanEnv.run(`phovea:${generator} ${_args}`, options, resolve);
     } catch (e) {
       console.error('error', e, e.stack);
       reject(e);
@@ -310,28 +312,16 @@ function yo(generator, options, cwd) {
 
 function cloneRepo(p, cwd) {
   // either of them has to be defined
-  p.name = p.name || (p.repo ? fromRepoUrl(p.repo) : '');
+  p.name = p.name || fromRepoUrl(p.repo);
   p.repo = p.repo || `phovea/${p.name}`;
   p.branch = p.branch || 'master';
 
-  if (p.symlink && fs.existsSync(p.symlink)) {
-    console.log(cwd, chalk.yellow(`symlink ${path.resolve(p.symlink)} -> ${cwd}/${p.name}`));
-    // use a symlink instead
-    // see https://nodejs.org/api/fs.html#fs_fs_symlinksync_target_path_type
-    return fs.ensureSymlinkAsync(path.resolve(p.symlink), `${cwd}/${p.name}`, 'junction'); // for windows
-  }
-
-  if (/^[0-9a-f]+$/gi.test(p.branch)) {
-    // clone a specific commit
-    console.log(cwd, chalk.blue(`running git clone -n ${toRepoUrl(p.repo)} ${p.name}`));
-    return spawn('git', ['clone', '-n', toRepoUrlWithUser(p.repo), p.name], {cwd}).then(() => {
-      console.log(cwd, chalk.blue(`running git checkout ${p.branch}`));
-      return spawn('git', ['checkout', p.branch], {cwd: cwd + '/' + p.name});
-    });
-  }
-
-  console.log(cwd, chalk.blue(`running git clone --depth 1 -b ${p.branch} ${toRepoUrl(p.repo)} ${p.name}`));
-  return spawn('git', ['clone', '--depth', '1', '-b', p.branch, toRepoUrlWithUser(p.repo), p.name], {cwd});
+  return yo('clone-repo', {
+    branch: p.branch,
+    extras: '--depth 1',
+    dir: p.name,
+    cwd
+  }, cwd, toRepoUrlWithUser(p.repo)); // pass repo url as argument
 }
 
 function resolvePluginType(p, dir) {
