@@ -49,6 +49,22 @@ class Generator extends Base {
     // readme content
     this.option('noAdditionals');
     this.option('defaultApp');
+
+    this.option('wsName', {
+      type: String,
+      default: 'phovea_workspace',
+      description: 'Name for workspace package.json'
+    });
+    this.option('wsDescription', {
+      type: String,
+      default: 'helper package',
+      description: 'Description for workspace package.json'
+    });
+    this.option('wsVersion', {
+      type: String,
+      default: '0.0.1',
+      description: 'Version for workspace package.json'
+    });
   }
 
   initializing() {
@@ -394,6 +410,9 @@ class Generator extends Base {
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins.filter((d) => this.fs.exists(this.destinationPath(d + '/phovea_registry.js')));
     config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
+    config.wsName = this.options.wsName;
+    config.wsDescription = this.options.wsDescription;
+    config.wsVersion = this.options.wsVersion;
 
     writeTemplates.call(this, config, false);
     // replace the added entries
