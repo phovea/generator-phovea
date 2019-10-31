@@ -3,15 +3,12 @@ const generators = require('yeoman-generator');
 
 const plugins = require('../../utils/types').plugin;
 
-const notifier = require('../../utils/update').notifier;
-
 class ChooseGenerator extends generators.Base {
 
   constructor(args, options) {
     super(args, options);
     // Make options available
     this.option('install');
-    notifier.notify();
   }
 
   prompting() {

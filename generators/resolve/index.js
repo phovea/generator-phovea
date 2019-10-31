@@ -2,6 +2,8 @@
 const Base = require('yeoman-generator').Base;
 const resolveAllNeighbors = require('../clone').resolveAllNeighbors;
 
+const notifier = require('../../utils/update').notifier;
+
 class Generator extends Base {
   constructor(args, options) {
     super(args, options);
@@ -61,11 +63,13 @@ class Generator extends Base {
     });
   }
 
-  default() {
+  default () {
     if (this.props.runWorkspace) {
       this.composeWith('phovea:workspace', {}, {
         local: require.resolve('../workspace')
       });
+    } else {
+      notifier.notify()
     }
   }
 

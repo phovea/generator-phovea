@@ -119,11 +119,13 @@ class Generator extends Base {
     });
   }
 
-  default() {
+  default () {
     if (this.props.runWorkspace) {
       this.composeWith('phovea:workspace', {}, {
         local: require.resolve('../workspace')
       });
+    } else {
+      notifier.notify()
     }
   }
 

@@ -10,6 +10,9 @@ const {
   simplifyRepoUrl
 } = require('../../utils/repo');
 
+const notifier = require('../../utils/update').notifier;
+notifier.notify();
+
 function toBaseName(name) {
   if (name.includes('/')) {
     return name;

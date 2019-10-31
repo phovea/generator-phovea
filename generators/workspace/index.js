@@ -6,6 +6,9 @@ const chalk = require('chalk');
 const extend = require('lodash').extend;
 const _ = require('lodash');
 
+const notifier = require('../../utils/update').notifier;
+notifier.notify();
+
 const known = () => require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;

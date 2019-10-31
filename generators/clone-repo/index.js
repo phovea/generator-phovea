@@ -10,6 +10,9 @@ function failed(spawnResult) {
   return spawnResult.status !== 0;
 }
 
+const notifier = require('../../utils/update').notifier;
+notifier.notify();
+
 /**
  * Clone a given repository and supports version ranges for git tags.
  * @see https://docs.npmjs.com/misc/semver#advanced-range-syntax

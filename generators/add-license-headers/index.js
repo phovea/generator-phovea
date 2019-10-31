@@ -6,6 +6,9 @@ const glob = require('glob');
 const path = require('path');
 const os = require('os');
 
+const notifier = require('../../utils/update').notifier;
+notifier.notify();
+
 const defaultLicenseFileName = 'LICENSE_FILE_HEADER.txt';
 const defaultLicensePath = `./${defaultLicenseFileName}`;
 
