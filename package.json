@@ -47,7 +47,8 @@
     "semver-intersect": "^1.4.0",
     "yamljs": "0.2.8",
     "yeoman-environment": "1.6.5",
-    "yeoman-generator": "0.24.1"
+    "yeoman-generator": "0.24.1",
+    "check-node-version": "^4.0.1"
   },
   "devDependencies": {
     "eslint": "3.12.2",
