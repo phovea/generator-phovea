@@ -8,4 +8,4 @@ const notifier = updateNotifier({
 
 module.exports = {
   notifier
-}
+};
