@@ -179,7 +179,6 @@ class BaseInitHybridGenerator extends BaseInitPluginGenerator {
 
   constructor(args, options) {
     super(args, options, 'hybrid');
-
   }
 
   initializing() {

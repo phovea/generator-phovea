@@ -1,7 +1,6 @@
 'use strict';
 const BasePluginGenerator = require('../../utils').Base;
 const chalk = require('chalk');
-console.log('lib')
 class PluginGenerator extends BasePluginGenerator {
 
   initializing() {
