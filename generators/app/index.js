@@ -1,6 +1,5 @@
 'use strict';
 const generators = require('yeoman-generator');
-const check = require("check-node-version");
 const plugins = require('../../utils/types').plugin;
 
 class ChooseGenerator extends generators.Base {
@@ -12,7 +11,9 @@ class ChooseGenerator extends generators.Base {
   }
   initializing() {
     this.composeWith(`phovea:check-node-version`, {
-      local: require.resolve(`../check-node-version`)
+      options: {
+        displayNoMessage: true
+      }
     });
   }
   prompting() {
