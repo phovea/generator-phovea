@@ -45,6 +45,14 @@ class Generator extends Base {
     this.plugins = [];
   }
 
+  initializing() {
+    this.composeWith(`phovea:check-node-version`, {
+      options: {
+        displayNoMessage: true
+      }
+    });
+  }
+
   _yo(generator, options) {
     const yeoman = require('yeoman-environment');
     // call yo internally
@@ -66,7 +74,7 @@ class Generator extends Base {
     });
   }
 
-  default() {
+  default () {
     this.plugin = this.options.for;
 
     if (this.fs.exists(this.destinationPath('../.yo-rc-workspace.json'))) {
@@ -79,7 +87,9 @@ class Generator extends Base {
       // regular dependency
       this.before = this.fs.readJSON(this.destinationPath('../package.json'));
       this.log('installing: ', this.pkgs.join(' '));
-      this.npmInstall(this.pkgs, {save: true});
+      this.npmInstall(this.pkgs, {
+        save: true
+      });
       return;
     }
 
@@ -104,7 +114,9 @@ class Generator extends Base {
     const fs = require('fs-extra');
     if (this.plugin && this.fs.exists(this.destinationPath(`package.json`))) {
       // also store the dependency in the plugin
-      const child = {dependencies: {}};
+      const child = {
+        dependencies: {}
+      };
       if (this.options.type.startsWith('p')) {
         this.plugins.forEach((p) => {
           child.dependencies[p.name] = p.url;

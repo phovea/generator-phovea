@@ -40,6 +40,14 @@ class Generator extends Base {
     this.new_ = null;
   }
 
+initializing(){
+  this.composeWith(`phovea:check-node-version`, {
+    options: {
+      displayNoMessage: true
+    }
+  });
+}
+
   prompting() {
     const type = this.config.get('type');
     const isHybridType = plugins.isTypeHybrid({type});

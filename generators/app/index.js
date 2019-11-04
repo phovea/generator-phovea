@@ -1,7 +1,6 @@
 'use strict';
 const generators = require('yeoman-generator');
 const plugins = require('../../utils/types').plugin;
-
 class ChooseGenerator extends generators.Base {
 
   constructor(args, options) {
@@ -29,7 +28,7 @@ class ChooseGenerator extends generators.Base {
     });
   }
 
-  default () {
+  default() {
     const gen = this.gen;
     this.composeWith(`phovea:${gen}`, {
       options: {

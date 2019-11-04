@@ -103,6 +103,11 @@ class BaseInitPluginGenerator extends generators.Base {
   }
 
   initializing() {
+    this.composeWith(`phovea:check-node-version`, {
+      options: {
+        displayNoMessage: true
+      }
+    });
     this.config.defaults({
       type: this.type
     });

@@ -62,6 +62,11 @@ class PluginGenerator extends Base {
   }
 
   initializing() {
+      this.composeWith(`phovea:check-node-version`, {
+        options: {
+          displayNoMessage: true
+        }
+      });
     this.config.defaults({
       type: 'lib',
       libraries: [],

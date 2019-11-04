@@ -6,6 +6,11 @@ const {toLibraryAliasMap, toLibraryExternals} = require('../_init-web');
 class Generator extends Base {
 
   initializing() {
+      this.composeWith(`phovea:check-node-version`, {
+        options: {
+          displayNoMessage: true
+        }
+      });
     this.config.defaults({
       modules: ['phovea_server', 'phovea_core']
     });

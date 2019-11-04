@@ -19,6 +19,11 @@ class PackageJSONGenerator extends Base {
   }
 
   initializing() {
+      this.composeWith(`phovea:check-node-version`, {
+        options: {
+          displayNoMessage: true
+        }
+      });
     const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
     this.props = {
