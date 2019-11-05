@@ -16,7 +16,7 @@ function restore_one {
 }
 
 function backup {
-  for volume in `docker volume ls -q -f name=${PREFIX}_*`; do
+  for volume in `docker volume ls -q -f name=${PREFIX}_db_*`; do
     local name=${volume//${PREFIX}_/}
 	echo "backing up ${name}"
 	backup_one ${name}
