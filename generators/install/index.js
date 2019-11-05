@@ -74,7 +74,7 @@ class Generator extends Base {
     });
   }
 
-  default () {
+  default() {
     this.plugin = this.options.for;
 
     if (this.fs.exists(this.destinationPath('../.yo-rc-workspace.json'))) {
