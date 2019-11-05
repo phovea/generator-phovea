@@ -89,6 +89,14 @@ class Generator extends Base {
     });
   }
 
+  initializing(){
+    this.composeWith(`phovea:check-node-version`, {
+      options: {
+        displayNoMessage: true
+      }
+    });
+  }
+
   prompting() {
     return this.prompt([{
       type: 'input',

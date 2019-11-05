@@ -4,8 +4,8 @@ const check = require("check-node-version");
 const printVersionNumber = require('../../utils/outputVersionNumber').printVersionNumber;
 const path = require('path');
 const fs = require('fs');
-const nvm = parseFloat(fs.readFileSync(path.resolve(__dirname, '../../.nvmrc'), 'utf8'));
-
+const nodeVersion = parseFloat(fs.readFileSync(path.resolve(__dirname, '../../.nvmrc'), 'utf8'));
+const npmVersion = parseFloat(fs.readFileSync(path.resolve(__dirname, '../../npm-version'), 'utf8'));
 
 class NodeVersionGenerator extends generators.Base {
   constructor(args, options) {
@@ -15,9 +15,10 @@ class NodeVersionGenerator extends generators.Base {
   async initializing() {
     this.message = await new Promise((resolve, reject) => {
       check({
-        node: nvm
+        node: nodeVersion,
+        npm: npmVersion
       },
-        (error, results) => printVersionNumber(results, resolve, this)
+        (error, results) => printVersionNumber(error,results, resolve, this)
       );
     });
   }
