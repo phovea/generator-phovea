@@ -5,9 +5,6 @@ const fs = require('fs-extra');
 const {parseRequirements} = require('../../utils/pip');
 const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 
-const notifier = require('../../utils/update').notifier;
-notifier.notify();
-
 function toBaseName(name) {
   if (name.includes('/')) {
     return name;
@@ -90,6 +87,10 @@ class Generator extends Base {
     this.argument('repo', {
       required: false
     });
+  }
+
+  initializing() {
+    this.composeWith('phovea:_version');
   }
 
   prompting() {

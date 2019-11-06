@@ -10,9 +10,6 @@ const {
   simplifyRepoUrl
 } = require('../../utils/repo');
 
-const notifier = require('../../utils/update').notifier;
-notifier.notify();
-
 function toBaseName(name) {
   if (name.includes('/')) {
     return name;
@@ -104,6 +101,10 @@ class Generator extends Base {
     this.argument('product', {
       required: true
     });
+  }
+
+  initializing() {
+    this.composeWith('phovea:_version');
   }
 
   prompting() {

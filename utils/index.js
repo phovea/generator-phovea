@@ -3,8 +3,6 @@ const generators = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
-const notifier = require('./update').notifier;
-notifier.notify();
 
 function patchPackageJSON(config, unset, extra, replaceExtra) {
   const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
@@ -125,6 +123,7 @@ class BaseInitPluginGenerator extends generators.Base {
   }
 
   default() {
+    this.composeWith('phovea:_version');
     this.composeWith('phovea:_init-' + this.basetype, {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')

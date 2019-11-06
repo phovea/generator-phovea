@@ -5,9 +5,6 @@ const plugins = require('../../utils/types').plugin;
 const stringifyAble = require('../../utils').stringifyAble;
 const path = require('path');
 
-const notifier = require('../../utils/update').notifier;
-notifier.notify();
-
 function toJSONFromText(text) {
   const r = {};
   text.split('\n').forEach((line) => {
@@ -41,6 +38,10 @@ class Generator extends Base {
     super(args, options);
     this.basetype = 'web';
     this.new_ = null;
+  }
+
+  initializing() {
+    this.composeWith('phovea:_version');
   }
 
   prompting() {

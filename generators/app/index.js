@@ -11,6 +11,10 @@ class ChooseGenerator extends generators.Base {
     this.option('install');
   }
 
+  initializing() {
+    this.composeWith('phovea:_version');
+  }
+
   prompting() {
     return this.prompt([{
       type: 'list',

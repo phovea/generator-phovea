@@ -6,9 +6,6 @@ const chalk = require('chalk');
 const extend = require('lodash').extend;
 const _ = require('lodash');
 
-const notifier = require('../../utils/update').notifier;
-notifier.notify();
-
 const known = () => require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
@@ -55,6 +52,8 @@ class Generator extends Base {
   }
 
   initializing() {
+    this.composeWith('phovea:_version');
+
     this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: [], defaultApp: null});
     this.props.defaultApp = this.props.defaultApp || this.options.defaultApp;
   }

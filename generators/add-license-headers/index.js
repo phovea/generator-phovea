@@ -6,9 +6,6 @@ const glob = require('glob');
 const path = require('path');
 const os = require('os');
 
-const notifier = require('../../utils/update').notifier;
-notifier.notify();
-
 const defaultLicenseFileName = 'LICENSE_FILE_HEADER.txt';
 const defaultLicensePath = `./${defaultLicenseFileName}`;
 
@@ -58,6 +55,10 @@ class Generator extends Base {
       type: String,
       desc: 'Comma separated list (without spaces) to exclude specific file types (e.g. only add to .ts files by excluding .scss and .py)'
     });
+  }
+
+  initializing() {
+    this.composeWith('phovea:_version');
   }
 
   prompting() {
