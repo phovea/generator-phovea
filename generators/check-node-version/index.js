@@ -3,47 +3,50 @@ const generators = require('yeoman-generator');
 const check = require('check-node-version');
 const path = require('path');
 const fs = require('fs');
-const checkRequiredVersion = require('../../utils/outputVersionNumber').checkRequiredVersion;
+const checkRequiredVersion = require('../../utils/installedVersions').checkRequiredVersion;
 const requiredNodeVersion = fs.readFileSync(path.resolve(__dirname, '../../.nvmrc'), 'utf8');
 const requiredNpmVersion = fs.readFileSync(path.resolve(__dirname, '../../.npm-version'), 'utf8');
 
 class NodeVersionGenerator extends generators.Base {
 
   initializing() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       check(
         {
-          node: parseFloat(requiredNodeVersion),
-          npm: parseFloat(requiredNpmVersion)
+          node: requiredNodeVersion,
+          npm: requiredNpmVersion
         },
         (error, results) => {
           if (error) {
-            throw new Error(error);
+            reject(error);
           }
 
           const versions = {
             installed: {
-              node: parseFloat(results.versions.node.version.version),
-              npm: parseFloat(results.versions.npm.version.version)
+              node: results.versions.node.version.version,
+              npm: results.versions.npm.version.version
             },
             required: {
-              node: parseFloat(requiredNodeVersion),
-              npm: parseFloat(requiredNpmVersion)
-            },
-            isSatisfied: results.isSatisfied
+              node: requiredNodeVersion.replace('\n', ''),
+              npm: requiredNpmVersion.replace('\n', '')
+            }
           };
 
-          return resolve(checkRequiredVersion(versions));
+          try {
+            resolve(checkRequiredVersion(versions));
+          } catch (error) {
+            reject(error);
+          }
         }
       );
     })
-    .then((message) => {
-      this.message = message;
-      return message;
-    })
-    .catch((error) => {
-      this.log(error.message);
-    });
+      .then((message) => {
+        this.message = message;
+        return message;
+      })
+      .catch((error) => {
+        this.log(error.message);
+      });
   }
 
   end() {
