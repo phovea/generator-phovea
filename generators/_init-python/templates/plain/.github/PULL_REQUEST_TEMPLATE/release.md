@@ -9,7 +9,7 @@
 
 * [x] Create new `release-x.x.x` branch (based on `develop` branch)
 * [ ] Collect changes and write [release notes](#release-notes)
-* [ ] Draft release PR in GitHub
+* [ ] Draft release PR in GitHub that merges the `release-x.x.x` into the `master` branch
 
 ### Release dependencies first
 
@@ -35,13 +35,8 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 
 ### Publish pip release
 
-<<<<<<< HEAD:generators/_init-python/templates/plain/.github/PULL_REQUEST_TEMPLATE/release.md
 The steps of this section are only necessary if the code is public and should be published to the pypi registry.
 
-* [ ] Ensure only two files are in the *dist* directory
-* [ ] **🚧 TODO is there any login 🚧**
-* [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
-=======
 * [ ] Create a directory called _dist_ in your local repo
 * [ ] Open last successful circle CI Build for this PR
 * [ ] Go to _Artifacts_ and open `home/phovea/dist`
@@ -51,14 +46,6 @@ The steps of this section are only necessary if the code is public and should be
 * [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
 * [ ] Login with `caleydo-bot`
 * [ ] Check release on [pipy.org](https://pypi.org/)
-
-### Publish npm release
-
-* [ ] `npm run build` to build the bundles
-* [ ] `npm login caleydo-bot`
-* [ ] `npm publish`
-* [ ] Check release on [npmjs.com](https://www.npmjs.com)
->>>>>>> 6a4cd1dc254241a30f99acdc2ee68dbcca8772ce:generators/utils-github-templates/templates/plain/.github/PULL_REQUEST_TEMPLATE/release.md
 
 ### Create GitHub release
 
