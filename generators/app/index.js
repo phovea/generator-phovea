@@ -8,13 +8,11 @@ class ChooseGenerator extends generators.Base {
     // Make options available
     this.option('install');
   }
+
   initializing() {
-    this.composeWith(`phovea:check-node-version`, {
-      options: {
-        displayNoMessage: true
-      }
-    });
+    this.composeWith('phovea:check-node-version');
   }
+
   prompting() {
     return this.prompt([{
       type: 'list',

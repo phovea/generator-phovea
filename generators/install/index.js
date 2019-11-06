@@ -46,11 +46,7 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith(`phovea:check-node-version`, {
-      options: {
-        displayNoMessage: true
-      }
-    });
+    this.composeWith('phovea:check-node-version');
   }
 
   _yo(generator, options) {

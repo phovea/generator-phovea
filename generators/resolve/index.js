@@ -26,6 +26,8 @@ class Generator extends Base {
   }
 
   initializing() {
+    this.composeWith('phovea:check-node-version');
+
     this.props = {
       cloneSSH: false,
       runWorkspace: false,

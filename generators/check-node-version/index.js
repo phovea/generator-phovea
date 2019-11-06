@@ -46,6 +46,8 @@ class NodeVersionGenerator extends generators.Base {
       })
       .catch((error) => {
         this.log(error.message);
+
+        process.exit(1); // terminate the whole yeoman process
       });
   }
 
