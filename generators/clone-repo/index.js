@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const {
   simplifyRepoUrl

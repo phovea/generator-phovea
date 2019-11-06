@@ -1,6 +1,6 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 
 const known = () => require('../../utils/known');
@@ -49,7 +49,7 @@ function toLibraryExternals(moduleNames, libraryNames) {
   return Array.from(new Set(r));
 }
 
-class PluginGenerator extends Base {
+class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
@@ -131,7 +131,7 @@ class PluginGenerator extends Base {
     patchPackageJSON.call(this, config, [], {
       dependencies: this._generateDependencies(useDevVersion.call(this))
     });
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea.js'))) {
@@ -148,6 +148,6 @@ class PluginGenerator extends Base {
   }
 }
 
-module.exports = PluginGenerator;
+module.exports = Generator;
 module.exports.toLibraryAliasMap = toLibraryAliasMap;
 module.exports.toLibraryExternals = toLibraryExternals;

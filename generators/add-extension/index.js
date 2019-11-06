@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 
 const plugins = require('../../utils/types').plugin;
 const stringifyAble = require('../../utils').stringifyAble;
