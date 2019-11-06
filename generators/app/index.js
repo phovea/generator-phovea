@@ -9,7 +9,6 @@ class ChooseGenerator extends generators.Base {
     super(args, options);
     // Make options available
     this.option('install');
-    console.log('hello')
   }
 
   prompting() {
