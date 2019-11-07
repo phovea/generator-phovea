@@ -1,33 +1,37 @@
 'use strict';
-var path = require('path');
-var gulp = require('gulp');
-var eslint = require('gulp-eslint');
-var excludeGitignore = require('gulp-exclude-gitignore');
-var mocha = require('gulp-mocha');
-var istanbul = require('gulp-istanbul');
-var plumber = require('gulp-plumber');
+const { series, src, watch } = require('gulp');
+const eslint = require('gulp-eslint');
+const excludeGitignore = require('gulp-exclude-gitignore');
+const mocha = require('gulp-mocha');
+const istanbul = require('gulp-istanbul');
+const plumber = require('gulp-plumber');
 
-gulp.task('static', function () {
-  return gulp.src(['generators/*/*.js','test/**.js','utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'])
+
+function lint() {
+  return src(['generators/*/*.js','test/**.js','utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'])
     .pipe(excludeGitignore())
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
-});
+}
 
-gulp.task('pre-test', function () {
-  return gulp.src('generators/*/*.js')
+function lintWatch() {
+  watch(['generators/*/*.js','test/**.js','utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'], lint);
+}
+
+function preTest() {
+  return src('generators/*/*.js')
     .pipe(excludeGitignore())
     .pipe(istanbul({
       includeUntested: true
     }))
     .pipe(istanbul.hookRequire());
-});
+}
 
-gulp.task('test', ['pre-test'], function (cb) {
-  var mochaErr;
+function runTest(cb) {
+  let mochaErr;
 
-  gulp.src('test/**/*.js')
+  return src('test/**/*.js')
     .pipe(plumber())
     .pipe(mocha({reporter: 'spec'}))
     .on('error', function (err) {
@@ -37,11 +41,17 @@ gulp.task('test', ['pre-test'], function (cb) {
     .on('end', function () {
       cb(mochaErr);
     });
-});
+}
 
-gulp.task('watch', function () {
-  gulp.watch(['generators/*/*.js', 'test/**'], ['test']);
-});
+const test = series(preTest, runTest);
 
-gulp.task('prepublish', ['static', 'test']);
-gulp.task('default', ['static', 'test']);
+function testWatch() {
+  watch(['generators/*/*.js', 'test/**'], runTest);
+}
+
+exports.test = test;
+exports.testWatch = series(test, testWatch);
+exports.lint = lint;
+exports.lintWatch = series(lint, lintWatch);
+exports.prepublish = series(lint, test);
+exports.default = series(lint, test);

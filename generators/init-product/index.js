@@ -1,9 +1,7 @@
 /**
  * Created by Samuel Gratzl on 28.11.2016.
  */
-
-const _ = require('lodash');
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
@@ -21,7 +19,7 @@ function buildPossibleAdditionalPlugins(type) {
   return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
 }
 
-class PluginGenerator extends Base {
+class Generator extends Base {
 
   initializing() {
     this.services = [];
@@ -125,7 +123,7 @@ class PluginGenerator extends Base {
     const config = this.config.getAll();
     patchPackageJSON.call(this, config);
     writeTemplates.call(this, config);
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     // don't overwrite existing registry file
     if (!this.fs.exists(this.destinationPath('phovea_product.json'))) {
       this.fs.writeJSON(this.destinationPath('phovea_product.json'), this.services);
@@ -144,4 +142,4 @@ class PluginGenerator extends Base {
   }
 }
 
-module.exports = PluginGenerator;
+module.exports = Generator;

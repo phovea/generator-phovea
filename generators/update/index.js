@@ -1,6 +1,6 @@
 'use strict';
 const chalk = require('chalk');
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 
 function extractFromReadme(content) {
   const safe = (p) => p ? p[1] : '';
