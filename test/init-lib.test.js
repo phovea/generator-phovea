@@ -17,4 +17,7 @@ describe('generator-phovea:init-lib', function () {
   //    'package.json'
   //  ]);
   // });
+  it('runs', function () {
+    expect(true).not.toBe(false);
+  });
 });
