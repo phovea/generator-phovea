@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
