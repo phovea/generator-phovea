@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
@@ -171,7 +171,7 @@ class Generator extends Base {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
-      extras,
+      extras: extras || '',
       cwd: this.cwd
     }, repoUrl); // repository URL as argument
   }
