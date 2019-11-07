@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const resolveAllNeighbors = require('../clone').resolveAllNeighbors;
 
 class Generator extends Base {
