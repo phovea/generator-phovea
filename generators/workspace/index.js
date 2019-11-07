@@ -46,23 +46,36 @@ class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
+    let defaultConfig = {
+      name: 'phovea_workspace',
+      description: 'helper package',
+      version: '0.0.1'
+    };
+
+    // use existing workspace package.json as default
+    const pkgPath = this.destinationPath('package.json');
+    if(this.fs.exists(pkgPath)) {
+      const pkg = this.fs.readJSON(pkgPath);
+      defaultConfig = Object.assign(defaultConfig, {name: pkg.name, description: pkg.description, version: pkg.version});
+    }
+
     // readme content
     this.option('noAdditionals');
     this.option('defaultApp');
 
     this.option('wsName', {
       type: String,
-      default: 'phovea_workspace',
+      default: defaultConfig.name,
       description: 'Name for workspace package.json'
     });
     this.option('wsDescription', {
       type: String,
-      default: 'helper package',
+      default: defaultConfig.description,
       description: 'Description for workspace package.json'
     });
     this.option('wsVersion', {
       type: String,
-      default: '0.0.1',
+      default: defaultConfig.version,
       description: 'Version for workspace package.json'
     });
   }
