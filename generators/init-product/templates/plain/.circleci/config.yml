@@ -24,7 +24,7 @@ jobs:
             - ./node_modules
       - run:
           name: Show installed npm dependencies
-          command: npm list --depth=0
+          command: npm list --depth=1 || true
       - restore_cache:
           key: awscli-1.11.113
       - run:

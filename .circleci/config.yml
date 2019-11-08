@@ -22,7 +22,7 @@ jobs:
           - ./node_modules
       - run:
           name: Show installed npm dependencies
-          command: npm list --depth=0
+          command: npm list --depth=1 || true
       - run:
           name: Run test
           command: npm run test
