@@ -1,7 +1,7 @@
 {
-  "name": "<%-wsName.toLowerCase()%>",
-  "description": "<%-wsDescription.toLowerCase()%>",
-  "version": "<%-wsVersion.toLowerCase()%>",
+  "name": "<%-wsName%>",
+  "description": "<%-wsDescription%>",
+  "version": "<%-wsVersion%>",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
