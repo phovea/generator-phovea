@@ -3,9 +3,7 @@ jobs:
   build:
     working_directory: ~/phovea
     docker:
-      - image: circleci/node:8-browsers
-    tags:
-      - /v\d+.\d+.\d+.*/
+      - image: circleci/node:12-browsers
     steps:
       - checkout
       - restore_cache:
@@ -20,3 +18,29 @@ jobs:
       - run:
           name: dist
           command: npm run test
+workflows:
+  version: 2
+#  build-nightly:
+#    triggers:
+#      - schedule:
+#          cron: "15 1 * * 1-5" # "At 01:15 on every day-of-week from Monday through Friday.”, see: https://crontab.guru/#15_1_*_*_1-5
+#          filters:
+#            branches:
+#              only:
+#                - develop
+#    jobs:
+#      - build
+  build-branch:
+    jobs:
+      - build:
+          filters:
+            tags:
+              ignore: /^v.*/
+  build-tag:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
