@@ -7,12 +7,18 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Show node and npm version
+          command: |
+            node -v
+            npm -v
+      - run:
+          name: Install Docker packages from docker_packages.txt
           command: |
             (!(test -f docker_packages.txt) || (cat docker_packages.txt | xargs sudo apt-get install -y))
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements_dev.txt" }}
       - run:
-          name: install-pip-wee
+          name: Install pip requirements
           command: |
             virtualenv ~/venv
             . ~/venv/bin/activate
@@ -22,13 +28,13 @@ jobs:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements_dev.txt" }}
           paths:
           - ~/venv
-      - run: #force update of VCS dependencies?
-          name: update-pip-vcs-dependencies
+      - run:
+          name: Force an update of pip dependencies from git repositories # not sure if this is working ?
           command: |
             . ~/venv/bin/activate
             pip install --upgrade --upgrade-strategy=only-if-needed -r requirements.txt
       - run:
-          name: dist
+          name: Build
           command: |
             . ~/venv/bin/activate
             npm run dist
