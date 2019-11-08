@@ -5,8 +5,6 @@ jobs:
     docker:
       - image: caleydo/phovea_circleci_python:v3.0
       - image: docker:17.05.0-ce-git
-    tags:
-      - /v\d+.\d+.\d+.*/
     steps:
       - checkout
       - setup_remote_docker
