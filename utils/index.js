@@ -71,7 +71,7 @@ function writeTemplates(config, withSamples) {
 
   const copy = (prefix) => {
     this.fs.exists(this.templatePath(prefix + 'plain'), (exists) => {
-      if(exists === false) {
+      if (exists === false) {
         return;
       }
       this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
@@ -80,7 +80,7 @@ function writeTemplates(config, withSamples) {
 
     if (config.name) {
       this.fs.exists(this.templatePath(prefix + 'pluginname_plain'), (exists) => {
-        if(exists === false) {
+        if (exists === false) {
           return;
         }
         this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
@@ -113,11 +113,7 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   initializing() {
-    this.composeWith(`phovea:check-node-version`, {
-      options: {
-        displayNoMessage: true
-      }
-    });
+    this.composeWith('phovea:check-node-version');
     this.config.defaults({
       type: this.type
     });
