@@ -1,5 +1,4 @@
 'use strict';
-const assert = require('yeoman-assert');
 const installedVersions = require('../utils/installedVersions');
 
 describe('installedVersions() behaves as expected', () => {
@@ -19,9 +18,9 @@ describe('installedVersions() behaves as expected', () => {
       }
     };
 
-    assert.throws(() => {
+    expect(() => {
       installedVersions.checkRequiredVersion(versions);
-    }, Error);
+    }).toThrow(Error);
   });
 
   it('error: installed node and npm versions are equal and less than the required, respectively', () => {
@@ -36,9 +35,9 @@ describe('installedVersions() behaves as expected', () => {
       }
     };
 
-    assert.throws(() => {
+    expect(() => {
       installedVersions.checkRequiredVersion(versions);
-    }, Error);
+    }).toThrow(Error);
   });
 
   it('error: installed node and npm versions are less than and equal the required, respectively', () => {
@@ -53,9 +52,9 @@ describe('installedVersions() behaves as expected', () => {
       }
     };
 
-    assert.throws(() => {
+    expect(() => {
       installedVersions.checkRequiredVersion(versions);
-    }, Error);
+    }).toThrow(Error);
   });
 
   it('error: installed node and npm versions are greater than and less than the required, respectively', () => {
@@ -70,9 +69,9 @@ describe('installedVersions() behaves as expected', () => {
       }
     };
 
-    assert.throws(() => {
+    expect(() => {
       installedVersions.checkRequiredVersion(versions);
-    }, Error);
+    }).toThrow(Error);
   });
 
   it('error: installed node  and npm versions are less than and  greater than the required, respectively', () => {
@@ -87,9 +86,9 @@ describe('installedVersions() behaves as expected', () => {
       }
     };
 
-    assert.throws(() => {
+    expect(() => {
       installedVersions.checkRequiredVersion(versions);
-    }, Error);
+    }).toThrow(Error);
   });
 
   it('warning: installed node and npm versions are equal and greater than the required, respectively', () => {
@@ -105,7 +104,7 @@ describe('installedVersions() behaves as expected', () => {
     };
 
     const message = installedVersions.checkRequiredVersion(versions);
-    assert.equal(message, installedVersions.warningMessage(versions));
+    expect(message).toBe(installedVersions.warningMessage(versions));
   });
   it('warning: installed node and npm versions are greater than required', () => {
     const versions = {
@@ -120,7 +119,7 @@ describe('installedVersions() behaves as expected', () => {
     };
 
     const message = installedVersions.checkRequiredVersion(versions);
-    assert.equal(message, installedVersions.warningMessage(versions));
+    expect(message).toBe(installedVersions.warningMessage(versions));
   });
 
   it('warning: installed node and npm versions are greater than and equal, respectively', () => {
@@ -136,7 +135,7 @@ describe('installedVersions() behaves as expected', () => {
     };
 
     const message = installedVersions.checkRequiredVersion(versions);
-    assert.equal(message, installedVersions.warningMessage(versions));
+    expect(message).toBe(installedVersions.warningMessage(versions));
   });
 
   it('success: installed node and npm version is equal to', () => {
@@ -152,6 +151,6 @@ describe('installedVersions() behaves as expected', () => {
     };
 
     const message = installedVersions.checkRequiredVersion(versions);
-    assert.equal(message, installedVersions.successMessage(versions));
+    expect(message).toBe(installedVersions.successMessage(versions));
   });
 });
