@@ -126,8 +126,8 @@ class Generator extends Base {
         local: require.resolve('../workspace')
       });
     } else {
-      this.composeWith('phovea:_version',{
-      local: require.resolve('../_version')
+      this.composeWith('phovea:_generator-version',{
+      local: require.resolve('../_generator-version')
     });
     }
   }
