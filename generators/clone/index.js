@@ -75,8 +75,9 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version',
-      {local: require.resolve('../check-node-version')});
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
     this.props = {
       plugins: [],
       resolve: false,
@@ -126,9 +127,9 @@ class Generator extends Base {
         local: require.resolve('../workspace')
       });
     } else {
-      this.composeWith('phovea:_generator-version',{
-      local: require.resolve('../_generator-version')
-    });
+      this.composeWith('phovea:_check-own-version', {}, {
+        local: require.resolve('../_check-own-version')
+      });
     }
   }
 
