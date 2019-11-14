@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
+const fs = require('fs');
 
 const known = () => require('../../utils/known');
 
@@ -134,7 +135,7 @@ class Generator extends Base {
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
-    if (!this.fs.exists(this.destinationPath('phovea.js'))) {
+    if (!fs.existsSync(this.destinationPath('phovea.js'))) {
       this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), stringifyAble(config));
     }
   }

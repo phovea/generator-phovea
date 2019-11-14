@@ -11,8 +11,13 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version',
-      {local: require.resolve('../check-node-version')});
+    this.composeWith('phovea:check-node-version', {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_version',  {
+      local: require.resolve('../_version')
+    });
   }
 
   prompting() {
