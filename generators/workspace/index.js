@@ -5,6 +5,7 @@ const glob = require('glob').sync;
 const chalk = require('chalk');
 const extend = require('lodash').extend;
 const _ = require('lodash');
+const fs = require('fs');
 
 const known = () => require('../../utils/known');
 const writeTemplates = require('../../utils').writeTemplates;
@@ -46,9 +47,38 @@ class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
+    let defaultConfig = {
+      name: 'phovea_workspace',
+      description: 'helper package',
+      version: '0.0.1'
+    };
+
+    // use existing workspace package.json as default
+    const pkgPath = this.destinationPath('package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = this.fs.readJSON(pkgPath);
+      defaultConfig = Object.assign(defaultConfig, {name: pkg.name, description: pkg.description, version: pkg.version});
+    }
+
     // readme content
     this.option('noAdditionals');
     this.option('defaultApp');
+
+    this.option('wsName', {
+      type: String,
+      default: defaultConfig.name,
+      description: 'Name for workspace package.json'
+    });
+    this.option('wsDescription', {
+      type: String,
+      default: defaultConfig.description,
+      description: 'Description for workspace package.json'
+    });
+    this.option('wsVersion', {
+      type: String,
+      default: defaultConfig.version,
+      description: 'Version for workspace package.json'
+    });
   }
 
   initializing() {
@@ -243,7 +273,7 @@ class Generator extends Base {
 
       // merge docker-compose
       const dockerFile = (fileName) => {
-        if (!this.fs.exists(this.destinationPath(fileName))) {
+        if (!fs.existsSync(this.destinationPath(fileName))) {
           return {};
         }
         const yaml = require('yamljs');
@@ -380,8 +410,8 @@ class Generator extends Base {
       scripts.start = `cd ${this.props.defaultApp} && npm start`;
     }
 
-    const patchYamlExists = this.fs.exists(this.destinationPath('docker-compose-patch.yaml'));
-    if (patchYamlExists || this.fs.exists(this.destinationPath('docker-compose-patch.yml'))) {
+    const patchYamlExists = fs.existsSync(this.destinationPath('docker-compose-patch.yaml'));
+    if (patchYamlExists || fs.existsSync(this.destinationPath('docker-compose-patch.yml'))) {
       const yaml = require('yamljs');
       const file = this.fs.read(this.destinationPath(patchYamlExists ? 'docker-compose-patch.yaml' : 'docker-compose-patch.yml'));
       const patch = yaml.parse(file);
@@ -396,14 +426,17 @@ class Generator extends Base {
     const config = {};
     config.workspace = path.basename(this.destinationPath());
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
-    config.webmodules = plugins.filter((d) => this.fs.exists(this.destinationPath(d + '/phovea_registry.js')));
+    config.webmodules = plugins.filter((d) => fs.existsSync(this.destinationPath(d + '/phovea_registry.js')));
     config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
+    config.wsName = this.options.wsName;
+    config.wsDescription = this.options.wsDescription;
+    config.wsVersion = this.options.wsVersion;
 
     writeTemplates.call(this, config, false);
     // replace the added entries
     patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts}, true);
 
-    if (!this.fs.exists(this.destinationPath('config.json'))) {
+    if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
     }
 
@@ -411,7 +444,7 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
 
-    if (this.fs.exists(this.destinationPath('docker_script_patch.sh'))) {
+    if (fs.existsSync(this.destinationPath('docker_script_patch.sh'))) {
       // push patch to the beginning
       sdeps.dockerScripts.unshift(this.fs.read(this.destinationPath('docker_script_patch.sh')));
     }
@@ -419,7 +452,7 @@ class Generator extends Base {
     this.fs.write(this.destinationPath('docker_script.sh'), `#!/usr/bin/env bash\n\n` + sdeps.dockerScripts.join('\n'));
 
     this.fs.copyTpl(this.templatePath('project.tmpl.iml'), this.destinationPath(`.idea/${config.workspace}.iml`), config);
-    if (!this.fs.exists(this.destinationPath(`.idea/workspace.xml`))) {
+    if (!fs.existsSync(this.destinationPath(`.idea/workspace.xml`))) {
       this.fs.copy(this.templatePath('workspace.tmpl.xml'), this.destinationPath(`.idea/workspace.xml`));
     }
   }

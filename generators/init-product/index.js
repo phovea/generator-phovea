@@ -5,6 +5,7 @@ const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
+const fs = require('fs');
 
 const isRequired = (v) => v.toString().length > 0;
 
@@ -125,7 +126,7 @@ class Generator extends Base {
     writeTemplates.call(this, config);
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     // don't overwrite existing registry file
-    if (!this.fs.exists(this.destinationPath('phovea_product.json'))) {
+    if (!fs.existsSync(this.destinationPath('phovea_product.json'))) {
       this.fs.writeJSON(this.destinationPath('phovea_product.json'), this.services);
     }
   }
