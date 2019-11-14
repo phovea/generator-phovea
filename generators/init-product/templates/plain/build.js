@@ -209,7 +209,7 @@ function spawn(cmd, args, opts) {
           // log output what has been captured
           console.log(out.join('\n'));
         }
-        reject(`${cmd} failed with status code ${code} ${signal}`);
+        reject(new Error(`${cmd} failed with status code ${code} ${signal}`));
       }
     });
   });
@@ -607,10 +607,20 @@ function strObject(items) {
 
 function buildDockerImage(p) {
   const buildInSubDir = p.type === 'web' || p.type === 'static';
+  let buildArgs = '';
+  // pass through http_proxy, no_proxy, and https_proxy env variables
+  for (const key of Object.keys(process.env)) {
+    const lkey = key.toLowerCase();
+    if (lkey === 'http_proxy' || lkey === 'https_proxy' || lkey === 'no_proxy') {
+      // pass through
+      buildArgs += ` --build-arg ${lkey}='${process.env[key]}'`;
+    }
+  }
+
   // patch the docker file with the with an optional given baseImage
   return Promise.resolve(patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
     // create the container image
-    .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image} -f deploy/Dockerfile .`))
+    .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image}${buildArgs} -f deploy/Dockerfile .`))
     // tag the container image
     .then(() => argv.pushExtra ? docker(`${p.tmpDir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`) : null);
 }
