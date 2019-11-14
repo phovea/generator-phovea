@@ -113,7 +113,9 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version');
+    this.composeWith('phovea:check-node-version',
+      {local: require.resolve('../generators/check-node-version')});
+
     this.config.defaults({
       type: this.type
     });

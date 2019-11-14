@@ -1,5 +1,5 @@
 'use strict';
-const generators = require('yeoman-generator');
+const Generator = require('yeoman-generator');
 const check = require('check-node-version');
 const path = require('path');
 const fs = require('fs');
@@ -7,7 +7,7 @@ const checkRequiredVersion = require('../../utils/installedVersions').checkRequi
 const requiredNodeVersion = fs.readFileSync(path.resolve(__dirname, '../../.nvmrc'), 'utf8');
 const requiredNpmVersion = fs.readFileSync(path.resolve(__dirname, '../../.npm-version'), 'utf8');
 
-class NodeVersionGenerator extends generators.Base {
+class NodeVersionGenerator extends Generator {
 
   initializing() {
     return new Promise((resolve, reject) => {
