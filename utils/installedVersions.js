@@ -1,7 +1,7 @@
 'use strict';
 const chalk = require('chalk');
 const semver = require('semver');
-let versionHasBeenShown = false;// using closure so that the checkRequiredVersion() function only gets executed once when called multiple times
+let versionHasBeenShown = false; // using closure so that the checkRequiredVersion() function only gets executed once when called multiple times
 
 /**
  * resets the remembered variable
