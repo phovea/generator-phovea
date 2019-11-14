@@ -89,6 +89,16 @@ class Generator extends Base {
     });
   }
 
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
+    });
+  }
+
   prompting() {
     return this.prompt([{
       type: 'input',
@@ -216,7 +226,7 @@ class Generator extends Base {
 
     let p = Promise.resolve(1);
 
-    if (this.fs.exists(`${ctx.cwd}/requirements.txt`)) {
+    if (fs.existsSync(`${ctx.cwd}/requirements.txt`)) {
       ctx.requirements = {};
       const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       p = Promise.all(Object.keys(req).map((dep) => {

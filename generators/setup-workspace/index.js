@@ -4,7 +4,11 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
-const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
+const {
+  toHTTPRepoUrl,
+  toSSHRepoUrl,
+  simplifyRepoUrl
+} = require('../../utils/repo');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -99,6 +103,16 @@ class Generator extends Base {
     });
   }
 
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
+    });
+  }
+
   prompting() {
     return this.prompt([{
       type: 'input',
@@ -121,16 +135,17 @@ class Generator extends Base {
     });
   }
 
-  _yo(generator, options) {
+  _yo(generator, options, args) {
     // call yo internally
     const env = yeoman.createEnv([], {
       cwd: this.cwd
     }, this.env.adapter);
     env.register(require.resolve('../' + generator), 'phovea:' + generator);
+    const _args = Array.isArray(args) ? args.join(' ') : args || '';
     return new Promise((resolve, reject) => {
       try {
         this.log('running yo phovea:' + generator);
-        env.run('phovea:' + generator, options || {}, () => {
+        env.run(`phovea:${generator} ${_args}`, options || {}, () => {
           // wait a second after running yo to commit the files correctly
           setTimeout(() => resolve(), 500);
         });
@@ -146,37 +161,29 @@ class Generator extends Base {
   }
 
   _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : Object.assign({cwd: this.cwd}, cwd || {});
+    const options = cwd === false ? {} : Object.assign({
+      cwd: this.cwd,
+      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
+    }, cwd || {});
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
   _spawnOrAbort(cmd, argline, cwd) {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
-      this.log(r);
-      return this._abort(`failed: "${cmd} ${argline.join(' ')}" - status code: ${r.status}`);
+      this.log(r.stderr.toString());
+      return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
     }
     return Promise.resolve(cmd);
   }
 
   _cloneRepo(repo, branch, extras) {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
-    if (!/^[0-9a-f]+$/gi.test(branch)) {
-      // regular branch
-      const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
-      this.log(chalk.blue(`clone repository:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(/ +/));
-    }
-    // clone a specific commit
-    const line = `clone ${extras || ''} ${repoUrl}`;
-    this.log(chalk.blue(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
-      const line = `checkout ${branch}`;
-      this.log(chalk.blue(`checkout commit:`), `git ${line}`);
-      let repoName = simplifyRepoUrl(repo);
-      repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
-      return this._spawnOrAbort('git', line.split(/ +/), {cwd: `${this.cwd}/${repoName}`});
-    });
+    return this._yo(`clone-repo`, {
+      branch,
+      extras: extras || '',
+      cwd: this.cwd
+    }, repoUrl); // repository URL as argument
   }
 
   _getProduct() {
@@ -352,13 +359,17 @@ class Generator extends Base {
         return repos;
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
-      .then(this._yo.bind(this, 'workspace', {defaultApp: findDefaultApp()}))
+      .then(this._yo.bind(this, 'workspace', {
+        defaultApp: findDefaultApp()
+      }))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
       .then(() => this.options.skip.includes('install') ? null : this._spawnOrAbort('npm', 'install'))
       .then(this._downloadBackupFiles.bind(this))
       .then(() => {
-        const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
+        const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {
+          defaults: ''
+        });
         if (l.trim().length > 0 && !this.options.skip.includes('build')) {
           return this._ifExecutable('docker-compose', this._spawnOrAbort.bind(this, 'docker-compose', 'build'), ' please run "docker-compose build" manually"');
         }

@@ -1,11 +1,11 @@
 /**
  * Created by Samuel Gratzl on 28.11.2016.
  */
-
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
 const {simplifyRepoUrl} = require('../../utils/repo');
 const chalk = require('chalk');
+const fs = require('fs');
 
 const isRequired = (v) => v.toString().length > 0;
 
@@ -20,7 +20,7 @@ function buildPossibleAdditionalPlugins(type) {
   return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
 }
 
-class PluginGenerator extends Base {
+class Generator extends Base {
 
   initializing() {
     this.services = [];
@@ -127,7 +127,7 @@ class PluginGenerator extends Base {
     writeTemplates.call(this, config);
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     // don't overwrite existing registry file
-    if (!this.fs.exists(this.destinationPath('phovea_product.json'))) {
+    if (!fs.existsSync(this.destinationPath('phovea_product.json'))) {
       this.fs.writeJSON(this.destinationPath('phovea_product.json'), this.services);
     }
   }
@@ -144,4 +144,4 @@ class PluginGenerator extends Base {
   }
 }
 
-module.exports = PluginGenerator;
+module.exports = Generator;

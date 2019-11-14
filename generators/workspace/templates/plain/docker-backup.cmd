@@ -40,7 +40,7 @@ exit /B 0
 :backup
 for /F %%v in ('docker volume ls -q --filter "name=%PREFIX%_"') do (
   set VOLUME=%%v
-  call set NAME=%%VOLUME:!PREFIX!_=%%
+  call set NAME=%%VOLUME:!PREFIX!_db_=%%
   echo backing up !NAME!
   call :backup_one !NAME!
 )

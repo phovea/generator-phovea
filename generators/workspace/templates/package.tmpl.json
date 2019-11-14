@@ -1,7 +1,7 @@
 {
-  "name": "phovea_workspace",
-  "description": "helper package",
-  "version": "0.0.1",
+  "name": "<%-wsName%>",
+  "description": "<%-wsDescription%>",
+  "version": "<%-wsVersion%>",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
@@ -10,9 +10,8 @@
   "license": "BSD-3-Clause",
   "private": true,
   "engines": {
-    "npm": ">= 3",
-    "node": ">= 6",
-    "iojs": ">= 3"
+    "npm": ">=6.12",
+    "node": ">= 12.13"
   },
   "scripts": {
     "compile": "tsc",

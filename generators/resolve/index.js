@@ -26,6 +26,10 @@ class Generator extends Base {
   }
 
   initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
     this.props = {
       cloneSSH: false,
       runWorkspace: false,
@@ -65,6 +69,10 @@ class Generator extends Base {
     if (this.props.runWorkspace) {
       this.composeWith('phovea:workspace', {}, {
         local: require.resolve('../workspace')
+      });
+    } else {
+      this.composeWith('phovea:_check-own-version', {}, {
+        local: require.resolve('../_check-own-version')
       });
     }
   }
