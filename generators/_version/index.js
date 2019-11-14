@@ -1,6 +1,6 @@
 'use strict';
 const pkg = require('../../package.json');
-const generators = require('yeoman-generator');
+const Generator = require('yeoman-generator');
 const updateNotifier = require('update-notifier');
 
 let hasBeenNotified = false;
@@ -18,7 +18,7 @@ function runUpdateNotifier() {
   notifier.notify({isGlobal: true});
 }
 
-class VersionGenerator extends generators.Base {
+class VersionGenerator extends Generator {
 
   initializing() {
     runUpdateNotifier();

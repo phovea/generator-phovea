@@ -75,7 +75,7 @@ function writeTemplates(config, withSamples) {
 
   const copy = (prefix) => {
     this.fs.exists(this.templatePath(prefix + 'plain'), (exists) => {
-      if(exists === false) {
+      if (exists === false) {
         return;
       }
       this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
@@ -84,7 +84,7 @@ function writeTemplates(config, withSamples) {
 
     if (config.name) {
       this.fs.exists(this.templatePath(prefix + 'pluginname_plain'), (exists) => {
-        if(exists === false) {
+        if (exists === false) {
           return;
         }
         this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
@@ -133,7 +133,9 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   default() {
-    this.composeWith('phovea:_version');
+    this.composeWith('phovea:_version', {
+      local: require.resolve('../generators/_version')
+    });
     this.composeWith('phovea:_init-' + this.basetype, {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')

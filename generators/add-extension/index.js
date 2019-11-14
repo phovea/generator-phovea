@@ -41,7 +41,9 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:_version');
+    this.composeWith('phovea:_version',{
+      local:require.resolve('../_version')
+    });
   }
 
   prompting() {
