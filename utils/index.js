@@ -155,9 +155,6 @@ class BaseInitPluginGenerator extends Generator {
     if (fs.existsSync(this.templatePath('_gitignore'))) {
       this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     }
-    if (this.fs.exists(this.templatePath('_npmignore'))) {
-      this.fs.copy(this.templatePath('_npmignore'), this.destinationPath('.npmignore'));
-    }
 
     this._writeTemplates(config, !this.options.noSamples);
   }
