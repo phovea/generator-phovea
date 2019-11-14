@@ -4,6 +4,7 @@ const Base = require('yeoman-generator');
 const plugins = require('../../utils/types').plugin;
 const stringifyAble = require('../../utils').stringifyAble;
 const path = require('path');
+const fs = require('fs');
 
 function toJSONFromText(text) {
   const r = {};
@@ -38,6 +39,16 @@ class Generator extends Base {
     super(args, options);
     this.basetype = 'web';
     this.new_ = null;
+  }
+
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
+    });
   }
 
   prompting() {
@@ -107,9 +118,9 @@ class Generator extends Base {
     this.fs.write(file, new_);
 
     const target = this.destinationPath(`src/${d.module}${d.module.includes('.') ? '' : '.ts'}`);
-    if (absFile.startsWith('.') && !this.fs.exists(target)) {
+    if (absFile.startsWith('.') && !fs.existsSync(target)) {
       let source = this.templatePath(`${d.type}.tmpl.ts`);
-      if (!this.fs.exists(source)) {
+      if (!fs.existsSync(source)) {
         source = this.templatePath('template.tmpl.ts');
       }
       const config = this._getModuleConfig(target);
@@ -126,9 +137,9 @@ class Generator extends Base {
     this.fs.write(file, new_);
 
     const target = this.destinationPath(`${name}/${d.module}.py`);
-    if (!this.fs.exists(target)) {
+    if (!fs.existsSync(target)) {
       let source = this.templatePath(`${d.type}.tmpl.py`);
-      if (!this.fs.exists(source)) {
+      if (!fs.existsSync(source)) {
         source = this.templatePath('template.tmpl.py');
       }
       const config = this._getModuleConfig(target);

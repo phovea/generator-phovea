@@ -1,14 +1,12 @@
 'use strict';
-const { series, src, watch } = require('gulp');
+const {series, src, watch} = require('gulp');
 const eslint = require('gulp-eslint');
 const excludeGitignore = require('gulp-exclude-gitignore');
-const mocha = require('gulp-mocha');
-const istanbul = require('gulp-istanbul');
 const plumber = require('gulp-plumber');
-
+const jest = require('gulp-jest').default;
 
 function lint() {
-  return src(['generators/*/*.js','test/**.js','utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'])
+  return src(['generators/*/*.js', 'test/**.js', 'utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'])
     .pipe(excludeGitignore())
     .pipe(eslint())
     .pipe(eslint.format())
@@ -16,42 +14,23 @@ function lint() {
 }
 
 function lintWatch() {
-  watch(['generators/*/*.js','test/**.js','utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'], lint);
+  watch(['generators/*/*.js', 'test/**.js', 'utils/**.js', 'generators/*/templates/plain/**.js', 'generators/*/templates/sample_plain/**.js'], lint);
 }
 
-function preTest() {
-  return src('generators/*/*.js')
-    .pipe(excludeGitignore())
-    .pipe(istanbul({
-      includeUntested: true
-    }))
-    .pipe(istanbul.hookRequire());
-}
-
-function runTest(cb) {
-  let mochaErr;
-
-  return src('test/**/*.js')
+function runTest() {
+  process.env.NODE_ENV = 'test';
+  return src('test/')// using src('test/**/*.js') will cause the task to be run twice
     .pipe(plumber())
-    .pipe(mocha({reporter: 'spec'}))
-    .on('error', function (err) {
-      mochaErr = err;
-    })
-    .pipe(istanbul.writeReports())
-    .on('end', function () {
-      cb(mochaErr);
-    });
+    .pipe(jest());
 }
-
-const test = series(preTest, runTest);
 
 function testWatch() {
   watch(['generators/*/*.js', 'test/**'], runTest);
 }
 
-exports.test = test;
-exports.testWatch = series(test, testWatch);
+exports.test = runTest;
+exports.testWatch = series(runTest, testWatch);
 exports.lint = lint;
 exports.lintWatch = series(lint, lintWatch);
-exports.prepublish = series(lint, test);
-exports.default = series(lint, test);
+exports.prepublish = series(lint, runTest);
+exports.default = series(lint, runTest);

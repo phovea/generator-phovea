@@ -1,6 +1,7 @@
 'use strict';
 const chalk = require('chalk');
 const Base = require('yeoman-generator');
+const fs = require('fs');
 
 function extractFromReadme(content) {
   const safe = (p) => p ? p[1] : '';
@@ -15,7 +16,7 @@ function extractFromReadme(content) {
 class Generator extends Base {
 
   initializing() {
-    this.isWorkspace = this.fs.exists(this.destinationPath('.yo-rc-workspace.json'));
+    this.isWorkspace = fs.existsSync(this.destinationPath('.yo-rc-workspace.json'));
 
     if (!this.isWorkspace) {
       this._initializingPlugin();
