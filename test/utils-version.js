@@ -214,3 +214,4 @@ describe('find highest version from list', () => {
     assert.equal(version.findHighestVersion(sourceVersions, targetVersion), undefined);
   });
 });
+

@@ -47,8 +47,12 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:_version',{
-      local:require.resolve('../_version')
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
     });
   }
 
@@ -86,7 +90,9 @@ class Generator extends Base {
       // regular dependency
       this.before = this.fs.readJSON(this.destinationPath('../package.json'));
       this.log('installing: ', this.pkgs.join(' '));
-      this.npmInstall(this.pkgs, {save: true});
+      this.npmInstall(this.pkgs, {
+        save: true
+      });
       return;
     }
 
@@ -111,7 +117,9 @@ class Generator extends Base {
     const fs = require('fs-extra');
     if (this.plugin && fs.existsSync(this.destinationPath(`package.json`))) {
       // also store the dependency in the plugin
-      const child = {dependencies: {}};
+      const child = {
+        dependencies: {}
+      };
       if (this.options.type.startsWith('p')) {
         this.plugins.forEach((p) => {
           child.dependencies[p.name] = p.url;
