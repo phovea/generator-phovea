@@ -42,7 +42,7 @@ function successMessage(versions) {
  * @returns {string}
  */
 function warningMessage(versions) {
-  return `\nWarnings: \n\n${chalk.yellow(`Your Node.js version is ${versions.installed.node} (npm: ${versions.installed.npm}). Required Node.js version is ${versions.required.node} (npm: ${versions.required.npm}).`)}\n\nUsing a newer version than the required one might cause unknown side effects.\n\n`;
+  return `\nWarnings: \n\n${chalk.yellow(`Your Node.js version ${versions.installed.node} (npm: ${versions.installed.npm}) is newer than the required Node.js version ${versions.required.node} (npm: ${versions.required.npm}).`)}\nUsing a newer version than the required one might cause unknown side effects.\n\n`;
 }
 
 /**
@@ -50,10 +50,10 @@ function warningMessage(versions) {
  * @returns {string}
  */
 function errorMessage(versions) {
-  return chalk.red(`\nYour Node.js version is ${versions.installed.node} (npm: ${versions.installed.npm}). Required Node.js version is ${versions.required.node} (npm: ${versions.required.npm}).`) +
-    '\n\nTo update:\n\n' +
+  return chalk.red(`\nYour Node.js version ${versions.installed.node} (npm: ${versions.installed.npm}) does not match the required Node.js version ${versions.required.node} (npm: ${versions.required.npm}).`) +
+    '\n\nRun the following commands to update your installation:\n\n' +
     '1. Install Node.js Version Manager (NVM): ' + chalk.yellow('https://github.com/nvm-sh/nvm#install--update-script') +
-    `\n2. Install Node.js ${versions.required.node} via NVM: ` + chalk.yellow(`nvm install ${versions.required.node}`);
+    `\n2. Install Node.js ${versions.required.node} via NVM: ` + chalk.yellow(`nvm install ${versions.required.node}`) + `\n`;
 }
 
 module.exports = {
