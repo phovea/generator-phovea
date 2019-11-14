@@ -46,6 +46,7 @@
     "request": "^2.88.0",
     "semver": "^6.3.0",
     "semver-intersect": "^1.4.0",
+    "update-notifier": "^3.0.1",
     "yamljs": "^0.3.0",
     "yeoman-environment": "^2.4.0",
     "yeoman-generator": "^4.0.2"

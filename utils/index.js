@@ -45,7 +45,9 @@ function stringifyAble(config) {
     },
     stringify: stringifyInline,
     isWeb: (p) => {
-      const {plugin} = require('./known');
+      const {
+        plugin
+      } = require('./known');
       return plugin.isTypeWeb(p);
     }
   }, config);
@@ -63,7 +65,9 @@ function writeTemplates(config, withSamples) {
   const copyTpl = (base, dbase) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
     // copyTpl doesn't support glob options
-    const f = glob(base + '/**/*', {dot: true});
+    const f = glob(base + '/**/*', {
+      dot: true
+    });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
       this.fs.copyTpl(fi, this.destinationPath(dbase + rel), pattern);
@@ -92,7 +96,9 @@ function writeTemplates(config, withSamples) {
 }
 
 function useDevVersion() {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {version: '1.0.0'});
+  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {
+    version: '1.0.0'
+  });
   // assumption having a suffix like -SNAPSHOT use the dev version
   return (pkg.version || '').includes('-');
 }
@@ -124,6 +130,9 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   default() {
+    this.composeWith('phovea:_version', {
+      local: require.resolve('../generators/_version')
+    });
     this.composeWith('phovea:_init-' + this.basetype, {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')

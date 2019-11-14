@@ -11,6 +11,12 @@ class Generator extends Base {
     this.option('install');
   }
 
+  initializing() {
+    this.composeWith('phovea:_version',{
+      local:require.resolve('../_version')
+    });
+  }
+
   prompting() {
     return this.prompt([{
       type: 'list',

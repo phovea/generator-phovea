@@ -103,6 +103,12 @@ class Generator extends Base {
     });
   }
 
+  initializing() {
+    this.composeWith('phovea:_version',{
+      local:require.resolve('../_version')
+    });
+  }
+
   prompting() {
     return this.prompt([{
       type: 'input',

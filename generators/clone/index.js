@@ -4,7 +4,6 @@ const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
 const {toHTTPRepoUrl, toSSHRepoUrl} = require('../../utils/repo');
-
 function toRepository(plugin, useSSH) {
   const p = known.plugin.byName(plugin);
   return useSSH ? toSSHRepoUrl(p.repository) : toHTTPRepoUrl(p.repository);
@@ -124,6 +123,10 @@ class Generator extends Base {
       this.composeWith('phovea:workspace', {}, {
         local: require.resolve('../workspace')
       });
+    } else {
+      this.composeWith('phovea:_version',{
+      local:require.resolve('../_version')
+    });
     }
   }
 

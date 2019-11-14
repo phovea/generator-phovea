@@ -41,6 +41,12 @@ class Generator extends Base {
     this.new_ = null;
   }
 
+  initializing() {
+    this.composeWith('phovea:_version',{
+      local:require.resolve('../_version')
+    });
+  }
+
   prompting() {
     const type = this.config.get('type');
     const isHybridType = plugins.isTypeHybrid({type});

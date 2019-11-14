@@ -46,6 +46,12 @@ class Generator extends Base {
     this.plugins = [];
   }
 
+  initializing() {
+    this.composeWith('phovea:_version',{
+      local:require.resolve('../_version')
+    });
+  }
+
   _yo(generator, options) {
     const yeoman = require('yeoman-environment');
     // call yo internally
