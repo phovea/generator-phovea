@@ -117,11 +117,11 @@ class BaseInitPluginGenerator extends Generator {
 
   initializing() {
     this.composeWith('phovea:check-node-version', {
-      local: require.resolve('../check-node-version')
+      local: require.resolve('../generators/check-node-version')
     });
 
     this.composeWith('phovea:_generator-version', {
-      local: require.resolve('../_generator-version')
+      local: require.resolve('../generators/_generator-version')
     });
 
     this.config.defaults({
