@@ -34,7 +34,7 @@ function checkRequiredVersion(versions) {
  * @returns {string}
  */
 function successMessage(versions) {
-  return `\nYour Node.js version is ${versions.installed.node} (npm: ${versions.installed.npm}).` + chalk.green(` Required Node.js version is ${versions.required.node} (npm: ${versions.required.npm}).`);
+  return `\nYour Node.js version ${versions.installed.node} (npm: ${versions.installed.npm}) matches the required Node.js version ${versions.required.node} (npm: ${versions.required.npm}). The phovea generator should work as expected.\n\n`;
 }
 
 /**
@@ -42,7 +42,7 @@ function successMessage(versions) {
  * @returns {string}
  */
 function warningMessage(versions) {
-  return `\nWarnings: \n\n${chalk.yellow(`Your Node.js version is ${versions.installed.node} (npm: ${versions.installed.npm}). Required Node.js version is ${versions.required.node} (npm: ${versions.required.npm}).`)}`;
+  return `\nWarnings: \n\n${chalk.yellow(`Your Node.js version is ${versions.installed.node} (npm: ${versions.installed.npm}). Required Node.js version is ${versions.required.node} (npm: ${versions.required.npm}).`)}\n\nUsing a newer version than the required one might cause unknown side effects.\n\n`;
 }
 
 /**
@@ -52,8 +52,8 @@ function warningMessage(versions) {
 function errorMessage(versions) {
   return chalk.red(`\nYour Node.js version is ${versions.installed.node} (npm: ${versions.installed.npm}). Required Node.js version is ${versions.required.node} (npm: ${versions.required.npm}).`) +
     '\n\nTo update:\n\n' +
-    chalk.green('1. Install Node.js Version Manager (NVM): ') + chalk.yellow('https://github.com/nvm-sh/nvm#install--update-script') +
-    chalk.green(`\n2. Install Node.js ${versions.required.node} via NVM: `) + chalk.yellow(`nvm install ${versions.required.node}`);
+    '1. Install Node.js Version Manager (NVM): ' + chalk.yellow('https://github.com/nvm-sh/nvm#install--update-script') +
+    `\n2. Install Node.js ${versions.required.node} via NVM: ` + chalk.yellow(`nvm install ${versions.required.node}`);
 }
 
 module.exports = {
