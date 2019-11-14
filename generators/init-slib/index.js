@@ -1,5 +1,6 @@
 'use strict';
 const BasePluginGenerator = require('../../utils').BasePython;
+const fs = require('fs');
 
 class PluginGenerator extends BasePluginGenerator {
 
@@ -13,7 +14,7 @@ class PluginGenerator extends BasePluginGenerator {
 
   writing() {
     super.writing();
-    if (!this.fs.exists(this.destinationPath(this.config.get('name') + '/config.json'))) {
+    if (!fs.existsSync(this.destinationPath(this.config.get('name') + '/config.json'))) {
       this.fs.writeJSON(this.destinationPath(this.config.get('name') + '/config.json'), {});
     }
   }
