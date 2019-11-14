@@ -624,6 +624,10 @@ function installWebDependencies(p) {
   return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'install');
 }
 
+function cleanUpWebDependencies(p) {
+  return fs.emptyDirAsync(p.additional.length > 0 ? `${p.tmpDir}/node_modules` : (`${p.tmpDir}/${p.name}/node_modules`));
+}
+
 function resolvePluginTypes(p) {
   if (p.pluginType) {
     return Promise.resolve(); // already resolved
@@ -654,7 +658,7 @@ function buildWeb(p) {
 function installPythonTestDependencies(p) {
   console.log(chalk.yellow('create test environment'));
   return spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: p.tmpDir})
-  .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
+    .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
 }
 
 function buildServer(p) {
@@ -671,8 +675,8 @@ function buildServer(p) {
 
   // copy main deploy thing and create a docker out of it
   act = act
-  .then(() => fs.ensureDirAsync(`${p.tmpDir}/deploy`))
-  .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/deploy`, `${p.tmpDir}/deploy/`));
+    .then(() => fs.ensureDirAsync(`${p.tmpDir}/deploy`))
+    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/deploy`, `${p.tmpDir}/deploy/`));
 
   return act;
 }
@@ -793,6 +797,7 @@ if (require.main === module) {
     steps[`test:${suffix}`] = isWeb && hasAdditional ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => null;
     steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildWeb(p))) : () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildServer(p)));
     steps[`data:${suffix}`] = () => catchProductBuild(p, downloadServerDataFiles(p));
+    steps[`postbuild:${suffix}`] = isWeb ? () => catchProductBuild(p, cleanUpWebDependencies(p)) : () => null;
     steps[`image:${suffix}`] = () => catchProductBuild(p, buildDockerImage(p));
     steps[`save:${suffix}`] = () => catchProductBuild(p, dockerSave(p.image, `build/${p.label}_image.tar.gz`));
 
@@ -804,6 +809,9 @@ if (require.main === module) {
     subSteps.push(`build:${suffix}`);
     if (isServer && p.data.length > 0) {
       subSteps.push(`data:${suffix}`);
+    }
+    if (isWeb) {
+      subSteps.push(`postbuild:${suffix}`);
     }
     subSteps.push(`image:${suffix}`);
     if (!argv.skipSaveImage) {
@@ -818,7 +826,7 @@ if (require.main === module) {
   // create some meta steps
   {
     const stepNames = Object.keys(steps);
-    for (const meta of ['clone', 'prepare', 'build', 'test', 'image', 'product', 'install']) {
+    for (const meta of ['clone', 'prepare', 'build', 'test', 'postbuild', 'image', 'product', 'install']) {
       const sub = stepNames.filter((d) => d.startsWith(`${meta}:`));
       if (sub.length <= 0) {
         continue;
