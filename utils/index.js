@@ -3,12 +3,13 @@ const Generator = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
+const fs = require('fs');
 
 function patchPackageJSON(config, unset, extra, replaceExtra) {
   const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
 
   let pkgPatch;
-  if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
+  if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
     pkgPatch = JSON.parse(template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
   } else {
     pkgPatch = {};
@@ -44,7 +45,9 @@ function stringifyAble(config) {
     },
     stringify: stringifyInline,
     isWeb: (p) => {
-      const {plugin} = require('./known');
+      const {
+        plugin
+      } = require('./known');
       return plugin.isTypeWeb(p);
     }
   }, config);
@@ -62,7 +65,9 @@ function writeTemplates(config, withSamples) {
   const copyTpl = (base, dbase) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
     // copyTpl doesn't support glob options
-    const f = glob(base + '/**/*', {dot: true});
+    const f = glob(base + '/**/*', {
+      dot: true
+    });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
       this.fs.copyTpl(fi, this.destinationPath(dbase + rel), pattern);
@@ -70,21 +75,17 @@ function writeTemplates(config, withSamples) {
   };
 
   const copy = (prefix) => {
-    this.fs.exists(this.templatePath(prefix + 'plain'), (exists) => {
-      if(exists === false) {
-        return;
-      }
+    if (fs.existsSync(this.templatePath(prefix + 'plain'))) {
       this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
-    });
+    }
+
     copyTpl(this.templatePath(prefix + 'processed'), '');
 
     if (config.name) {
-      this.fs.exists(this.templatePath(prefix + 'pluginname_plain'), (exists) => {
-        if(exists === false) {
-          return;
-        }
+      if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
         this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
-      });
+      }
+
       copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
     }
   };
@@ -95,7 +96,9 @@ function writeTemplates(config, withSamples) {
 }
 
 function useDevVersion() {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {version: '1.0.0'});
+  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {
+    version: '1.0.0'
+  });
   // assumption having a suffix like -SNAPSHOT use the dev version
   return (pkg.version || '').includes('-');
 }
@@ -113,6 +116,14 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../generators/check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../generators/_check-own-version')
+    });
+
     this.config.defaults({
       type: this.type
     });
@@ -120,7 +131,7 @@ class BaseInitPluginGenerator extends Generator {
 
   readmeAddon() {
     const f = this.templatePath('README.partial.md');
-    if (this.fs.exists(f)) {
+    if (fs.existsSync(f)) {
       return this.fs.read(f);
     }
     return '';
@@ -138,10 +149,10 @@ class BaseInitPluginGenerator extends Generator {
 
   writing() {
     const config = this.config.getAll();
-    if (this.fs.exists(this.templatePath('package.tmpl.json'))) {
+    if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
       this._patchPackageJSON(config);
     }
-    if (this.fs.exists(this.templatePath('_gitignore'))) {
+    if (fs.existsSync(this.templatePath('_gitignore'))) {
       this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     }
 

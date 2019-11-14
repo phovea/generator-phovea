@@ -1,7 +1,7 @@
 {
-  "name": "phovea_workspace",
-  "description": "helper package",
-  "version": "0.0.1",
+  "name": "<%-wsName%>",
+  "description": "<%-wsDescription%>",
+  "version": "<%-wsVersion%>",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
