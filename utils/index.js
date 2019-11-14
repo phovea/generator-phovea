@@ -1,9 +1,9 @@
 'use strict';
-const Base = require('yeoman-generator');
+const Generator = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
-const fs = require('fs');
 const glob = require('glob').sync;
+const fs = require('fs');
 
 function patchPackageJSON(config, unset, extra, replaceExtra) {
   const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
@@ -103,7 +103,7 @@ function useDevVersion() {
   return (pkg.version || '').includes('-');
 }
 
-class BaseInitPluginGenerator extends Base {
+class BaseInitPluginGenerator extends Generator {
 
   constructor(args, options, basetype) {
     super(args, options);
