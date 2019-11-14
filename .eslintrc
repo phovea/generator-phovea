@@ -7,17 +7,7 @@
     }
   },
   "extends": "eslint:recommended",
-  "rules": {
-    "linebreak-style": 0,
-    "valid-jsdoc": 0,
-    "capitalized-comments": 0,
-    "no-div-regex": 0,
-    "padded-blocks": 0,
-    "arrow-parens": [
-      2,
-      "always"
-    ]
-  },
+  "rules": {},
   "env": {
     "es6": true,
     "node": true,

@@ -65,6 +65,20 @@
     "yeoman-assert": "^3.1.1",
     "yeoman-test": "^2.0.0"
   },
+  "eslintConfig": {
+    "extends": "xo-space",
+    "env": {
+      "jest": true
+    },
+    "rules": {
+      "linebreak-style": 0,
+      "no-div-regex": 0,
+      "arrow-parens": [
+        2,
+        "always"
+      ]
+    }
+  },
   "scripts": {
     "lint": "gulp lint",
     "lint:watch": "gulp lintWatch",
