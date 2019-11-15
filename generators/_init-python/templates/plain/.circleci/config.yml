@@ -7,10 +7,15 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Show node and npm version
+          name: Show Node.js and npm version
           command: |
             node -v
             npm -v
+      - run:
+          name: Show Python and pip version
+          command: |
+            python --version
+            pip --version
       - run:
           name: Install Docker packages from docker_packages.txt
           command: |
@@ -33,6 +38,9 @@ jobs:
           command: |
             . ~/venv/bin/activate
             pip install --upgrade --upgrade-strategy=only-if-needed -r requirements.txt
+      - run:
+          name: Show installed pip packages
+          command: pip list || true
       - run:
           name: Build
           command: |

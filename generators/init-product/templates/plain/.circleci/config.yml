@@ -9,10 +9,15 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Show node and npm version
+          name: Show Node.js and npm version
           command: |
             node -v
             npm -v
+      - run:
+          name: Show Python and pip version
+          command: |
+            python --version
+            pip --version
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:

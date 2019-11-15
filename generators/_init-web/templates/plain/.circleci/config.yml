@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Show node and npm version
+          name: Show Node.js and npm version
           command: |
             node -v
             npm -v
