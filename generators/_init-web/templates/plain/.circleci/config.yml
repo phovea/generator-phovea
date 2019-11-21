@@ -6,24 +6,32 @@ jobs:
       - image: circleci/node:12-browsers
     steps:
       - checkout
-      - restore_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          name: install-npm-wee
+          name: Show Node.js and npm version
+          command: |
+            node -v
+            npm -v
+      - restore_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Install npm dependencies
           command: npm install
-      - run: #remove all resolved github dependencies
-          name: delete-vcs-dependencies
+      - run:
+          name: Remove npm dependencies installed from git repositories (avoid caching of old commits)
           command: |
             (grep -l '._resolved.: .\(git[^:]*\|bitbucket\):' ./node_modules/*/package.json || true) | xargs -r dirname | xargs -r rm -rf
       - save_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "package.json" }}
+          key: deps1-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
           - ./node_modules
-      - run: #install all dependencies
-          name: install-npm-wee2
+      - run:
+          name: Install npm dependencies from git repositories (always get latest commit)
           command: npm install
       - run:
-          name: dist
+          name: Show installed npm dependencies
+          command: npm list --depth=1 || true
+      - run:
+          name: Build
           command: npm run dist
       - store_artifacts:
           path: dist

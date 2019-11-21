@@ -6,17 +6,25 @@ jobs:
       - image: circleci/node:12-browsers
     steps:
       - checkout
+      - run:
+          name: Show Node.js and npm version
+          command: |
+            node -v
+            npm -v
       - restore_cache:
           key: deps-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          name: install-npm-wee
+          name: Install npm dependencies
           command: npm install
       - save_cache:
           key: deps-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
           - ./node_modules
       - run:
-          name: dist
+          name: Show installed npm dependencies
+          command: npm list --depth=1 || true
+      - run:
+          name: Run test
           command: npm run test
 workflows:
   version: 2
