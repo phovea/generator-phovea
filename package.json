@@ -20,7 +20,9 @@
   "files": [
     "generators/",
     "utils/",
-    "knownPhoveaPlugins.json"
+    "knownPhoveaPlugins.json",
+    ".nvmrc",
+    ".npm-version"
   ],
   "keywords": [
     "yeoman-generator"
