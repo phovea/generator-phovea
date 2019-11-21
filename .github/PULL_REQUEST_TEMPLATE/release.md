@@ -35,7 +35,7 @@
 
 ### Prepeare next develop release
 
-* [ ] Switch to `develop` branch
+* [ ] Merge `master` into `develop` branch
 * [ ] Update version in *package.json* and *package-lock.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Commit and push changes
 
