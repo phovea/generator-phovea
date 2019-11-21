@@ -1,13 +1,13 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 const {parseRequirements} = require('../../utils/pip');
+const fs = require('fs');
 
 const known = () => require('../../utils/known');
 
-class PluginGenerator extends Base {
-
+class Generator extends Base {
   constructor(args, options) {
     super(args, options);
 
@@ -108,11 +108,11 @@ class PluginGenerator extends Base {
     this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.join('\n'));
 
     // don't overwrite existing registry file
-    if (!this.fs.exists(this.destinationPath(config.name.toLowerCase() + '/__init__.py'))) {
+    if (!fs.existsSync(this.destinationPath(config.name.toLowerCase() + '/__init__.py'))) {
       this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(config.name.toLowerCase() + '/__init__.py'), stringifyAble(config));
     }
-    this.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
-    this.copy(this.templatePath('docs_gitignore'), this.destinationPath('docs/.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+    this.fs.copy(this.templatePath('docs_gitignore'), this.destinationPath('docs/.gitignore'));
   }
 
   install() {
@@ -122,4 +122,4 @@ class PluginGenerator extends Base {
   }
 }
 
-module.exports = PluginGenerator;
+module.exports = Generator;

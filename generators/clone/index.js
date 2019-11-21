@@ -1,10 +1,9 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
 const {toHTTPRepoUrl, toSSHRepoUrl} = require('../../utils/repo');
-
 function toRepository(plugin, useSSH) {
   const p = known.plugin.byName(plugin);
   return useSSH ? toSSHRepoUrl(p.repository) : toHTTPRepoUrl(p.repository);
@@ -76,6 +75,9 @@ class Generator extends Base {
   }
 
   initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
     this.props = {
       plugins: [],
       resolve: false,
@@ -123,6 +125,10 @@ class Generator extends Base {
     if (this.props.runWorkspace) {
       this.composeWith('phovea:workspace', {}, {
         local: require.resolve('../workspace')
+      });
+    } else {
+      this.composeWith('phovea:_check-own-version', {}, {
+        local: require.resolve('../_check-own-version')
       });
     }
   }

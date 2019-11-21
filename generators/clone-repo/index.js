@@ -1,5 +1,5 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const {
   simplifyRepoUrl
@@ -59,6 +59,16 @@ class Generator extends Base {
       alias: 'd',
       defaults: '',
       type: String
+    });
+  }
+
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
     });
   }
 

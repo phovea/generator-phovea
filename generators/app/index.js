@@ -1,14 +1,23 @@
 'use strict';
-const generators = require('yeoman-generator');
-
+const Base = require('yeoman-generator');
 const plugins = require('../../utils/types').plugin;
 
-class ChooseGenerator extends generators.Base {
+class Generator extends Base {
 
   constructor(args, options) {
     super(args, options);
     // Make options available
     this.option('install');
+  }
+
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
+    });
   }
 
   prompting() {
@@ -36,4 +45,4 @@ class ChooseGenerator extends generators.Base {
   }
 }
 
-module.exports = ChooseGenerator;
+module.exports = Generator;

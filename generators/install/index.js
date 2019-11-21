@@ -1,6 +1,7 @@
 'use strict';
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const path = require('path');
+const fs = require('fs');
 
 function toPluginRepo(url, useSSH) {
   const match = url.match(/(github:)?([\w\d-_]+\/)?([\w\d-_]+)(#.+)?/);
@@ -45,6 +46,16 @@ class Generator extends Base {
     this.plugins = [];
   }
 
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
+    });
+  }
+
   _yo(generator, options) {
     const yeoman = require('yeoman-environment');
     // call yo internally
@@ -69,7 +80,7 @@ class Generator extends Base {
   default() {
     this.plugin = this.options.for;
 
-    if (this.fs.exists(this.destinationPath('../.yo-rc-workspace.json'))) {
+    if (fs.existsSync(this.destinationPath('../.yo-rc-workspace.json'))) {
       // we are in a workspace
       this.plugin = path.basename(this.destinationRoot());
       this.log('switch to workspace for install dependencies but keep ' + this.plugin, 'in mind');
@@ -79,7 +90,9 @@ class Generator extends Base {
       // regular dependency
       this.before = this.fs.readJSON(this.destinationPath('../package.json'));
       this.log('installing: ', this.pkgs.join(' '));
-      this.npmInstall(this.pkgs, {save: true});
+      this.npmInstall(this.pkgs, {
+        save: true
+      });
       return;
     }
 
@@ -102,9 +115,11 @@ class Generator extends Base {
 
   end() {
     const fs = require('fs-extra');
-    if (this.plugin && this.fs.exists(this.destinationPath(`package.json`))) {
+    if (this.plugin && fs.existsSync(this.destinationPath(`package.json`))) {
       // also store the dependency in the plugin
-      const child = {dependencies: {}};
+      const child = {
+        dependencies: {}
+      };
       if (this.options.type.startsWith('p')) {
         this.plugins.forEach((p) => {
           child.dependencies[p.name] = p.url;

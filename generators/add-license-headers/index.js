@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Base = require('yeoman-generator').Base;
+const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
@@ -54,6 +54,16 @@ class Generator extends Base {
       default: '',
       type: String,
       desc: 'Comma separated list (without spaces) to exclude specific file types (e.g. only add to .ts files by excluding .scss and .py)'
+    });
+  }
+
+  initializing() {
+    this.composeWith('phovea:check-node-version', {}, {
+      local: require.resolve('../check-node-version')
+    });
+
+    this.composeWith('phovea:_check-own-version', {}, {
+      local: require.resolve('../_check-own-version')
     });
   }
 
