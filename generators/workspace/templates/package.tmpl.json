@@ -15,7 +15,7 @@
   },
   "scripts": {
     "compile": "tsc",
-    "lint": "tslint -c tslint.json -p . 'src/**/*.ts?(x)' 'tests/**/*.ts?(x)'",
+    "lint": "tslint -c tslint.json -p .",
     "prebuild": "npm run test",
     "pretest": "npm run compile",
     "test": "karma start",
