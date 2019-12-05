@@ -297,12 +297,13 @@ function yo(generator, options, cwd, args) {
   const yeoman = require('yeoman-environment');
   // call yo internally
   const yeomanEnv = yeoman.createEnv([], {cwd, env}, quiet ? createQuietTerminalAdapter() : undefined);
-  yeomanEnv.register(require.resolve('generator-phovea/generators/' + generator), 'phovea:' + generator);
   const _args = Array.isArray(args) ? args.join(' ') : args || '';
   return new Promise((resolve, reject) => {
     try {
       console.log(cwd, chalk.blue('running yo phovea:' + generator));
-      yeomanEnv.run(`phovea:${generator} ${_args}`, options, resolve);
+      yeomanEnv.lookup(() => {
+        yeomanEnv.run(`phovea:${generator} ${_args}`, options, resolve);
+      });
     } catch (e) {
       console.error('error', e, e.stack);
       reject(e);
