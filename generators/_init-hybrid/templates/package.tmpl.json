@@ -35,7 +35,7 @@
     "predist:python": "npm run build:python && npm run docs:python",
     "predist": "echo hybrid",
     "dist:web": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *",
-    "dist:python": "python setup.py bdist_egg",
+    "dist:python": "python setup.py sdist bdist_wheel",
     "dist": "npm run dist:web && npm run dist:python"
   }
 }
