@@ -15,7 +15,10 @@
         "**/.cache-loader": true
     },
     "diffEditor.ignoreTrimWhitespace": false,
+    "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": ["--exclude=.git,venv,deploy,docs,__pycache__,node_modules"],
     "editor.formatOnSave": false,
     "beautify.tabSize": 2,
     "beautify.options": {
