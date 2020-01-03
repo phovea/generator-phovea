@@ -11,6 +11,7 @@
     "node": ">= 12.13"
   },
   "scripts": {
+    "preinstall": "node preinstall",
     "compile": "tsc",
     "lint": "tslint -c tslint.json -p . 'src/**/*.ts?(x)' 'tests/**/*.ts?(x)'",
     "docs": "typedoc --options typedoc.json src/",

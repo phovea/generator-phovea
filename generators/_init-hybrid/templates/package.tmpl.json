@@ -13,6 +13,7 @@
     "docker_packages.txt"
   ],
   "scripts": {
+    "preinstall": "node preinstall",
     "check": "flake8 --exclude=.git,venv,deploy,docs,__pycache__,node_modules",
     "docs:web": "typedoc --options typedoc.json src/**.ts",
     "docs:python": "sphinx-apidoc -o docs -f ./<%-name.toLowerCase()%> && sphinx-build ./docs build/docs",
