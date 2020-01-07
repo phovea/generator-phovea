@@ -1,12 +1,12 @@
 # optional patch file for docker-compose file generation that will be merged, images for built docker container will be merged into the docker file accordingly
 services:
   api:
-    image: python:2.7
+    image: python:3.7
     environment:
       - http_proxy=http://yourproxylocation
       - https_proxy=https://yourproxylocation
   server:
-    image: python:2.7
+    image: python:3.7
     environment:
       - http_proxy=http://yourproxylocation
       - https_proxy=https://yourproxylocation
