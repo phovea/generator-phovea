@@ -26,8 +26,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Check version numbers of dependencies again
 * [ ] Check if build is successful
 * [ ] Update this version number following [semver](https://semver.org)
-* [ ] Run `npm install` on release branch to update _package-lock.json_
-* [ ] Commit and push *package.json* and *package-lock.json* with new version number
+* [ ] Commit and push *package.json* with new version number
 * [ ] Wait until build is successful
 * [ ] Assign reviewer and wait for final review
 * [ ] Merge this pull request into master branch
@@ -51,7 +50,7 @@ The steps of this section are only necessary if the code is public and should be
 ### Prepeare next develop release
 
 * [ ] Switch to `develop` branch
-* [ ] Update version in *package.json* and *package-lock.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
+* [ ] Update version in *package.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Revert dependencies in *package.json* to develop branches (e.g., `"phovea_core": "github:phovea/phovea_core#develop"`)
 * [ ] Revert dependencies in *requirements.txt* to develop branches (e.g., `-e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server`)
 * [ ] Commit and push changes
