@@ -37,10 +37,10 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 
 The steps of this section are only necessary if the code is public and should be published to the pypi registry.
 
-* [ ] Create a directory called _dist_ in your local repo
-* [ ] Open last successful circle CI Build for this PR
-* [ ] Go to _Artifacts_ and open `home/phovea/dist`
-* [ ] Download the two files into the _dist_ directory
+* [ ] `docker run -it -v <PATH TO HOST DIRECTORY>:/phovea circleci/python:3.7-buster-node-browsers /bin/bash` and continue inside the container
+* [ ] `cd /phovea`
+* [ ] `sudo pip install -r requirements.txt && sudo pip install -r requirements_dev.txt && sudo pip install twine`
+* [ ] `npm run dist`
 * [ ] Ensure only two files are in the *dist* directory (*.whl and *.tar.gz)
 * [ ] Ensure that both files contain the new version number
 * [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
