@@ -27,8 +27,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Check version numbers of dependencies again
 * [ ] Check if build is successful
 * [ ] Update this version number following [semver](https://semver.org)
-* [ ] Run `npm install` on release branch to update _package-lock.json_
-* [ ] Commit and push *package.json* and *package-lock.json* with new version number
+* [ ] Commit and push *package.json* with new version number
 * [ ] Wait until build is successful
 * [ ] Assign reviewer and wait for final review
 * [ ] Merge this pull request into master branch
@@ -37,10 +36,10 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 
 The steps of this section are only necessary if the code is public and should be published to the pypi registry.
 
-* [ ] Create a directory called _dist_ in your local repo
-* [ ] Open last successful circle CI Build for this PR
-* [ ] Go to _Artifacts_ and open `home/phovea/dist`
-* [ ] Download the two files into the _dist_ directory
+* [ ] `docker run -it -v <PATH TO HOST DIRECTORY>:/phovea circleci/python:3.7-buster-node-browsers /bin/bash` and continue inside the container
+* [ ] `cd /phovea`
+* [ ] `sudo pip install -r requirements.txt && sudo pip install -r requirements_dev.txt && sudo pip install twine`
+* [ ] `npm run dist`
 * [ ] Ensure only two files are in the *dist* directory (*.whl and *.tar.gz)
 * [ ] Ensure that both files contain the new version number
 * [ ] `twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
@@ -57,7 +56,7 @@ The steps of this section are only necessary if the code is public and should be
 ### Prepeare next develop release
 
 * [ ] Switch to `develop` branch
-* [ ] Update version in *package.json* and *package-lock.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
+* [ ] Update version in *package.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Revert dependencies in *package.json* to develop branches (e.g., `"phovea_core": "github:phovea/phovea_core#develop"`)
 * [ ] Revert dependencies in *requirements.txt* to develop branches (e.g., `-e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server`)
 * [ ] Commit and push changes
