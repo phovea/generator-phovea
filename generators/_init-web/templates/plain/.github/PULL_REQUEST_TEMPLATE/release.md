@@ -30,13 +30,19 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Wait until build is successful
 * [ ] Assign reviewer and wait for final review
 * [ ] Merge this pull request into master branch
+* [ ] Add release label (i.e., `release: major`, `release: minor`, or `release: patch`)
 
 ### Publish npm release
 
 The steps of this section are only necessary if the code is public and should be published to the npm registry.
 
+* [ ] `rm -rf dist && rm -rf build`
+* [ ] `docker run -it -v $(pwd):/phovea circleci/node:12.13-buster-browsers /bin/bash` and continue inside the container
+* [ ] `cd /phovea`
+* [ ] `rm -rf node_modules/ && rm -rf package-lock.json`
+* [ ] `npm install`
 * [ ] `npm run build` to build the bundles
-* [ ] `npm login caleydo-bot`
+* [ ] `npm login` as caleydo-bot
 * [ ] `npm publish`
 * [ ] Check release on [npmjs.com](https://www.npmjs.com)
 
@@ -50,9 +56,9 @@ The steps of this section are only necessary if the code is public and should be
 ### Prepeare next develop release
 
 * [ ] Switch to `develop` branch
+* [ ] Merge `master` branch into `develop` (`git merge origin/master`)
 * [ ] Update version in *package.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Revert dependencies in *package.json* to develop branches (e.g., `"phovea_core": "github:phovea/phovea_core#develop"`)
-* [ ] Revert dependencies in *requirements.txt* to develop branches (e.g., `-e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server`)
 * [ ] Commit and push changes
  
 ### 🏁 Finish line
