@@ -136,7 +136,7 @@ class Generator extends Base {
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
     if (!fs.existsSync(this.destinationPath('phovea.js'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), stringifyAble(config));
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath('src/phovea.ts'), stringifyAble(config));
     }
   }
 
