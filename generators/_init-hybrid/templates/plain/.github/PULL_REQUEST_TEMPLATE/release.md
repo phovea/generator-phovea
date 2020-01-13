@@ -54,10 +54,9 @@ The steps of this section are only necessary if the code is public and should be
 
 The steps of this section are only necessary if the code is public and should be published to the npm registry.
 
-* [ ] `rm -rf dist && rm -rf build`
+* [ ] `rm -rf dist && rm -rf build && rm -rf node_modules/ && rm -rf package-lock.json`
 * [ ] `docker run -it -v $(pwd):/phovea circleci/node:12.13-buster-browsers /bin/bash` and continue inside the container
 * [ ] `cd /phovea`
-* [ ] `rm -rf node_modules/ && rm -rf package-lock.json`
 * [ ] `npm install`
 * [ ] `npm run build:web` to build the bundles
 * [ ] `npm login` as caleydo-bot
