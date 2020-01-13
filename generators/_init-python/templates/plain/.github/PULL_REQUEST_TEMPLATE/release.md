@@ -37,6 +37,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 
 The steps of this section are only necessary if the code is public and should be published to the pypi registry.
 
+* [ ] `chmod -R o+w .` in the cloned repository directory (to provide write access to the CircleCI Linux user)
 * [ ] `rm -rf dist && rm -rf build`
 * [ ] `docker run -it -v $(pwd):/phovea circleci/python:3.7-buster-node-browsers /bin/bash` and continue inside the container
 * [ ] `cd /phovea`

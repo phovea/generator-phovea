@@ -36,6 +36,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 
 The steps of this section are only necessary if the code is public and should be published to the npm registry.
 
+* [ ] `chmod -R o+w .` in the cloned repository directory (to provide write access to the CircleCI Linux user)
 * [ ] `rm -rf dist && rm -rf build && rm -rf node_modules/ && rm -rf package-lock.json`
 * [ ] `docker run -it -v $(pwd):/phovea circleci/node:12.13-buster-browsers /bin/bash` and continue inside the container
 * [ ] `cd /phovea`
