@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
+    "target": "es6",
     "jsx": "react"
   },
   "include": [
