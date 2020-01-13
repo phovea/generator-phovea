@@ -135,7 +135,7 @@ class Generator extends Base {
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     writeTemplates.call(this, config);
     // don't overwrite existing registry file
-    if (!fs.existsSync(this.destinationPath('phovea.js'))) {
+    if (!fs.existsSync(this.destinationPath('src/phovea.ts')) && !fs.existsSync(this.destinationPath('phovea.js'))) {//keep support for phovea.js files
       this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath('src/phovea.ts'), stringifyAble(config));
     }
   }
