@@ -3,24 +3,36 @@ jobs:
   build:
     working_directory: ~/phovea
     docker:
-      - image: caleydo/phovea_circleci_python:v3.0
-      - image: docker:17.05.0-ce-git
+      - image: circleci/python:3.7-buster-node-browsers # for node version see Dockerfile on https://hub.docker.com/r/circleci/python
     steps:
       - checkout
       - setup_remote_docker
+      - run:
+          name: Show Node.js and npm version
+          command: |
+            node -v
+            npm -v
+      - run:
+          name: Show Python and pip version
+          command: |
+            python --version
+            pip --version
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: install-npm-wee
+          name: Install npm dependencies
           command: npm install
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - run:
+          name: Show installed npm dependencies
+          command: npm list --depth=1 || true
       - restore_cache:
           key: awscli-1.11.113
       - run:
-          name: install-aws-cli
+          name: Install AWS CLI
           command: |
             virtualenv ~/venv
             . ~/venv/bin/activate
@@ -30,7 +42,7 @@ jobs:
           paths:
           - ~/venv
       - run:
-          name: login ecr and docker hub
+          name: Login AWS ECR and DockerHub
           command: |
             . ~/venv/bin/activate
             cat > ~/.dockercfg << EOF
@@ -44,7 +56,7 @@ jobs:
             login="$(aws ecr get-login --no-include-email)"
             ${login}
       - deploy:
-          name: build and deploy
+          name: Build and deploy
           command: |
             . ~/venv/bin/activate
             case $CIRCLE_BRANCH in
@@ -59,9 +71,9 @@ jobs:
             node build.js --skipSaveImage --noDefaultTags --pushExtra=${awsTag} --pushTo=922145058410.dkr.ecr.eu-central-1.amazonaws.com/caleydo
       - store_artifacts:
           path: build
-          prefix: build
+          destination: build
       - deploy:
-          name: cleanup untagged aws repo
+          name: Cleanup untagged AWS repositories
           command: |
             . ~/venv/bin/activate
             export AWS_DEFAULT_REGION=eu-central-1
@@ -69,7 +81,7 @@ jobs:
             # list repos filter to just the one of this product and delete untagged ones
             aws ecr describe-repositories --output text | cut -f5 | grep "caleydo/${baseName}" | while read line; do aws ecr list-images --repository-name $line --filter tagStatus=UNTAGGED --query 'imageIds[*]' --output text | while read imageId; do aws ecr batch-delete-image --output text --repository-name $line --image-ids imageDigest=$imageId; done; done
       - deploy:
-          name: restart aws #assumes the task definition is called <reponame>-<branch>
+          name: Restart AWS task # assumes the task definition is called <reponame>-<branch>
           command: |
             . ~/venv/bin/activate
             export AWS_DEFAULT_REGION=eu-central-1
