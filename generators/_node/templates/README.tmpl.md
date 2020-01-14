@@ -1,4 +1,4 @@
-<%- name %> [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+<%- name %> [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url]
 =====================
 
 <%- longDescription %>
@@ -43,7 +43,6 @@ This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform 
 [phovea-url]: https://phovea.caleydo.org
 [npm-image]: https://badge.fury.io/js/<%= name %>.svg
 [npm-url]: https://npmjs.org/package/<%= name %>
-[travis-image]: https://travis-ci.org/<%-githubAccount%>/<%-name%>.svg?branch=master
-[travis-url]: https://travis-ci.org/<%-githubAccount%>/<%-name%>
+
 [daviddm-image]: https://david-dm.org/<%-githubAccount%>/<%-name%>/status.svg
 [daviddm-url]: https://david-dm.org/<%-githubAccount%>/<%-name%>
