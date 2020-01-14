@@ -32,8 +32,6 @@ class Generator extends Base {
 
     this.composeWith('phovea:_node', {
       options: this.options
-    }, {
-      local: require.resolve('../_node')
     });
   }
 
