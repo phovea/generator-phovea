@@ -65,13 +65,19 @@ class Generator extends Base {
       local: require.resolve('../_node')
     });
   }
+  /**
+   * Removes requirements from github with a version tag
+   * i.e :`-e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server`
+   *
+   */
+  _removeGithubTagged(requirements) {
+    return requirements.filter((req) => !(req.includes('github.com') && !req.includes('develop')))
+  }
 
   _generateDependencies(useDevelopDependencies) {
     const requirements = parseRequirements(this.fs.read(this.destinationPath('requirements.txt'), {defaults: ''}));
     const dockerPackages = parseRequirements(this.fs.read(this.destinationPath('docker_packages.txt'), {defaults: ''}));
-
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
-
     // merge dependencies
     // support old notation, too (smodules, slibraries)
     const modules = this.config.get('modules').concat(this.config.get('smodules') || []);
@@ -92,11 +98,10 @@ class Generator extends Base {
     });
 
     return {
-      requirements: concat(requirements),
-      dockerPackages: concat(dockerPackages)
+      requirements: this._removeGithubTagged(concat(requirements)),
+      dockerPackages: concat(dockerPackages),
     };
   }
-
   writing() {
     const config = this.config.getAll();
     const deps = this._generateDependencies(useDevVersion.call(this));
