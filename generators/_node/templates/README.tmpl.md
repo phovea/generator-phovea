@@ -43,6 +43,3 @@ This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform 
 [phovea-url]: https://phovea.caleydo.org
 [npm-image]: https://badge.fury.io/js/<%= name %>.svg
 [npm-url]: https://npmjs.org/package/<%= name %>
-
-[daviddm-image]: https://david-dm.org/<%-githubAccount%>/<%-name%>/status.svg
-[daviddm-url]: https://david-dm.org/<%-githubAccount%>/<%-name%>
