@@ -146,6 +146,9 @@ class PackageJSONGenerator extends Base {
     this.spawnCommandSync('git', ['init'], {
       cwd: this.destinationPath()
     });
+    this.spawnCommandSync('git', ['add', '--all'])
+    this.spawnCommandSync('git', ['commit', '-am', '"Initial commit"'])
+    this.spawnCommandSync('git', ['checkout', '-b', 'develop'])
   }
 }
 
