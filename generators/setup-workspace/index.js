@@ -166,6 +166,8 @@ class Generator extends Base {
       cwd: this.cwd,
       stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
     }, cwd || {});
+
+    this.log(`\nrunning ${cmd} ${argline}\n`)
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -174,6 +176,8 @@ class Generator extends Base {
     if (failed(r)) {
       this.log(r.stderr.toString());
       return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
+    } else {
+      this.log(r.stdout.toString())
     }
     return Promise.resolve(cmd);
   }
@@ -361,7 +365,8 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace', {
-        defaultApp: findDefaultApp()
+        defaultApp: findDefaultApp(),
+        noLogging: true// do not show logs from yo phovea:workspace
       }))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
@@ -384,14 +389,28 @@ class Generator extends Base {
 
   end() {
     this.log('\n\nnext steps: ');
-    this.log(chalk.green('1. switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
-    this.log(chalk.green('2. Open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
-    this.log(chalk.green('   in case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
-    this.log(chalk.green('3. start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
-    this.log(chalk.green('4. start client application in the foreground: '), chalk.yellow('npm start'));
-    this.log(chalk.green('5. open web browser and access: '), chalk.yellow('http://localhost:8080'));
+    this.log(chalk.green('- switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
+    if (this.options.skip.includes('install')) {
+      this.log(chalk.green('- install npm dependencies: '), chalk.yellow('npm install'));
+    }
+    if (this.options.skip.includes('build')) {
+      this.log(chalk.green('- build docker containers: '), chalk.yellow('docker-compose build'));
+    }
 
-    this.log(chalk.green('X. look at last 50 server log messages (-f ... auto update): '), chalk.yellow('docker-compose logs -f --tail=50 api'));
+
+    this.log(chalk.green('- open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
+    this.log(chalk.green('   in case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
+    this.log(chalk.green('- start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
+    this.log(chalk.green('- start client application in the foreground: '), chalk.yellow('npm start'));
+    this.log(chalk.green('- open web browser and access: '), chalk.yellow('http://localhost:8080'));
+
+    this.log(chalk.green('- look at last 50 server log messages (-f ... auto update): '), chalk.yellow('docker-compose logs -f --tail=50 api'));
+
+    this.log('\n\nuseful commands: ');
+    this.log(chalk.red(' docker-compose up'), '        ... starts the system');
+    this.log(chalk.red(' docker-compose restart'), '   ... restart');
+    this.log(chalk.red(' docker-compose stop'), '      ... stop');
+    this.log(chalk.red(' docker-compose build api'), ' ... rebuild api (in case of new dependencies)');
   }
 }
 
