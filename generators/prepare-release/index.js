@@ -9,7 +9,7 @@ function toBaseName(name) {
   if (name.includes('/')) {
     return name;
   }
-  return `Caleydo/${name}`;
+  return `oltionchampari/${name}`;
 }
 
 function toCWD(basename) {
@@ -332,6 +332,7 @@ class Generator extends Base {
   _createPullRequest(ctx) {
     const opn = require('opn');
     const base = simplifyRepoUrl(ctx.repo);
+    this.log(base)
     const url = `https://github.com/${base}/compare/release_${ctx.version}?expand=1`;
     return opn(url, {
       wait: false

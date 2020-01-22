@@ -21,6 +21,7 @@
     "generators/",
     "utils/",
     "knownPhoveaPlugins.json",
+    "knownRepositories",
     ".nvmrc",
     ".npm-version"
   ],
@@ -52,7 +53,9 @@
     "update-notifier": "^3.0.1",
     "yamljs": "^0.3.0",
     "yeoman-environment": "^2.4.0",
-    "yeoman-generator": "^4.0.2"
+    "yeoman-generator": "^4.0.2",
+    "nodegit": "0.26.4",
+    "request-promise": "^4.2.5"
   },
   "devDependencies": {
     "eslint": "^6.4.0",
