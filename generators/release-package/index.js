@@ -6,6 +6,7 @@ const knownRepositories = require('../../knownRepositories');
 const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 const opn = require('opn');
 var rp = require('request-promise');
+const semver = require('semver')
 const {parseRequirements} = require('../../utils/pip');
 // const {parseRequirements} = require('../../utils/pip');
 
@@ -19,7 +20,11 @@ function toBaseName(name) {
   }
   return `${Object.keys(knownRepositories).find((base) => knownRepositories[base].includes(name))}/${name}`;
 }
-
+function getOrganization(name) {
+  if (name.includes('/')) {
+    return Object.keys(knownRepositories).find((base) => knownRepositories[base].includes(name))
+  }
+}
 function toCWD(basename) {
   let match = basename.match(/.*\/(.*)/)[1];
   if (match.endsWith('_product')) {
@@ -143,7 +148,7 @@ class Generator extends Base {
    * @param {string} cwd optional directory
    */
   _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : {cwd: cwd || this.cwd};
+    const options = cwd === false ? {} : {cwd: cwd || this.cwd, stdio: ['inherit', 'pipe', 'pipe']};
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -179,14 +184,14 @@ class Generator extends Base {
   //   })
   // }
 
-  // _openRelease(ctx) {
-
-  //   const base = simplifyRepoUrl(ctx.repo);
-  //   const url = `https://github.com/oltionchampari/dummy_repo/releases/edit/v6.0.0`;
-  //   return opn(url, {
-  //     wait: false
-  //   }).then(() => ctx);
-  // }
+  _openRelease(ctx) {
+    console.log(this.username, this._getGitUser())
+    // const base = simplifyRepoUrl(ctx.repo);
+    // const url = `https://github.com/oltionchampari/dummy_repo/releases/edit/v6.0.0`;
+    // return opn(url, {
+    //   wait: false
+    // }).then(() => ctx);
+  }
   _collectReleaseNotes() {
     const options = {
       cwd: 'dummy_repo/dummy_repo',
@@ -204,7 +209,7 @@ class Generator extends Base {
    * @param {*} repository
    */
   async _getGitLabels(issueNumbers, repository) {
-    this.username = this._getGitUser().replace('\n', '')
+
     const labels = await Promise.all(issueNumbers.map(n => {
       const options = {
         url: `https://${this.username}:${this.accessToken}@api.github.com/repos/${repository}/issues/${n}/labels`,
@@ -244,11 +249,21 @@ class Generator extends Base {
    * Calculate if release is `major`,`minor`,`patch`
    */
   async _getReleaseVersion() {
-    const labels = await this._getGitLabels([82], 'datavisyn/festival')
-    const releaseVersion = labels.includes('patch') ? 'patch' : labels.includes('minor') ? 'minor' : 'major'
-    this.log(chalk.yellow(`Taking a ${releaseVersion} release`))
-    this.release = releaseVersion
+    const hasMajorDependency = await this._majorReleasedDependency()
+    if (hasMajorDependency) {
+      this.release = 'major'
+      this.log(chalk.yellow(`One or more dependencies has a major release, thus version to be released: `, chalk.green(this.release)))
+    } else {
+      const labels = await this._getGitLabels([82], 'datavisyn/festival')//TODO labels empty throw error
+      this.release = labels.includes('major') ? 'major' : labels.includes('minor') ? 'minor' : 'patch'
+      this.log(chalk.yellow(`From the labels of the pull requests, version computed: `, chalk.green(this.release)))
+    }
     return this.release
+  }
+
+  async _majorReleasedDependency() {
+    const dependencies = await this._getVersions()
+    return dependencies.raw.some((dep) => semver.minor(dep.version) === 0 && semver.patch(dep.version) === 0)
   }
 
   _getGitUser() {
@@ -256,10 +271,13 @@ class Generator extends Base {
       cwd: 'dummy_repo/dummy_repo',
       stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
     };
-    return this.spawnCommandSync('git', ['config', 'user.name'], options).stdout.toString()
+    this.log(chalk.blue('Running git config', 'user.name'))
+    this.username = this.spawnCommandSync('git', ['config', 'user.name'], options).stdout.toString().replace('\n', '')
+    return this.username
   }
 
   async _editPullRequest(ctx) {
+    this.username = await this._getGitUser();
     const version = await this._getDependencyTag('datavisyn/festival')
     const url = `https://github.com/${this.repository}/pull/${this.prNumber}`;
     this.log(chalk.blue('Please assign reviewers and assignees for PR'))
@@ -280,7 +298,7 @@ class Generator extends Base {
 
 
   _createPullRequest(title, content, base, head) {
-    this.log(chalk.blue('Creating new PR...'))
+    this.log(chalk.blue('Creating new PR...'), this.username)
     const postOptions = {
       method: 'POST',
       uri: `https://${this.username}:${this.accessToken}@api.github.com/repos/${this.repository}/pulls`,
@@ -314,6 +332,7 @@ class Generator extends Base {
         }
         return rp(patchOptions)
       })
+    //assignee and reviewer will be automatically by the github feature `code owners`
     //TODO assign assignee to the PR
     //TODO assign reviewer to the PR
   }
@@ -347,7 +366,6 @@ class Generator extends Base {
   }
 
   _getDependencyTag(dep) {
-    this.log(dep)
     const options = {
       url: `https://${this.username}:${this.accessToken}@api.github.com/repos/${dep}/releases`,
       headers: {
@@ -358,25 +376,82 @@ class Generator extends Base {
     return rp(options).then((d) => JSON.parse(d)[0].name.replace('v', ''));
   }
 
-  async _adaptDependencies() {
-    const pkg = this.fs.readJSON(`${this.ctx.cwd}/package.json`);
-    const dependencies = Object.keys(pkg.dependencies).filter((dep) => this._isKnownRepo(dep));
+  /////////////////////////////////////////////////////////////////////// REQUIREMENTS
+
+  // async _patchRequirements() {
+
+  // }
+
+  _getRequirementVersions(req) {
+    return Promise.all(req.map((r) => {
+      return this._getDependencyTag(toBaseName(this._pipToNpm(r)))
+        .then((v) => {
+          return {key: r, version: v}
+        })
+    }))
+  }
+
+  _getMasterRequirements(req) {
+    return req.map((r) => {return this._parsePip(r.key) + ':' + this._computeMasterVersion(r.key, r.version)})
+  }
+
+  _getDevelopRequirements(req) {
+    return req.map((r) => {return this._parseGithub(r.key) + ':' + this._computeDevelopVersion(r.key, r.version)})
+  }
+
+  _getRequirements() {
     const reqs = parseRequirements(this.fs.read(`${this.ctx.cwd}/requirements.txt`))//parsed to object requirements
-    const requirements = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return {[r]: reqs[r]}})//requirements minus our repos
-    const ownRequirements = Object.keys(reqs).filter((req) => this._isKnownRepo(req))//ourOwn requirements
-    const masterRequirements = [
-      ...requirements, ...await Promise.all(ownRequirements.map((r) => {
-        return this._getDependencyTag(toBaseName(this._parsePip(r)))
-          .then((v) => {
-            return [r] + ':' + v
-          })
-      }))
-    ]
-    this.fs.write(`${this.ctx.cwd} /requirements.txt`, masterRequirements.join('\n'));
-    this.log(masterRequirements)
+    const foreignRequirements = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]})//requirements minus our repos
+    const knownRequirements = Object.keys(reqs).filter((req) => this._isKnownRepo(req))//ourOwn requirements
+
+    return {known: knownRequirements, foreign: foreignRequirements}
+  }
+
+  _mergeRequirements(reqA, reqB) {
+
+  }
+  ///get it from config json
+  _isNotPublishedToPip(dependency) {
+    return dependency.endsWith('tdp_core.git')
+  }
+
+  _computeMasterUnPublished(dependency, version) {
+
+    return `@v${version}@egg=${this._pipToNpm(dependency)}`
+  }
+
+  //turn 4.0.0 to >=4.0.0,<5.0.0
+  _computeMasterPublished(version) {
+    const firstLetter = parseInt(version.charAt(0))
+    return `>=${firstLetter}.0.0,<${firstLetter + 1}.0.0`
+  }
+
+  _computeMasterVersion(dependency, version) {
+    return this._isNotPublishedToPip(dependency) ? this._computeMasterUnPublished(dependency, version) : this._computeMasterPublished(version)
+  }
+
+  _computeDevelopVersion(dependency, version) {
+    return `@develop@egg=${this._parsePip(dependency)}`
+  }
+
+  //from `tdp_core` to `-e git+https://github.com/datavisyn/tdp_core.git`
+  _parseGithub(req) {
+    if (this._isNotPublishedToPip(req)) {
+      return req
+    }
+    return `-e git+https://github.com/${toBaseName(req)}.git`
   }
   //from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
   _parsePip(req) {
+    if (!this._isKnownRepo(req)) {
+      return
+    }
+    if (this._isNotPublishedToPip(req)) {
+      return req
+    }
+    return this._pipToNpm(req)
+  }
+  _pipToNpm(req) {
     let repoName;
     Object.keys(knownRepositories).forEach((r) => {
       return knownRepositories[r].forEach(element => {
@@ -388,18 +463,80 @@ class Generator extends Base {
     return repoName
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////// Dependencies
+  _isNotPublishedToNpm(dep) {
+    return dep.includes('tdp_core') || dep.includes('tdp_ui')
+  }
+
+  _getRawVersions(dep) {
+    return Promise.all(dep.map((r) => {
+      return this._getDependencyTag(toBaseName(r))
+        .then((v) => {
+          return {key: r, version: v}
+        })
+    }))
+  }
+
+  async _getVersions() {
+    const pkg = this.fs.readJSON(`${this.repo.cwd}/package.json`);
+    const deps = Object.keys(pkg.dependencies).filter((dep) => this._isKnownRepo(dep));
+    const dependencies = await this._getRawVersions(deps)
+    this.dependencies = {raw: dependencies, master: this._toMaster(dependencies), develop: this._toDevelop(dependencies)}
+    return this.dependencies
+  }
+
+  _toMaster(deps) {
+    return deps.reduce((acc, dep) => (acc[dep.key] = this._isNotPublishedToNpm(dep.key) ? `github:${toBaseName(dep.key)}#semver:^${dep.version}` : `^${dep.version}`, acc), {})
+  }
+
+  _toDevelop(deps) {
+    return deps.reduce((acc, dep) => (acc[dep.key] = `github:${toBaseName(dep.key)}#develop`, acc), {})
+  }
+
+  async _prepareReleasePackage() {
+    const reqs = await this._getRequirementVersions(this._getRequirements().known)
+    const master = [...this._getRequirements().foreign, ...this._getMasterRequirements(reqs)]
+    const develop = [...this._getRequirements().foreign, ...this._getDevelopRequirements(reqs)]
+    this.requirements = {master, develop}
+    // fs.unlinkSync(this.destinationPath(this.ctx.cwd + '/requirements.txt'))//If you delete the requirements.tx and then replace it with new one .No need to resolve conflicts
+    this.fs.write(this.destinationPath(this.ctx.cwd + '/requirements.txt'), master.join('\n'));
+
+    const pkg = this.fs.readJSON(`${this.ctx.cwd}/package.json`);
+    Object.keys(this.dependencies.master).forEach((dep) => {
+      pkg.dependencies[dep] = this.dependencies.master[dep];
+    })
+    pkg.version = this.ctx.version
+    // fs.unlinkSync(this.destinationPath(this.ctx.cwd + '/package.json'))//If you delete the package.json and then replace it with new one .No need to resolve conflicts
+    this.fs.writeJSON(`${this.ctx.cwd}/package.json`, pkg);
+    return Promise.resolve(1).then(() => new Promise((resolve) => this.fs.commit(resolve))).then(() => {
+      const line = `commit -am "prepare release_${this.ctx.version}"`;
+      this.log(chalk.blue(`git commit:`), `git ${line}`);
+      return this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.ctx.version}`], this.ctx.cwd, this.ctx);
+    });
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  _pushBranch(branch, ctx) {
+    const line = `push origin ${branch}`;
+    const options = {cwd: ctx.cwd, stdio: ['inherit', 'pipe', 'pipe']};
+    this.log(chalk.blue(`push:`), `git ${line}`);
+    return this.spawnCommandSync('git', line.split(' '), options);
+  }
+
   writing() {
     return Promise.resolve(1)
       .then(() => this._createAccessToken())
       .then(this._mkdir.bind(this, null))
-      .then(() => this._cloneRepo(this.repo.repo, this.options.branch))
+      .then(() => this._cloneRepo(this.repo.repo, this.options.branch, null))
+      .then(() => this._getGitUser())
       .then(() => this._collectReleaseNotes())
       .then(() => this._getReleaseVersion())
       .then(() => this._determineVersion(this.repo))
       .then(() => this._checkoutBranch(`-b release_${this.ctx.version}`, this.ctx))
-      // .then((ctx) => this._createPullRequest('Release 4.0.0', "this is my new pull request", "oltionchampari-patch-1", 'master'))
+      .then((ctx) => this._createPullRequest('Release 4.0.0', "this is my new pull request", "oltionchampari-patch-1", 'master'))
       // .then(() => this._editPullRequest(this.ctx))
-      .then(() => this._adaptDependencies())
+      .then(() => this._prepareReleasePackage())
+      .then(() => this._pushBranch(`release_${this.ctx.version}`, this.ctx))
       // .then(() => this._openRelease(this.ctx))
       // .then((ctx) => this._prepareReleasePackage(ctx))
       .catch((msg) => {
