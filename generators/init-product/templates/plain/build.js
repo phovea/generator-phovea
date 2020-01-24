@@ -680,7 +680,9 @@ function installPythonTestDependencies(p) {
 }
 
 function showPythonTestDependencies(p) {
-  return spawn('pip', 'list', {cwd: p.tmpDir});
+  // since this function is for debug purposes only, we catch possible errors and resolve it with status code `0`.
+  return spawn('pip', 'list', {cwd: p.tmpDir})
+    .catch(() => Promise.resolve(0)) // status code = 0
 }
 
 function buildServer(p) {
