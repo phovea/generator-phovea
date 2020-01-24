@@ -636,7 +636,10 @@ function installWebDependencies(p) {
 }
 
 function showWebDependencies(p) {
-  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'list --depth=1');
+  // `npm ls` fails if some peerDependencies are not installed
+  // since this function is for debug purposes only, we catch possible errors of `npm()` and resolve it with status code `0`.
+  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'list --depth=1')
+    .catch(() => Promise.resolve(0)) // status code = 0
 }
 
 function cleanUpWebDependencies(p) {
