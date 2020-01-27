@@ -13,9 +13,6 @@ const logSymbols = require('log-symbols');
 const {toBaseName, findBase, findName, toCWD, failed} = require('../../utils/release')
 const RequirementsManager = require('../../utils/RequirementsManager');
 
-//datavisyn_access_token         32d14aec0ec1fcaa956d168e7f3bec4a7d16e6dc
-//caleydo_access_token           1e70171e3c013b148f120a9c61de342ee7260f88
-//oltionchampari access token    36551f28e98f4c6ee64d1fec660af6bdcea10649
 class Generator extends Base {
 
   constructor(args, options) {
