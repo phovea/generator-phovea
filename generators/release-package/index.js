@@ -1,5 +1,5 @@
 'use strict';
-
+const BaseRelease = require('../../utils/BaseRelease');
 const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
@@ -7,13 +7,12 @@ const knownRepositories = require('../../knownRepositories');
 const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 const opn = require('opn');
 var rp = require('request-promise');
-const semver = require('semver')
+const semver = require('semver');
 const {parseRequirements} = require('../../utils/pip');
 const logSymbols = require('log-symbols');
-const {toBaseName, findBase, findName, toCWD, failed} = require('../../utils/release')
-const RequirementsManager = require('../../utils/RequirementsManager');
+const {toBaseName, findBase, findName, toCWD, failed} = require('../../utils/release');
 
-class Generator extends Base {
+class ReleaseData extends BaseRelease {
 
   constructor(args, options) {
     super(args, options);
@@ -40,7 +39,7 @@ class Generator extends Base {
     this.log(chalk.cyan.bold('Welcome to the release party. Sit back and relax!'))
     //verify when `yo phovea:prepare-release repoName` that repoName is a known repo
     if (this.args[0]) {
-      return this._validateRepository(this._args[0])
+      return this._validateRepository(this.args[0])
         .then(() => {this.log(logSymbols.success, 'Repository verified')})
         .catch((e) => {
           throw new Error(chalk.red('Repository name doesn\'t exist.'))
@@ -85,30 +84,31 @@ class Generator extends Base {
     }
     ])
       .then((props) => {
-        this.repository = toBaseName(props.repository || this.args[0]);
+        const repository = toBaseName(props.repository || this.args[0]);
         this.cloneSSH = props.cloneSSH || this.options.ssh;
-        this.cwd = toCWD(this.repository);
-        this.repo = {cwd: `${this.cwd}/${toCWD(this.repository)}`, repo: this.repository, name: toCWD(this.repository)};
-        return this.accessToken = {datavisyn: props.datavisynToken, caleydo: props.caleydoToken}//github access_tokens in order to interact with the api
+        this.cwd = toCWD(repository);
+        return this.data = {
+          repo: repository,
+          cwd: `${this.cwd}/${toCWD(repository)}`,
+          repoName: toCWD(repository),
+          repoBase: findBase(repository),
+          accessToken: {datavisyn: props.datavisynToken, caleydo: props.caleydoToken}//github access_tokens in order to interact with the api
+        };
       })
-      .then((accessToken) => {
-        this.username = this._getGitUser()
-        return this._validateTokens([accessToken.caleydo, accessToken.datavisyn], this.username)
+      .then((data) => {
+        this.data.gitUser = this._getGitUser();
+        this.data.accessToken.current = this._getAccessToken(this.data.repo)
+        return this._validateTokens([data.accessToken.caleydo, data.accessToken.datavisyn], this.data.gitUser)
       }).then(() => {this.log(logSymbols.success, 'Tokens verified')})
       .catch((e) => {
         throw new Error(chalk.red('The tokens are incorrect'))
       })
   }
 
-  _logVerbose(logMessage, isVerbose = this.options.verbose) {
-    if (isVerbose) {
-      if (Array.isArray(logMessage)) {
-        this.log(...logMessage)
-      } else {
-        this.log(logMessage)
-      }
-    }
+  _determineWhereToPublish() {
+    return this.data.publish = this.fs.readJSON(`${this.data.cwd}/.yo-rc.json`).publish
   }
+
   /**
    * Validate repo name against existing phovea/caleydo/datavisyn repositories
    * Throw error if not a known repository
@@ -142,7 +142,7 @@ class Generator extends Base {
    * @return caleydoToken or datavisynToken
    */
   _getAccessToken(repo) {
-    return findBase(repo) === 'caleydo' ? this.accessToken.caleydo : this.accessToken.datavisyn
+    return findBase(repo) === 'oltionchampari' ? this.data.accessToken.caleydo : this.data.accessToken.datavisyn
   }
 
   /**
@@ -176,50 +176,13 @@ class Generator extends Base {
       stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
     };
     //  this._logVerbose(chalk.blue('Running git config', 'user.name'))
-    this.username = this.spawnCommandSync('git', ['config', 'user.name'], options).stdout.toString().replace('\n', '')
-    return this.username
-  }
-
-  /**
-   * Executes cmd or returns error message if it failed
-   * @param {string} cmd command we want to run i.e. `git`
-   * @param {Array} argline arguments of command i.e. `['clone','-b']`
-   * @param {string|undefined} cwd directory to execute command
-   * @param {any} returnValue
-   */
-  _spawnOrAbort(cmd, argline, cwd, returnValue) {
-    const r = this._spawn(cmd, argline, cwd);
-    returnValue = returnValue || cmd;
-    if (failed(r)) {
-      this.log(r);
-      return this._abort('failed: ' + cmd + ' - status code: ' + r.status);
-    }
-    return Promise.resolve(returnValue);
-  }
-
-  /**
-   *executes a command line cmd
-   * @param {string} cmd command to execute
-   * @param {array} argline cmd arguments
-   * @param {string} cwd optional directory
-   */
-  _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : {cwd: cwd || this.cwd, stdio: ['inherit', 'pipe', 'pipe']};
-    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
-  }
-
-  /**
-   * reject promise with error message
-   * @param {string} msg
-   */
-  _abort(msg) {
-    return Promise.reject(logSymbols.error, msg ? msg : 'Step Failed: Aborting');
+    return this.spawnCommandSync('git', ['config', 'user.name'], options).stdout.toString().replace('\n', '')
   }
 
   /**
    * Collect release notes from PR title and number
    *
-   * Format: `*Updated README.md #22`
+   * Format: `* Updated README.md #22`
    */
   _collectReleaseNotes() {
     const options = {
@@ -230,45 +193,73 @@ class Generator extends Base {
     const lineB = 'log --merges --pretty=format:"%s'
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineA}`)]);
     const logBody = this.spawnCommandSync('git', lineA.split(' '), options).stdout.toString().split('\n')
+
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineB}`)]);
-    const pullRequestNumber = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n').map((n) => n.match(/#\S {1}/g)[0]);
-    this.changelog = logBody.map((l, i) => '*' + l.replace('"', '') + ' ' + pullRequestNumber[i]).join('\n');
-    this.log(`\n${chalk.yellow.bold('Release Notes:')}\n${chalk.italic(this.changelog)}\n`)
+    const pullRequestNumber = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n')
+
+    this.data.changelog = this._formatReleaseNotes(logBody, pullRequestNumber)
+    this.log(`\n${chalk.yellow.bold('Release Notes:')}\n${chalk.italic(this.data.changelog)}\n`)
+  }
+
+  _formatReleaseNotes(body, pr) {
+    const title = body
+      .filter((message) => message && message.length > 2)
+      .map((message) => message.replace('"', ''))////git log creates extra newline characters and quotes
+    const number = pr
+      .map((n) => {
+        const prNumber = n.match(/#(\d+)/g)///match `#number`
+        return prNumber ? prNumber[0] : null
+      })
+      .filter((t) => t != null)
+
+    return title.map((t, i) => '* ' + t + ' ' + number[i]).join('\n')
+
   }
 
   /**
    * Calculate if release is `major`,`minor`,`patch`
    */
-  async _getReleaseVersion() {
-    const hasMajorDependency = await this._majorReleasedDependency()
+  async _getReleaseTag() {
+    const hasMajorDependency = this._majorReleasedDependency()
+    let release;
     if (hasMajorDependency) {
-      this.release = 'major'
-      this.log(logSymbols.info, 'Next version:', chalk.cyan.bold(this.release), `(One or more dependencies latest tag is a major)`);
+      release = 'major'
+      this.log(logSymbols.info, 'Next version:', chalk.cyan.bold(release), `(One or more dependencies latest tag is a major)`);
     } else {
       const labels = await this._getGitLabels([82], 'datavisyn/festival')//TODO labels empty throw error
-      this.release = labels.includes('major') ? 'major' : labels.includes('minor') ? 'minor' : 'patch'
-      this.log(logSymbols.info, 'Next version:', chalk.cyan.bold(this.release), `Computed from the labels set on PRs`);
+      release = labels.includes('major') ? 'major' : labels.includes('minor') ? 'minor' : 'patch'
+      this.log(logSymbols.info, 'Next version:', chalk.cyan.bold(release), `Computed from the labels set on PRs`);
     }
-    return this.release
+
+    return this.data.release = release;
   }
   /**
    * Check if  phovea/caleydo/datavisyn dependencies latest release is `major`
    */
-  async _majorReleasedDependency() {
-    const dependencies = await this._getVersions()
+  _majorReleasedDependency() {
     //check if minor and patch digits are zero ---> release is X.0.0
-    return dependencies.original.some((dep) => semver.minor(dep.version) === 0 && semver.patch(dep.version) === 0)
+    return this.data.dependencies.original.some((dep) => semver.minor(dep.version) === 0 && semver.patch(dep.version) === 0)
   }
 
 
-  async _getVersions() {
-    const pkg = this.fs.readJSON(`${this.repo.cwd}/package.json`);
+  async _prepareDependencies() {
+    const pkg = this.fs.readJSON(`${this.data.cwd}/package.json`);
     const deps = Object.keys(pkg.dependencies).filter((dep) => this._isKnownRepo(dep));
     const dependencies = await this._getOriginalVersions(deps)
-    this.dependencies = {original: dependencies, master: this._toMaster(dependencies), develop: this._toDevelop(dependencies)}
-    return this.dependencies
+    return this.data.dependencies = {original: dependencies, master: this._toMaster(dependencies), develop: this._toDevelop(dependencies)}
   }
 
+  _isNotPublishedToNpm(dep) {
+    return dep.includes('tdp_core') || dep.includes('tdp_ui')
+  }
+
+  _toMaster(deps) {
+    return deps.reduce((acc, dep) => (acc[dep.name] = this._isNotPublishedToNpm(dep.name) ? `github:${toBaseName(dep.name)}#semver:^${dep.version}` : `^${dep.version}`, acc), {})
+  }
+
+  _toDevelop(deps) {
+    return deps.reduce((acc, dep) => (acc[dep.name] = `github:${toBaseName(dep.name)}#develop`, acc), {})
+  }
   /**
    * Get the versions of the dependencies from github api
    * @param {Array} dep
@@ -277,7 +268,7 @@ class Generator extends Base {
     return Promise.all(deps.map((r) => {
       return this._getDependencyTag(toBaseName(r))
         .then((v) => {
-          return {key: r, version: v}
+          return {name: r, version: v}
         })
     }))
   }
@@ -289,9 +280,9 @@ class Generator extends Base {
    */
   async _getGitLabels(issueNumbers, repository) {
 
-    const labels = await Promise.all(issueNumbers.map(n => {
+    this.data.labels = await Promise.all(issueNumbers.map((n) => {
       const options = {
-        url: `https://${this.username}:${this._getAccessToken(repository)}@api.github.com/repos/${repository}/issues/${n}/labels`,
+        url: `https://${this.data.gitUser}:${this._getAccessToken(repository)}@api.github.com/repos/${repository}/issues/${n}/labels`,
         headers: {
           'User-Agent': 'request'
         }
@@ -308,86 +299,14 @@ class Generator extends Base {
    */
   _getDependencyTag(dep) {
     const options = {
-      url: `https://${this.username}:${this._getAccessToken(dep)}@api.github.com/repos/${dep}/releases`,
+      url: `https://${this.data.gitUser}:${this._getAccessToken(dep)}@api.github.com/repos/${dep}/releases`,
       headers: {
         'User-Agent': 'request'
       }
     };
     //TODO package not yet released
-    // this._logVerbose([chalk.cyan('Running:'), chalk.italic(`GET https://${this.username}:****************************************@api.github.com/repos/${dep}/releases`)]);
+    // this._logVerbose([chalk.cyan('Running:'), chalk.italic(`GET https://${this.data.gitUser}:****************************************@api.github.com/repos/${dep}/releases`)]);
     return rp(options).then((d) => JSON.parse(d)[0].name.replace('v', ''));
-  }
-
-  /**
-   *
-   * @param {string} branch to be checked out
-   * @param {} ctx injected data
-   */
-  _checkoutBranch(branch, ctx) {
-    const line = `checkout ${branch}`;
-    this._logVerbose([chalk.cyan(`Checkout new branch:`), chalk.italic(`git ${line}`)]);
-    return this._spawnOrAbort('git', line.split(' '), ctx.cwd, ctx);
-  }
-
-  async _editPullRequest(ctx) {
-    this.username = await this._getGitUser();
-    const version = await this._getDependencyTag('datavisyn/festival')
-    const url = `https://github.com/${this.repository}/pull/${this.prNumber}`;
-    this.log(chalk.blue('Please assign reviewers and assignees for PR'))
-    return this.prompt({
-      type: 'confirm',
-      name: 'jumpToGithub',
-      message: 'Take me to github',
-      store: true,
-      default: true
-    }).then((props) => {
-      if (props.jumpToGithub) {
-        return opn(url, {
-          wait: false
-        });
-      }
-    })
-  }
-
-
-  _createPullRequest(title, content, base, head) {
-    this.log(chalk.blue('Creating new PR...'))
-    const postOptions = {
-      method: 'POST',
-      uri: `https://${this.username}:${this._getAccessToken(this.repository)}@api.github.com/repos/${this.repository}/pulls`,
-      body: {
-        title: title,
-        head: head,
-        body: content,
-        base: base
-      },
-      headers: {
-        'User-Agent': 'request'
-      },
-      json: true
-    }
-    return rp(postOptions).then((d) => {
-      this.prNumber = d.number
-      return d.number
-    })
-      .then((prNumber) => {
-        this.log(chalk.blue('Assigning labels...'))
-        const patchOptions = {
-          method: 'POST',
-          uri: `https://${this.username}:${this._getAccessToken(this.repository)}@api.github.com/repos/${this.repository}/issues/${prNumber}`,
-          body: {
-            labels: ['release: ' + this.release]
-          },
-          headers: {
-            'User-Agent': 'request'
-          },
-          json: true
-        }
-        return rp(patchOptions)
-      })
-    //assignee and reviewer will be automatically by the github feature `code owners`
-    //TODO assign assignee to the PR
-    //TODO assign reviewer to the PR
   }
 
   /**
@@ -395,26 +314,25 @@ class Generator extends Base {
    * prepare next dev version
    * @param {*} ctx
    */
-  _determineVersion(ctx) {
+  _determineReleaseVersion() {
     const semver = require('semver');
-    const pkg = this.fs.readJSON(`${ctx.cwd}/package.json`);
+    const pkg = this.fs.readJSON(`${this.data.cwd}/package.json`);
     let version = pkg.version;
     if (version.endsWith('-SNAPSHOT')) {
       version = version.slice(0, version.length - 9);
     }
-    if (this.release === 'major') {
-      ctx.version = semver.inc(version, 'major');
-    } else if (this.release === 'minor') {
-      ctx.version = semver.inc(version, 'minor');
+    if (this.data.release === 'major') {
+      this.data.version = semver.inc(version, 'major');
+    } else if (this.data.release === 'minor') {
+      this.data.version = semver.inc(version, 'minor');
     } else {
-      ctx.version = semver.inc(version, 'patch');
+      this.data.version = semver.inc(version, 'patch');
     }
-    ctx.private = pkg.private === true;
-    ctx.nextDevVersion = semver.inc(ctx.version, 'patch') + '-SNAPSHOT';
-    this.ctx = ctx
-    this.branch = `release_${this.ctx.version}`
-    this.log(logSymbols.info, 'Next tag:', chalk.cyan.bold(this.ctx.version));
-    return Promise.resolve(ctx);
+    this.data.private = pkg.private === true;
+    this.data.nextDevVersion = semver.inc(this.data.version, 'patch') + '-SNAPSHOT';
+    this.data.branch = `release_${this.data.version}`
+    this.log(logSymbols.info, 'Next tag:', chalk.cyan.bold(this.data.version));
+    return Promise.resolve(this.data);
   }
 
   /**
@@ -427,60 +345,58 @@ class Generator extends Base {
 
   /////////////////////////////////////////////////////////////////////// REQUIREMENTS
 
-  async _prepareReleasePackage() {
-    const requirements = parseRequirements(fs.read(`${this.ctx.cwd}/requirements.txt`))//parsed to object requirements
-    const reqManager = new RequirementsManager(requirements)
-    await this.
-    this.log(reqManager.getRequirements())
-    // const reqs = await this._getRequirementVersions(this._getRequirements().known)
-    // const master = [...this._getRequirements().foreign, ...this._getMasterRequirements(reqs)]
-    // const develop = [...this._getRequirements().foreign, ...this._getDevelopRequirements(reqs)]
-    // this.requirements = {master, develop}
-    // // fs.unlinkSync(this.destinationPath(this.ctx.cwd + '/requirements.txt'))//If you delete the requirements.tx and then replace it with new one .No need to resolve conflicts
-    // this.fs.write(this.destinationPath(this.ctx.cwd + '/requirements.txt'), master.join('\n'));
+  async _prepareRequirements() {
+    const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`))//parsed to object requirements
+    const known = Object.keys(reqs).filter((req) => this._isKnownRepo(req))//ourOwn requirements
+    const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]})//requirements minus our repos
+    const requirements = await this._getRequirementVersions(known)
+    // this.log('original', known)
+    // this.log('versions', requirements)
 
-    // const pkg = this.fs.readJSON(`${this.ctx.cwd}/package.json`);
-    // Object.keys(this.dependencies.master).forEach((dep) => {
-    //   pkg.dependencies[dep] = this.dependencies.master[dep];
-    // })
-    // pkg.version = this.ctx.version
-    // // fs.unlinkSync(this.destinationPath(this.ctx.cwd + '/package.json'))//If you delete the package.json and then replace it with new one .No need to resolve conflicts
-    // this.fs.writeJSON(`${this.ctx.cwd}/package.json`, pkg);
-    // return Promise.resolve(1).then(() => new Promise((resolve) => this.fs.commit(resolve))).then(() => {
-    //   const line = `commit -am "prepare release_${this.ctx.version}"`;
-    //   this._logVerbose([chalk.cyan(`Commit changes:`), chalk.italic(`git ${line}`)]);
-    //   return this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.ctx.version}`], this.ctx.cwd, this.ctx);
-    // });
+    const master = [...others, ...this._getMasterRequirements(requirements)]
+    const develop = [...others, ...this._getDevelopRequirements(requirements)]
+    this.log(develop, master)
+
+    // this.log('master', master)
+    // this.log('develop', develop)
+    // this.data.requirements = {master, develop}
+    // fs.unlinkSync(this.destinationPath(this.data.cwd + '/requirements.txt'))//If you delete the requirements.tx and then replace it with new one .No need to resolve conflicts
   }
 
   _getRequirementVersions(req) {
     return Promise.all(req.map((r) => {
       return this._getDependencyTag(toBaseName(this._pipToNpm(r)))
         .then((v) => {
-          return {req: r, ver: v}
+          return {name: r, version: v}
         })
     }))
   }
 
   _getMasterRequirements(req) {
-    return req.map((r) => {return this._parsePip(r.key) + ':' + this._computeMasterVersion(r.key, r.version)})
+    return req.map((r) => {
+      return r.name.startsWith('-e') && r.name.endsWith('.git') && this._isNotPublishedToPip(r.name) ?
+        `${r.name}:@v${r.version}@egg=${this._pipToNpm(r.name)}` : `${this._pipToNpm(r.name)}>=${parseInt(r.version.charAt(0))}.0.0,<${parseInt(r.version.charAt(0)) + 1}.0.0`
+    })
   }
 
   _getDevelopRequirements(req) {
-    return req.map((r) => {return this._parseGithub(r.key) + ':' + this._computeDevelopVersion(r.key, r.version)})
+    return req.map((r) => r.name.startsWith('-e') && r.name.endsWith('.git') ?
+      `${r.name}:@develop@egg=${this._pipToNpm(r.name)}` : `-e git+https://github.com/${toBaseName(r.name)}.git:@develop@egg=${r.name}`)
   }
 
-  _getRequirements() {
-    const reqs = parseRequirements(this.fs.read(`${this.ctx.cwd}/requirements.txt`))//parsed to object requirements
-    const foreignRequirements = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]})//requirements minus our repos
-    const knownRequirements = Object.keys(reqs).filter((req) => this._isKnownRepo(req))//ourOwn requirements
-
-    return {known: knownRequirements, foreign: foreignRequirements}
+  //from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
+  _pipToNpm(req) {
+    let repoName;
+    Object.keys(knownRepositories).forEach((r) => {
+      return knownRepositories[r].forEach(element => {
+        if (req.includes(element)) {
+          repoName = element
+        }
+      })
+    })
+    return repoName
   }
 
-  _mergeRequirements(reqA, reqB) {
-
-  }
   ///get it from config json
   _isNotPublishedToPip(dependency) {
     return dependency.endsWith('tdp_core.git')
@@ -510,7 +426,7 @@ class Generator extends Base {
     if (this._isNotPublishedToPip(req)) {
       return req
     }
-    return `-e git+https://github.com/${toBaseName(req)}.git`
+    return `-e git+https://github.com/${toBaseName(this._parsePip(req))}.git`
   }
   //from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
   _parsePip(req) {
@@ -522,80 +438,29 @@ class Generator extends Base {
     }
     return this._pipToNpm(req)
   }
-  _pipToNpm(req) {
-    let repoName;
-    Object.keys(knownRepositories).forEach((r) => {
-      return knownRepositories[r].forEach(element => {
-        if (req.includes(element)) {
-          repoName = element
-        }
-      })
-    })
-    return repoName
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////// Dependencies
-  _isNotPublishedToNpm(dep) {
-    return dep.includes('tdp_core') || dep.includes('tdp_ui')
-  }
-
-  _toMaster(deps) {
-    return deps.reduce((acc, dep) => (acc[dep.key] = this._isNotPublishedToNpm(dep.key) ? `github:${toBaseName(dep.key)}#semver:^${dep.version}` : `^${dep.version}`, acc), {})
-  }
-
-  _toDevelop(deps) {
-    return deps.reduce((acc, dep) => (acc[dep.key] = `github:${toBaseName(dep.key)}#develop`, acc), {})
-  }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  _pushBranch(branch, ctx) {
-    const line = `push origin ${branch}`;
-    const options = {cwd: ctx.cwd, stdio: ['inherit', 'pipe', 'pipe']};
-    this._logVerbose([chalk.cyan(`Push branch:`), chalk.italic(`git ${line}`)]);
-    return this.spawnCommandSync('git', line.split(' '), options);
-  }
 
   writing() {
     return Promise.resolve(1)
       .then(this._mkdir.bind(this, null))
-      .then(() => this._cloneRepo(this.repo.repo, this.options.branch, null))
+      .then(() => this._cloneRepo(this.data.repo, this.options.branch, null))
+      .then(() => this._determineWhereToPublish())
       .then(() => this._collectReleaseNotes())
-      .then(() => this._getReleaseVersion())
-      .then(() => this._determineVersion(this.repo))
-      .then(() => this._checkoutBranch(`-b release_${this.ctx.version}`, this.ctx))
-      .then(() => this._prepareReleasePackage())
-    //   .then(() => this._pushBranch(`release_${this.ctx.version}`, this.ctx))
-    //   .then(() => this._createPullRequest(`Release ${this.ctx.version}`, 'this.prContent', 'master', this.branch))
-    //   // .then(() => this._editPullRequest(this.ctx))
-    //   // .then(() => this._openRelease(this.ctx))
-    //   // .then((ctx) => this._prepareReleasePackage(ctx))
-    //   .catch((msg) => {
-    //     this.log(chalk.red(`Error: ${msg}`));
-    //     return Promise.reject(msg);
-    //   });
+      .then(() => this._prepareDependencies())
+      .then(() => this._prepareRequirements())
+      .then(() => this._getReleaseTag())
+      .then(() => this._determineReleaseVersion())
+      .then(() => this.options.final ? this.composeWith('phovea:finalize-release', {
+        data: this.data,
+        verbose: this.options.verbose
+      }) : this.composeWith('phovea:release-hybrid', {
+        data: this.data,
+        verbose: this.options.verbose
+      }))
+      .catch((msg) => {
+        this.log(chalk.red(`Error: ${msg}`));
+        return Promise.reject(msg);
+      });
   }
-  // _prepareReleasePackage(ctx) {
-  //   const semver = require('semver');
-  //   const pkg = this.fs.readJSON(`${ctx.cwd}/package.json`);
-  //   pkg.version = ctx.version;
-  //   ctx.dependencies = {};
-  //   Object.keys(pkg.dependencies || {}).forEach((dep) => {
-  //     // if (known
-  //     // const depVersion = pkg.dependencies[dep];
-  //     // let version = depVersion;
-  //     // this.log(dep, version)
-  //   })
-  // }
-
-  // _openRelease(ctx) {
-  // console.log(this.username, this._getGitUser())
-  // const base = simplifyRepoUrl(ctx.repo);
-  // const url = `https://github.com/oltionchampari/dummy_repo/releases/edit/v6.0.0`;
-  // return opn(url, {
-  //   wait: false
-  // }).then(() => ctx);
-  // }
 }
 
-module.exports = Generator;
+module.exports = ReleaseData;
