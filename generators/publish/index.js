@@ -20,8 +20,16 @@ class Generator extends Base {
     this.spawnCommandSync('cd', 'phovea');
     this.spawnCommandSync('npm', 'install');
     this.spawnCommandSync('npm', ['run', 'build:web']);
-    this.spawnCommandSync('npm', 'login')//
-    this.spawnCommandSync('npm', 'publish')
+    // publish:
+    // docker:
+    //   - image: circleci/<language>:<version TAG>
+    // steps:
+    //   - checkout
+    //   - run:
+    //       name: Publish to NPM
+    //       command: |
+    //         npm set //registry.npmjs.org/:_authToken=$npm_Token
+    //         npm publish
   }
   _publishToPyPi() {
     this.spawnCommandSync('cd', 'phovea');
@@ -33,6 +41,33 @@ class Generator extends Base {
     // Ensure that both files contain the new version number
     // Login with caleydo-bot
     this.spawnCommandSync('twine', ['upload', '--repository-url', 'https://upload.pypi.org/legacy/ dist/*'])//
+    // - run:
+    // name: init .pypirc
+    // command: |
+    //   echo -e "[pypi]" >> ~/.pypirc
+    //   echo -e "username = oliverxx" >> ~/.pypirc
+    //   echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+    // - run:
+    // name: upload to pypi
+    // command: |
+    //   twine upload dist/*
+
+  //   workflows:
+  // version: 2
+  // build_and_deploy:
+  //   jobs:
+  //     - build:
+  //         filters:
+  //           tags:
+  //             only: /.*/
+  //     - deploy:
+  //         requires:
+  //           - build
+  //         filters:
+  //           tags:
+  //             only: /[0-9]+(\.[0-9]+)*/
+  //           branches:
+  //             ignore: /.*/
   }
 
 }

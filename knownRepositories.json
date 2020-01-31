@@ -1,5 +1,9 @@
 {
-  "oltionchampari": ["dummy_repo"],
+  "oltionchampari": [
+    "dummy_repo",
+    "dummy_product",
+    "my_product"
+  ],
   "phovea": [
     "phovea_core",
     "phovea_ui",
@@ -14,16 +18,16 @@
     "phovea_data_mongo",
     "phovea_data_hdf",
     "phovea_vis",
-    "phovea_d3"
+    "phovea_d3",
+    "generator-phovea"
   ],
   "lineupjs": [
     "lineupjs"
   ],
   "datavisyn": [
+    "phovea_security_store_generated",
     "tdp_core",
     "tdp_dummy",
-    "tdp_gene",
-    "tdp_publicdb",
     "tdp_ui",
     "dTiles",
     "tdp_react",
@@ -63,7 +67,9 @@
     "triage_product"
   ],
   "caleydo": [
+    "tdp_publicdb",
     "ordino",
+    "tdp_gene",
     "ordino_public",
     "tdp_bi_bioinfodb",
     "gapminder",

@@ -84,29 +84,34 @@ class ReleaseData extends BaseRelease {
     }
     ])
       .then((props) => {
+
+
         const repository = toBaseName(props.repository || this.args[0]);
         this.cloneSSH = props.cloneSSH || this.options.ssh;
         this.cwd = toCWD(repository);
         return this.data = {
+          isProduct: findName(repository).includes('_product'),
           repo: repository,
           cwd: `${this.cwd}/${toCWD(repository)}`,
-          repoName: toCWD(repository),
+          repoName: findName(repository),
           repoBase: findBase(repository),
           accessToken: {datavisyn: props.datavisynToken, caleydo: props.caleydoToken}//github access_tokens in order to interact with the api
         };
       })
       .then((data) => {
+        this.log('isProduct', this.data.isProduct)
+        this.log('cwd', this.data.cwd)
         this.data.gitUser = this._getGitUser();
         this.data.accessToken.current = this._getAccessToken(this.data.repo)
         return this._validateTokens([data.accessToken.caleydo, data.accessToken.datavisyn], this.data.gitUser)
       }).then(() => {this.log(logSymbols.success, 'Tokens verified')})
       .catch((e) => {
-        throw new Error(chalk.red('The tokens are incorrect'))
+        throw new Error(chalk.red(e))
       })
   }
 
   _determineWhereToPublish() {
-    return this.data.publish = this.fs.readJSON(`${this.data.cwd}/.yo-rc.json`).publish
+    return fs.existsSync(this.destinationPath(`${this.data.cwd}/.yo-rc.json`)) ? this.fs.readJSON(`${this.data.cwd}/.yo-rc.json`).publish : null;
   }
 
   /**
@@ -185,23 +190,29 @@ class ReleaseData extends BaseRelease {
    * Format: `* Updated README.md #22`
    */
   _collectReleaseNotes() {
-    const options = {
-      cwd: 'dummy_repo/dummy_repo',
-      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
-    };
-    const lineA = 'log --merges --pretty=format:"%b'
-    const lineB = 'log --merges --pretty=format:"%s'
-    this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineA}`)]);
-    const logBody = this.spawnCommandSync('git', lineA.split(' '), options).stdout.toString().split('\n')
+    if (this.isProduct) {
 
-    this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineB}`)]);
-    const pullRequestNumber = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n')
+    } else {
+      const options = {
+        cwd: 'dummy_repo/dummy_repo',
+        stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
+      };
 
-    this.data.changelog = this._formatReleaseNotes(logBody, pullRequestNumber)
-    this.log(`\n${chalk.yellow.bold('Release Notes:')}\n${chalk.italic(this.data.changelog)}\n`)
+      const lineA = 'log --merges --pretty=format:"%b'
+      const lineB = 'log --merges --pretty=format:"%s'
+      this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineA}`)]);
+      const logBody = this.spawnCommandSync('git', lineA.split(' '), options).stdout.toString().split('\n')
+
+      this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineB}`)]);
+      const pullRequestNumber = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n')
+
+      this.data.changelog = this._formatReleaseNotes(logBody, pullRequestNumber, this.data.repo)
+      this.log(`\n${chalk.yellow.bold('Release Notes:')}\n${chalk.italic(this.data.changelog)}\n`)
+    }
+
   }
 
-  _formatReleaseNotes(body, pr) {
+  _formatReleaseNotes(body, pr, repo) {
     const title = body
       .filter((message) => message && message.length > 2)
       .map((message) => message.replace('"', ''))////git log creates extra newline characters and quotes
@@ -212,7 +223,7 @@ class ReleaseData extends BaseRelease {
       })
       .filter((t) => t != null)
 
-    return title.map((t, i) => '* ' + t + ' ' + number[i]).join('\n')
+    return title.map((t, i) => `* ${t} (${repo}${number[i]})`).join('\n')
 
   }
 
@@ -246,8 +257,9 @@ class ReleaseData extends BaseRelease {
     const pkg = this.fs.readJSON(`${this.data.cwd}/package.json`);
     const deps = Object.keys(pkg.dependencies).filter((dep) => this._isKnownRepo(dep));
     const dependencies = await this._getOriginalVersions(deps)
-    return this.data.dependencies = {original: dependencies, master: this._toMaster(dependencies), develop: this._toDevelop(dependencies)}
+    this.log({original: dependencies, master: this._toMaster(dependencies), develop: this._toDevelop(dependencies)})
   }
+
 
   _isNotPublishedToNpm(dep) {
     return dep.includes('tdp_core') || dep.includes('tdp_ui')
@@ -346,12 +358,13 @@ class ReleaseData extends BaseRelease {
   /////////////////////////////////////////////////////////////////////// REQUIREMENTS
 
   async _prepareRequirements() {
+    if (!fs.existsSync(`${this.data.cwd}/requirements.txt`)) {
+      return;
+    }
     const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`))//parsed to object requirements
     const known = Object.keys(reqs).filter((req) => this._isKnownRepo(req))//ourOwn requirements
     const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]})//requirements minus our repos
     const requirements = await this._getRequirementVersions(known)
-    // this.log('original', known)
-    // this.log('versions', requirements)
 
     const master = [...others, ...this._getMasterRequirements(requirements)]
     const develop = [...others, ...this._getDevelopRequirements(requirements)]
@@ -359,7 +372,7 @@ class ReleaseData extends BaseRelease {
 
     // this.log('master', master)
     // this.log('develop', develop)
-    // this.data.requirements = {master, develop}
+    this.data.requirements = {master, develop}
     // fs.unlinkSync(this.destinationPath(this.data.cwd + '/requirements.txt'))//If you delete the requirements.tx and then replace it with new one .No need to resolve conflicts
   }
 
@@ -444,18 +457,19 @@ class ReleaseData extends BaseRelease {
       .then(this._mkdir.bind(this, null))
       .then(() => this._cloneRepo(this.data.repo, this.options.branch, null))
       .then(() => this._determineWhereToPublish())
-      .then(() => this._collectReleaseNotes())
       .then(() => this._prepareDependencies())
       .then(() => this._prepareRequirements())
+      // .then(()=>this._prepareProductReleaseNotes())
+      // .then(() => this._collectReleaseNotes())
       .then(() => this._getReleaseTag())
-      .then(() => this._determineReleaseVersion())
-      .then(() => this.options.final ? this.composeWith('phovea:finalize-release', {
-        data: this.data,
-        verbose: this.options.verbose
-      }) : this.composeWith('phovea:release-hybrid', {
-        data: this.data,
-        verbose: this.options.verbose
-      }))
+      // .then(() => this._determineReleaseVersion())
+      // .then(() => this.options.final ? this.composeWith('phovea:finalize-release', {
+      //   data: this.data,
+      //   verbose: this.options.verbose
+      // }) : this.composeWith('phovea:release-hybrid', {
+      //   data: this.data,
+      //   verbose: this.options.verbose
+      // }))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);

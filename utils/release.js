@@ -21,9 +21,9 @@ function findName(fullName) {
 
 function toCWD(basename) {
   let match = basename.match(/.*\/(.*)/)[1];
-  if (match.endsWith('_product')) {
-    match = match.slice(0, -8);
-  }
+  // if (match.endsWith('_product')) {
+  //   match = match.slice(0, -8);
+  // }
   return match;
 }
 
