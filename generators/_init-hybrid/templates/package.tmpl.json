@@ -22,7 +22,7 @@
     "pretest": "echo hybrid",
     "posttest:web": "npm run lint",
     "posttest": "echo hybrid",
-    "test:web": "test ! $(find tests -name \"*.ts\") || karma start",
+    "test:web": "test ! $(find tests -name \"*.ts\") || jest",
     "test:python": "test ! $(find tests -name \"*.py\") || python setup.py test",
     "test": "npm run test:web && npm run test:python",
     "prebuild:python": "node -e \"process.exit(process.env.PHOVEA_SKIP_TESTS === undefined?1:0)\" || npm run test:python",
