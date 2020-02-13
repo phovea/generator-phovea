@@ -74,7 +74,7 @@ const webpackloaders = [
   },
   {test: /\.json$/, use: 'json-loader'},
   {
-    test: /\.(png|jpg)$/,
+    test: /\.(png|jpg|gif|webp)$/,
     loader: 'url-loader',
     options: {
       limit: 10000 // inline <= 10kb
@@ -280,7 +280,7 @@ function generateWebpack(options) {
   if (!options.bundle || options.isApp) {
     // extract the included css file to own file
     const p = new ExtractTextPlugin({
-      filename: (options.isApp || options.moduleBundle ? '[name]' : pkg.name) + (options.min && !options.nosuffix ? '.min' : '') + '.css',
+      filename: (options.isApp || options.moduleBundle ? 'style' : pkg.name) + (options.min && !options.nosuffix ? '.min' : '') + '.css',
       allChunks: true // there seems to be a bug in dynamically loaded chunk styles are not loaded, workaround: extract all styles from all chunks
     });
     base.plugins.push(p);
