@@ -83,7 +83,7 @@ function findMaxCaretRange(versions) {
 }
 
 /**
- * Finds the max / max tilde range of an array of tilde ranges
+ * Finds the  max tilde range of an array of tilde ranges
  * @param {string[]} versions Possible values: `['~2.3.4',~3.0.0]`
  */
 function findMaxTildeRange(versions) {

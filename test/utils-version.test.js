@@ -1,5 +1,5 @@
 'use strict';
-
+const {intersect} = require('semver-intersect');
 const version = require('../utils/version');
 
 describe('check isGitCommit()', () => {
@@ -263,5 +263,13 @@ describe('find max version or range version from list', () => {
   it('works for versions of the format `5.1` ', () => {
     const versions = ['~4.2.0-alpha.1', '^4.2.0-rc.0', '~4.2.0-beta.1', '^4.1.0', '5.1', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('5.1.0');
+  });
+});
+
+describe('semver-intersect works for prerelease ranges', () => {
+
+  it('finds intersection of prerelease ranges', () => {
+    const versions = ['~4.2.0-alpha.1', '~4.2.0-beta.1',];
+    expect(intersect(...versions)).toBe('~4.2.0-beta.1');
   });
 });
