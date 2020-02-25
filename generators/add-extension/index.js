@@ -110,7 +110,7 @@ class Generator extends Base {
   }
 
   _injectWebExtension(d) {
-    const pathToRegistry = fs.existsSync('src/phovea.ts') ? 'src/phovea.ts' : 'phovea.js';//check if the project has a phovea.js or a phovea.ts file
+    const pathToRegistry = fs.existsSync('src/phovea.ts') ? 'src/phovea.ts' : 'phovea.js'; // check if the project has a phovea.ts file in src folder or a phovea.js in plugin root
     const file = this.destinationPath(pathToRegistry);
 
     const old = this.fs.read(file);
