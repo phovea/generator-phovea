@@ -16,7 +16,6 @@ __pycache__/
 *.lock
 /.awcache
 /local_cache/*
-/data/*
 # due to using tox and pytest
 .tox
 .cache

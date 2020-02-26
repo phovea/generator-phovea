@@ -9,4 +9,3 @@ node_modules/
 *.css
 *.log
 /.cache-loader
-/data/*
