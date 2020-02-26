@@ -59,12 +59,12 @@ jobs:
           name: Build and deploy
           command: |
             . ~/venv/bin/activate
-            case $CIRCLE_BRANCH in
+            case "${CIRCLE_BRANCH}${CIRCLE_TAG}" in
             master)
               awsTag="latest"
               ;;
             *)
-            awsTag="${CIRCLE_BRANCH//\//_}" # replace `/` with `_` in branch name
+              awsTag="${CIRCLE_BRANCH//\//_}${CIRCLE_TAG}" # replace `/` with `_` in branch name
               ;;
             esac
             echo "using tag: --${awsTag}--"
