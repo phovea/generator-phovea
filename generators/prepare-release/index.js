@@ -330,10 +330,10 @@ class Generator extends Base {
   }
 
   _createPullRequest(ctx) {
-    const opn = require('opn');
+    const open = require('open');
     const base = simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/compare/release_${ctx.version}?expand=1`;
-    return opn(url, {
+    return open(url, {
       wait: false
     }).then(() => ctx);
   }
@@ -360,10 +360,10 @@ class Generator extends Base {
   }
 
   _openReleasePage(ctx) {
-    const opn = require('opn');
+    const open = require('open');
     const base = simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/releases/tag/v${ctx.version}`;
-    return opn(url, {
+    return open(url, {
       wait: false
     }).then(() => ctx);
   }
