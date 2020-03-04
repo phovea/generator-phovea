@@ -2,7 +2,7 @@
   "scripts": {
     "build": "node build.js --skipTests",
     "predist": "npm run build",
-    "dist": "mkdirp dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
+    "dist": "mkdir dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
   },
   "dependencies": {
     "bluebird": "3.7.2",
