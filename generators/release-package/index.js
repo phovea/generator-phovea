@@ -13,7 +13,14 @@ const logSymbols = require('log-symbols');
 const {toBaseName, findBase, findName, toCWD, failed} = require('../../utils/release');
 
 class ReleaseData extends BaseRelease {
-
+  /**
+   *
+   * @param {string []} args The repository to be released. Can be accessed later with `this.options.repo`.
+   * @param {object} options Are provided when calling the generator, i.e., `yo phovea:prepare-release --ssh`.
+   * Available options include:
+   * `--ssh`: Use ssh to interact with github.
+   * `--verbose`: Set the information logging to verbose.
+   */
   constructor(args, options) {
     super(args, options);
     this.option('ssh', {
@@ -36,14 +43,15 @@ class ReleaseData extends BaseRelease {
 
   initializing() {
     // this.composeWith(['phovea:check-node-version', 'phovea:_check-own-version'])
-    this.log(chalk.cyan.bold('Welcome to the release party. Sit back and relax!'))
-    //verify when `yo phovea:prepare-release repoName` that repoName is a known repo
+    this.log(chalk.cyan.bold('Welcome to the release generator'));
+
+    // verify that provided repo is a known repo.
     if (this.args[0]) {
       return this._validateRepository(this.args[0])
         .then(() => {this.log(logSymbols.success, 'Repository verified')})
         .catch((e) => {
-          throw new Error(chalk.red('Repository name doesn\'t exist.'))
-        })
+          throw new Error(chalk.red('Repository name doesn\'t exist.'));
+        });
     }
   }
 
@@ -84,8 +92,6 @@ class ReleaseData extends BaseRelease {
     }
     ])
       .then((props) => {
-
-
         const repository = toBaseName(props.repository || this.args[0]);
         this.cloneSSH = props.cloneSSH || this.options.ssh;
         this.cwd = toCWD(repository);
@@ -95,12 +101,10 @@ class ReleaseData extends BaseRelease {
           cwd: `${this.cwd}/${toCWD(repository)}`,
           repoName: findName(repository),
           repoBase: findBase(repository),
-          accessToken: {datavisyn: props.datavisynToken, caleydo: props.caleydoToken}//github access_tokens in order to interact with the api
+          accessToken: {datavisyn: props.datavisynToken, caleydo: props.caleydoToken} // github access_tokens in to interact with the api
         };
       })
       .then((data) => {
-        this.log('isProduct', this.data.isProduct)
-        this.log('cwd', this.data.cwd)
         this.data.gitUser = this._getGitUser();
         this.data.accessToken.current = this._getAccessToken(this.data.repo)
         return this._validateTokens([data.accessToken.caleydo, data.accessToken.datavisyn], this.data.gitUser)
@@ -110,9 +114,9 @@ class ReleaseData extends BaseRelease {
       })
   }
 
-  _determineWhereToPublish() {
-    return fs.existsSync(this.destinationPath(`${this.data.cwd}/.yo-rc.json`)) ? this.fs.readJSON(`${this.data.cwd}/.yo-rc.json`).publish : null;
-  }
+  // _determineWhereToPublish() {
+  //   return fs.existsSync(this.destinationPath(`${this.data.cwd}/.yo-rc.json`)) ? this.fs.readJSON(`${this.data.cwd}/.yo-rc.json`).publish : null;
+  // }
 
   /**
    * Validate repo name against existing phovea/caleydo/datavisyn repositories
@@ -123,6 +127,7 @@ class ReleaseData extends BaseRelease {
     this._logVerbose(chalk.cyan(`Checking if repository: ${chalk.bold(repository)} exists...`));
     return new Promise((resolve, reject) => this._isKnownRepo(findName(repository)) ? resolve(true) : reject('Repository doesn\'t exist.Please provide a valid repository name.'))
   }
+
   /**
    * Verify access tokens against github api
    * @param {Array} tokens datavisyn/caleydo access tokens
@@ -172,6 +177,7 @@ class ReleaseData extends BaseRelease {
     this._logVerbose([chalk.cyan(`Cloning repository:`), chalk.italic(`git ${line}`)]);
     return this._spawnOrAbort('git', line.split(' '));
   }
+
   /**
    * Get username to send api calls to github
    * TODO refactor users to caleydo_bot datavisyn_bot
@@ -186,7 +192,6 @@ class ReleaseData extends BaseRelease {
 
   /**
    * Collect release notes from PR title and number
-   *
    * Format: `* Updated README.md #22`
    */
   _collectReleaseNotes() {
@@ -209,7 +214,6 @@ class ReleaseData extends BaseRelease {
       this.data.changelog = this._formatReleaseNotes(logBody, pullRequestNumber, this.data.repo)
       this.log(`\n${chalk.yellow.bold('Release Notes:')}\n${chalk.italic(this.data.changelog)}\n`)
     }
-
   }
 
   _formatReleaseNotes(body, pr, repo) {
@@ -222,10 +226,32 @@ class ReleaseData extends BaseRelease {
         return prNumber ? prNumber[0] : null
       })
       .filter((t) => t != null)
-
     return title.map((t, i) => `* ${t} (${repo}${number[i]})`).join('\n')
-
   }
+
+  writing() {
+    return Promise.resolve(1)
+      .then(this._mkdir.bind(this, null))
+      .then(() => this._cloneRepo(this.data.repo, this.options.branch, null))
+      .then(() => this._determineWhereToPublish())
+      .then(() => this._prepareDependencies())
+      .then(() => this._prepareRequirements())
+      .then(() => this._collectReleaseNotes())
+      .then(() => this._getReleaseTag())
+      .then(() => this._determineReleaseVersion())
+      // .then(() => this.options.final ? this.composeWith('phovea:finalize-release', {
+      //   data: this.data,
+      //   verbose: this.options.verbose
+      // }) : this.composeWith('phovea:release-hybrid', {
+      //   data: this.data,
+      //   verbose: this.options.verbose
+      // }))
+      .catch((msg) => {
+        this.log(chalk.red(`Error: ${msg}`));
+        return Promise.reject(msg);
+      });
+  }
+
 
   /**
    * Calculate if release is `major`,`minor`,`patch`
@@ -261,17 +287,6 @@ class ReleaseData extends BaseRelease {
   }
 
 
-  _isNotPublishedToNpm(dep) {
-    return dep.includes('tdp_core') || dep.includes('tdp_ui')
-  }
-
-  _toMaster(deps) {
-    return deps.reduce((acc, dep) => (acc[dep.name] = this._isNotPublishedToNpm(dep.name) ? `github:${toBaseName(dep.name)}#semver:^${dep.version}` : `^${dep.version}`, acc), {})
-  }
-
-  _toDevelop(deps) {
-    return deps.reduce((acc, dep) => (acc[dep.name] = `github:${toBaseName(dep.name)}#develop`, acc), {})
-  }
   /**
    * Get the versions of the dependencies from github api
    * @param {Array} dep
@@ -347,35 +362,26 @@ class ReleaseData extends BaseRelease {
     return Promise.resolve(this.data);
   }
 
-  /**
-   * Check if repo is a phovea/caleydo/datavisyn repository
-   * @param {string} repo
-   */
-  _isKnownRepo(repo) {
-    return Object.keys(knownRepositories).some((r) => knownRepositories[r].includes(repo) || knownRepositories[r].some((d) => repo.includes(d)))
-  }
-
-  /////////////////////////////////////////////////////////////////////// REQUIREMENTS
-
   async _prepareRequirements() {
     if (!fs.existsSync(`${this.data.cwd}/requirements.txt`)) {
       return;
     }
-    const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`))//parsed to object requirements
-    const known = Object.keys(reqs).filter((req) => this._isKnownRepo(req))//ourOwn requirements
-    const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]})//requirements minus our repos
-    const requirements = await this._getRequirementVersions(known)
+    const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`)); //parsed to object requirements
+    const known = Object.keys(reqs).filter((req) => this._isKnownRepo(req)); // known requirements
+    const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]}); // requirements minus our repos
+    const requirements = await this._getRequirementVersions(known);
 
-    const master = [...others, ...this._getMasterRequirements(requirements)]
-    const develop = [...others, ...this._getDevelopRequirements(requirements)]
-    this.log(develop, master)
-
-    // this.log('master', master)
-    // this.log('develop', develop)
-    this.data.requirements = {master, develop}
+    const master = [...others, ...this._getMasterRequirements(requirements)];
+    const develop = [...others, ...this._getDevelopRequirements(requirements)];
+    this.log({master, develop})
+    this.data.requirements = {master, develop};
     // fs.unlinkSync(this.destinationPath(this.data.cwd + '/requirements.txt'))//If you delete the requirements.tx and then replace it with new one .No need to resolve conflicts
   }
 
+  /**
+   * Get latest release tag from github of a requirement.
+   * @param {string} req Requirement entry in requirement.txt.
+   */
   _getRequirementVersions(req) {
     return Promise.all(req.map((r) => {
       return this._getDependencyTag(toBaseName(this._pipToNpm(r)))
@@ -385,19 +391,31 @@ class ReleaseData extends BaseRelease {
     }))
   }
 
+/**
+ * Prepare requirements to be committed to master branch.
+ * @param {array} req Requirements
+ */
   _getMasterRequirements(req) {
     return req.map((r) => {
       return r.name.startsWith('-e') && r.name.endsWith('.git') && this._isNotPublishedToPip(r.name) ?
-        `${r.name}:@v${r.version}@egg=${this._pipToNpm(r.name)}` : `${this._pipToNpm(r.name)}>=${parseInt(r.version.charAt(0))}.0.0,<${parseInt(r.version.charAt(0)) + 1}.0.0`
+        `${r.name}:@v${r.version}@egg=${this._pipToNpm(r.name)}` :
+         `${this._pipToNpm(r.name)}>=${parseInt(r.version.charAt(0))}.0.0,<${parseInt(r.version.charAt(0)) + 1}.0.0`
     })
   }
 
+ /**
+  * Prepare develop versions of requirements to commit on new develop branch.
+  * @param {array} req
+  */
   _getDevelopRequirements(req) {
     return req.map((r) => r.name.startsWith('-e') && r.name.endsWith('.git') ?
       `${r.name}:@develop@egg=${this._pipToNpm(r.name)}` : `-e git+https://github.com/${toBaseName(r.name)}.git:@develop@egg=${r.name}`)
   }
 
-  //from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
+  /**
+   * Turn `-e git+https://github.com/datavisyn/tdp_core.git` --> `tdp_core`
+   * @param {string} req Requirement
+   */
   _pipToNpm(req) {
     let repoName;
     Object.keys(knownRepositories).forEach((r) => {
@@ -410,17 +428,19 @@ class ReleaseData extends BaseRelease {
     return repoName
   }
 
-  ///get it from config json
+  // TODO get it from yo-rc.json
   _isNotPublishedToPip(dependency) {
     return dependency.endsWith('tdp_core.git')
   }
 
   _computeMasterUnPublished(dependency, version) {
-
     return `@v${version}@egg=${this._pipToNpm(dependency)}`
   }
 
-  //turn 4.0.0 to >=4.0.0,<5.0.0
+ /**
+  *  Turn 4.0.0 to >=4.0.0,<5.0.0
+  * @param {string} version
+  */
   _computeMasterPublished(version) {
     const firstLetter = parseInt(version.charAt(0))
     return `>=${firstLetter}.0.0,<${firstLetter + 1}.0.0`
@@ -434,14 +454,14 @@ class ReleaseData extends BaseRelease {
     return `@develop@egg=${this._parsePip(dependency)}`
   }
 
-  //from `tdp_core` to `-e git+https://github.com/datavisyn/tdp_core.git`
+  // from `tdp_core` to `-e git+https://github.com/datavisyn/tdp_core.git`
   _parseGithub(req) {
     if (this._isNotPublishedToPip(req)) {
       return req
     }
     return `-e git+https://github.com/${toBaseName(this._parsePip(req))}.git`
   }
-  //from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
+  // from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
   _parsePip(req) {
     if (!this._isKnownRepo(req)) {
       return
@@ -450,30 +470,6 @@ class ReleaseData extends BaseRelease {
       return req
     }
     return this._pipToNpm(req)
-  }
-
-  writing() {
-    return Promise.resolve(1)
-      .then(this._mkdir.bind(this, null))
-      .then(() => this._cloneRepo(this.data.repo, this.options.branch, null))
-      .then(() => this._determineWhereToPublish())
-      .then(() => this._prepareDependencies())
-      .then(() => this._prepareRequirements())
-      // .then(()=>this._prepareProductReleaseNotes())
-      // .then(() => this._collectReleaseNotes())
-      .then(() => this._getReleaseTag())
-      // .then(() => this._determineReleaseVersion())
-      // .then(() => this.options.final ? this.composeWith('phovea:finalize-release', {
-      //   data: this.data,
-      //   verbose: this.options.verbose
-      // }) : this.composeWith('phovea:release-hybrid', {
-      //   data: this.data,
-      //   verbose: this.options.verbose
-      // }))
-      .catch((msg) => {
-        this.log(chalk.red(`Error: ${msg}`));
-        return Promise.reject(msg);
-      });
   }
 }
 

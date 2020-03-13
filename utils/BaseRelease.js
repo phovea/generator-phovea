@@ -57,9 +57,8 @@ class BaseRelease extends Base {
    * @param {string} msg
    */
   _abort(msg) {
-    return Promise.reject(logSymbols.error, msg ? msg : 'Step Failed: Aborting');
+    return Promise.reject( msg ? msg : 'Step Failed: Aborting');
   }
-
 }
 
 module.exports = BaseRelease;
