@@ -484,16 +484,30 @@ class Release extends BaseRelease {
    * Resolve dependencies & requirements to master version.
    */
   async _writeDeps(dependencies, requirements, cwd) {
-    this._logVerbose([chalk.cyan(`Computing master dependencies/requirements....`)]);
-    if (dependencies) {
-      await this._writeDependencies(dependencies.master, cwd);
-    }
-    if (requirements) {
-      await this._writeRequirements(requirements, cwd);
-    }
+    return this.prompt([
+      {
+        type: 'confirm',
+        name: 'update',
+        message: `Update versions of the known dependencies/requirements?`,
+      }
+    ]).then(async ({update}) => {
+      if (update) {
+        this._logVerbose([chalk.cyan(`Updating versions of the known dependencies/requirements....`)]);
+        if (dependencies) {
+          await this._writeDependencies(dependencies.master, cwd);
+        }
+        if (requirements) {
+          await this._writeRequirements(requirements, cwd);
+        }
+      }
+    })
+  }
+
+  _commitFiles(cwd) {
     const line = `commit -am "prepare release_${this.data.version}"`;
     this._logVerbose([chalk.cyan(`Commit changes:`), chalk.italic(`git ${line}`)]);
-    return this._spawnOrAbort('git', ['commit', '-am', `prepare release_v${this.data.version}`], cwd, null);
+    return Promise.resolve().then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release_v${this.data.version}`], cwd, null))
+
   }
 
   _writeDependencies(dependencies, cwd) {
@@ -629,6 +643,7 @@ class Release extends BaseRelease {
       .then(() => this._editReleaseNotes())
       .then(() => this._writeToChangelog())
       .then(() => this._writeDeps(this.data.dependencies, this.data.requirements, this.data.cwd))
+      .then(() => this._commitFiles(this.data.cwd))
       .then(() => this._pushBranch(this.data.branch, this.data.cwd))
       .then(() => this._getReviewersList())
       .then(() => this._chooseReviewers())
