@@ -3,6 +3,7 @@ const BaseRelease = require('../../utils/BaseRelease');
 const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
+const fsp = require('fs-extra').promises;
 const knownRepositories = require('../../knownRepositories');
 const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 const opn = require('opn');
@@ -156,7 +157,7 @@ class Release extends BaseRelease {
    * @return caleydoToken or datavisynToken
    */
   _getAccessToken(repo) {
-    return findBase(repo) === 'phovea' ? this.data.accessToken.caleydo : this.data.accessToken.datavisyn
+    return findBase(repo) === 'phovea' ? this.data.accessToken.caleydo : findBase(repo) === 'datavisyn' ? this.data.accessToken.datavisyn : this.data.accessToken.caleydo
   }
 
   /**
@@ -248,19 +249,27 @@ class Release extends BaseRelease {
 
   async _prepareRequirements() {
     if (fs.existsSync(`${this.data.cwd}/requirements.txt`)) {
-      const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`)); //parsed to object requirements
+      const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`)); // parsed to object requirements
       const known = Object.keys(reqs).filter((req) => this._isKnownRepo(req)); // known requirements
       if (known) {
-        const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + ':' + reqs[r]}); // requirements minus our repos
+        const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + reqs[r]}); // requirements minus our repos
         const requirements = await this._getRequirementVersions(known);
-
-        const master = [...others, ...this._getMasterRequirements(requirements)];
-        const develop = [...others, ...this._getDevelopRequirements(requirements)];
-        return this.data.requirements = {master, develop};
+        const RequirementsHandler = require('../../utils/RequirementsHandler')
+        const knownToMaster = new RequirementsHandler(requirements).master.join('\n');
+        const master = [...others, knownToMaster];
+        return this.data.requirements = {master};
       }
     }
+  }
 
-    // fs.unlinkSync(this.destinationPath(this.data.cwd + '/requirements.txt'))//If you delete the requirements.tx and then replace it with new one .No need to resolve conflicts
+  _isPublishedToPyPI(req) {
+    const options = {
+      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
+    };
+    const searchResult = this.spawnCommandSync('pip', ['search', req], options).stdout.toString()
+    return searchResult.split('\n').filter((p) => {
+      p.startsWith(req + ' (')
+    })
   }
 
   _getRequirementVersions(req) {
@@ -272,29 +281,14 @@ class Release extends BaseRelease {
     }))
   }
 
-  _getMasterRequirements(req) {
-    return req.map((r) => {
-      return r.name.startsWith('-e') && r.name.endsWith('.git') && this._isNotPublishedToPip(r.name) ?
-        `${r.name}:@v${r.version}@egg=${this._pipToNpm(r.name)}` : `${this._pipToNpm(r.name)}>=${parseInt(r.version.charAt(0))}.0.0,<${parseInt(r.version.charAt(0)) + 1}.0.0`
-    })
-  }
-
-  _getDevelopRequirements(req) {
-    return req.map((r) => r.name.startsWith('-e') && r.name.endsWith('.git') ?
-      `${r.name}:@develop@egg=${this._pipToNpm(r.name)}` : `-e git+https://github.com/${toBaseName(r.name)}.git:@develop@egg=${r.name}`)
-  }
-
   // from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
-  _pipToNpm(req) {
-    let repoName;
-    Object.keys(knownRepositories).forEach((r) => {
-      return knownRepositories[r].forEach(element => {
-        if (req.includes(element)) {
-          repoName = element
-        }
-      })
-    })
-    return repoName
+  _pipToNpm(requirement) {
+    const regex = /\/(?!.*\/)(.*)\.git/;
+    const match = requirement.match(regex);
+    if (match) {
+      return match[1];
+    }
+    return requirement;
   }
 
   // get it from config json
@@ -302,42 +296,6 @@ class Release extends BaseRelease {
     return dependency.endsWith('tdp_core.git')
   }
 
-  _computeMasterUnPublished(dependency, version) {
-
-    return `@v${version}@egg=${this._pipToNpm(dependency)}`
-  }
-
-  // turn 4.0.0 to >=4.0.0,<5.0.0
-  _computeMasterPublished(version) {
-    const firstLetter = parseInt(version.charAt(0))
-    return `>=${firstLetter}.0.0,<${firstLetter + 1}.0.0`
-  }
-
-  _computeMasterVersion(dependency, version) {
-    return this._isNotPublishedToPip(dependency) ? this._computeMasterUnPublished(dependency, version) : this._computeMasterPublished(version)
-  }
-
-  _computeDevelopVersion(dependency, version) {
-    return `@develop@egg=${this._parsePip(dependency)}`
-  }
-
-  // from `tdp_core` to `-e git+https://github.com/datavisyn/tdp_core.git`
-  _parseGithub(req) {
-    if (this._isNotPublishedToPip(req)) {
-      return req
-    }
-    return `-e git+https://github.com/${toBaseName(this._parsePip(req))}.git`
-  }
-  // from `-e git+https://github.com/datavisyn/tdp_core.git` to `tdp_core`
-  _parsePip(req) {
-    if (!this._isKnownRepo(req)) {
-      return
-    }
-    if (this._isNotPublishedToPip(req)) {
-      return req
-    }
-    return this._pipToNpm(req)
-  }
 
   /**
    * Generate release notes from the Pull Request merged into the develop branch
@@ -356,7 +314,6 @@ class Release extends BaseRelease {
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineB}`)]);
     const pullRequestsDescriptions = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n')
     const pullRequestsNumbers = this._extractPullRequestsNumbers(pullRequestsDescriptions)
-    this.log(pullRequestsNumbers)
     this.data.releaseNotes = this._formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers, this.data.repo)
   }
 
@@ -397,7 +354,6 @@ class Release extends BaseRelease {
         message: 'Edit Release Notes'
       }
     ]).then(({releaseNotes}) => {
-      this.log(`\n${chalk.yellow.bold('Release Notes:')}\n${chalk.italic(releaseNotes)}\n`)
       this.data.releaseNotes = releaseNotes;
     })
   }
@@ -410,9 +366,8 @@ class Release extends BaseRelease {
     const oldChangelog = fs.existsSync(changelogPath) ?
       this.fs.read(changelogPath) : '# Changelog';
     const mergedChangelog = oldChangelog.replace('# Changelog', `# Changelog\n\n## v${this.data.version}\n\n${this.data.releaseNotes}`);
-    this.log(mergedChangelog)
-    this.fs.write(changelogPath, mergedChangelog);
-    return Promise.resolve(this)
+    return Promise.resolve(1).then(() => fs.writeFileSync(changelogPath, mergedChangelog))
+
   }
 
   /**
@@ -529,24 +484,30 @@ class Release extends BaseRelease {
   /**
    * Resolve dependencies & requirements to master version.
    */
-  _writeDependencies(dependencies, requirements, cwd) {
+  async _writeDeps(dependencies, requirements, cwd, d) {
     if (dependencies) {
-      const pkg = this.fs.readJSON(`${cwd}/package.json`);
-      Object.keys(dependencies).forEach((dep) => {
-        pkg.dependencies[dep] = dependencies.master[dep];
-      })
-      pkg.version = this.data.version
-      this.fs.writeJSON(`${cwd}/package.json`, pkg);
+      await this._writeDependencies(dependencies.master, cwd);
     }
     if (requirements) {
-      this.fs.write(this.destinationPath(cwd + '/requirements.txt'), requirements.master.join('\n'));
+      await this._writeRequirements(requirements, cwd);
     }
-    // fs.unlinkSync(this.destinationPath(this.ctx.cwd + '/package.json'))//If you delete the package.json and then replace it with new one .No need to resolve conflicts
-    return Promise.resolve(1).then(() => new Promise((resolve) => this.fs.commit(resolve))).then(() => {
-      const line = `commit -am "prepare release_${this.data.version}"`;
-      this._logVerbose([chalk.cyan(`Commit changes:`), chalk.italic(`git ${line}`)]);
-      return this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.data.version}`], cwd, null);
-    });
+    const line = `commit -am "prepare release_${this.data.version}"`;
+    this._logVerbose([chalk.cyan(`Commit changes:`), chalk.italic(`git ${line}`)]);
+    return this._spawnOrAbort('git', ['commit', '-am', `prepare release_v${this.data.version}`], cwd, null);
+  }
+
+  _writeDependencies(dependencies, cwd) {
+    const pkg = this.fs.readJSON(`${cwd}/package.json`);
+    Object.keys(dependencies).forEach((dep) => {
+      pkg.dependencies[dep] = dependencies[dep];
+    })
+    pkg.version = this.data.version
+
+    return Promise.resolve().then(() => fs.writeJsonSync(`${cwd}/package.json`, pkg, {spaces: 2}))
+  }
+
+  _writeRequirements(requirements, cwd) {
+    return Promise.resolve().then(() => fs.writeFileSync(this.destinationPath(cwd + '/requirements.txt'), requirements.master.join('\n')))
   }
 
   _pushBranch(branch, cwd) {
@@ -579,7 +540,7 @@ class Release extends BaseRelease {
     })
       .then((prNumber) => this._setLabels(prNumber))
       .then((prNumber) => this._setAssignees(prNumber))
-      .then((prNumber) => this._setReviewers());
+    // .then((prNumber) => this._setReviewers(prNumber));
   }
 
   _setLabels(prNumber) {
@@ -604,7 +565,7 @@ class Release extends BaseRelease {
       method: 'POST',
       uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/issues/${prNumber}/assignees`,
       body: {
-        assignees: this.assignees
+        assignees: this.data.reviewers
       },
       headers: {
         'User-Agent': 'request'
@@ -614,31 +575,14 @@ class Release extends BaseRelease {
     return rp(assigneeOptions).then(() => prNumber);
   }
 
-  _setReviewers(prNumber) {
-    const reviewerOptions = {
-      method: 'POST',
-      uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`,
-      body: {
-        reviewers: [
-          'oltionchampari'
-        ]
-      },
-      headers: {
-        'User-Agent': 'request'
-      },
-      json: true
-    }
-    return rp(reviewerOptions).then(() => prNumber);
-  }
-
   _chooseReviewers() {
     return this.prompt([{
       type: 'checkbox',
       name: 'assignees',
       message: chalk.cyan('Choose reviewer/s and assignee/s.'),
       choices: this.data.members
-    }]).then(({assignees}) => {
-      this.data.assignees = assignees
+    }]).then(({reviewers}) => {
+      this.data.reviewers = reviewers
     });
   }
 
@@ -649,7 +593,7 @@ class Release extends BaseRelease {
       uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`,
       body: {
         reviewers: [
-          'oltionchampari'
+          this.data.reviewers
         ]
       },
       headers: {
@@ -678,12 +622,13 @@ class Release extends BaseRelease {
       .then(this._mkdir.bind(this, null))
       .then(() => this._cloneRepo(this.data.repo, this.options.branch, null))
       .then(() => this._prepareDependencies())
+      .then(() => this._prepareRequirements())
       .then(() => this._collectReleaseNotes())
       .then(() => this._getReleaseTag())
+      .then(() => this._checkoutBranch('-b ' + this.data.branch, this.data.cwd))
       .then(() => this._editReleaseNotes())
       .then(() => this._writeToChangelog())
-      .then(() => this._checkoutBranch('-b ' + this.data.branch, this.data.cwd))
-      .then(() => this._writeDependencies(this.data.dependencies, this.data.requirements, this.data.cwd))
+      .then((d) => this._writeDeps(this.data.dependencies, this.data.requirements, this.data.cwd, d))
       .then(() => this._pushBranch(this.data.branch, this.data.cwd))
       .then(() => this._getReviewersList())
       .then(() => this._chooseReviewers())
