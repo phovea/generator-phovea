@@ -6,7 +6,6 @@ const fs = require('fs-extra');
 const fsp = require('fs-extra').promises;
 const knownRepositories = require('../../knownRepositories');
 const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
-const opn = require('opn');
 var rp = require('request-promise');
 const semver = require('semver');
 const {parseRequirements} = require('../../utils/pip');
@@ -140,7 +139,7 @@ class Release extends BaseRelease {
   _validateTokens(tokens, username) {
     this._logVerbose(chalk.cyan('Verifying tokens...'))
     return Promise.all(tokens.map((token) => {
-      this._logVerbose([chalk.cyan('Running...'), chalk.italic(`GET https://${username}:${token}@api.github.com/user`)])
+      this._logVerbose([chalk.cyan('Running...'), chalk.italic(`GET https://${username}:**********************@api.github.com/user`)])
       const options = {
         url: `https://${username}:${token}@api.github.com/user`,
         headers: {
@@ -540,7 +539,7 @@ class Release extends BaseRelease {
     })
       .then((prNumber) => this._setLabels(prNumber))
       .then((prNumber) => this._setAssignees(prNumber))
-    // .then((prNumber) => this._setReviewers(prNumber));
+      .then((prNumber) => this._setReviewers(prNumber));
   }
 
   _setLabels(prNumber) {
@@ -560,6 +559,7 @@ class Release extends BaseRelease {
   }
 
   _setAssignees(prNumber) {
+    console.log(this.data.reviewers)
     this._logVerbose([chalk.cyan(`Adding Assignees:`), chalk.italic(`POST https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repoName}/issues/${prNumber}/assignees`)])
     const assigneeOptions = {
       method: 'POST',
@@ -578,7 +578,7 @@ class Release extends BaseRelease {
   _chooseReviewers() {
     return this.prompt([{
       type: 'checkbox',
-      name: 'assignees',
+      name: 'reviewers',
       message: chalk.cyan('Choose reviewer/s and assignee/s.'),
       choices: this.data.members
     }]).then(({reviewers}) => {
