@@ -365,7 +365,7 @@ class Release extends BaseRelease {
     const oldChangelog = fs.existsSync(changelogPath) ?
       this.fs.read(changelogPath) : '# Changelog';
     const mergedChangelog = oldChangelog.replace('# Changelog', `# Changelog\n\n## v${this.data.version}\n\n${this.data.releaseNotes}`);
-    return Promise.resolve(1).then(() => fs.writeFileSync(changelogPath, mergedChangelog))
+    return Promise.resolve().then(() => fs.writeFileSync(changelogPath, mergedChangelog))
 
   }
 
@@ -483,7 +483,8 @@ class Release extends BaseRelease {
   /**
    * Resolve dependencies & requirements to master version.
    */
-  async _writeDeps(dependencies, requirements, cwd, d) {
+  async _writeDeps(dependencies, requirements, cwd) {
+    this._logVerbose([chalk.cyan(`Computing master dependencies/requirements....`)]);
     if (dependencies) {
       await this._writeDependencies(dependencies.master, cwd);
     }
@@ -559,7 +560,6 @@ class Release extends BaseRelease {
   }
 
   _setAssignees(prNumber) {
-    console.log(this.data.reviewers)
     this._logVerbose([chalk.cyan(`Adding Assignees:`), chalk.italic(`POST https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repoName}/issues/${prNumber}/assignees`)])
     const assigneeOptions = {
       method: 'POST',
@@ -588,20 +588,20 @@ class Release extends BaseRelease {
 
   _setReviewers(prNumber) {
     this._logVerbose([chalk.cyan(`Adding Reviewers:`), chalk.italic(`POST https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repoName}/pulls/${prNumber}/requested_reviewers`)])
-    const reviewerOptions = {
-      method: 'POST',
-      uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`,
-      body: {
-        reviewers: [
-          this.data.reviewers
-        ]
-      },
-      headers: {
-        'User-Agent': 'request'
-      },
-      json: true
-    }
-    return rp(reviewerOptions).then(() => prNumber);
+    // const reviewerOptions = {
+    //   method: 'POST',
+    //   uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`,
+    //   body: {
+    //     reviewers: [
+    //       this.data.reviewers
+    //     ]
+    //   },
+    //   headers: {
+    //     'User-Agent': 'request'
+    //   },
+    //   json: true
+    // }
+    // return rp(reviewerOptions).then(() => prNumber);
   }
 
   async _getReviewersList() {
@@ -628,7 +628,7 @@ class Release extends BaseRelease {
       .then(() => this._checkoutBranch('-b ' + this.data.branch, this.data.cwd))
       .then(() => this._editReleaseNotes())
       .then(() => this._writeToChangelog())
-      .then((d) => this._writeDeps(this.data.dependencies, this.data.requirements, this.data.cwd, d))
+      .then(() => this._writeDeps(this.data.dependencies, this.data.requirements, this.data.cwd))
       .then(() => this._pushBranch(this.data.branch, this.data.cwd))
       .then(() => this._getReviewersList())
       .then(() => this._chooseReviewers())
