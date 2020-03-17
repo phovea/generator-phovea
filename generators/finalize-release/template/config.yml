@@ -1,0 +1,52 @@
+version: 2.1
+jobs:
+  build:
+    working_directory: ~/phovea
+    docker:
+      - image: circleci/python:3.7-buster-node-browsers # for node version see Dockerfile on https://hub.docker.com/r/circleci/python
+    steps:
+      - checkout
+  publish:
+      working_directory: ~/phovea
+      docker:
+          - image: circleci/python:3.7-buster-node-browsers # for node version see Dockerfile on https://hub.docker.com/r/circleci/python
+      steps:
+       - checkout
+       - run:
+           name: Install jq
+           command: sudo apt install jq
+       - run:
+           name: Publish to Pypi
+           command: | # read publish.npm flag from .yo-rc.json file
+               if [ $(jq .publish.pip .yo-rc.json) ]; then
+                     pip install -r requirements.txt'
+                     pip' install' -r, requirements_dev.txt
+                     pip install twine
+                     npm run dist:python
+                     echo -e "[pypi]" >> ~/.pypirc
+                     echo -e "username = oliverxx" >> ~/.pypirc
+                     echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+                     twine upload dist/*;
+               fi
+       - run:
+           name: Publish to npm
+           command: |
+               if [ $(jq .publish.npm .yo-rc.json) ]; then
+                   npm install
+                   npm run build:web
+                   echo "//registry.npmjs.org/:_authToken=$npm_Token" > ~/phovea/.npmrc
+                   npm publish;
+               fi
+
+workflows:
+  version: 2
+  finalize-release:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+      - publish:
+          filters:
+             branches:
+               only: master

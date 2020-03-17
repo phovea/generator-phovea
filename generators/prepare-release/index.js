@@ -96,21 +96,15 @@ class Release extends BaseRelease {
         this.cloneSSH = props.cloneSSH || this.options.ssh;
         this.cwd = toCWD(repository);
         return this.data = {
-          isProduct: findName(repository).includes('_product'),
           repo: repository,
           cwd: `${this.cwd}/${toCWD(repository)}`,
           repoName: findName(repository),
           repoBase: findBase(repository),
-          accessToken: {datavisyn: props.datavisynToken, caleydo: props.caleydoToken} // github access_tokens in to interact with the api
+          accessTokens: [{name: 'datavisyn-bot', token: props.datavisynToken}, {name: 'caleydo-bot', token: props.caleydoToken}] // github access_tokens in to interact with the api
         };
       })
-      .then((data) => {
-        this.data.gitUser = this._getGitUser();
-        this.data.accessToken.current = this._getAccessToken(this.data.repo)
-        return this._validateTokens([data.accessToken.caleydo, data.accessToken.datavisyn], this.data.gitUser)
-      }).then(() => {this.log(logSymbols.success, 'Tokens verified')})
       .catch((e) => {
-        throw new Error(chalk.red(e))
+        throw new Error(chalk.red(e));
       })
   }
 
@@ -121,7 +115,7 @@ class Release extends BaseRelease {
    */
   _validateRepository(repository) {
     this._logVerbose(chalk.cyan(`Checking if repository: ${chalk.bold(repository)} exists...`));
-    return new Promise((resolve, reject) => this._isKnownRepo(findName(repository)) ? resolve(true) : reject('Repository doesn\'t exist.Please provide a valid repository name.'))
+    return new Promise((resolve, reject) => this._isKnownRepo(findName(repository)) ? resolve(true) : reject('Repository doesn\'t exist.Please provide a valid repository name.'));
   }
 
   /**
@@ -129,25 +123,7 @@ class Release extends BaseRelease {
    * @param {string} repo
    */
   _isKnownRepo(repo) {
-    return Object.keys(knownRepositories).some((r) => knownRepositories[r].includes(repo) || knownRepositories[r].some((d) => repo.includes(d)))
-  }
-
-  /**
-   * Verify access tokens against github api
-   * @param {Array} tokens datavisyn/caleydo access tokens
-   */
-  _validateTokens(tokens, username) {
-    this._logVerbose(chalk.cyan('Verifying tokens...'))
-    return Promise.all(tokens.map((token) => {
-      this._logVerbose([chalk.cyan('Running...'), chalk.italic(`GET https://${username}:**********************@api.github.com/user`)])
-      const options = {
-        url: `https://${username}:${token}@api.github.com/user`,
-        headers: {
-          'User-Agent': 'request'
-        }
-      };
-      return rp(options).then((d) => JSON.parse(d))
-    }))
+    return Object.keys(knownRepositories).some((r) => knownRepositories[r].includes(repo) || knownRepositories[r].some((d) => repo.includes(d)));
   }
 
   /**
@@ -156,7 +132,10 @@ class Release extends BaseRelease {
    * @return caleydoToken or datavisynToken
    */
   _getAccessToken(repo) {
-    return findBase(repo) === 'phovea' ? this.data.accessToken.caleydo : findBase(repo) === 'datavisyn' ? this.data.accessToken.datavisyn : this.data.accessToken.caleydo
+    if (findBase(repo) === 'datavisyn') {
+      return this.data.accessTokens[0];
+    } else if (findBase(repo) === 'phovea')
+      return this.data.accessTokens[1];
   }
 
   /**
@@ -182,27 +161,17 @@ class Release extends BaseRelease {
     return this._spawnOrAbort('git', line.split(' '));
   }
 
-  /**
-   * Get username to send api calls to github
-   * TODO refactor users to caleydo_bot datavisyn_bot
-   */
-  _getGitUser() {
-    const options = {
-      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
-    };
-    //  this._logVerbose(chalk.blue('Running git config', 'user.name'))
-    return this.spawnCommandSync('git', ['config', 'user.name'], options).stdout.toString().replace('\n', '')
-  }
-
-
   async _prepareDependencies() {
     const pkg = this.fs.readJSON(`${this.data.cwd}/package.json`);
-    const deps = Object.keys(pkg.dependencies).filter((dep) => this._isKnownRepo(dep));
-    if (deps && deps.length) {
-      const dependencies = await this._getOriginalVersions(deps);
-      return this.data.dependencies = {original: dependencies, master: this._toMaster(dependencies), develop: this._toDevelop(dependencies)};
+    const deps = pkg.dependencies;
+    if (deps && Object.keys(deps).length) {
+      const known = Object.keys(deps).filter((dep) => this._isKnownRepo(dep));
+      if (known) {
+        const dependencies = await this._getOriginalVersions(known);
+        return this.data.dependencies = {original: dependencies, master: this._toMaster(dependencies)};
+      }
     }
-    return Promise.resolve(this)
+    return Promise.resolve();
   }
 
   /**
@@ -213,7 +182,7 @@ class Release extends BaseRelease {
     return Promise.all(deps.map((r) => {
       return this._getDependencyTag(toBaseName(r))
         .then((v) => {
-          return {name: r, version: v}
+          return {name: r, version: v};
         })
     }))
   }
@@ -223,8 +192,9 @@ class Release extends BaseRelease {
    * @param {string} dep i.e phovea_clue
    */
   _getDependencyTag(dep) {
+    const token = this._getAccessToken(dep);
     const options = {
-      url: `https://${this.data.gitUser}:${this._getAccessToken(dep)}@api.github.com/repos/${dep}/releases`,
+      url: `https://${token.name}:${token.token}@api.github.com/repos/${dep}/releases`,
       headers: {
         'User-Agent': 'request'
       }
@@ -235,30 +205,26 @@ class Release extends BaseRelease {
   }
 
   _isNotPublishedToNpm(dep) {
-    return dep.includes('tdp_core') || dep.includes('tdp_ui')
+    return dep.includes('tdp_core') || dep.includes('tdp_ui');
   }
 
   _toMaster(deps) {
-    return deps.reduce((acc, dep) => (acc[dep.name] = this._isNotPublishedToNpm(dep.name) ? `github:${toBaseName(dep.name)}#semver:^${dep.version}` : `^${dep.version}`, acc), {})
-  }
-
-  _toDevelop(deps) {
-    return deps.reduce((acc, dep) => (acc[dep.name] = `github:${toBaseName(dep.name)}#develop`, acc), {})
+    return deps.reduce((acc, dep) => (acc[dep.name] = this._isNotPublishedToNpm(dep.name) ? `github:${toBaseName(dep.name)}#semver:^${dep.version}` : `^${dep.version}`, acc), {});
   }
 
   async _prepareRequirements() {
     if (fs.existsSync(`${this.data.cwd}/requirements.txt`)) {
       const reqs = parseRequirements(this.fs.read(`${this.data.cwd}/requirements.txt`)); // parsed to object requirements
       const known = Object.keys(reqs).filter((req) => this._isKnownRepo(req)); // known requirements
-      if (known) {
+      if (known && known.length) {
         const others = Object.keys(reqs).filter((req) => !this._isKnownRepo(req)).map((r) => {return [r] + reqs[r]}); // requirements minus our repos
         const requirements = await this._getRequirementVersions(known);
-        const RequirementsHandler = require('../../utils/RequirementsHandler')
-        const knownToMaster = new RequirementsHandler(requirements).master.join('\n');
-        const master = [...others, knownToMaster];
-        return this.data.requirements = {master};
+        const RequirementsHandler = require('../../utils/RequirementsHandler');
+        const masterVersions = new RequirementsHandler(requirements).master
+        return this.data.requirements = {original: requirements, master: masterVersions, others};
       }
     }
+    return Promise.resolve();
   }
 
   _isPublishedToPyPI(req) {
@@ -300,20 +266,22 @@ class Release extends BaseRelease {
    * Generate release notes from the Pull Request merged into the develop branch
    * using the `git log` command.
    */
-  _collectReleaseNotes() {
+  _collectReleaseNotes(cwd) {
     const options = {
-      cwd: 'dummy_repo/dummy_repo',
+      cwd,
       stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
     };
-    const lineA = 'log --merges --pretty=format:"%b'
-    const lineB = 'log --merges --pretty=format:"%s'
+    const lineA = 'log --merges --pretty=format:"%b';
+    const lineB = 'log --merges --pretty=format:"%s';
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineA}`)]);
-    const pullRequestsTitles = this.spawnCommandSync('git', lineA.split(' '), options).stdout.toString().split('\n')
-
+    let pullRequestsTitles = this.spawnCommandSync('git', lineA.split(' '), options).stdout.toString().split('\n');
+    const latestReleaseIndex = pullRequestsTitles.findIndex((pr) => pr.includes('Release 4.1.0')) // find another way through git to get only latest merged.
+    pullRequestsTitles = pullRequestsTitles.slice(0, latestReleaseIndex);
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineB}`)]);
-    const pullRequestsDescriptions = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n')
-    const pullRequestsNumbers = this._extractPullRequestsNumbers(pullRequestsDescriptions)
-    this.data.releaseNotes = this._formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers, this.data.repo)
+    let pullRequestsDescriptions = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n');
+    pullRequestsDescriptions = pullRequestsDescriptions.slice(0, latestReleaseIndex);
+    const pullRequestsNumbers = this._extractPullRequestsNumbers(pullRequestsDescriptions);
+    this.data.releaseNotes = this._formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers, this.data.repo);
   }
 
   /**
@@ -327,6 +295,7 @@ class Release extends BaseRelease {
       .map((message) => message.replace('"', '')) // `git log` creates extra newline characters and quotes
     return title.map((t, i) => `* ${t} (${repo}#${pullRequestsNumbers[i]})`).join('\n')
   }
+
   /**
    * Extract Numbers from Pull Requests titles.
    * @param {string []} pullRequests
@@ -373,9 +342,8 @@ class Release extends BaseRelease {
    * Calculate if release is `major`,`minor`,`patch`.
    */
   async _getReleaseTag() {
-    const hasMajorDependency = this._majorReleasedDependency();
     let release;
-    if (hasMajorDependency) {
+    if (this._hasMajorReleased()) {
       release = 'major';
       this.log(logSymbols.info, 'Next release:', chalk.cyan.bold(release), `(One or more dependencies latest tag is a major)`);
     } else {
@@ -388,7 +356,7 @@ class Release extends BaseRelease {
       }
     }
     this.data.version = await this._determineReleaseVersion(release);
-    this.data.branch = `release_v${this.data.version}`
+    this.data.branch = `release_${this.data.version}`
     return this
   }
 
@@ -396,8 +364,22 @@ class Release extends BaseRelease {
    * Check if any of the known dependencies latest release is `major`.
    * Put differently check if minor and patch digits are zero ---> release is X.0.0.
    */
-  _majorReleasedDependency() {
-    return this.data.dependencies.original.some((dep) => semver.minor(dep.version) === 0 && semver.patch(dep.version) === 0)
+  _hasMajorReleased() {
+    return this._hasMajorReleasedDependency() || this._hasMajorReleasedRequirement;
+  }
+
+  _hasMajorReleasedDependency() {
+    if (this.data.dependencies) {
+      return this.data.dependencies.original.some((dep) => semver.minor(dep.version) === 0 && semver.patch(dep.version) === 0);
+    }
+    return false;
+  }
+
+  _hasMajorReleasedRequirement() {
+    if (this.data.requirements) {
+      return this.data.requirements.original.some((req) => semver.minor(req.version) === 0 && semver.patch(req.version) === 0)
+    }
+    return false;
   }
 
   /**
@@ -484,21 +466,37 @@ class Release extends BaseRelease {
    * Resolve dependencies & requirements to master version.
    */
   async _writeDeps(dependencies, requirements, cwd) {
+    if (this.data.requirements) {
+      this.log(`\n${chalk.yellow.bold('Dependencies:')}${Object.keys(dependencies.master).map((k) => '\n' + k + ': ' + chalk.cyan(dependencies.master[k]))}`)
+    }
     return this.prompt([
       {
         type: 'confirm',
         name: 'update',
-        message: `Update versions of the known dependencies/requirements?`,
+        when: this.data.dependencies != null,
+        message: `Update versions of the known dependencies`,
       }
-    ]).then(async ({update}) => {
+    ]).then(({update}) => {
       if (update) {
-        this._logVerbose([chalk.cyan(`Updating versions of the known dependencies/requirements....`)]);
-        if (dependencies) {
-          await this._writeDependencies(dependencies.master, cwd);
+        this._logVerbose([chalk.cyan(`Updating versions of the known dependencies...`)]);
+        return this._writeDependencies(dependencies.master, cwd);
+      }
+    }).then(() => {
+      if (this.data.requirements) {
+        this.log(`\n${chalk.yellow.bold('Dependencies:')}\n ${chalk.cyan(requirements.master.join('\n'))}\n`)
+      }
+      return this.prompt([
+        {
+          type: 'confirm',
+          name: 'update',
+          when: this.data.requirements != null,
+          message: `Update versions of the known requirements`,
         }
-        if (requirements) {
-          await this._writeRequirements(requirements, cwd);
-        }
+      ])
+    }).then(({update}) => {
+      if (update) {
+        this._logVerbose([chalk.cyan(`Updating versions of the known requirements...`)]);
+        return this._writeRequirements(requirements, cwd);
       }
     })
   }
@@ -506,7 +504,7 @@ class Release extends BaseRelease {
   _commitFiles(cwd) {
     const line = `commit -am "prepare release_${this.data.version}"`;
     this._logVerbose([chalk.cyan(`Commit changes:`), chalk.italic(`git ${line}`)]);
-    return Promise.resolve().then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release_v${this.data.version}`], cwd, null))
+    return Promise.resolve().then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.data.version}`], cwd, null))
 
   }
 
@@ -521,7 +519,7 @@ class Release extends BaseRelease {
   }
 
   _writeRequirements(requirements, cwd) {
-    return Promise.resolve().then(() => fs.writeFileSync(this.destinationPath(cwd + '/requirements.txt'), requirements.master.join('\n')))
+    return Promise.resolve().then(() => fs.writeFileSync(this.destinationPath(cwd + '/requirements.txt'), [...requirements.master, ...requirements.others].join('\n')));
   }
 
   _pushBranch(branch, cwd) {
@@ -637,7 +635,7 @@ class Release extends BaseRelease {
       .then(() => this._cloneRepo(this.data.repo, this.options.branch, null))
       .then(() => this._prepareDependencies())
       .then(() => this._prepareRequirements())
-      .then(() => this._collectReleaseNotes())
+      .then(() => this._collectReleaseNotes(this.data.cwd))
       .then(() => this._getReleaseTag())
       .then(() => this._checkoutBranch('-b ' + this.data.branch, this.data.cwd))
       .then(() => this._editReleaseNotes())
