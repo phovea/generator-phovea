@@ -275,7 +275,7 @@ class Release extends BaseRelease {
     const lineB = 'log --merges --pretty=format:"%s';
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineA}`)]);
     let pullRequestsTitles = this.spawnCommandSync('git', lineA.split(' '), options).stdout.toString().split('\n');
-    const latestReleaseIndex = pullRequestsTitles.findIndex((pr) => pr.includes('Release 4.1.0')) // find another way through git to get only latest merged.
+    const latestReleaseIndex = pullRequestsTitles.findIndex((pr) => pr.includes('Release')) // find another way through git to get only latest merged.
     pullRequestsTitles = pullRequestsTitles.slice(0, latestReleaseIndex);
     this._logVerbose([chalk.cyan(`Running: `), chalk.italic(`git ${lineB}`)]);
     let pullRequestsDescriptions = this.spawnCommandSync('git', lineB.split(' '), options).stdout.toString().split('\n');
@@ -644,8 +644,8 @@ class Release extends BaseRelease {
       .then(() => this._commitFiles(this.data.cwd))
       .then(() => this._pushBranch(this.data.branch, this.data.cwd))
       .then(() => this._getReviewersList())
-      .then(() => this._chooseReviewers())
-      .then(() => this._createPullRequest(`Release ${this.data.version}`, 'master', this.data.branch))
+      // .then(() => this._chooseReviewers())
+      // .then(() => this._createPullRequest(`Release ${this.data.version}`, 'master', this.data.branch))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);
