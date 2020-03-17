@@ -7,7 +7,6 @@
     "moduleResolution": "node",
     "jsx": "react",
     "experimentalDecorators": true,
-    "downlevelIteration": true, // required as long as target is `es5`
     "lib": [
       "dom",
       "es2015"
