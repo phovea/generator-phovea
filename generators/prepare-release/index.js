@@ -542,7 +542,6 @@ class Release extends BaseRelease {
 
   _createPullRequest(title, base, head) {
     const token = this._getAccessToken(this.data.repoName)
-    const content = this.fs.read(this.templatePath('release.md'));
     this._logVerbose([chalk.cyan(`Create Pull Request:`), chalk.italic(`POST https://${token.name}:**********************@api.github.com/repos/${this.data.repo}/pulls`)])
     const postOptions = {
       method: 'POST',
@@ -550,7 +549,7 @@ class Release extends BaseRelease {
       body: {
         title: title,
         head: head,
-        body: content,
+        body: this.data.releaseTemplate,
         base: base
       },
       headers: {
@@ -605,7 +604,6 @@ class Release extends BaseRelease {
       message: chalk.cyan('Choose reviewer/s and assignee/s.'),
       choices: this.data.members
     }]).then(({reviewers}) => {
-      this.log(reviewers)
       this.data.reviewers = reviewers
     });
   }
@@ -641,6 +639,15 @@ class Release extends BaseRelease {
     });
   }
 
+  _getPluginType() {
+    return this.data.type = this.fs.readJSON(`${this.data.cwd}/.yo-rc.json`)["generator-phovea"].type;
+  }
+
+  _getReleaseTemplate() {
+    const type = this._getPluginType();
+    return this.data.releaseTemplate = this.fs.read(this.templatePath(`${type}.md`)).replace('*List of addressed issues and PRs since the last release*', this.data.releaseNotes);
+  }
+
   writing() {
     return Promise.resolve(1)
       .then(this._mkdir.bind(this, null))
@@ -658,6 +665,7 @@ class Release extends BaseRelease {
       .then(() => this._pushBranch(this.data.branch, this.data.cwd))
       .then(() => this._getReviewersList())
       .then(() => this._chooseReviewers())
+      .then(() => this._getReleaseTemplate())
       .then(() => this._createPullRequest(`Release ${this.data.version}`, 'master', this.data.branch))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
