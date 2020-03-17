@@ -205,7 +205,8 @@ class Release extends BaseRelease {
   }
 
   _isNotPublishedToNpm(dep) {
-    return dep.includes('tdp_core') || dep.includes('tdp_ui');
+    const notPublished = ['tdp_core', 'tdp_ui']
+    return notPublished.includes(dep);
   }
 
   _toMaster(deps) {
@@ -334,7 +335,8 @@ class Release extends BaseRelease {
     const oldChangelog = fs.existsSync(changelogPath) ?
       this.fs.read(changelogPath) : '# Changelog';
     const mergedChangelog = oldChangelog.replace('# Changelog', `# Changelog\n\n## v${this.data.version}\n\n${this.data.releaseNotes}`);
-    return Promise.resolve().then(() => fs.writeFileSync(changelogPath, mergedChangelog))
+
+    return Promise.resolve().then(() => fs.writeFileSync(changelogPath, mergedChangelog));
 
   }
 
@@ -347,16 +349,16 @@ class Release extends BaseRelease {
       release = 'major';
       this.log(logSymbols.info, 'Next release:', chalk.cyan.bold(release), `(One or more dependencies latest tag is a major)`);
     } else {
-      const labels = await this._getGitLabels(this.data.issueNumbers, 'datavisyn/festival');
+      const labels = await this._getGitLabels(this.data.issueNumbers, this.data.repo);
       if (labels.length) {
         release = labels.includes('major') ? 'major' : labels.includes('minor') ? 'minor' : 'patch';
         this.log(logSymbols.info, 'Next release:', chalk.cyan.bold(release), `Computed from the labels set on PRs`);
       } else {
-        throw new Error('Pull Request have no release labels set. Thus next version can not be calculated'); // labels empty throw error
+        throw new Error('No release labels were found on Pull Requests:\nPlease add at least one release label in one of the Pull Requests'); // labels empty throw error
       }
     }
     this.data.version = await this._determineReleaseVersion(release);
-    this.data.branch = `release_${this.data.version}`
+    this.data.branch = `release-${this.data.version}`
     return this
   }
 
@@ -388,10 +390,11 @@ class Release extends BaseRelease {
   * @param {string} repository Current repository, i.e., `phovea/phovea_server`
   */
   async _getGitLabels(issueNumbers, repository) {
+    const token = this._getAccessToken(this.data.repoName)
     this._logVerbose(chalk.cyan('Getting Pull Requests Labels...'))
     const allLabels = await Promise.all(issueNumbers.map((n) => {
       const options = {
-        url: `https://${this.data.gitUser}:${this._getAccessToken(repository)}@api.github.com/repos/${repository}/issues/${n}/labels`,
+        url: `https://${token.name}:${token.token}@api.github.com/repos/${repository}/issues/${n}/labels`,
         headers: {
           'User-Agent': 'request'
         }
@@ -418,6 +421,7 @@ class Release extends BaseRelease {
       originalVersion = originalVersion.slice(0, originalVersion.length - 9);
     }
     const version = this._calculateVersion(originalVersion, release)
+
     this.data.release = release
     return this._editReleaseVersion(version, release, originalVersion)
   }
@@ -466,7 +470,7 @@ class Release extends BaseRelease {
    * Resolve dependencies & requirements to master version.
    */
   async _writeDeps(dependencies, requirements, cwd) {
-    if (this.data.requirements) {
+    if (this.data.dependencies) {
       this.log(`\n${chalk.yellow.bold('Dependencies:')}${Object.keys(dependencies.master).map((k) => '\n' + k + ': ' + chalk.cyan(dependencies.master[k]))}`)
     }
     return this.prompt([
@@ -483,7 +487,7 @@ class Release extends BaseRelease {
       }
     }).then(() => {
       if (this.data.requirements) {
-        this.log(`\n${chalk.yellow.bold('Dependencies:')}\n ${chalk.cyan(requirements.master.join('\n'))}\n`)
+        this.log(`\n${chalk.yellow.bold('Requirements:')}\n ${chalk.cyan(requirements.master.join('\n'))}\n`)
       }
       return this.prompt([
         {
@@ -502,10 +506,16 @@ class Release extends BaseRelease {
   }
 
   _commitFiles(cwd) {
-    const line = `commit -am "prepare release_${this.data.version}"`;
+    const line = `commit -am "prepare release-${this.data.version}"`;
     this._logVerbose([chalk.cyan(`Commit changes:`), chalk.italic(`git ${line}`)]);
-    return Promise.resolve().then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.data.version}`], cwd, null))
+    return this._spawnOrAbort('git', ['add', '.'], cwd, null).then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release-${this.data.version}`], cwd, null))
 
+  }
+
+  _writeNewVersion(cwd) {
+    const pkg = this.fs.readJSON(`${cwd}/package.json`);
+    pkg.version = this.data.version
+    return Promise.resolve().then(() => fs.writeJsonSync(`${cwd}/package.json`, pkg, {spaces: 2}))
   }
 
   _writeDependencies(dependencies, cwd) {
@@ -513,7 +523,7 @@ class Release extends BaseRelease {
     Object.keys(dependencies).forEach((dep) => {
       pkg.dependencies[dep] = dependencies[dep];
     })
-    pkg.version = this.data.version
+
 
     return Promise.resolve().then(() => fs.writeJsonSync(`${cwd}/package.json`, pkg, {spaces: 2}))
   }
@@ -531,11 +541,12 @@ class Release extends BaseRelease {
   }
 
   _createPullRequest(title, base, head) {
+    const token = this._getAccessToken(this.data.repoName)
     const content = this.fs.read(this.templatePath('release.md'));
-    this._logVerbose([chalk.cyan(`Create Pull Request:`), chalk.italic(`POST https://${this.data.gitUser}:**********************@api.github.com/repos/${this.data.repo}/pulls`)])
+    this._logVerbose([chalk.cyan(`Create Pull Request:`), chalk.italic(`POST https://${token.name}:**********************@api.github.com/repos/${this.data.repo}/pulls`)])
     const postOptions = {
       method: 'POST',
-      uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/pulls`,
+      uri: `https://${token.name}:${token.token}@api.github.com/repos/${this.data.repo}/pulls`,
       body: {
         title: title,
         head: head,
@@ -550,16 +561,16 @@ class Release extends BaseRelease {
     return rp(postOptions).then((d) => {
       return d.number
     })
-      .then((prNumber) => this._setLabels(prNumber))
-      .then((prNumber) => this._setAssignees(prNumber))
-      .then((prNumber) => this._setReviewers(prNumber));
+      .then((prNumber) => this._setLabels(prNumber, token))
+      .then((prNumber) => this._setAssignees(prNumber, token))
+      .then((prNumber) => this._setReviewers(prNumber, token));
   }
 
-  _setLabels(prNumber) {
-    this._logVerbose([chalk.cyan(`Adding labels:`), chalk.italic(`POST https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repoName}/issues/${prNumber}`)])
+  _setLabels(prNumber, token) {
+    this._logVerbose([chalk.cyan(`Adding labels:`), chalk.italic(`POST https://${token.name}:**************************@api.github.com/repos/${this.data.repoName}/issues/${prNumber}`)])
     const patchOptions = {
       method: 'POST',
-      uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/issues/${prNumber}`,
+      uri: `https://${token.name}:${token.token}@api.github.com/repos/${this.data.repo}/issues/${prNumber}`,
       body: {
         labels: ['release: ' + this.data.release]
       },
@@ -571,11 +582,11 @@ class Release extends BaseRelease {
     return rp(patchOptions).then(() => prNumber);
   }
 
-  _setAssignees(prNumber) {
-    this._logVerbose([chalk.cyan(`Adding Assignees:`), chalk.italic(`POST https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repoName}/issues/${prNumber}/assignees`)])
+  _setAssignees(prNumber, token) {
+    this._logVerbose([chalk.cyan(`Adding Assignees:`), chalk.italic(`POST https://${token.name}:**************************@api.github.com/repos/${this.data.repoName}/issues/${prNumber}/assignees`)])
     const assigneeOptions = {
       method: 'POST',
-      uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/issues/${prNumber}/assignees`,
+      uri: `https://${token.name}:${token.token}@api.github.com/repos/${this.data.repo}/issues/${prNumber}/assignees`,
       body: {
         assignees: this.data.reviewers
       },
@@ -594,38 +605,39 @@ class Release extends BaseRelease {
       message: chalk.cyan('Choose reviewer/s and assignee/s.'),
       choices: this.data.members
     }]).then(({reviewers}) => {
+      this.log(reviewers)
       this.data.reviewers = reviewers
     });
   }
 
-  _setReviewers(prNumber) {
-    this._logVerbose([chalk.cyan(`Adding Reviewers:`), chalk.italic(`POST https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repoName}/pulls/${prNumber}/requested_reviewers`)])
-    // const reviewerOptions = {
-    //   method: 'POST',
-    //   uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`,
-    //   body: {
-    //     reviewers: [
-    //       this.data.reviewers
-    //     ]
-    //   },
-    //   headers: {
-    //     'User-Agent': 'request'
-    //   },
-    //   json: true
-    // }
-    // return rp(reviewerOptions).then(() => prNumber);
+  _setReviewers(prNumber, token) {
+    this._logVerbose([chalk.cyan(`Adding Reviewers:`), chalk.italic(`POST https://${token.name}:**************************@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`)])
+    const reviewerOptions = {
+      method: 'POST',
+      uri: `https://${token.name}:${token.token}@api.github.com/repos/${this.data.repo}/pulls/${prNumber}/requested_reviewers`,
+      body: {
+        reviewers:
+          this.data.reviewers
+      },
+      headers: {
+        'User-Agent': 'request'
+      },
+      json: true
+    }
+    return rp(reviewerOptions).then(() => prNumber);
   }
 
   async _getReviewersList() {
+    const token = this._getAccessToken(this.data.repoName)
     const options = {
-      url: `https://${this.data.gitUser}:${this._getAccessToken(this.data.repoName)}@api.github.com/orgs/${'phovea'}/members`,
+      url: `https://${token.name}:${token.token}@api.github.com/orgs/datavisyn/teams/dev/members`,
       headers: {
         'User-Agent': 'request'
       },
       role: 'admin'
     };
     return this.data.members = await rp(options).then((d) => JSON.parse(d)).then((b) => {
-      return b.map((user) => user.login)
+      return b.map((d) => d.login)
     });
   }
 
@@ -640,12 +652,13 @@ class Release extends BaseRelease {
       .then(() => this._checkoutBranch('-b ' + this.data.branch, this.data.cwd))
       .then(() => this._editReleaseNotes())
       .then(() => this._writeToChangelog())
+      .then(() => this._writeNewVersion(this.data.cwd))
       .then(() => this._writeDeps(this.data.dependencies, this.data.requirements, this.data.cwd))
       .then(() => this._commitFiles(this.data.cwd))
       .then(() => this._pushBranch(this.data.branch, this.data.cwd))
       .then(() => this._getReviewersList())
-      // .then(() => this._chooseReviewers())
-      // .then(() => this._createPullRequest(`Release ${this.data.version}`, 'master', this.data.branch))
+      .then(() => this._chooseReviewers())
+      .then(() => this._createPullRequest(`Release ${this.data.version}`, 'master', this.data.branch))
       .catch((msg) => {
         this.log(chalk.red(`Error: ${msg}`));
         return Promise.reject(msg);
