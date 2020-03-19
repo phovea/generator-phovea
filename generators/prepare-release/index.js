@@ -27,7 +27,7 @@ class Release extends Base {
     return this.spawnCommandSync(command, flags, options).stdout.toString().trim(); // git log returns extra spaces
   }
 
-  async initializing() {
+   initializing() {
     this.repository = this._getRepositoryName();
     if (this._isNotDevelopBranch()) {
       throw new Error(`${logSymbols.error} ${chalk.red('Current branch is not develop. Please switch to develop branch.')} `);
@@ -60,7 +60,7 @@ class Release extends Base {
       }
     ]).then(({datavisyn, caleydo}) => {
       this.datavisyn = {name: 'datavisyn-bot', token: datavisyn};
-      this.caleydo = {name: 'caleydo-bot', token: caleydo}
+      this.caleydo = {name: 'caleydo-bot', token: caleydo};
       this.token = this._isDatavisynRepo(this.organization) ? this.datavisyn : this.caleydo;
     });
   }
@@ -109,7 +109,7 @@ class Release extends Base {
     this.log(logSymbols.info, chalk.bold('Calculating dependencies...'));
     const formatted = knownDeps.map((dep) => {
       return {name: dep, org: this._getDependencyOrg(dep, dependencies[dep]), originalVersion: dependencies[dep]};
-    })
+    });
     this.dependencies = await this._getDependenciesVersion(formatted);
     return Promise.resolve(this.dependencies);
   }
@@ -203,7 +203,7 @@ class Release extends Base {
     return deps.reduce((acc, dep) => (acc[dep.name] = dep.version, acc), {});
   }
 
-  _confirmDependencies(dependencies, pkg) {
+  _confirmDependencies(dependencies) {
     this._logDependencies(dependencies);
     return this.prompt([
       {
@@ -244,7 +244,7 @@ class Release extends Base {
         return Promise.resolve()
           .then(() => this._prepareDependencies(knownDeps, dependencies))
           .then((updatedDeps) => this._writeDependencies(this._toObject(updatedDeps), pkg))
-          .then(() => this._confirmDependencies(this.dependencies))
+          .then(() => this._confirmDependencies(this.dependencies));
       }
     }
 
@@ -258,24 +258,24 @@ class Release extends Base {
     if (fs.existsSync('requirements.txt')) {
       const requirements = parseRequirements(this.fs.read('requirements.txt')); // parsed to object requirements
       const knownRequirements = Object.keys(requirements).filter((req) => this._isKnownDependency(req));
-      const rest = Object.keys(requirements).filter((req) => !this._isKnownDependency(req)).map((r) => {return [r] + requirements[r]});
+      const rest = Object.keys(requirements).filter((req) => !this._isKnownDependency(req)).map((r) => {return [r] + requirements[r];});
       if (knownRequirements && knownRequirements.length) {
         return Promise.resolve()
           .then(() => this._prepareRequirements(knownRequirements, requirements))
           .then((reqs) => this._writeRequirements(reqs.map((req) => req.version), rest))
-          .then(() => this._confirmRequirements(this.requirements))
+          .then(() => this._confirmRequirements(this.requirements));
       }
     }
     return Promise.resolve();
   }
 
   _logRequirements(requirements) {
-    this.log(chalk.bold('The requirements in requirements.tx have been updated: \n'))
-    this.log((requirements.map((d) => chalk.red('- ') + chalk.red(d.raw + d.originalVersion) + '\n' + chalk.green.bold('+ ') + chalk.green(d.version) + '\n').join('\n')) + '\n')
+    this.log(chalk.bold('The requirements in requirements.tx have been updated: \n'));
+    this.log((requirements.map((d) => chalk.red('- ') + chalk.red(d.raw + d.originalVersion) + '\n' + chalk.green.bold('+ ') + chalk.green(d.version) + '\n').join('\n')) + '\n');
   }
 
   _confirmRequirements(requirements) {
-    this._logRequirements(requirements)
+    this._logRequirements(requirements);
     return this.prompt([
       {
         type: 'confirm',
@@ -294,7 +294,7 @@ class Release extends Base {
             name: 'saved',
             message: 'Saved changes?',
             when: !confirmReqs,
-          }])
+          }]);
       });
   }
 
@@ -303,7 +303,7 @@ class Release extends Base {
   }
 
   async _prepareRequirements(known, requirements) {
-    this.log(logSymbols.info, chalk.bold('Calculating requirements... '))
+    this.log(logSymbols.info, chalk.bold('Calculating requirements... '));
     return this.requirements = await Promise.all(known.map(async (d) => {
       const regex = /datavisyn|phovea|caleydo/;
       const org = d.match(regex)[0];
@@ -320,12 +320,12 @@ class Release extends Base {
         version: version.version,
         rawVersion: version.rawVersion,
         token
-      }
-    }))
+      };
+    }));
   }
 
   _parsePyPiVersion(versionString, org) {
-    const regex = new RegExp(`${org}/(.*).git`)
+    const regex = new RegExp(`${org}/(.*).git`);
     return versionString.match(regex)[1];
   }
 
@@ -334,7 +334,7 @@ class Release extends Base {
       url: `https://pypi.org/pypi/${name.replace('_', '-')}/json`,
     };
     return rp(options)
-      .then((d) => JSON.parse(d)).then(({info}) => info.version)
+      .then((d) => JSON.parse(d)).then(({info}) => info.version);
   }
 
   _getRequirementVersion(name, raw, org, token) {
@@ -342,9 +342,9 @@ class Release extends Base {
       .then((version) => {
         return {rawVersion: version, version: `${name}>=${version},<${semver.valid(semver.coerce(parseInt(version) + 1))}`};
       }).catch(async () => {
-        const version = await this._getGithubVersion({name, org}, token)
-        return {rawVersion: version, version: `${raw}@${version}#egg=${name}`}
-      })
+        const version = await this._getGithubVersion({name, org}, token);
+        return {rawVersion: version, version: `${raw}@${version}#egg=${name}`};
+      });
   }
 
   /**
@@ -353,10 +353,10 @@ class Release extends Base {
    */
   _collectReleaseNotes() {
     const pullRequestsDescriptions = this._spawnOnHost('git', ['log', 'origin/master..develop', '--merges', '--pretty=format:"%s']).split('\n');
-    const pullRequestsTitles = this._spawnOnHost('git', ['log', 'origin/master..develop', '--merges', '--pretty=format:"%b']).split('\n')
+    const pullRequestsTitles = this._spawnOnHost('git', ['log', 'origin/master..develop', '--merges', '--pretty=format:"%b']).split('\n');
     const pullRequestsNumbers = this._extractPullRequestsNumbers(pullRequestsDescriptions);
     this.releaseNotes = this._formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers, `${this.organization}/${this.repository}`);
-    return Promise.resolve(this.releaseNotes)
+    return Promise.resolve(this.releaseNotes);
   }
 
   /**
@@ -367,8 +367,8 @@ class Release extends Base {
    */
   _formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers, repo) {
     const title = pullRequestsTitles.filter((title) => title.trim() && title.trim().length > 2) // remove empty strings and invalid titles
-      .map((message) => message.replace('"', '')) // `git log` creates extra newline characters and quotes
-    return title.map((t, i) => `* ${t} (${repo}#${pullRequestsNumbers[i]})`).join('\n')
+      .map((message) => message.replace('"', '')); // `git log` creates extra newline characters and quotes
+    return title.map((t, i) => `* ${t} (${repo}#${pullRequestsNumbers[i]})`).join('\n');
   }
 
   // /**
@@ -378,8 +378,8 @@ class Release extends Base {
   _extractPullRequestsNumbers(pullRequestsDescriptions) {
     return this.issueNumbers = pullRequestsDescriptions
       .map((description) => {
-        const number = /(?:#)(\d+)/g.exec(description) // match number that comes after `#`
-        return number ? number[1] : null
+        const number = /(?:#)(\d+)/g.exec(description); // match number that comes after `#`
+        return number ? number[1] : null;
       })
       .filter((number) => number != null); // filter empty values
   }
@@ -411,7 +411,7 @@ class Release extends Base {
     const result = await this._determineReleaseVersion(release);
     this.release = result.release;
     this.version = result.version;
-    return this.branch = `release-test-${this.version}`
+    return this.branch = `release-test-${this.version}`;
   }
 
   /**
@@ -427,17 +427,17 @@ class Release extends Base {
           'User-Agent': 'request'
         }
       };
-      return rp(options).then((d) => JSON.parse(d))
-    }))
+      return rp(options).then((d) => JSON.parse(d));
+    }));
     return this.releaseLabels = [].concat.apply([], allLabels)
       .filter((label) => label.name.trim().startsWith('release:'))
-      .map((s) => s.name.replace('release:', '').trim())
+      .map((s) => s.name.replace('release:', '').trim());
   }
 
 
   _calculateVersion(version, release) {
     const semver = require('semver');
-    return semver.inc(version, release)
+    return semver.inc(version, release);
   }
 
   /**
@@ -474,25 +474,25 @@ class Release extends Base {
           validate: (version) => this._validateReleaseVersion(version, originalVersion),
           default: version,
         }]).then(({newTag}) => {
-          this.log(logSymbols.info, 'New Version: ' + chalk.cyan(newTag))
-          return {release: semver.diff(newTag, originalVersion), version: newTag}
-        })
+          this.log(logSymbols.info, 'New Version: ' + chalk.cyan(newTag));
+          return {release: semver.diff(newTag, originalVersion), version: newTag};
+        });
       }
-      return {version, release}
-    })
+      return {version, release};
+    });
   }
 
   _validateReleaseVersion(version, originalVersion) {
     if (semver.valid(version) && semver.gta(version, originalVersion)) {
-      return true
+      return true;
     }
-    return `Please enter a valid and greater than current ${originalVersion} version (i.e, 4.0.0)`
+    return `Please enter a valid and greater than or equal to ${originalVersion} version (i.e, 4.0.0)`;
   }
 
 
   _writeNewVersion() {
-    this.pkg.version = this.version
-    return Promise.resolve().then(() => fs.writeJsonSync(`package.json`, this.pkg, {spaces: 2}))
+    this.pkg.version = this.version;
+    return Promise.resolve().then(() => fs.writeJsonSync(`package.json`, this.pkg, {spaces: 2}));
   }
 
   /**
@@ -530,7 +530,7 @@ class Release extends Base {
    * @param {string} cwd optional directory
    */
   _spawn(cmd, argline, cwd) {
-    const options = cwd || {}
+    const options = cwd || {};
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -546,7 +546,7 @@ class Release extends Base {
    * Prompt user to edit the release notes.
    */
   _editReleaseNotes() {
-    this.log(`\n${chalk.bold('Release Notes:')}\n${chalk.italic(this.releaseNotes)}\n`)
+    this.log(`\n${chalk.bold('Release Notes:')}\n${chalk.italic(this.releaseNotes)}\n`);
     return this.prompt([
       {
         type: 'editor',
@@ -556,7 +556,7 @@ class Release extends Base {
       }
     ]).then(({releaseNotes}) => {
       this.releaseNotes = releaseNotes;
-    })
+    });
   }
 
   /**
@@ -575,27 +575,13 @@ class Release extends Base {
     this.log(chalk.bold(`Commit changes:`), chalk.italic(`git ${line}`));
 
     const filesToCommit = this.requirements ? ['package.json', 'CHANGELOG.md', 'requirements.txt'] : ['package.json', 'CHANGELOG.md'];
-    return this._spawnOrAbort('git', ['add', ...filesToCommit], null).then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release-${this.version}`], null))
+    return this._spawnOrAbort('git', ['add', ...filesToCommit], null).then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release-${this.version}`], null));
   }
 
   _pushBranch(branch) {
     const line = `push origin ${branch}`;
     this.log(chalk.bold(`Push branch:`), chalk.italic(`git ${line}`));
     return Promise.resolve().then(() => this._spawnOnHost('git', line.split(' ')));
-  }
-
-  async _getReviewersList() {
-    const token = this._getAccessToken(this.data.repoName)
-    const options = {
-      url: `https://${token.name}:${token.token}@api.github.com/orgs/datavisyn/teams/dev/members`,
-      headers: {
-        'User-Agent': 'request'
-      },
-      role: 'admin'
-    };
-    return this.data.members = await rp(options).then((d) => JSON.parse(d)).then((b) => {
-      return b.map((d) => d.login)
-    });
   }
 
   /**
@@ -615,9 +601,9 @@ class Release extends Base {
       }
       return this._getReviewersList()
         .then(async (assignees) => {
-          return this._chooseAssignees(assignees)
-        })
-    })
+          return this._chooseAssignees(assignees);
+        });
+    });
   }
 
   async _getReviewersList() {
@@ -629,7 +615,7 @@ class Release extends Base {
       role: 'admin'
     };
     return rp(options).then((d) => JSON.parse(d)).then((b) => {
-      return b.map((d) => d.login)
+      return b.map((d) => d.login);
     });
   }
 
@@ -645,13 +631,13 @@ class Release extends Base {
   }
 
   _getReleaseTemplate() {
-    const releaseTemplate = this.fs.read(this.templatePath(`release.md`))
-    const merged = releaseTemplate.replace('*List of addressed issues and PRs since the last release*', this.releaseNotes)
+    const releaseTemplate = this.fs.read(this.templatePath(`release.md`));
+    const merged = releaseTemplate.replace('*List of addressed issues and PRs since the last release*', this.releaseNotes);
     return merged;
   }
 
   _createPullRequest(title, base, head, template) {
-    this.log(chalk.bold('Drafting Pull Request...'))
+    this.log(chalk.bold('Drafting Pull Request...'));
     const postOptions = {
       method: 'POST',
       uri: `https://${this.token.name}:${this.token.token}@api.github.com/repos/${this.baseName}/pulls`,
@@ -666,12 +652,12 @@ class Release extends Base {
       },
       json: true
     };
-    this.log(postOptions)
+    this.log(postOptions);
     return rp(postOptions).then((d) => {
-      return d.number
+      return d.number;
     })
       .then((prNumber) => this._setLabels(prNumber))
-      .then((prNumber) => this._setAssignees(prNumber))
+      .then((prNumber) => this._setAssignees(prNumber));
   }
 
   _setLabels(prNumber) {
@@ -700,7 +686,7 @@ class Release extends Base {
         'User-Agent': 'request'
       },
       json: true
-    }
+    };
     this.log(chalk.bold('Open Pull Request in browser: ') + `https://github.com/${this.baseName}/pull/${prNumber}`);
     return rp(assigneeOptions).then(() => prNumber);
   }
@@ -725,7 +711,6 @@ class Release extends Base {
         return Promise.reject(msg);
       });
   }
-
 }
 
 module.exports = Release;
