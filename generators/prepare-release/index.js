@@ -39,6 +39,9 @@ class Release extends Base {
     return this._getAccessTokens();
   }
 
+ /**
+  * Prompt user to enter github tokens and store them.
+  */
   _getAccessTokens() {
     return this.prompt([
       {
@@ -61,13 +64,18 @@ class Release extends Base {
     ]).then(({datavisyn, caleydo}) => {
       this.datavisyn = {name: 'datavisyn-bot', token: datavisyn};
       this.caleydo = {name: 'caleydo-bot', token: caleydo};
-      this.token = this._isDatavisynRepo(this.organization) ? this.datavisyn : this.caleydo;
+      this.token = this._isDatavisynRepo(this.organization) ? this.datavisyn : this.caleydo; // store the token needed to draft a PR for this repository
     });
   }
 
+ /**
+  * Check if this is a datavisyn repository.
+  * @param {string} organization  i.e:,`phovea`
+  */
   _isDatavisynRepo(org) {
     return org === 'datavisyn';
   }
+
 
   /**
    * Read the name of the package from `package.json`.
@@ -78,24 +86,23 @@ class Release extends Base {
   }
 
   /**
-   * Read the url of the package and parse it to get the github organization, i.e, `phovea`, or `caleydo`,`datavisyn`.
+   * Read the url of the package and parse it to get the github organization, i.e:, `phovea`, or `caleydo`,`datavisyn`.
    */
   _getOrganization() {
     const {repository} = this.fs.readJSON('package.json');
-    // const regex = new RegExp(`https:\/\/github.com\/(.*)\/${this.repository}`); // parse organization link to get organization, i.e, `phovea`
     const regex = /datavisyn|phovea|caleydo/;
-    return repository.url.toLowerCase().match(regex)[0];
+    return repository.url.toLowerCase().match(regex)[0]; // lowercase necessary since url can be `https://github.com/Caleydo/ordino.git`
   }
 
   /**
-   * Check that the current branch is not the develop branch.
+   * Confirm the current branch is not the develop branch.
    */
   _isNotDevelopBranch() {
     return this._spawnOnHost('git', ['rev-parse', '--abbrev-ref', 'HEAD']) !== 'develop';
   }
 
   /**
-   * Check that the current directory has no `.yo-rc.json` file.
+   * Confirm current directory has no `.yo-rc.json` file, therefore not valid to release.
    */
   _notValidRepository() {
     return !fs.existsSync('.yo-rc.json');
@@ -103,7 +110,7 @@ class Release extends Base {
 
   /**
    * Read dependencies, filter out third party ones and get their latest versions.
-   * @param {}knownDeps datavisyn, caleydo
+   * @param {string[]}knownDeps Array containing the known dependencies of package.json, i.e:,`tdp_core`
    */
   async _prepareDependencies(knownDeps, dependencies) {
     this.log(logSymbols.info, chalk.bold('Calculating dependencies...'));
@@ -116,9 +123,8 @@ class Release extends Base {
 
   /**
    * Parse dependency's version and get the github organization.
-   * Example: `github:datavisyn/tdp_core#develop` -->`datavisyn`.
    * @param {string} dependencyName Name of the dependency.
-   * @param {*} versionString Version string to be parsed.
+   * @param {string} versionString Version string to be parsed, i.e:, `github:datavisyn/tdp_core#develop`.
    */
   _getDependencyOrg(dependencyName, versionString) {
     const regex = new RegExp(`github:(.*)\/${dependencyName}`);
@@ -127,7 +133,7 @@ class Release extends Base {
 
   /**
    * Check if dependency has `datavisyn`,`caleydo`,`phovea` in it's version string.
-   * @param {string} versionString Version as read from pkg.json.
+   * @param {string} versionString Version string, i.e:, `github:datavisyn/tdp_core#develop`
    */
   _isKnownDependency(versionString) {
     versionString = versionString.toLowerCase();
@@ -143,10 +149,10 @@ class Release extends Base {
    */
 
   /**
-   * Get latest version from `npm` if it is published.
-   * Get it from github if not.
-   * @param {Object<string,string>[]} dependencies Non third party dependencies
-   * @returns {Promise<Dependency[]>}
+   * Get latest versions of dependencies.
+   * From `npm` if published, otherwise from github.
+   * @param {Object<string,string>[]} dependencies Known dependencies
+   * @returns {Promise< Dependency[] >}
    */
   _getDependenciesVersion(dependencies) {
     return Promise.all(dependencies.map((dependency) => {
@@ -168,7 +174,8 @@ class Release extends Base {
 
   /**
    * Get latest version of repo from github.
-   * @param {Object<string,string>} dependency
+   * @param {Dependency} dependency
+   * @param {{name:string,token:string}} token
    */
   _getGithubVersion(dependency, token) {
     const authString = token ? `${token.name}:${token.token}@` : '';
@@ -192,6 +199,11 @@ class Release extends Base {
     }
   }
 
+ /**
+  * Replace known dependencies versions with the new ones
+  * @param {Dependency[]} updatedDeps
+  * @param {*} pkg
+  */
   _writeDependencies(updatedDeps, pkg) {
     Object.keys(updatedDeps).forEach((dep) => {
       pkg.dependencies[dep] = updatedDeps[dep];
@@ -199,10 +211,20 @@ class Release extends Base {
     this.pkg = pkg;
     return Promise.resolve().then(() => fs.writeJsonSync(`package.json`, this.pkg, {spaces: 2}));
   }
+
+  /**
+   * Utility to transform array of objects to object.
+   * @param {Dependency[]} deps
+   */
   _toObject(deps) {
     return deps.reduce((acc, dep) => (acc[dep.name] = dep.version, acc), {});
   }
 
+/**
+ * Show user the changed dependencies.
+ * Prompt user to confirm changes or open Visual Studio Code to edit.
+ * @param {Dependency[]} dependencies
+ */
   _confirmDependencies(dependencies) {
     this._logDependencies(dependencies);
     return this.prompt([
@@ -227,6 +249,10 @@ class Release extends Base {
       });
   }
 
+/**
+ *  Logs changed dependencies with style.
+ * @param {Dependency[]} dependencies
+ */
   _logDependencies(dependencies) {
     this.log(chalk.bold('The dependencies in package.json have been updated: \n'));
     this.log((dependencies.map((d) => chalk.red.bold('- ') + chalk.red(`${d.name}: ${d.originalVersion}`) + '\n' + chalk.green.bold('+ ') + chalk.green(`${d.name}: ${d.version}`)).join('\n')) + '\n');
@@ -238,7 +264,6 @@ class Release extends Base {
   _runForFrontend() {
     const pkg = this.fs.readJSON('package.json');
     const {dependencies} = pkg;
-    if (dependencies) {
       const knownDeps = this._knownDependencies(dependencies);
       if (knownDeps) {
         return Promise.resolve()
@@ -246,7 +271,6 @@ class Release extends Base {
           .then((updatedDeps) => this._writeDependencies(this._toObject(updatedDeps), pkg))
           .then(() => this._confirmDependencies(this.dependencies));
       }
-    }
 
     return Promise.resolve();
   }
@@ -269,11 +293,56 @@ class Release extends Base {
     return Promise.resolve();
   }
 
+  /**
+   * @typedef {Object} Requirement
+   * @property {string} raw Raw name of requirement as read from requirements.txt, i.e:,`-e git+https://github.com/phovea/phovea_server.git`.
+   * @property {string} name Name of requirement.
+   * @property {string} org Organization.
+   * @property {string} originalVersion Latest github/PyPi version, i.e:, `5.0.0`.
+   * @property {string} version Formatted version, i.e:, `>=5.0.0,<6.0.0`.
+   * @property {Object<name:string,token:string>} token Matching caleydo/datavisyn token depending on organization.
+   */
+
+ /**
+  * Prepare/transform requirements into a useful data structure.
+  * @param {Object[]} known
+  * @param {Object<string,string>} requirements
+  * @returns {Requirement[]}
+  */
+  async _prepareRequirements(known, requirements) {
+    this.log(logSymbols.info, chalk.bold('Calculating requirements... '));
+    return this.requirements = await Promise.all(known.map(async (d) => {
+      const regex = /datavisyn|phovea|caleydo/;
+      const org = d.match(regex)[0];
+      const name = this._parsePyPiVersion(d, org);
+      const token = this._isDatavisynRepo(org) ? this.datavisyn : null;
+      const version = await this._getRequirementVersion(name, d, org, token);
+      return {
+        raw: d,
+        org,
+        name,
+        originalVersion: requirements[d],
+        version: version.version,
+        rawVersion: version.rawVersion,
+        token
+      };
+    }));
+  }
+
+ /**
+ *  Logs changed requirements with style.
+ * @param {Requirement[]} dependencies
+ */
   _logRequirements(requirements) {
     this.log(chalk.bold('The requirements in requirements.tx have been updated: \n'));
     this.log((requirements.map((d) => chalk.red('- ') + chalk.red(d.raw + d.originalVersion) + '\n' + chalk.green.bold('+ ') + chalk.green(d.version) + '\n').join('\n')) + '\n');
   }
 
+ /**
+ * Show user the changed Requirements.
+ * Prompt user to confirm changes or open Visual Studio Code to edit.
+ * @param {Requirement[]} requirements
+ */
   _confirmRequirements(requirements) {
     this._logRequirements(requirements);
     return this.prompt([
@@ -297,38 +366,30 @@ class Release extends Base {
           }]);
       });
   }
-
+/**
+ * Write updated requirements to `requirements.txt`
+ * @param {[]} known
+ * @param {*} rest
+ */
   _writeRequirements(known, rest) {
     return Promise.resolve(1).then(() => fs.writeFileSync('requirements.txt', [...known, ...rest].join('\n')));
   }
 
-  async _prepareRequirements(known, requirements) {
-    this.log(logSymbols.info, chalk.bold('Calculating requirements... '));
-    return this.requirements = await Promise.all(known.map(async (d) => {
-      const regex = /datavisyn|phovea|caleydo/;
-      const org = d.match(regex)[0];
-      const name = this._parsePyPiVersion(d, org);
-      const token = this._isDatavisynRepo(org) ? this.datavisyn : null;
-
-      const version = await this._getRequirementVersion(name, d, org, token);
-
-      return {
-        raw: d,
-        org,
-        name,
-        originalVersion: requirements[d],
-        version: version.version,
-        rawVersion: version.rawVersion,
-        token
-      };
-    }));
-  }
-
+ /**
+  * Parse requirements version string to get the name of the requirement.
+  * Example from `-e git+https://github.com/phovea/phovea_server.git` get `phovea_server`.
+  * @param {string} versionString
+  * @param {*} org Organization name.
+  */
   _parsePyPiVersion(versionString, org) {
     const regex = new RegExp(`${org}/(.*).git`);
     return versionString.match(regex)[1];
   }
 
+ /**
+  * Query Python registry if
+  * @param {string} name
+  */
   _getPyPiVersion(name) {
     const options = {
       url: `https://pypi.org/pypi/${name.replace('_', '-')}/json`,
@@ -371,20 +432,23 @@ class Release extends Base {
     return title.map((t, i) => `* ${t} (${repo}#${pullRequestsNumbers[i]})`).join('\n');
   }
 
-  // /**
-  //  * Extract Numbers from Pull Requests titles.
-  //  * @param {string []} pullRequests
-  //  */
+  /**
+   * Extract pull requests numbers.
+   * @param {string []} pullRequestsDescriptions
+   */
   _extractPullRequestsNumbers(pullRequestsDescriptions) {
     return this.issueNumbers = pullRequestsDescriptions
       .map((description) => {
         const number = /(?:#)(\d+)/g.exec(description); // match number that comes after `#`
         return number ? number[1] : null;
       })
-      .filter((number) => number != null); // filter empty values
+      .filter((number) => number != null); // filter empty values if any
   }
 
 
+ /**
+  * Check if one dependencies/requirements latest release was a major.
+  */
   _hasMajorReleasedDependency() {
     const dependencies = this.dependencies || [];
     const requirements = this.requirements || [];
@@ -392,18 +456,16 @@ class Release extends Base {
   }
 
   /**
-   * Calculate if release is `major`,`minor`,`patch`.
+   * Calculate if next release should be  `major`,`minor`,`patch`.
    */
   async _getReleaseTag() {
     let release;
     if (this._hasMajorReleasedDependency()) {
       release = 'major';
-      // this.log(logSymbols.info, 'Next release:', chalk.cyan.bold(release), `(One or more dependencies latest tag is a major)`);
     } else {
       const labels = await this._getGitLabels(this.issueNumbers);
       if (labels.length) {
         release = labels.includes('major') ? 'major' : labels.includes('minor') ? 'minor' : 'patch';
-        // this.log(logSymbols.info, 'Next release:', chalk.cyan.bold(release), `Computed from the labels set on PRs`);
       } else {
         throw new Error('No release labels were found on Pull Requests:\nPlease add at least one release label in one of the Pull Requests'); // labels empty throw error
       }
@@ -411,12 +473,12 @@ class Release extends Base {
     const result = await this._determineReleaseVersion(release);
     this.release = result.release;
     this.version = result.version;
-    return this.branch = `release-test-${this.version}`;
+    return this.branch = `release-${this.version}`;
   }
 
   /**
   * Get the release labels of the Pull Requests numbers that have been merged into develop.
-  * @param {string []} issueNumbers Array containing the Pull Requests numbers that have been merged into develop.
+  * @param {string []} issueNumbers Array containing the Pull Requests numbers.
   * @param {string} baseName Current repository, i.e., `phovea/phovea_server`
   */
   async _getGitLabels(issueNumbers, baseName) {
@@ -435,6 +497,11 @@ class Release extends Base {
   }
 
 
+ /**
+  * Compute next version from release type
+  * @param {string} version Version string, i.e:, `5.0.0`
+  * @param {string} release Release type `major`, `patch`. `minor`
+  */
   _calculateVersion(version, release) {
     const semver = require('semver');
     return semver.inc(version, release);
@@ -455,8 +522,10 @@ class Release extends Base {
 
   /**
    * Allow user to change release version.
-   * @param {*} version
-   * @param {*} release
+   * Validate user input.
+   * @param {string} version
+   * @param {string} release
+   * @param {string} originalVersion
    */
   _editReleaseVersion(version, release, originalVersion) {
     return this.prompt([
@@ -471,7 +540,7 @@ class Release extends Base {
           type: 'input',
           name: 'newTag',
           message: `Enter release version`,
-          validate: (version) => this._validateReleaseVersion(version, originalVersion),
+          validate: (version) => this._validateReleaseVersion(version),
           default: version,
         }]).then(({newTag}) => {
           this.log(logSymbols.info, 'New Version: ' + chalk.cyan(newTag));
@@ -482,14 +551,24 @@ class Release extends Base {
     });
   }
 
-  _validateReleaseVersion(version, originalVersion) {
-    if (semver.valid(version) && semver.gta(version, originalVersion)) {
-      return true;
+/**
+ * Validate if version is a valid semver version and greater or equal than current package.json version.
+ * @param {string} version
+ * @param {string} originalVersion
+ * @returns {true| string} Return invalid message if version invalid
+ */
+  _validateReleaseVersion(version) {
+    if (semver.valid(version)) {
+        return true;
+
+    } else {
+      return `Please enter a valid version)`;
     }
-    return `Please enter a valid and greater than or equal to ${originalVersion} version (i.e, 4.0.0)`;
   }
 
-
+/**
+ * Update version in package.json.
+ */
   _writeNewVersion() {
     this.pkg.version = this.version;
     return Promise.resolve().then(() => fs.writeJsonSync(`package.json`, this.pkg, {spaces: 2}));
@@ -524,10 +603,10 @@ class Release extends Base {
   }
 
   /**
-   *executes a command line cmd
-   * @param {string} cmd command to execute
-   * @param {array} argline cmd arguments
-   * @param {string} cwd optional directory
+   * Executes a command line cmd.
+   * @param {string} cmd command to execute.
+   * @param {array} argline cmd arguments.
+   * @param {string} cwd optional directory.
    */
   _spawn(cmd, argline, cwd) {
     const options = cwd || {};
@@ -535,7 +614,7 @@ class Release extends Base {
   }
 
   /**
-   * reject promise with error message
+   * Reject promise with error message.
    * @param {string} msg
    */
   _abort(msg) {
@@ -570,6 +649,9 @@ class Release extends Base {
     return Promise.resolve().then(() => fs.writeFileSync(path, mergedChangelog));
   }
 
+/**
+ * Commit changes made to `requirements.txt`, `package.json` and `CHANGELOG.md`.
+ */
   _commitFiles() {
     const line = `commit -am "prepare release-${this.version}"`;
     this.log(chalk.bold(`Commit changes:`), chalk.italic(`git ${line}`));
@@ -578,6 +660,10 @@ class Release extends Base {
     return this._spawnOrAbort('git', ['add', ...filesToCommit], null).then(() => this._spawnOrAbort('git', ['commit', '-am', `prepare release-${this.version}`], null));
   }
 
+/**
+ * Push current branch.
+ * @param {string} branch
+ */
   _pushBranch(branch) {
     const line = `push origin ${branch}`;
     this.log(chalk.bold(`Push branch:`), chalk.italic(`git ${line}`));
@@ -585,7 +671,7 @@ class Release extends Base {
   }
 
   /**
-  * Get username to send api calls to github
+  * Get pull request assignee from using git config or choose from members of the datavisyn `dev' team.
   */
   async _getAssignees() {
     const gitUser = this._spawnOnHost('git', ['config', 'user.name']);
@@ -599,14 +685,17 @@ class Release extends Base {
       if (keepUser) {
         return [gitUser];
       }
-      return this._getReviewersList()
+      return this._getAssigneesList()
         .then(async (assignees) => {
           return this._chooseAssignees(assignees);
         });
     });
   }
 
-  async _getReviewersList() {
+ /**
+  * Get members of the datavisyn `dev' team.
+  */
+  async _getAssigneesList() {
     const options = {
       url: `https://${this.datavisyn.name}:${this.datavisyn.token}@api.github.com/orgs/datavisyn/teams/dev/members`,
       headers: {
@@ -619,6 +708,10 @@ class Release extends Base {
     });
   }
 
+  /**
+   * Prompt user to choose assignee.
+   * @param {string[]} assignees
+   */
   _chooseAssignees(assignees) {
     return this.prompt([{
       type: 'checkbox',
@@ -630,12 +723,22 @@ class Release extends Base {
     });
   }
 
+ /**
+  * Read `release.md` template and append release notes to it.
+  */
   _getReleaseTemplate() {
     const releaseTemplate = this.fs.read(this.templatePath(`release.md`));
     const merged = releaseTemplate.replace('*List of addressed issues and PRs since the last release*', this.releaseNotes);
     return merged;
   }
 
+ /**
+  * Create a pull request with the following parameters.
+  * @param {string} title Pull request title
+  * @param {string} base Base branch, usually master
+  * @param {string} head Head branch, usually release-<version>
+  * @param {string} template Content of the pull request
+  */
   _createPullRequest(title, base, head, template) {
     this.log(chalk.bold('Drafting Pull Request...'));
     const postOptions = {
@@ -660,6 +763,10 @@ class Release extends Base {
       .then((prNumber) => this._setAssignees(prNumber));
   }
 
+ /**
+  * Add release label to pull request.
+  * @param {string} prNumber
+  */
   _setLabels(prNumber) {
     const postOptions = {
       method: 'POST',
@@ -675,6 +782,10 @@ class Release extends Base {
     return rp(postOptions).then(() => prNumber);
   }
 
+ /**
+  * Add assignees to pull request.
+  * @param {string} prNumber
+  */
   _setAssignees(prNumber) {
     const assigneeOptions = {
       method: 'POST',
@@ -714,3 +825,4 @@ class Release extends Base {
 }
 
 module.exports = Release;
+
