@@ -9,56 +9,22 @@ var rp = require('request-promise');
 // const semver = require('semver');
 // const {parseRequirements} = require('../../utils/pip');
 const logSymbols = require('log-symbols');
-// const {toBaseName, findBase, findName, toCWD, failed} = require('../../utils/release');
+const {toBaseName, findBase, findName, toCWD, failed} = require('../../utils/release');
 
 
 class Generator extends BaseRelease {
   constructor(args, options) {
     super(args, options)
-    this.data = options.data
   }
 
-  _publishToNpm() {
-    //Context is inside the docker container
-    //`cd /phovea`
-    //`npm install`
-    //`npm run build:web`
-    //`npm login` Open question: Where do we we keep the npm login in circleci
-    // `npm publish`
-  }
-  _publishToPip() {
-    //Context is inside the docker container
-    //`cd /phovea`
-    //`sudo pip install -r requirements.txt && sudo pip install -r requirements_dev.txt && sudo pip install twine`
-    //`npm run dist:python`
-    //Ensure only two files are in the dist directory (*.whl and *.tar.gz)
-    //Ensure that both files contain the new version number
-    //`twine upload --repository-url https://upload.pypi.org/legacy/ dist/*`
-    //`Login with caleydo-bot` Open question: Where do we we keep the npm login in circleci
-    // `npm publish`
-  }
-
-  _publish() {
-    //separate generators are gonna publish to npm or pip
-    // const publishTo = this.data.publish
-    // if (publishTo) {
-    //   if (publishTo.npm) {
-    //     this._publishToNpm()
-    //   } else if (publishTo.pip) {
-    //     this._publishToPip()
-    //   }
-    // } else {
-    //   this._logVerbose(chalk.cyan(`Skipping publishing to Pip and npm`))
-    // }
-  }
   _createRelease() {
     this._logVerbose([chalk.cyan(`Drafting github release v${this.data.version} `), chalk.italic(`GET https://${this.data.gitUser}:**************************@api.github.com/repos/${this.data.repo}/releases`)]);
     const postOptions = {
       method: 'POST',
       uri: `https://${this.data.gitUser}:${this.data.accessToken.current}@api.github.com/repos/${this.data.repo}/releases`,
       body: {
-        tag_name: 'vssss' + this.data.version,
-        name: 'vssss' + this.data.version,
+        tag_name: 'v' + this.data.version,
+        name: 'v' + this.data.version,
         body: this.data.changelog,
       },
       headers: {
@@ -111,13 +77,12 @@ class Generator extends BaseRelease {
 
   writing() {
     Promise.resolve(1)
-      // .then(() => this._publish())//TODO
-      // .then(() => this._createRelease())//Done!
-      .then(() => this._checkoutBranch('-t origin/master', this.data))
-      .then(() => this._checkoutBranch('develop', this.data))
-      .then(() => this._merge('origin/master', this.data))
-      .then(() => this._prepareNextDevPackage(this.data))
-      .then(() => this._pushBranch('develop', this.data))
+      .then(() => this._createRelease())//Done!
+      // .then(() => this._checkoutBranch('-t origin/master', this.data))
+      // .then(() => this._checkoutBranch('develop', this.data))
+      // .then(() => this._merge('origin/master', this.data))
+      // .then(() => this._prepareNextDevPackage(this.data))
+      // .then(() => this._pushBranch('develop', this.data))
     //.then(()=>this._pushToDevelop())
   }
 }
