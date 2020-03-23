@@ -29,6 +29,7 @@ module.exports = {
     "json",
     "node"
   ],
+  testURL: "http://localhost",
   modulePaths: [
     "src",
     "../node_modules",
