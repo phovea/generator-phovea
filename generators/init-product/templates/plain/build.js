@@ -14,7 +14,7 @@ const quiet = argv.quiet !== undefined;
 
 const now = new Date();
 const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
-const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth())}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
+const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth()+1)}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
 pkg.version = pkg.version.replace('SNAPSHOT', buildId);
 const env = Object.assign({}, process.env);
 const productName = pkg.name.replace('_product', '');
@@ -635,6 +635,13 @@ function installWebDependencies(p) {
   return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'install');
 }
 
+function showWebDependencies(p) {
+  // `npm ls` fails if some peerDependencies are not installed
+  // since this function is for debug purposes only, we catch possible errors of `npm()` and resolve it with status code `0`.
+  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'list --depth=1')
+    .catch(() => Promise.resolve(0)) // status code = 0
+}
+
 function cleanUpWebDependencies(p) {
   return fs.emptyDirAsync(p.additional.length > 0 ? `${p.tmpDir}/node_modules` : (`${p.tmpDir}/${p.name}/node_modules`));
 }
@@ -670,6 +677,12 @@ function installPythonTestDependencies(p) {
   console.log(chalk.yellow('create test environment'));
   return spawn('pip', 'install --no-cache-dir -r requirements.txt', {cwd: p.tmpDir})
     .then(() => spawn('pip', 'install --no-cache-dir -r requirements_dev.txt', {cwd: p.tmpDir}));
+}
+
+function showPythonTestDependencies(p) {
+  // since this function is for debug purposes only, we catch possible errors and resolve it with status code `0`.
+  return spawn('pip', 'list', {cwd: p.tmpDir})
+    .catch(() => Promise.resolve(0)) // status code = 0
 }
 
 function buildServer(p) {
@@ -797,13 +810,17 @@ if (require.main === module) {
       }
     }
 
-    const needsWorskpace = (isWeb && hasAdditional) || isServer;
-    steps[`prepare:${suffix}`] = needsWorskpace ? () => catchProductBuild(p, createWorkspace(p)) : null;
+    const needsWorkspace = (isWeb && hasAdditional) || isServer;
+    if(needsWorkspace) {
+      steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p));
+    }
 
     if (isWeb) {
       steps[`install:${suffix}`] = () => catchProductBuild(p, installWebDependencies(p));
+      steps[`show:${suffix}`] = () => catchProductBuild(p, showWebDependencies(p));
     } else { // server
       steps[`install:${suffix}`] = argv.skipTests ? () => null : () => catchProductBuild(p, installPythonTestDependencies(p));
+      steps[`show:${suffix}`] = () => catchProductBuild(p, showPythonTestDependencies(p));
     }
     steps[`test:${suffix}`] = isWeb && hasAdditional ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => null;
     steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildWeb(p))) : () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildServer(p)));
@@ -812,8 +829,12 @@ if (require.main === module) {
     steps[`image:${suffix}`] = () => catchProductBuild(p, buildDockerImage(p));
     steps[`save:${suffix}`] = () => catchProductBuild(p, dockerSave(p.image, `build/${p.label}_image.tar.gz`));
 
-    subSteps.push(`prepare:${suffix}`);
+    if(needsWorkspace) {
+      subSteps.push(`prepare:${suffix}`);
+    }
     subSteps.push(`install:${suffix}`);
+    subSteps.push(`show:${suffix}`);
+
     if (!argv.skipTests) {
       subSteps.push(`test:${suffix}`);
     }
@@ -837,7 +858,7 @@ if (require.main === module) {
   // create some meta steps
   {
     const stepNames = Object.keys(steps);
-    for (const meta of ['clone', 'prepare', 'build', 'test', 'postbuild', 'image', 'product', 'install']) {
+    for (const meta of ['clone', 'prepare', 'build', 'test', 'postbuild', 'image', 'product', 'install', 'show']) {
       const sub = stepNames.filter((d) => d.startsWith(`${meta}:`));
       if (sub.length <= 0) {
         continue;
