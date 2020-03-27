@@ -1,4 +1,4 @@
-/// <reference types="jasmine" />
+/// <reference types="jest" />
 import {create} from '../src/app';
 
 describe('create', () => {
