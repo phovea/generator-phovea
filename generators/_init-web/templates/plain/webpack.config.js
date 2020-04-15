@@ -55,7 +55,9 @@ const tsLoaderDev = [
     options: {
       happyPackMode: true, // IMPORTANT! use happyPackMode mode to speed-up compilation and reduce errors reported to webpack,
       compilerOptions: {
-        target: 'es6'
+        target: 'es6',
+        jsx: 'react',
+        jsxFactory: 'h',
       }
     }
   }
@@ -185,7 +187,7 @@ function generateWebpack(options) {
         'process.env.NODE_ENV': JSON.stringify(options.isProduction ? 'production' : 'development'),
         __VERSION__: JSON.stringify(pkg.version),
         __LICENSE__: JSON.stringify(pkg.license),
-        __BUILD_ID__: buildId,
+        __BUILD_ID__: JSON.stringify(buildId),
         __DEBUG__: options.isDev || options.isTest,
         __TEST__: options.isTest,
         __PRODUCTION__: options.isProduction,
