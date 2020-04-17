@@ -63,10 +63,21 @@ class PackageJSONGenerator extends Base {
       name: 'name',
       message: 'Plugin Name',
       default: this.config.get('name'),
-      filter: _.snakeCase
+      validate: this._hasNoWhitespace, // check if plugin name has no white space between
+      filter: (name) => name.trim() // filter white space around plugin name
     }]).then((props) => {
       this.config.set('name', props.name);
     });
+  }
+
+  /**
+   * Check if string is one continuous word with no spaces
+   * i.e _hasNoWhiteSpace('my app')--> false
+   * @param {string} string
+   * @returns {boolean|string} Returns true if the given string does not contain white spaces. Otherwise it returns an error message string.
+   */
+  _hasNoWhitespace(string) {
+    return string.trim().indexOf(' ') === -1 || 'The plugin name must not contain whitespace. Please use a dash (-) or an underscore (_) as separator.';
   }
 
   _promptDescription() {
