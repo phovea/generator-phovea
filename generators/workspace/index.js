@@ -82,13 +82,7 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version', {}, {
-      local: require.resolve('../check-node-version')
-    });
-
-    this.composeWith('phovea:_check-own-version', {}, {
-      local: require.resolve('../_check-own-version')
-    });
+    this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
 
     this.props = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'), {modules: [], defaultApp: null});
     this.props.defaultApp = this.props.defaultApp || this.options.defaultApp;

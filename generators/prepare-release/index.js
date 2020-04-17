@@ -90,13 +90,7 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version', {}, {
-      local: require.resolve('../check-node-version')
-    });
-
-    this.composeWith('phovea:_check-own-version', {}, {
-      local: require.resolve('../_check-own-version')
-    });
+    this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
   }
 
   prompting() {
@@ -257,9 +251,16 @@ class Generator extends Base {
               req[key] = '==' + version;
             } else {
               return new Promise((resolve) => {
-                const request = require('request');
-                console.log(`https://pypi.python.org/pypi/${key}/json`);
-                request(`https://pypi.python.org/pypi/${key}/json`, (error, response, data) => resolve(data));
+                const https = require('https');
+                console.log(`https://pypi.org/pypi/${key}/json`);
+                https.get(`https://pypi.org/pypi/${key}/json`, (res) => {
+                  var body = '';
+                  res.on('data', (chunk) => { body += chunk; });
+                  res.on('end', () => { resolve(body); });
+                })
+                .on('error', (e) => {
+                  this.log(`The request was not successful: ${e}`);
+                });
               }).then((data) => {
                 const infos = JSON.parse(data);
                 const versions = Object.keys(infos.releases).sort(semver.compare);
@@ -330,10 +331,10 @@ class Generator extends Base {
   }
 
   _createPullRequest(ctx) {
-    const opn = require('opn');
+    const open = require('open');
     const base = simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/compare/release_${ctx.version}?expand=1`;
-    return opn(url, {
+    return open(url, {
       wait: false
     }).then(() => ctx);
   }
@@ -360,10 +361,10 @@ class Generator extends Base {
   }
 
   _openReleasePage(ctx) {
-    const opn = require('opn');
+    const open = require('open');
     const base = simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/releases/tag/v${ctx.version}`;
-    return opn(url, {
+    return open(url, {
       wait: false
     }).then(() => ctx);
   }

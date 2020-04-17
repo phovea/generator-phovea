@@ -48,15 +48,11 @@ class Generator extends Base {
 
   default() {
     if (this.isWorkspace) {
-      this.composeWith(`phovea:workspace`, {}, {
-        local: require.resolve(`../workspace`)
-      });
+      this.composeWith(`phovea:workspace`);
     } else {
       const type = this.config.get('type');
       this.composeWith(`phovea:init-${type}`, {
         options: this.props
-      }, {
-        local: require.resolve(`../init-${type}`)
       });
     }
   }
