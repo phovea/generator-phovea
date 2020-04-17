@@ -191,7 +191,13 @@ class Generator extends Base {
     return this._cloneRepo(this.productName, this.options.branch || 'master', ' --depth 1')
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
+        const phoveaProductJSON = `${this.cwd}/${name}/phovea_product.json`;
+
+        if(!fs.existsSync(phoveaProductJSON)) {
+          throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
+        }
+
+        this.product = fs.readJSONSync(phoveaProductJSON);
 
         // pass through the docker overrides
         for (const file of ['docker-compose-patch.yaml', 'docker-compose-patch.yml']) {
