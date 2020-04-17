@@ -50,7 +50,8 @@ class Generator extends Base {
     let defaultConfig = {
       name: 'phovea_workspace',
       description: 'helper package',
-      version: '0.0.1'
+      version: '0.0.1',
+      skipNextStepsLog: false
     };
 
     // use existing workspace package.json as default
@@ -69,15 +70,23 @@ class Generator extends Base {
       default: defaultConfig.name,
       description: 'Name for workspace package.json'
     });
+
     this.option('wsDescription', {
       type: String,
       default: defaultConfig.description,
       description: 'Description for workspace package.json'
     });
+
     this.option('wsVersion', {
       type: String,
       default: defaultConfig.version,
       description: 'Version for workspace package.json'
+    });
+
+    this.option('skipNextStepsLog', {
+      type: Boolean,
+      default: defaultConfig.skipNextStepsLog,
+      description: 'Skip the log message with the next steps at the end'
     });
   }
 
@@ -94,14 +103,14 @@ class Generator extends Base {
     return this.prompt([{
       type: 'checkbox',
       name: 'modules',
-      message: 'Additional Plugins',
+      message: 'Additional plugins',
       choices: known().plugin.listNamesWithDescription.filter((d) => !isInstalled.includes(d.value)),
       default: this.props.modules,
       when: !this.option('noAdditionals')
     }, {
       type: 'list',
       name: 'defaultApp',
-      message: 'Default Application to launch using `npm start`?',
+      message: 'Default application to launch using `npm start`?',
       choices: apps,
       default: apps[0],
       when: apps.length > 1 && !this.props.defaultApp
@@ -456,7 +465,7 @@ class Generator extends Base {
   }
 
   end() {
-    if (!this.options.skipNextStepsLog) {
+    if (this.options.skipNextStepsLog) {
       return;
     }
 
