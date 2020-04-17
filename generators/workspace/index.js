@@ -459,14 +459,17 @@ class Generator extends Base {
     if (!this.options.skipNextStepsLog) {
       return;
     }
-    
-    this.log('\n\nuseful commands: ');
-    this.log(chalk.red(' docker-compose up'), '        ... starts the system');
-    this.log(chalk.red(' docker-compose restart'), '   ... restart');
-    this.log(chalk.red(' docker-compose stop'), '      ... stop');
-    this.log(chalk.red(' docker-compose build api'), ' ... rebuild api (in case of new dependencies)');
 
-    this.log('\n\nnext steps: ');
+    this.log('\n\nUseful commands: ');
+
+    this.log(chalk.red(' docker-compose up'), '                    ... starts the system');
+    this.log(chalk.red(' docker-compose restart'), '               ... restart');
+    this.log(chalk.red(' docker-compose stop'), '                  ... stop');
+    this.log(chalk.red(' docker-compose build api'), '             ... rebuild api (in case of new dependencies)');
+    this.log(chalk.red(' docker-compose logs -f --tail=50 api'), ' ... show the last 50 server log messages (-f to auto update)');
+
+    this.log('\n\nNext steps: ');
+
     this.log(chalk.red(' npm install'));
     this.log(chalk.red(' docker-compose up'));
   }

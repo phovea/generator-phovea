@@ -382,29 +382,33 @@ class Generator extends Base {
   }
 
   end() {
+    let stepCounter = 1;
+
     this.log('\n\nNext steps: ');
-    this.log(chalk.green('- switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
+
+    this.log(chalk.green((stepCounter++) + '. Switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
+
     if (this.options.skip.includes('install')) {
-      this.log(chalk.green('- install npm dependencies: '), chalk.yellow('npm install'));
+      this.log(chalk.green((stepCounter++) + '. Install npm dependencies: '), chalk.yellow('npm install'));
     }
+
     if (this.options.skip.includes('build')) {
-      this.log(chalk.green('- build docker containers: '), chalk.yellow('docker-compose build'));
+      this.log(chalk.green((stepCounter++) + '. Build docker containers: '), chalk.yellow('docker-compose build'));
     }
 
-
-    this.log(chalk.green('- open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
-    this.log(chalk.green('   in case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
-    this.log(chalk.green('- start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
-    this.log(chalk.green('- start client application in the foreground: '), chalk.yellow('npm start'));
-    this.log(chalk.green('- open web browser and access: '), chalk.yellow('http://localhost:8080'));
-
-    this.log(chalk.green('- look at last 50 server log messages (-f ... auto update): '), chalk.yellow('docker-compose logs -f --tail=50 api'));
+    this.log(chalk.green((stepCounter++) + '. Open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
+    this.log(chalk.green('   In case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
+    this.log(chalk.green((stepCounter++) + '. Start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
+    this.log(chalk.green((stepCounter++) + '. Start client application in the foreground: '), chalk.yellow('npm start'));
+    this.log(chalk.green((stepCounter++) + '. Open web browser and navigate to'), chalk.yellow('http://localhost:8080'));
 
     this.log('\n\nUseful commands: ');
-    this.log(chalk.red(' docker-compose up'), '        ... starts the system');
-    this.log(chalk.red(' docker-compose restart'), '   ... restart');
-    this.log(chalk.red(' docker-compose stop'), '      ... stop');
-    this.log(chalk.red(' docker-compose build api'), ' ... rebuild api (in case of new dependencies)');
+
+    this.log(chalk.red(' docker-compose up'), '                    ... starts the system');
+    this.log(chalk.red(' docker-compose restart'), '               ... restart');
+    this.log(chalk.red(' docker-compose stop'), '                  ... stop');
+    this.log(chalk.red(' docker-compose build api'), '             ... rebuild api (in case of new dependencies)');
+    this.log(chalk.red(' docker-compose logs -f --tail=50 api'), ' ... show the last 50 server log messages (-f to auto update)');
   }
 }
 
