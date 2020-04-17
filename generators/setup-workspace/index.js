@@ -331,6 +331,8 @@ class Generator extends Base {
   }
 
   writing() {
+    this.hasErrors = false;
+
     return Promise.resolve(1)
       .then(this._mkdir.bind(this, null))
       .then(this._getProduct.bind(this))
@@ -378,12 +380,17 @@ class Generator extends Base {
         return null;
       })
       .catch((msg) => {
-        this.log(chalk.red(`Error: ${msg}`));
-        return Promise.reject(msg);
+        this.log('\r\n');
+        this.log(chalk.red(msg));
+        this.hasErrors = true;
       });
   }
 
   end() {
+    if(this.hasErrors) {
+      return; // skip next steps on errors
+    }
+
     let stepCounter = 1;
 
     this.log('\n\nNext steps: ');
