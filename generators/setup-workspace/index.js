@@ -360,7 +360,7 @@ class Generator extends Base {
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace', {
         defaultApp: findDefaultApp(),
-        noLogging: true// do not show logs from yo phovea:workspace
+        skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
       }))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
@@ -382,7 +382,7 @@ class Generator extends Base {
   }
 
   end() {
-    this.log('\n\nnext steps: ');
+    this.log('\n\nNext steps: ');
     this.log(chalk.green('- switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
     if (this.options.skip.includes('install')) {
       this.log(chalk.green('- install npm dependencies: '), chalk.yellow('npm install'));
@@ -400,7 +400,7 @@ class Generator extends Base {
 
     this.log(chalk.green('- look at last 50 server log messages (-f ... auto update): '), chalk.yellow('docker-compose logs -f --tail=50 api'));
 
-    this.log('\n\nuseful commands: ');
+    this.log('\n\nUseful commands: ');
     this.log(chalk.red(' docker-compose up'), '        ... starts the system');
     this.log(chalk.red(' docker-compose restart'), '   ... restart');
     this.log(chalk.red(' docker-compose stop'), '      ... stop');
