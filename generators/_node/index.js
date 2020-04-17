@@ -74,9 +74,10 @@ class PackageJSONGenerator extends Base {
    * Check if string is one continuous word with no spaces
    * i.e _hasNoWhiteSpace('my app')--> false
    * @param {string} string
+   * @returns {boolean|string} Returns true if the given string does not contain white spaces. Otherwise it returns an error message string.
    */
   _hasNoWhiteSpace(string) {
-    return string.trim().indexOf(' ') === -1;
+    return string.trim().indexOf(' ') === -1 || 'The plugin name must not contain white spaces. Please use dash (-) or underscore (_) as separator instead.';
   }
 
   _promptDescription() {
