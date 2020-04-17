@@ -34,7 +34,7 @@
 *.scm text
 *.sql text
 *.sh text eof=LF
-forEach text eol=crlf
+forEach text eol=lf
 withinEnv text eol=crlf
 docker-backup text eol=crlf
 docker-compose-debug text eof=LF
