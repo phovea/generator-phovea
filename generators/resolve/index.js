@@ -63,7 +63,7 @@ class Generator extends Base {
   }
 
   default() {
-    this.composeWith(this.props.runWorkspace ? 'phovea:workspace' : 'phovea:_check-own-version')//run `phovea:_check-own-version` only once
+    this.composeWith(this.props.runWorkspace ? 'phovea:workspace' : 'phovea:_check-own-version'); // run `phovea:_check-own-version` only once
   }
 
   writing() {
