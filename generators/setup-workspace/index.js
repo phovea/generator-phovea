@@ -43,7 +43,7 @@ function findDefaultApp(product) {
 
 function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
-  console.log(chalk.blue('download file', url));
+  console.log(chalk.blue('Download file', url));
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     http.get(url, (response) => {
@@ -137,7 +137,7 @@ class Generator extends Base {
     const _args = Array.isArray(args) ? args.join(' ') : args || '';
     return new Promise((resolve, reject) => {
       try {
-        this.log('running yo phovea:' + generator);
+        this.log(`Running: yo phovea:${generator} ${_args}`);
         env.lookup(() => {
           env.run(`phovea:${generator} ${_args}`, options || {}, () => {
             // wait a second after running yo to commit the files correctly
@@ -145,7 +145,7 @@ class Generator extends Base {
           });
         });
       } catch (e) {
-        console.error('error', e, e.stack);
+        console.error('Error', e, e.stack);
         reject(e);
       }
     });
@@ -161,7 +161,7 @@ class Generator extends Base {
       stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
     }, cwd || {});
 
-    this.log(`\nrunning ${cmd} ${argline}\n`)
+    this.log(`\nRunning: ${cmd} ${argline}\n`)
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -169,9 +169,11 @@ class Generator extends Base {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
       this.log(r.stderr.toString());
+      return this._abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
       return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
     } else {
       this.log(r.stdout.toString())
+      this.log(r.stdout.toString());
     }
     return Promise.resolve(cmd);
   }
@@ -227,7 +229,7 @@ class Generator extends Base {
 
   _mkdir(dir) {
     dir = dir || this.cwd;
-    this.log('create directory: ' + dir);
+    this.log('Create directory: ' + dir);
     return new Promise((resolve) => fs.ensureDir(dir, resolve));
   }
 
@@ -254,7 +256,7 @@ class Generator extends Base {
       case 'url':
         return downloadDataUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
       default:
-        this.log(chalk.red('cannot handle data type:', desc.type));
+        this.log(chalk.red('Cannot handle data type:', desc.type));
         return null;
     }
   }
@@ -270,7 +272,7 @@ class Generator extends Base {
       case 'url':
         return downloadBackupUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
       default:
-        this.log(chalk.red('cannot handle data type:', desc.type));
+        this.log(chalk.red('Cannot handle data type:', desc.type));
         return null;
     }
   }
