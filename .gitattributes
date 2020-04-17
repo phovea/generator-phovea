@@ -2,7 +2,7 @@
 
 # Handle line endings automatically for files detected as text
 # and leave all files detected as binary untouched.
-* text=auto
+# * text=auto
 
 #
 # The above will handle all files NOT found below
@@ -35,7 +35,7 @@
 *.scm text
 *.sql text
 *.sh text eof=LF
-forEach text eof=LF
+# forEach text eof=LF
 withinEnv text eof=LF
 docker-backup text eof=LF
 docker-compose-debug text eof=LF
