@@ -46,9 +46,7 @@ class Generator extends Base {
   }
 
   default() {
-    this.composeWith(`phovea:update`, {}, {
-      local: require.resolve(`../update`)
-    });
+    this.composeWith('phovea:update');
   }
 
   end() {

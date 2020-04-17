@@ -37,22 +37,8 @@ class Generator extends Base {
   }
 
   default() {
-    this.composeWith('phovea:_node', {
-      options: this.options
-    }, {
-      local: require.resolve('../_node')
-    });
     const types = this.config.get('type').split('-');
-    this.composeWith('phovea:init-' + types[1], {
-      options: this.options
-    }, {
-      local: require.resolve('../init-' + types[1])
-    });
-    this.composeWith('phovea:init-' + types[0], {
-      options: this.options
-    }, {
-      local: require.resolve('../init-' + types[0])
-    });
+    this.composeWith(['phovea:_node', 'phovea:init-' + types[1], 'phovea:init-' + types[0]], {options: this.options})
   }
 
   end() {
