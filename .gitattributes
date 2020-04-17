@@ -35,10 +35,10 @@
 *.sql text
 # *.sh text eof=LF
 # forEach text eof=lf
-test text eof=lf
+test text eof=crlf
 withinEnv text eol=crlf
-docker-backup text eol=lf
-# docker-compose-debug text eof=LF
+docker-backup text eof=CRLF
+docker-compose-debug text eof=LF
 # Dockerfile text eof=LF
 *.bat text
 
