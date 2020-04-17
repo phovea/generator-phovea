@@ -1,5 +1,6 @@
 'use strict';
 const _ = require('lodash');
+const chalk = require('chalk');
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 const fs = require('fs');
@@ -132,9 +133,10 @@ class Generator extends Base {
     });
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     writeTemplates.call(this, config);
-    // don't overwrite existing registry file
-    if (!fs.existsSync(this.destinationPath('phovea.js'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), stringifyAble(config));
+
+    // do not overwrite existing registry file
+    if (!fs.existsSync(this.destinationPath('src/phovea.ts'))) {
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath('src/phovea.ts'), stringifyAble(config));
     }
   }
 
@@ -143,6 +145,16 @@ class Generator extends Base {
       this.installDependencies({
         bower: false
       });
+    }
+  }
+
+  end() {
+    if(fs.existsSync(this.destinationPath('phovea.js'))) {
+      this.log('\r\n');
+      this.log(chalk.red(`ACTION REQUIRED!`));
+      this.log(chalk.default(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.default(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.default(` now!`));
+      this.log(chalk.default(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.default(`file from this plugin repository.`));
+      this.log(chalk.default(`If you do not migrate the content the registered extension points will be unavailable.`));
     }
   }
 }
