@@ -154,8 +154,8 @@ class Generator extends Base {
     if(fs.existsSync(this.destinationPath('phovea.js'))) {
       this.log('\r\n');
       this.log(chalk.red(`ACTION REQUIRED!`));
-      this.log(chalk.default(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.default(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.default(` now.`));
-      this.log(chalk.default(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.default(`file from this plugin.`));
+      this.log(chalk.default(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.default(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.default(` now!`));
+      this.log(chalk.default(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.default(`file from this plugin repository.`));
       this.log(chalk.default(`If you do not migrate the content the registered extension points will be unavailable.`));
     }
   }
