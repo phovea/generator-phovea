@@ -4,6 +4,7 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
+const ProgressBar = require('progress');
 const {
   toHTTPRepoUrl,
   toSSHRepoUrl,
@@ -41,32 +42,58 @@ function findDefaultApp(product) {
   return null;
 }
 
-function downloadFileImpl(url, dest) {
+function downloadFileImpl(url, dest, verbose) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
-  console.log(chalk.blue('Download file', url));
+  console.log('Download', url);
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    http.get(url, (response) => {
+
+    const req = http.get(url, (response) => {
       response.pipe(file);
       file.on('finish', () => {
         file.close(resolve);
       });
-    }).on('error', reject);
+  });
+
+    req.on('error', reject);
+
+    // show progress bar in verbose mode
+    if(verbose) {
+      req.on('response', (res) => {
+        var len = parseInt(res.headers['content-length'], 10);
+
+        console.log();
+        var bar = new ProgressBar(` [:bar] :rate/bps :percent :etas`, {
+          complete: '=',
+          incomplete: ' ',
+          width: 30,
+          total: len
+        });
+
+        res.on('data', function (chunk) {
+          bar.tick(chunk.length);
+        });
+
+        res.on('end', function () {
+          console.log('\n');
+        });
+      });
+}
   });
 }
 
-function downloadDataUrl(url, dest) {
+function downloadDataUrl(url, dest, verbose) {
   if (!url.startsWith('http')) {
     url = `https://s3.eu-central-1.amazonaws.com/phovea-data-packages/${url}`;
   }
-  return downloadFileImpl(url, dest);
+  return downloadFileImpl(url, dest, verbose);
 }
 
-function downloadBackupUrl(url, dest) {
+function downloadBackupUrl(url, dest, verbose) {
   if (!url.startsWith('http')) {
     url = `https://s3.eu-central-1.amazonaws.com/phovea-volume-backups/${url}`;
   }
-  return downloadFileImpl(url, dest);
+  return downloadFileImpl(url, dest, verbose);
 }
 
 function toDownloadName(url) {
@@ -241,7 +268,7 @@ class Generator extends Base {
 
   _mkdir(dir) {
     dir = dir || this.cwd;
-    this.log('Create directory: ' + dir);
+    this.log('\r\nCreate directory: ' + dir);
     return new Promise((resolve) => fs.ensureDir(dir, resolve));
   }
 
@@ -266,7 +293,7 @@ class Generator extends Base {
     }
     switch (desc.type) {
       case 'url':
-        return downloadDataUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
+        return downloadDataUrl(desc.url, path.join(destDir, toDownloadName(desc.url)), this.options.verbose);
       default:
         this.log(chalk.red('Cannot handle data type:', desc.type));
         return null;
@@ -282,7 +309,7 @@ class Generator extends Base {
     }
     switch (desc.type) {
       case 'url':
-        return downloadBackupUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
+        return downloadBackupUrl(desc.url, path.join(destDir, toDownloadName(desc.url)), this.options.verbose);
       default:
         this.log(chalk.red('Cannot handle data type:', desc.type));
         return null;
@@ -300,7 +327,12 @@ class Generator extends Base {
       return Promise.resolve(null);
     }
     return this._mkdir(this.cwd + '/_data')
-      .then(() => Promise.all(data.map((d) => this._downloadDataFile(d, this.cwd + '/_data'))));
+      .then(async () => {
+        for (const d of data) {
+          this.log(chalk.blue(`\r\nProcess data file (${data.indexOf(d)+1} of ${data.length})`));
+          await this._downloadDataFile(d, this.cwd + '/_data');
+        }
+      });
   }
 
   _downloadBackupFiles() {
@@ -314,7 +346,12 @@ class Generator extends Base {
       return Promise.resolve(null);
     }
     return this._mkdir(this.cwd + '/_backup')
-      .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
+      .then(async () => {
+        for (const d of data) {
+          this.log(chalk.blue(`\r\nProcess backup file (${data.indexOf(d)+1} of ${data.length})`));
+          await this._downloadBackupFile(d, this.cwd + '/_backup');
+        }
+      })
       .then(this._ifExecutable.bind(this, 'docker-compose', this._spawnOrAbort.bind(this, './docker-backup', 'restore'), 'please execute: "./docker-backup restore" manually'));
   }
 
