@@ -98,12 +98,6 @@ class Generator extends Base {
       type: String
     });
 
-    this.option('verbose', {
-      type: Boolean,
-      defaults: false,
-      description: 'Show logs from spawned processes'
-    });
-
     this.argument('product', {
       required: true
     });
@@ -162,11 +156,9 @@ class Generator extends Base {
   }
 
   _spawn(cmd, argline, cwd) {
-    const stdio = this.options.verbose ? 'inherit' : ['inherit', 'pipe', 'pipe']; // pipe `stdout` and `stderr` to host process
-
     const options = cwd === false ? {} : Object.assign({
       cwd: this.cwd,
-      stdio
+      stdio: 'inherit' // log output and error of spawned process to host process
     }, cwd || {});
 
     this.log(`\nRunning: ${cmd} ${argline}\n`)
