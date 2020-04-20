@@ -18,9 +18,9 @@
     "lint": "tslint -c tslint.json -p .",
     "prebuild": "npm run test",
     "pretest": "npm run compile",
-    "test": "karma start",
+    "test": "jest",
     "posttest": "npm run lint",
-    "test:watch": "karma start --autoWatch=true --singleRun=false",
+    "test:watch": "jest --watch",
     "build:dev": "webpack",
     "build": "webpack --env prod",
     "watch": "webpack --watch"

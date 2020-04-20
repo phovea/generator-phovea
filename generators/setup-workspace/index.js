@@ -43,7 +43,7 @@ function findDefaultApp(product) {
 
 function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
-  console.log(chalk.blue('download file', url));
+  console.log(chalk.blue('Download file', url));
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     http.get(url, (response) => {
@@ -104,13 +104,7 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version', {}, {
-      local: require.resolve('../check-node-version')
-    });
-
-    this.composeWith('phovea:_check-own-version', {}, {
-      local: require.resolve('../_check-own-version')
-    });
+    this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
   }
 
   prompting() {
@@ -143,7 +137,7 @@ class Generator extends Base {
     const _args = Array.isArray(args) ? args.join(' ') : args || '';
     return new Promise((resolve, reject) => {
       try {
-        this.log('running yo phovea:' + generator);
+        this.log(`Running: yo phovea:${generator} ${_args}`);
         env.lookup(() => {
           env.run(`phovea:${generator} ${_args}`, options || {}, () => {
             // wait a second after running yo to commit the files correctly
@@ -151,7 +145,7 @@ class Generator extends Base {
           });
         });
       } catch (e) {
-        console.error('error', e, e.stack);
+        console.error('Error', e, e.stack);
         reject(e);
       }
     });
@@ -164,8 +158,10 @@ class Generator extends Base {
   _spawn(cmd, argline, cwd) {
     const options = cwd === false ? {} : Object.assign({
       cwd: this.cwd,
-      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
+      stdio: 'inherit' // log output and error of spawned process to host process
     }, cwd || {});
+
+    this.log(`\nRunning: ${cmd} ${argline}\n`)
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -173,7 +169,9 @@ class Generator extends Base {
     const r = this._spawn(cmd, argline, cwd);
     if (failed(r)) {
       this.log(r.stderr.toString());
-      return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
+      return this._abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
+    } else if(r.stdout) {
+      this.log(r.stdout.toString());
     }
     return Promise.resolve(cmd);
   }
@@ -191,7 +189,13 @@ class Generator extends Base {
     return this._cloneRepo(this.productName, this.options.branch || 'master', ' --depth 1')
       .then(() => {
         const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        this.product = fs.readJSONSync(`${this.cwd}/${name}/phovea_product.json`);
+        const phoveaProductJSON = `${this.cwd}/${name}/phovea_product.json`;
+
+        if(!fs.existsSync(phoveaProductJSON)) {
+          throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
+        }
+
+        this.product = fs.readJSONSync(phoveaProductJSON);
 
         // pass through the docker overrides
         for (const file of ['docker-compose-patch.yaml', 'docker-compose-patch.yml']) {
@@ -229,7 +233,7 @@ class Generator extends Base {
 
   _mkdir(dir) {
     dir = dir || this.cwd;
-    this.log('create directory: ' + dir);
+    this.log('Create directory: ' + dir);
     return new Promise((resolve) => fs.ensureDir(dir, resolve));
   }
 
@@ -256,7 +260,7 @@ class Generator extends Base {
       case 'url':
         return downloadDataUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
       default:
-        this.log(chalk.red('cannot handle data type:', desc.type));
+        this.log(chalk.red('Cannot handle data type:', desc.type));
         return null;
     }
   }
@@ -272,7 +276,7 @@ class Generator extends Base {
       case 'url':
         return downloadBackupUrl(desc.url, path.join(destDir, toDownloadName(desc.url)));
       default:
-        this.log(chalk.red('cannot handle data type:', desc.type));
+        this.log(chalk.red('Cannot handle data type:', desc.type));
         return null;
     }
   }
@@ -331,6 +335,8 @@ class Generator extends Base {
   }
 
   writing() {
+    this.hasErrors = false;
+
     return Promise.resolve(1)
       .then(this._mkdir.bind(this, null))
       .then(this._getProduct.bind(this))
@@ -361,7 +367,8 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace', {
-        defaultApp: findDefaultApp()
+        defaultApp: findDefaultApp(),
+        skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
       }))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
@@ -377,21 +384,44 @@ class Generator extends Base {
         return null;
       })
       .catch((msg) => {
-        this.log(chalk.red(`Error: ${msg}`));
-        return Promise.reject(msg);
+        this.log('\r\n');
+        this.log(chalk.red(msg));
+        this.hasErrors = true;
       });
   }
 
   end() {
-    this.log('\n\nnext steps: ');
-    this.log(chalk.green('1. switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
-    this.log(chalk.green('2. Open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
-    this.log(chalk.green('   in case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
-    this.log(chalk.green('3. start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
-    this.log(chalk.green('4. start client application in the foreground: '), chalk.yellow('npm start'));
-    this.log(chalk.green('5. open web browser and access: '), chalk.yellow('http://localhost:8080'));
+    if(this.hasErrors) {
+      return; // skip next steps on errors
+    }
 
-    this.log(chalk.green('X. look at last 50 server log messages (-f ... auto update): '), chalk.yellow('docker-compose logs -f --tail=50 api'));
+    let stepCounter = 1;
+
+    this.log('\n\nNext steps: ');
+
+    this.log(chalk.green((stepCounter++) + '. Switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
+
+    if (this.options.skip.includes('install')) {
+      this.log(chalk.green((stepCounter++) + '. Install npm dependencies: '), chalk.yellow('npm install'));
+    }
+
+    if (this.options.skip.includes('build')) {
+      this.log(chalk.green((stepCounter++) + '. Build docker containers: '), chalk.yellow('docker-compose build'));
+    }
+
+    this.log(chalk.green((stepCounter++) + '. Open IDE (PyCharm or Visual Studio Code, Atom) and select:'), this.destinationPath(this.cwd));
+    this.log(chalk.green('   In case of Visual Studio Code, the following should also work: '), chalk.yellow('code .'));
+    this.log(chalk.green((stepCounter++) + '. Start server docker container in the background (-d): '), chalk.yellow('docker-compose up -d'));
+    this.log(chalk.green((stepCounter++) + '. Start client application in the foreground: '), chalk.yellow('npm start'));
+    this.log(chalk.green((stepCounter++) + '. Open web browser and navigate to'), chalk.yellow('http://localhost:8080'));
+
+    this.log('\n\nUseful commands: ');
+
+    this.log(chalk.red(' docker-compose up'), '                    ... starts the system');
+    this.log(chalk.red(' docker-compose restart'), '               ... restart');
+    this.log(chalk.red(' docker-compose stop'), '                  ... stop');
+    this.log(chalk.red(' docker-compose build api'), '             ... rebuild api (in case of new dependencies)');
+    this.log(chalk.red(' docker-compose logs -f --tail=50 api'), ' ... show the last 50 server log messages (-f to auto update)');
   }
 }
 

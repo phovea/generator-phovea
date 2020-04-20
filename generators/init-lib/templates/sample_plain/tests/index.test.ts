@@ -1,4 +1,4 @@
-/// <reference types="jasmine" />
+/// <reference types="jest" />
 import {hello} from '../src/index';
 
 describe('index', () => {
