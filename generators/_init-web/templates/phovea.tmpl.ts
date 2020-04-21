@@ -12,7 +12,7 @@ export default function (registry: IRegistry) {
   /// #endif
 
   // generator-phovea:begin
-  <%- extensions.map((d) => `   registry.push('${d.type}', '${d.id}', () => System.import('./src/${d.module}'), ${stringify(d.extras, ' ')});`).join('\n\n') %>
+  <%- extensions.map((d) => `   registry.push('${d.type}', '${d.id}', () => System.import('./${d.module}'), ${stringify(d.extras, ' ')});`).join('\n\n') %>
   // generator-phovea:end
 }
 
