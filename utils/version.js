@@ -1,11 +1,15 @@
 'use strict';
 
 const semver = require('semver');
+const chalk= require('chalk');
 const {
   intersect
 } = require('semver-intersect');
 
 module.exports.mergeVersions = (name, versions) => {
+  if (versions.some((v) => v === 'latest')) {
+    throw new Error(chalk.red('Invalid version. Please avoid using version latest in package.json.'))
+  }
   // create set
   versions = Array.from(new Set(versions));
   if (versions.length === 1) {
