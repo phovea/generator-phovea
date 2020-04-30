@@ -36,6 +36,22 @@ function toJSONFromText(text) {
   return r;
 }
 
+/**
+ * The outside key in the `.yo-rc.json` file where the configuration is saved.
+ * Used to manually add key-value pairs to the `.yo-rc.json` file.
+ */
+const GENERATOR_PHOVEA_CONFIG = 'generator-phovea';
+
+/**
+ * Find the string in the plugins `__init__.py` file and replace it with the new extension entry.
+ */
+const REPLACE_STRING_PYTHON_FILE = '# generator-phovea:end';
+
+/**
+ * Find the string in the plugins `phovea.ts` file and replace it with the new extension entry.
+ */
+const REPLACE_STRING_JAVASCRIPT_FILE = '// generator-phovea:end';
+
 class Generator extends Base {
   constructor(args, options) {
     super(args, options);
@@ -175,6 +191,17 @@ class Generator extends Base {
       this._injectServerExtension(d, this.cwd);
     }
   }
+
+  /**
+   * Tests if the string `// generator-phovea:end` and `# generator-phovea:end` exist in `phovea.ts` and `/__init__.py` respectively.
+   * @param {string} target Target string file to be tested.
+   * @param {string} string String to test with either `// generator-phovea:end` or `# generator-phovea:end`.
+   * @param {string} filePath Path of the target file.
+   */
+  _testReplaceStringExists(target, string, filePath) {
+    const regex = RegExp(string);
+    if (!regex.test(target)) {
+      throw new Error(chalk.red(`String "${string}" not found in ${filePath}.`));
     }
   }
 
@@ -185,6 +212,8 @@ class Generator extends Base {
     let absFile = '';
     let importFunction = '';
 
+    this._testReplaceStringExists(old, REPLACE_STRING_JAVASCRIPT_FILE, pathToRegistry);
+
     if (fs.existsSync(cwd + 'src/phovea.ts')) {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
       importFunction = `() => System.import('${absFile}')`; // TODO remove System.import for Typescript case when switching to Webpack 4 (see https://github.com/phovea/generator-phovea/issues/286#issuecomment-566553497)
@@ -192,8 +221,8 @@ class Generator extends Base {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
       importFunction = `function() { return import('${absFile}'); }`;
     }
-    const text = `\n\n  registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
-    const new_ = old.replace('  // generator-phovea:end', text);
+    const text = `\n\n  registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, ' ')});\n  ${REPLACE_STRING_JAVASCRIPT_FILE}`; // indentation is 2 spaces
+    const new_ = old.replace(`  ${REPLACE_STRING_JAVASCRIPT_FILE}`, text);  // also here indentation is 2 spaces
     this.fs.write(file, new_);
 
     const target = this.destinationPath(cwd + `src/${d.module}${d.module.includes('.') ? '' : '.ts'}`);
@@ -211,9 +240,11 @@ class Generator extends Base {
     const name = this._readConfig(cwd, 'name');
     const file = this.destinationPath(`${cwd}${name}/__init__.py`);
     const old = this.fs.read(file);
-    const text = `\n\n  registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, '  ')})\n  # generator-phovea:end`;
-    const new_ = old.replace('  # generator-phovea:end', text);
+    const text = `\n\n  registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, '  ')})\n  ${REPLACE_STRING_PYTHON_FILE}`; // indentation is 2 spaces
+    const new_ = old.replace(`  ${REPLACE_STRING_PYTHON_FILE}`, text); // also here indentation is 2 spaces
     this.fs.write(file, new_);
+
+    this._testReplaceStringExists(old, REPLACE_STRING_PYTHON_FILE, file);
 
     const target = this.destinationPath(`${cwd}${name}/${d.module}.py`);
     if (!fs.existsSync(target)) {
