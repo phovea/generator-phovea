@@ -98,6 +98,24 @@ class Generator extends Base {
       throw new Error(chalk.red('Invalid `yo-rc.json` file in ' + path))
     }
   }
+
+  /**
+   * Saves configuration to the `.yo-rc.json file` either in the current directory or inside the plugin folder if the generator is executed from the workspace.
+   * @param {*} path  Directory name of the plugin, i.e., `phovea_core/`.
+   * @param {*} key Key in the config file.
+   * @param {*} value Value to assign to key.
+   */
+  _writeConfig(path, key, value) {
+    if (path) {
+      const configFile = this.fs.readJSON(this.destinationPath(path + '.yo-rc.json'));
+      configFile[GENERATOR_PHOVEA_CONFIG][key] = value;
+      this.fs.writeJSON(this.destinationPath(path + '.yo-rc.json'), configFile);
+
+    } else {
+      this.config.set(key, value);
+    }
+  }
+
   async prompting() {
     const {plugin} = await this._chooseApplication();
     this.cwd = plugin ? plugin + '/' : '';
@@ -146,8 +164,7 @@ class Generator extends Base {
     const basekey = this.basetype === 'web' ? 'extensions' : 'sextensions';
     const arr = this._readConfig(this.cwd, basekey);
     arr.push(this.new_);
-    this.config.set(basekey, arr);
-
+    this._writeConfig(this.cwd, basekey, arr);
     // inject new extension
 
     const d = stringifyAble(this.new_);
