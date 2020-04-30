@@ -129,6 +129,7 @@ class BaseInitPluginGenerator extends Generator {
     this.option('skipInstall');
     this.option('noSamples');
     this.option('useDefaults');
+    this.cwd = '';
   }
 
   initializing() {
@@ -158,6 +159,20 @@ class BaseInitPluginGenerator extends Generator {
   _isInvalidWorkspace() {
     return this._isWorkspace() && this.hasConfigFile();
   }
+
+  /**
+   * Create a subdirectory in the current directory.
+   * Initialize the property cwd.
+   * @param {string} dir Directory name.
+   */
+  _mkdir(dir) {
+    if (this._isWorkspace() && this.cwd !== dir + '/') {
+      this.cwd = dir + '/';
+      this.log('create directory: ' + dir);
+      return new Promise((resolve) => fs.ensureDir(dir, resolve));
+    }
+  }
+
   readmeAddon() {
     const f = this.templatePath('README.partial.md');
     if (fs.existsSync(f)) {
@@ -170,28 +185,31 @@ class BaseInitPluginGenerator extends Generator {
     this.composeWith('phovea:_init-' + this.basetype, {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
-      }, this.options)
+      }, this.options),
+      isWorkspace: this._isWorkspace() // inform the sub generator that the cwd is the workspace to avoid reading prompt default values from the workspace package.json
     });
   }
 
   writing() {
     const config = this.config.getAll();
+    this._mkdir(config.cwd || config.name);
     if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
-      this._patchPackageJSON(config);
+      this._patchPackageJSON(config, null, null, this.cwd);
     }
     if (fs.existsSync(this.templatePath('_gitignore'))) {
-      this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+      this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
     }
 
-    this._writeTemplates(config, !this.options.noSamples);
+    this._writeTemplates(config, !this.options.noSamples, this.cwd);
+
   }
 
-  _patchPackageJSON(config, unset, extra) {
-    return patchPackageJSON.call(this, config, unset, extra);
+  _patchPackageJSON(config, unset, extra, cwd) {
+    return patchPackageJSON.call(this, config, unset, extra, null, cwd);
   }
 
-  _writeTemplates(config, withSamples) {
-    return writeTemplates.call(this, config, withSamples);
+  _writeTemplates(config, withSamples, cwd) {
+    return writeTemplates.call(this, config, withSamples, cwd);
   }
 }
 
