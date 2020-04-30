@@ -170,20 +170,22 @@ class Generator extends Base {
     const d = stringifyAble(this.new_);
 
     if (this.basetype === 'web') {
-      this._injectWebExtension(d);
+      this._injectWebExtension(d, this.cwd);
     } else {
-      this._injectServerExtension(d);
+      this._injectServerExtension(d, this.cwd);
+    }
+  }
     }
   }
 
-  _injectWebExtension(d) {
-    const pathToRegistry = fs.existsSync('src/phovea.ts') ? 'src/phovea.ts' : 'phovea.js'; // check if the project has a phovea.ts file in src folder or a phovea.js in plugin root
+  _injectWebExtension(d, cwd) {
+    const pathToRegistry = fs.existsSync(cwd + 'src/phovea.ts') ? cwd + 'src/phovea.ts' : cwd + 'phovea.js'; // check if the project has a phovea.ts file in src folder or a phovea.js in plugin root
     const file = this.destinationPath(pathToRegistry);
     const old = this.fs.read(file);
     let absFile = '';
     let importFunction = '';
 
-    if(fs.existsSync('src/phovea.ts')) {
+    if (fs.existsSync(cwd + 'src/phovea.ts')) {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
       importFunction = `() => System.import('${absFile}')`; // TODO remove System.import for Typescript case when switching to Webpack 4 (see https://github.com/phovea/generator-phovea/issues/286#issuecomment-566553497)
     } else {
@@ -194,7 +196,7 @@ class Generator extends Base {
     const new_ = old.replace('  // generator-phovea:end', text);
     this.fs.write(file, new_);
 
-    const target = this.destinationPath(`src/${d.module}${d.module.includes('.') ? '' : '.ts'}`);
+    const target = this.destinationPath(cwd + `src/${d.module}${d.module.includes('.') ? '' : '.ts'}`);
     if (absFile.startsWith('.') && !fs.existsSync(target)) {
       let source = this.templatePath(`${d.type}.tmpl.ts`);
       if (!fs.existsSync(source)) {
@@ -205,15 +207,15 @@ class Generator extends Base {
     }
   }
 
-  _injectServerExtension(d) {
-    const name = this.config.get('name');
-    const file = this.destinationPath(`${name}/__init__.py`);
+  _injectServerExtension(d, cwd) {
+    const name = this._readConfig(cwd, 'name');
+    const file = this.destinationPath(`${cwd}${name}/__init__.py`);
     const old = this.fs.read(file);
     const text = `\n\n  registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, '  ')})\n  # generator-phovea:end`;
     const new_ = old.replace('  # generator-phovea:end', text);
     this.fs.write(file, new_);
 
-    const target = this.destinationPath(`${name}/${d.module}.py`);
+    const target = this.destinationPath(`${cwd}${name}/${d.module}.py`);
     if (!fs.existsSync(target)) {
       let source = this.templatePath(`${d.type}.tmpl.py`);
       if (!fs.existsSync(source)) {
