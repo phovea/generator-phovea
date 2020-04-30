@@ -116,9 +116,9 @@ class Generator extends Base {
 
   /**
    * Saves configuration to the `.yo-rc.json file` either in the current directory or inside the plugin folder if the generator is executed from the workspace.
-   * @param {*} path  Directory name of the plugin, i.e., `phovea_core/`.
-   * @param {*} key Key in the config file.
-   * @param {*} value Value to assign to key.
+   * @param {string} path  Directory name of the plugin, i.e., `phovea_core/`.
+   * @param {string} key Key in the config file.
+   * @param {string} value Value to assign to key.
    */
   _writeConfig(path, key, value) {
     if (path) {
@@ -178,7 +178,6 @@ class Generator extends Base {
   writing() {
     const basekey = this.basetype === 'web' ? 'extensions' : 'sextensions';
     const arr = this._readConfig(this.cwd, basekey);
-    this.log(arr, this.cwd)
     arr.push(this.new_);
     this._writeConfig(this.cwd, basekey, arr);
     // inject new extension
