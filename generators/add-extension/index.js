@@ -83,7 +83,6 @@ class Generator extends Base {
       name: 'plugin',
       choices: this._findPluginsInWorkspace(),
       message: 'Plugin/Application',
-      // default: 'web',
       when: this._isWorkspace()
     }]);
   }
