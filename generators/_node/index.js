@@ -152,13 +152,31 @@ class PackageJSONGenerator extends Base {
         dot: true
       }
     };
-    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
+    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(this.cwd), includeDot);
+  }
+
+  /**
+   * When initializing a plugin from the workspace the `.yo-rc.json` config file is saved in the workspace.
+   * Therefore copy the file into the the new created plugin subdirectory and delete it from the workspace.
+   */
+  _moveConfigFile() {
+    const currentPosition = this.destinationPath('.yo-rc.json');
+    const targetPosition = this.destinationPath(this.cwd + '.yo-rc.json');
+    if (fs.existsSync(currentPosition)) {
+      this.fs.copy(currentPosition, targetPosition);
+      this.fs.delete(currentPosition);
+    }
   }
 
   end() {
     this.spawnCommandSync('git', ['init'], {
-      cwd: this.destinationPath()
+      cwd: this.destinationPath(this.cwd)
     });
+
+    // after all the files have been written move the config file from the workspace to the plugin subdirectory
+    if (this.isWorkspace) {
+      this._moveConfigFile();
+    }
   }
 }
 
