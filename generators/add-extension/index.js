@@ -107,7 +107,7 @@ class Generator extends Base {
         return config[key]
 
       } else {
-        this.config.get(key);
+        return this.config.get(key);
       }
     } catch (e) {
       throw new Error(chalk.red('Invalid `yo-rc.json` file in ' + path))
@@ -178,6 +178,7 @@ class Generator extends Base {
   writing() {
     const basekey = this.basetype === 'web' ? 'extensions' : 'sextensions';
     const arr = this._readConfig(this.cwd, basekey);
+    this.log(arr, this.cwd)
     arr.push(this.new_);
     this._writeConfig(this.cwd, basekey, arr);
     // inject new extension
