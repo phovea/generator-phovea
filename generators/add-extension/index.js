@@ -5,6 +5,8 @@ const plugins = require('../../utils/types').plugin;
 const stringifyAble = require('../../utils').stringifyAble;
 const path = require('path');
 const fs = require('fs');
+const glob = require('glob').sync;
+const chalk = require('chalk');
 
 function toJSONFromText(text) {
   const r = {};
@@ -70,10 +72,37 @@ class Generator extends Base {
     }]);
   }
 
+  /**
+   * Check if current directory is the workspace.
+   */
+  _isWorkspace() {
+    return fs.existsSync(this.destinationPath('.yo-rc-workspace.json'));
+  }
 
+  /**
+   * Reads a key in the `.yo.rc.json` either from the current directory or a subdirectory.
+   * @param {string} path Directory name of the plugin, i.e., `phovea_core/`.
+   * @param {string} key Key in the config file.
+   * @return {string} The value of the key. Throws an error if the `.yo.rc.json` file has an invalid structure.
+   */
+  _readConfig(path, key) {
+    try {
+      if (path) {
+        const config = this.fs.readJSON(this.destinationPath(path + '.yo-rc.json'), {})[GENERATOR_PHOVEA_CONFIG];
+        return config[key]
+
+      } else {
+        this.config.get(key);
+      }
+    } catch (e) {
+      throw new Error(chalk.red('Invalid `yo-rc.json` file in ' + path))
+    }
+  }
   async prompting() {
     const {plugin} = await this._chooseApplication();
     this.cwd = plugin ? plugin + '/' : '';
+
+    const type = this._readConfig(this.cwd, 'type');
     const isHybridType = plugins.isTypeHybrid({type});
 
     return this.prompt([{
@@ -115,7 +144,7 @@ class Generator extends Base {
 
   writing() {
     const basekey = this.basetype === 'web' ? 'extensions' : 'sextensions';
-    const arr = this.config.get(basekey);
+    const arr = this._readConfig(this.cwd, basekey);
     arr.push(this.new_);
     this.config.set(basekey, arr);
 
