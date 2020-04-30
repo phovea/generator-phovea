@@ -5,9 +5,17 @@ const path = require('path');
 const glob = require('glob').sync;
 const fs = require('fs');
 
-function patchPackageJSON(config, unset, extra, replaceExtra) {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
-
+/**
+ * Modify package.json by passing the configuration
+ * @param {object} config Current configuration
+ * @param {*} unset
+ * @param {*} extra
+ * @param {*} replaceExtra
+ * @param {string} cwd The directory from which the generator is being called, i.e., `tdp_core/`.
+ * If cwd is provided than the `package.json` is going to be written to that subdirectory, otherwise to the current directory.
+ */
+function patchPackageJSON(config, unset, extra, replaceExtra, cwd = '') {
+  const pkg = this.fs.readJSON(this.destinationPath(cwd + 'package.json'), {});
   let pkgPatch;
   if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
     pkgPatch = JSON.parse(template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
@@ -23,7 +31,7 @@ function patchPackageJSON(config, unset, extra, replaceExtra) {
 
   (unset || []).forEach((d) => delete pkg[d]);
 
-  this.fs.writeJSON(this.destinationPath('package.json'), pkg);
+  this.fs.writeJSON(this.destinationPath(cwd + 'package.json'), pkg);
 }
 
 function stringifyInline(obj, space) {
@@ -53,7 +61,14 @@ function stringifyAble(config) {
   }, config);
 }
 
-function writeTemplates(config, withSamples) {
+/**
+ * Copies the template files to the current directory or to a subdirectory if `cwd` is provided.
+ * @param {object} config Current configuration
+ * @param {*} withSamples
+ * @param {string} cwd The directory from which the generator is being called, i.e., `tdp_core/`.
+ * If `cwd` is provided than the `package.json` is going to be written to that subdirectory, otherwise to the current directory.
+ */
+function writeTemplates(config, withSamples, cwd = '') {
   const includeDot = {
     globOptions: {
       dot: true
@@ -70,23 +85,23 @@ function writeTemplates(config, withSamples) {
     });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
-      this.fs.copyTpl(fi, this.destinationPath(dbase + rel), pattern);
+      this.fs.copyTpl(fi, this.destinationPath(cwd + dbase + rel), pattern);
     });
   };
 
   const copy = (prefix) => {
     if (fs.existsSync(this.templatePath(prefix + 'plain'))) {
-      this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+      this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(cwd), includeDot);
     }
 
     copyTpl(this.templatePath(prefix + 'processed'), '');
 
     if (config.name) {
       if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
-        this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+        this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(cwd + config.name.toLowerCase() + '/'), includeDot);
       }
 
-      copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
+      copyTpl(this.templatePath(prefix + 'pluginname_processed'), cwd + config.name.toLowerCase() + '/');
     }
   };
   copy('');
@@ -95,8 +110,8 @@ function writeTemplates(config, withSamples) {
   }
 }
 
-function useDevVersion() {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {
+function useDevVersion(cwd = '') {
+  const pkg = this.fs.readJSON(this.destinationPath(cwd + 'package.json'), {
     version: '1.0.0'
   });
   // assumption having a suffix like -SNAPSHOT use the dev version
