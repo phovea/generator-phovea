@@ -45,8 +45,35 @@ class Generator extends Base {
     this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
   }
 
-  prompting() {
-    const type = this.config.get('type');
+  /**
+   * Find all plugins in the workspace by checking if they have a `.yo-rc.json file`.
+   * @returns {string} The name of the plugin directory
+   */
+  _findPluginsInWorkspace() {
+    const files = glob('*/.yo-rc.json', {
+      cwd: this.destinationPath()
+    });
+    return files.map(path.dirname);
+  }
+
+  /**
+   * Prompt the user to choose the application he would like to add the extension to when the generator is executed from the workspace.
+   */
+  _chooseApplication() {
+    return this.prompt([{
+      type: 'list',
+      name: 'plugin',
+      choices: this._findPluginsInWorkspace(),
+      message: 'Plugin/Application',
+      // default: 'web',
+      when: this._isWorkspace()
+    }]);
+  }
+
+
+  async prompting() {
+    const {plugin} = await this._chooseApplication();
+    this.cwd = plugin ? plugin + '/' : '';
     const isHybridType = plugins.isTypeHybrid({type});
 
     return this.prompt([{
