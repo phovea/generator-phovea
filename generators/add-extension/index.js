@@ -43,12 +43,12 @@ function toJSONFromText(text) {
 const GENERATOR_PHOVEA_CONFIG = 'generator-phovea';
 
 /**
- * Find the string in the plugins `__init__.py` file and replace it with the new extension entry.
+ * Find the string in the plugin's `__init__.py` file and replace it with the new extension entry.
  */
 const REPLACE_STRING_PYTHON_FILE = '# generator-phovea:end';
 
 /**
- * Find the string in the plugins `phovea.ts` file and replace it with the new extension entry.
+ * Find the string in the plugin's `phovea.ts` file and replace it with the new extension entry.
  */
 const REPLACE_STRING_JAVASCRIPT_FILE = '// generator-phovea:end';
 
