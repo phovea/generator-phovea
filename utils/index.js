@@ -3,7 +3,8 @@ const Generator = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
-const fs = require('fs');
+const fs = require('fs-extra');
+const chalk = require('chalk');
 
 /**
  * Modify package.json by passing the configuration
@@ -131,6 +132,10 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   initializing() {
+    if (this._isInvalidWorkspace()) {
+      throw new Error(chalk.red('There must be no ".yo-rc.json" file in the workspace in order for the generator to function properly.\n'))
+    }
+
     this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
 
     this.config.defaults({
@@ -138,6 +143,21 @@ class BaseInitPluginGenerator extends Generator {
     });
   }
 
+  _isWorkspace() {
+    return fs.existsSync(this.destinationPath('.yo-rc-workspace.json'));
+  }
+
+  hasConfigFile() {
+    return fs.existsSync(this.destinationPath('.yo-rc.json'));
+  }
+
+  /**
+   * If there is both a `.yo-rc-workspace.json` and `.yo-rc.json` file in the current directory
+   * the workspace is invalid and the generator can not function properly.
+   */
+  _isInvalidWorkspace() {
+    return this._isWorkspace() && this.hasConfigFile();
+  }
   readmeAddon() {
     const f = this.templatePath('README.partial.md');
     if (fs.existsSync(f)) {
