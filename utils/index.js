@@ -116,13 +116,7 @@ class BaseInitPluginGenerator extends Generator {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version', {}, {
-      local: require.resolve('../generators/check-node-version')
-    });
-
-    this.composeWith('phovea:_check-own-version', {}, {
-      local: require.resolve('../generators/_check-own-version')
-    });
+    this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
 
     this.config.defaults({
       type: this.type
@@ -142,8 +136,6 @@ class BaseInitPluginGenerator extends Generator {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
       }, this.options)
-    }, {
-      local: require.resolve('../generators/_init-' + this.basetype)
     });
   }
 
