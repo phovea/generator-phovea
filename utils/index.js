@@ -134,7 +134,7 @@ class BaseInitPluginGenerator extends Generator {
 
   initializing() {
     if (this._isInvalidWorkspace()) {
-      throw new Error(chalk.red('There must be no ".yo-rc.json" file in the workspace in order for the generator to function properly.\n'))
+      throw new Error(chalk.red('Execution failed, because a ".yo-rc.json" and ".yo-rc-workspace.json" file was found. If this directory is a workspace, please remove the ".yo-rc.json" file and try again.\n'));
     }
 
     this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
@@ -168,7 +168,7 @@ class BaseInitPluginGenerator extends Generator {
   _mkdir(dir) {
     if (this._isWorkspace() && this.cwd !== dir + '/') {
       this.cwd = dir + '/';
-      this.log('create directory: ' + dir);
+      this.log('Create directory: ' + dir);
       return new Promise((resolve) => fs.ensureDir(dir, resolve));
     }
   }
