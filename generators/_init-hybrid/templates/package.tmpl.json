@@ -4,13 +4,7 @@
     "index.js",
     "phovea.js",
     "phovea_registry.js",
-    "build",
-    "<%-name.toLowerCase()%>",
-    "__init__.py",
-    "__main__.py",
-    "requirements.txt",
-    "requirements_dev.txt",
-    "docker_packages.txt"
+    "build"
   ],
   "scripts": {
     "check": "flake8 --exclude=.git,venv,deploy,docs,__pycache__,node_modules",

@@ -219,7 +219,7 @@ class Generator extends Base {
           fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
             modules: [],
             defaultApp: defaultAppName
-          });
+          }, {spaces: 2});
         }
 
         return this.product;
