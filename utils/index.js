@@ -148,16 +148,16 @@ class BaseInitPluginGenerator extends Generator {
     return fs.existsSync(this.destinationPath('.yo-rc-workspace.json'));
   }
 
-  hasConfigFile() {
+  _hasConfigFile() {
     return fs.existsSync(this.destinationPath('.yo-rc.json'));
   }
 
   /**
    * If there is both a `.yo-rc-workspace.json` and `.yo-rc.json` file in the current directory
-   * the workspace is invalid and the generator can not function properly.
+   * the workspace is invalid and the generator cannot function properly.
    */
   _isInvalidWorkspace() {
-    return this._isWorkspace() && this.hasConfigFile();
+    return this._isWorkspace() && this._hasConfigFile();
   }
 
   /**
