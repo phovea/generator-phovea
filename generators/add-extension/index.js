@@ -222,7 +222,7 @@ class Generator extends Base {
     }
 
     const [match, spaces] = old.match(new RegExp(`^([ ]*)(${REPLACE_STRING_JAVASCRIPT_FILE})`, 'm'));
-    const new_ = old.replace(match, `\n\n${spaces}registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, spaces)});\n${match}`);
+    const new_ = old.replace(match, `\n${spaces}registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, spaces)});\n${match}`);
     this.fs.write(file, new_);
 
     const target = this.destinationPath(cwd + `src/${d.module}${d.module.includes('.') ? '' : '.ts'}`);
@@ -244,7 +244,7 @@ class Generator extends Base {
     this._testReplaceStringExists(old, REPLACE_STRING_PYTHON_FILE, file);
 
     const [match, spaces] = old.match(new RegExp(`^([ ]*)(${REPLACE_STRING_PYTHON_FILE})`, 'm'));
-    const new_ = old.replace(match, `\n\n${spaces}registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, spaces)})\n${match}`);
+    const new_ = old.replace(match, `\n${spaces}registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, spaces)})\n${match}`);
     this.fs.write(file, new_);
 
     const target = this.destinationPath(`${cwd}${name}/${d.module}.py`);
