@@ -31,77 +31,81 @@ module.exports.mergeVersions = (name, versions) => {
 };
 
 /**
- * Finds the max version of an array of versions. i.e `['1.2.3-alpha.1', '4.0.1-beta.0', '^3.8.0', '~4.0.0', '^2.8.0', '^4.0.0', '4.0.1-rc.0']`
- * Can handle range(caret ,tilde) and prerelease versions
- * @param {stringArray} versions Array of semver versions even range versions
+ * Finds the max version of an array of versions, i.e., `['1.2.3-alpha.1', '4.0.1-beta.0', '^3.8.0', '~4.0.0', '^2.8.0', '^4.0.0', '4.0.1-rc.0']`.
+ * Can handle range(caret, tilde) and prerelease versions.
+ * @param {Array} versions Array of semver versions including range versions.
  */
 function findMaxVersion(versions) {
   const nonRangeVersions = versions.filter((v) => !hasRangeVersionTag(v)).map((v) => semver.prerelease(v) ? v : semver.coerce(v).version); // Filter out versions with `~` and `^`
-  // Sort versions and get max /semver.rcomapre() fails when you try to compare ranges i.e `~2.0.0`
+  // Sort versions and get max. Method `semver.rcomapre()` fails when you try comparing ranges, i.e., `~2.0.0`
   const maxNonRangeVersion = nonRangeVersions.sort(semver.rcompare)[0] || versions[versions.length - 1];
   if (versions.some((v) => hasRangeVersionTag(v))) {
-    const maxCaretRange = findMaxCaretRange(versions); // ['^1.0.0','^1.2.3']--> '^1.2.3'
-    const maxTildeRange = findMaxTildeRange(versions); // ['~1.0.0','~1.2.5']--> '~1.2.5'
+    const maxCaretRange = findMaxCaretRange(versions); // ['^1.0.0', '^1.2.3']--> '^1.2.3'
+    const maxTildeRange = findMaxTildeRange(versions); // ['~1.0.0', '~1.2.5']--> '~1.2.5'
     const maxRange = maxCaretRange && maxTildeRange ? findMaxRange(maxTildeRange, maxCaretRange) : maxTildeRange || maxCaretRange;
     return semver.gtr(maxNonRangeVersion, maxRange) ? maxNonRangeVersion : maxRange; // check maxNonRangeVersion is greater than all the versions possible in the range.
   }
-
   return maxNonRangeVersion;
 }
 
 /**
- * Find max between a tilde range and a caret range
- * @param {string} tildeRange Example value:'~2.0.3'
- * @param {string} caretRange Example value'^3.5.6'
+ * Find max between a tilde range and a caret range.
+ * @param {string} tildeRange , i.e., '~2.0.3'
+ * @param {string} caretRange , i.e., '^3.5.6'
+ * @returns {string} Returns a tilde range or a caret range.
  */
 function findMaxRange(tildeRange, caretRange) {
   const parsedCaretRange = semver.coerce(caretRange); // create a semver object from tag to access `major` and `version` properties
   const parsedTildeRange = semver.coerce(tildeRange);
-  // tilde range can only be greater than caret range when its major is greater i.e '~3.5.6' > '^2.9.0'
+  // tilde range can only be greater than caret range when its major is greater, i.e, '~3.5.6' > '^2.9.0'
   if (semver.gt(semver.coerce(parsedTildeRange.major), semver.coerce(parsedCaretRange.major))) {
     return tildeRange;
-  } else {  // in any other case the caret range is greater(has a greater upper domain)
+  } else {  // in any other case the caret range is greater (has a greater upper domain)
     return caretRange;
   }
 }
 
 /**
- * Remove caret or tilde and format version
- * @param {string} r
+ * Remove caret or tilde and format version.
+ * @param {string} range Possible values: `^2.3.4, `~3.0.0`.
+ * @returns {string} Return a version string without the range tags (tilde, caret).
  */
 function removeRangeTag(range) {
   return semver.prerelease(semver.minVersion(range)) ? semver.minVersion(range) : semver.coerce(range).version
 }
 
 /**
- * Finds the max caret range of an array of caret ranges
- * @param {string[]} versions Possible values:`['^2.3.4',^3.0.0]`
+ * Finds the max caret range of an array of caret ranges.
+ * @param {string[]} versions Possible values: `['^2.3.4', '^3.0.0']`
+ * @returns {void | string} Returns the caret range with the highest upper domain or void if there are no caret ranges in the versions array.
  */
 function findMaxCaretRange(versions) {
   const caretRanges = versions.filter((v) => v.startsWith('^'));
   if (caretRanges) {
-    const parsedTags = caretRanges.map((r) => removeRangeTag(r))
+    const parsedTags = caretRanges.map((r) => removeRangeTag(r));
     const max = parsedTags.sort(semver.rcompare)[0] || caretRanges[caretRanges.length - 1];
     return caretRanges.find((r) => semver.eq(removeRangeTag(r), max));
   }
 }
 
 /**
- * Finds the  max tilde range of an array of tilde ranges
- * @param {string[]} versions Possible values: `['~2.3.4',~3.0.0]`
+ * Finds the max tilde range of an array of tilde ranges.
+ * @param {string[]} versions Possible values: `['~2.3.4', '~3.0.0']`
+ * @returns {void | string} Returns the tilde range with the highest upper domain or void if there are no tilde ranges in the versions array.
  */
 function findMaxTildeRange(versions) {
   const tildeRanges = versions.filter((v) => v.startsWith('~'));
   if (tildeRanges) {
-    const parsedTags = tildeRanges.map((r) => removeRangeTag(r))
+    const parsedTags = tildeRanges.map((r) => removeRangeTag(r));
     const max = parsedTags.sort(semver.rcompare)[0] || tildeRanges[tildeRanges.length - 1];
     return tildeRanges.find((r) => semver.eq(removeRangeTag(r), max));
   }
 }
 
 /**
- *Check if version is a caret range or a tilde range
- * @param {string} version Possible values: `^=2.0.0`, `~3.5.6`, `3.4.5`
+ * Check if version is a caret or a tilde range.
+ * @param {string} version Possible values: `^=2.0.0`, `~3.5.6`, `3.4.5`.
+ * @returns {boolean}
  */
 function hasRangeVersionTag(version) {
   return /^[\^~]/gi.test(version);

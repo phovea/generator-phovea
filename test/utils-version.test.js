@@ -215,52 +215,52 @@ describe('find highest version from list', () => {
 
 describe('find max version or range version from list', () => {
 
-  it('works version for simple versions arrays', () => {
+  it('works for simple versions arrays', () => {
     const versions = ['0.0.5', '0.1.0', '1.0.0', '2.1.0', '2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('2.2.0');
   });
 
-  it('works version for arrays with prerelease versions', () => {
+  it('works for arrays with prerelease versions', () => {
     const versions = ['4.2.0-alpha.1', '4.2.0-beta.0', '0.1.0', '1.0.0', '2.1.0', '2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('4.2.0-beta.0');
   });
 
-  it('works  for arrays with prerelease and tilde ranges ', () => {
+  it('works for arrays with prerelease and tilde ranges', () => {
     const versions = ['4.2.0-alpha.1', '4.2.0-beta.0', '0.1.0', '~4.2.0', '2.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('~4.2.0');
   });
 
-  it('works for arrays with prerelease and tilde and caret ranges ', () => {
+  it('works for arrays with prerelease, tilde and caret ranges', () => {
     const versions = ['4.2.0-alpha.1', '4.2.0-beta.0', '^4.2.0', '~4.2.0', '2.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('^4.2.0');
   });
 
-  it('works for "^4.2.0" "~4.8.0" ', () => {
+  it('works for `^4.2.0`', () => {
     const versions = ['4.2.0-alpha.1', '4.2.0-beta.0', '^4.2.0', '~4.2.0', '2.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('^4.2.0');
   });
 
-  it('works for  caret prerelease ranges ', () => {
+  it('works for caret prerelease ranges', () => {
     const versions = ['^4.2.0-alpha.1', '^4.2.0-beta.0', '^4.1.0', '2.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('^4.2.0-beta.0');
   });
 
-  it('works  for tilde prerelease ranges ', () => {
+  it('works for tilde prerelease ranges', () => {
     const versions = ['~4.2.0-alpha.1', '~4.2.0-beta.0', '~4.1.0', '2.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('~4.2.0-beta.0');
   });
 
-  it('works for tilde and caret prerelease ranges ', () => {
+  it('works for tilde and caret prerelease ranges', () => {
     const versions = ['~4.2.0-alpha.1', '^4.2.0-rc.0', '~4.2.0-beta.1', '^4.1.0', '2.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('^4.2.0-rc.0');
   });
 
-  it('works for versions that start with `v` ', () => {
+  it('works for versions that start with `v`', () => {
     const versions = ['~4.2.0-alpha.1', '^4.2.0-rc.0', '~4.2.0-beta.1', '^4.1.0', 'v5.1.0', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('5.1.0');
   });
 
-  it('works for versions of the format `5.1` ', () => {
+  it('works for versions of the format `5.1`', () => {
     const versions = ['~4.2.0-alpha.1', '^4.2.0-rc.0', '~4.2.0-beta.1', '^4.1.0', '5.1', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('5.1.0');
   });
@@ -268,7 +268,7 @@ describe('find max version or range version from list', () => {
 
 describe('semver-intersect works for prerelease ranges', () => {
 
-  it('finds intersection of prerelease ranges', () => {
+  it('finds intersection of an array of prerelease ranges', () => {
     const versions = ['~4.2.0-alpha.1', '~4.2.0-beta.1',];
     expect(intersect(...versions)).toBe('~4.2.0-beta.1');
   });
