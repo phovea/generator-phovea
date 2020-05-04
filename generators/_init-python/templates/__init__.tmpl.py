@@ -12,7 +12,7 @@ def phovea(registry):
     """
 
     # generator-phovea:begin
-    <% - sextensions.map((d) => `  registry.append('${d.type}', '${d.id}', '${name.toLowerCase()}.${d.module}', ${stringifyPython(d.extras, '  ')})`).join('\n\n')%>
+    <% - sextensions.map((d) => `    registry.append('${d.type}', '${d.id}', '${name.toLowerCase()}.${d.module}', ${stringifyPython(d.extras, '  ')})`).join('\n\n')%>
     # generator-phovea:end
     pass
 
