@@ -42,13 +42,7 @@ class Generator extends Base {
   }
 
   initializing() {
-    this.composeWith('phovea:check-node-version', {}, {
-      local: require.resolve('../check-node-version')
-    });
-
-    this.composeWith('phovea:_check-own-version', {}, {
-      local: require.resolve('../_check-own-version')
-    });
+    this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
   }
 
   prompting() {
@@ -110,13 +104,20 @@ class Generator extends Base {
   }
 
   _injectWebExtension(d) {
-    const importFunction = fs.existsSync('src/phovea.ts') ? 'System.import' : 'import'; // TODO remove System.import for Typescript case when switching to Webpack 4 (see https://github.com/phovea/generator-phovea/issues/286#issuecomment-566553497)
     const pathToRegistry = fs.existsSync('src/phovea.ts') ? 'src/phovea.ts' : 'phovea.js'; // check if the project has a phovea.ts file in src folder or a phovea.js in plugin root
     const file = this.destinationPath(pathToRegistry);
-
     const old = this.fs.read(file);
-    const absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
-    const text = `\n\n  registry.push('${d.type}', '${d.id}', function() { return ${importFunction}('${absFile}'); }, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
+    let absFile = '';
+    let importFunction = '';
+
+    if(fs.existsSync('src/phovea.ts')) {
+      absFile = d.module.startsWith('~') ? d.module.slice(1) : `./${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
+      importFunction = `() => System.import('${absFile}')`; // TODO remove System.import for Typescript case when switching to Webpack 4 (see https://github.com/phovea/generator-phovea/issues/286#issuecomment-566553497)
+    } else {
+      absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
+      importFunction = `function() { return import('${absFile}'); }`;
+    }
+    const text = `\n\n  registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, ' ')});\n  // generator-phovea:end`;
     const new_ = old.replace('  // generator-phovea:end', text);
     this.fs.write(file, new_);
 
