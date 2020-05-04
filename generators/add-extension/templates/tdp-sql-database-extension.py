@@ -10,11 +10,11 @@ views = dict()
 
 # register the view for getting the mytable itself
 views['<%-id%>'] = DBViewBuilder().idtype(idtype).table('<%-id%>') \
-  .query("""SELECT my_id as id, * FROM <%-id%>""") \
-  .derive_columns() \
-  .assign_ids() \
-  .call(inject_where) \
-  .build()
+    .query("""SELECT my_id as id, * FROM <%-id%>""") \
+    .derive_columns() \
+    .assign_ids() \
+    .call(inject_where) \
+    .build()
 
 # notes:
 # by convention the 'id' column contains the identifier column of a row
@@ -28,10 +28,10 @@ add_common_queries(views, '<%-id%>', idtype, 'my_id as id', columns)
 
 
 def create():
-  """
-  factory method to build this extension
-  :return:
-  """
-  connector = DBConnector(views)
-  connector.description = 'sample connector to the <%-id%> database'
-  return connector
+    """
+    factory method to build this extension
+    :return:
+    """
+    connector = DBConnector(views)
+    connector.description = 'sample connector to the <%-id%> database'
+    return connector
