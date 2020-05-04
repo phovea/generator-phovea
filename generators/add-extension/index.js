@@ -220,8 +220,9 @@ class Generator extends Base {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
       importFunction = `function() { return import('${absFile}'); }`;
     }
-    const text = `\n\n  registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, ' ')});\n  ${REPLACE_STRING_JAVASCRIPT_FILE}`; // indentation is 2 spaces
-    const new_ = old.replace(`  ${REPLACE_STRING_JAVASCRIPT_FILE}`, text);  // also here indentation is 2 spaces
+
+    const [match, spaces] = old.match(new RegExp(`^([ ]*)(${REPLACE_STRING_JAVASCRIPT_FILE})`, 'm'));
+    const new_ = old.replace(match, `\n\n${spaces}registry.push('${d.type}', '${d.id}', ${importFunction}, ${d.stringify(d.extras, spaces)});\n${match}`);
     this.fs.write(file, new_);
 
     const target = this.destinationPath(cwd + `src/${d.module}${d.module.includes('.') ? '' : '.ts'}`);
@@ -239,11 +240,12 @@ class Generator extends Base {
     const name = this._readConfig(cwd, 'name');
     const file = this.destinationPath(`${cwd}${name}/__init__.py`);
     const old = this.fs.read(file);
-    const text = `\n\n  registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, '  ')})\n  ${REPLACE_STRING_PYTHON_FILE}`; // indentation is 2 spaces
-    const new_ = old.replace(`  ${REPLACE_STRING_PYTHON_FILE}`, text); // also here indentation is 2 spaces
-    this.fs.write(file, new_);
 
     this._testReplaceStringExists(old, REPLACE_STRING_PYTHON_FILE, file);
+
+    const [match, spaces] = old.match(new RegExp(`^([ ]*)(${REPLACE_STRING_PYTHON_FILE})`, 'm'));
+    const new_ = old.replace(match, `\n\n${spaces}registry.append('${d.type}', '${d.id}', '${name}.${d.module}', ${d.stringifyPython(d.extras, spaces)})\n${match}`);
+    this.fs.write(file, new_);
 
     const target = this.destinationPath(`${cwd}${name}/${d.module}.py`);
     if (!fs.existsSync(target)) {
