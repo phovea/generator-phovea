@@ -135,8 +135,9 @@ class BaseInitPluginGenerator extends Generator {
     this.composeWith('phovea:_init-' + this.basetype, {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
-      }, this.options)
-    });
+      }, this.options),
+      useDefaults: this.options.useDefaults
+    })
   }
 
   writing() {
