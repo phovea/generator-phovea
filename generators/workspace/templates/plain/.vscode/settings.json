@@ -20,17 +20,22 @@
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Args": ["--exclude=.git,venv,deploy,docs,__pycache__,node_modules"],
     "editor.formatOnSave": false,
-    "beautify.tabSize": 2,
-    "beautify.options": {
-        "end_with_newline": true,
-        "preserve_newlines": true,
-        "space_in_paren": true,
-        "space_around_selector_separator": true
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "tsimporter.spaceBetweenBraces": false,
-    "tsimporter.noStatusBar": true,
-    "typescriptHero.imports.insertSpaceBeforeAndAfterImportBraces": false,
-    "typescriptHero.codeOutline.enabled": false,
-    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false
+    "[yaml]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
 }
