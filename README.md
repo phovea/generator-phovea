@@ -1,4 +1,5 @@
-# generator-phovea [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url]
+# generator-phovea 
+[![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][circleci-image]][circleci-url]
 
 helper generator for phovea
 
