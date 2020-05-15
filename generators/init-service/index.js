@@ -18,8 +18,9 @@ class Generator extends BasePluginGenerator {
       name: 'serviceName',
       message: 'Service Name',
       default: this.config.get('serviceName')
-    }]).then((props) => {
-      this.config.set('serviceName', props.serviceName);
+    }]).then(({serviceName}) => {
+      this.config.set('serviceName', serviceName);
+      this.config.set('cwd', serviceName);
     });
   }
 

@@ -1,4 +1,5 @@
-# generator-phovea [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+# generator-phovea 
+[![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][circleci-image]][circleci-url]
 
 helper generator for phovea
 
@@ -51,7 +52,5 @@ This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform 
 [phovea-url]: https://phovea.caleydo.org
 [npm-image]: https://badge.fury.io/js/generator-phovea.svg
 [npm-url]: https://npmjs.org/package/generator-phovea
-[travis-image]: https://travis-ci.org/phovea/generator-phovea.svg?branch=master
-[travis-url]: https://travis-ci.org/phovea/generator-phovea
-[daviddm-image]: https://david-dm.org/phovea/generator-phovea.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/phovea/generator-phovea
+[circleci-image]: https://circleci.com/gh/phovea/generator-phovea.svg?style=shield
+[circleci-url]: https://circleci.com/gh/phovea/generator-phovea
