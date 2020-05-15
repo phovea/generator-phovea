@@ -65,17 +65,8 @@ class Generator extends Base {
     });
   }
 
-  /**
-   * Removes requirements from github with a version tag
-   * i.e :`-e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server`
-   *
-   */
-  _removeGithubTagged(requirements) {
-    return requirements.filter((req) => !(req.includes('github.com') && !req.includes('develop')));
-  }
-
   _generateDependencies(useDevelopDependencies, cwd) {
-    const requirements = parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
+    let requirements = parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
     const dockerPackages = parseRequirements(this.fs.read(this.destinationPath(cwd + 'docker_packages.txt'), {defaults: ''}));
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
@@ -86,6 +77,16 @@ class Generator extends Base {
     this.config.set('modules', modules);
     modules.filter(known().plugin.isTypeServer).forEach((m) => {
       const p = known().plugin.byName(m);
+
+     // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
+     // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
+     // and the incoming format is phovea_server>=5.0.1,<6.0.0
+      if (!useDevelopDependencies) {
+        const devRequirement = Object.keys(p.develop.requirements)[0];
+        const masterRequirment = Object.keys(p.requirements)[0];
+        requirements = _.omit(requirements, [devRequirement, masterRequirment]);
+      }
+
       _.assign(requirements, (useDevelopDependencies ? p.develop : p).requirements);
       _.assign(dockerPackages, (useDevelopDependencies ? p.develop : p).dockerPackages);
     });
@@ -97,9 +98,8 @@ class Generator extends Base {
       _.assign(requirements, p.requirements);
       _.assign(dockerPackages, p.dockerPackages);
     });
-
     return {
-      requirements: this._removeGithubTagged(concat(requirements)),
+      requirements: concat(requirements),
       dockerPackages: concat(dockerPackages)
     };
   }
