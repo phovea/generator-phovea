@@ -64,13 +64,14 @@ class Generator extends Base {
       isWorkspace: this.options.isWorkspace
     });
   }
+
   /**
    * Removes requirements from github with a version tag
    * i.e :`-e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server`
    *
    */
   _removeGithubTagged(requirements) {
-    return requirements.filter((req) => !(req.includes('github.com') && !req.includes('develop')))
+    return requirements.filter((req) => !(req.includes('github.com') && !req.includes('develop')));
   }
 
   _generateDependencies(useDevelopDependencies, cwd) {
@@ -99,7 +100,7 @@ class Generator extends Base {
 
     return {
       requirements: this._removeGithubTagged(concat(requirements)),
-      dockerPackages: concat(dockerPackages),
+      dockerPackages: concat(dockerPackages)
     };
   }
   writing() {
