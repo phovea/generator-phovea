@@ -1,7 +1,7 @@
 {
   "mode": "file",
   "out": "./build/docs/frontend",
-  "readme": "none",
+  "readme": "./docs/README.md",
   "hideGenerator": true,
   "includeVersion": true,
   "ignoreCompilerErrors": true,
