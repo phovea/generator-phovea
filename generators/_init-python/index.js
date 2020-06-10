@@ -101,7 +101,8 @@ class Generator extends Base {
     this.cwd = this.options.isWorkspace ? (config.cwd || config.name) + '/' : '';
     const deps = this._generateDependencies(useDevVersion.call(this, this.cwd), this.cwd);
 
-    patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
+    // deletes devDependecies from package.json in case there are some there. My test show that there are no devDependdencies at this point.
+    // patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
     writeTemplates.call(this, config, !this.options.noSamples, this.cwd);
 
     this.fs.write(this.destinationPath(this.cwd + 'requirements.txt'), deps.requirements.join('\n'));
