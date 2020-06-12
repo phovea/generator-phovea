@@ -27,7 +27,6 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Check if build is successful
 * [ ] Update this version number following [semver](https://semver.org)
 * [ ] Commit and push *package.json* with new version number
-* [ ] Wait until build is successful
 * [ ] Assign reviewer and wait for final review
 * [ ] Merge this pull request into master branch
 * [ ] Add release label (i.e., `release: major`, `release: minor`, or `release: patch`)
