@@ -1,5 +1,6 @@
 'use strict';
 const _ = require('lodash');
+const chalk = require('chalk');
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 const fs = require('fs');
@@ -108,9 +109,8 @@ class Generator extends Base {
       return; // hybrid
     }
     this.composeWith('phovea:_node', {
-      options: this.options
-    }, {
-      local: require.resolve('../_node')
+      options: this.options,
+      isWorkspace: this.options.isWorkspace
     });
   }
 
@@ -129,22 +129,33 @@ class Generator extends Base {
 
   writing() {
     const config = this.config.getAll();
+    this.cwd = this.options.isWorkspace ? (config.app || config.name) + '/' : '';
     patchPackageJSON.call(this, config, [], {
-      dependencies: this._generateDependencies(useDevVersion.call(this))
-    });
-    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
-    writeTemplates.call(this, config);
-    // don't overwrite existing registry file
-    if (!fs.existsSync(this.destinationPath('phovea.js'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.js'), this.destinationPath('phovea.js'), stringifyAble(config));
+      dependencies: this._generateDependencies(useDevVersion.call(this, this.cwd))
+    }, null, this.cwd);
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
+    writeTemplates.call(this, config, null, this.cwd);
+
+    // do not overwrite existing registry file
+    if (!fs.existsSync(this.destinationPath(this.cwd + 'src/phovea.ts'))) {
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath(this.cwd + 'src/phovea.ts'), stringifyAble(config));
     }
   }
 
   install() {
-    if (this.options.install) {
-      this.installDependencies({
-        bower: false
-      });
+    if (this.options.options.install) {
+      const options = this.cwd ? {cwd: this.cwd} : {}
+      this.spawnCommand("npm", ["install"], options);
+    }
+  }
+
+  end() {
+    if (fs.existsSync(this.destinationPath(this.cwd + 'phovea.js'))) {
+      this.log('\r\n');
+      this.log(chalk.red(`ACTION REQUIRED!`));
+      this.log(chalk.default(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.default(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.default(` now!`));
+      this.log(chalk.default(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.default(`file from this plugin repository.`));
+      this.log(chalk.default(`If you do not migrate the content the registered extension points will be unavailable.`));
     }
   }
 }

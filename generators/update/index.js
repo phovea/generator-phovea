@@ -1,4 +1,5 @@
 'use strict';
+const chalk = require('chalk');
 const Base = require('yeoman-generator');
 const fs = require('fs');
 
@@ -48,15 +49,17 @@ class Generator extends Base {
 
   default() {
     if (this.isWorkspace) {
-      this.composeWith(`phovea:workspace`, {}, {
-        local: require.resolve(`../workspace`)
-      });
+      this.composeWith(`phovea:workspace`);
     } else {
       const type = this.config.get('type');
+
+      if (!type) {
+        this.log(chalk.red('No .yo-rc file found or the .yo-rc file does not contain a type property.'));
+        process.exit(1); // terminate the yeoman process
+      }
+
       this.composeWith(`phovea:init-${type}`, {
         options: this.props
-      }, {
-        local: require.resolve(`../init-${type}`)
       });
     }
   }

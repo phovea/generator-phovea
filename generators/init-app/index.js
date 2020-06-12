@@ -34,6 +34,7 @@ class PluginGenerator extends BasePluginGenerator {
     }]).then((props) => {
       this.config.set('app', props.app);
       this.config.set('clientOnly', props.clientOnly);
+      this.config.set('cwd', props.app);
     });
   }
 
@@ -43,8 +44,9 @@ class PluginGenerator extends BasePluginGenerator {
 
   writing() {
     const config = this.config.getAll();
-    this._patchPackageJSON(config, ['main']);
-    this._writeTemplates(config, !this.options.noSamples);
+    this._mkdir(config.cwd);
+    this._patchPackageJSON(config, ['main'], null, this.cwd);
+    this._writeTemplates(config, !this.options.noSamples, this.cwd);
   }
 
   end() {

@@ -4,6 +4,7 @@ const parseAuthor = require('parse-author');
 const Base = require('yeoman-generator');
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 const originUrl = require('git-remote-origin-url');
+const fs = require('fs-extra');
 
 // based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
 
@@ -16,10 +17,11 @@ class PackageJSONGenerator extends Base {
     this.option('readme');
     this.option('longDescription');
     this.option('useDefaults');
+    this.isWorkspace = this.options.isWorkspace;
   }
 
   initializing() {
-    const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
+    const pkg = this.isWorkspace ? {} : this.fs.readJSON(this.destinationPath('package.json'), {});
 
     this.props = {
       description: this.options.description || pkg.description || '',
@@ -62,11 +64,22 @@ class PackageJSONGenerator extends Base {
     return this.prompt([{
       name: 'name',
       message: 'Plugin Name',
-      default: this.config.get('name'),
-      filter: _.snakeCase
+      default: this.isWorkspace ? null : this.config.get('name'), // avoid using the directory name of the workspace as default when initializing a plugin from the workspace.
+      validate: this._hasNoWhitespace, // check if plugin name has no white space between
+      filter: (name) => name.trim() // filter white space around plugin name
     }]).then((props) => {
       this.config.set('name', props.name);
     });
+  }
+
+  /**
+   * Check if string is one continuous word with no spaces
+   * i.e _hasNoWhiteSpace('my app')--> false
+   * @param {string} string
+   * @returns {boolean|string} Returns true if the given string does not contain white spaces. Otherwise it returns an error message string.
+   */
+  _hasNoWhitespace(string) {
+    return string.trim().indexOf(' ') === -1 || 'The plugin name must not contain whitespace. Please use a dash (-) or an underscore (_) as separator.';
   }
 
   _promptDescription() {
@@ -122,40 +135,59 @@ class PackageJSONGenerator extends Base {
 
   writing() {
     const config = _.extend({}, this.props, this.config.getAll());
-
+    this.cwd = this.isWorkspace ? (config.cwd || config.name) + '/' : ''; // use config.cwd for init-app or init-service generators and config.name for the rest.
     if (this.originUrl) {
       config.repository = this.originUrl;
     } else {
       config.repository = `https://github.com/${config.githubAccount}/${config.name}.git`;
     }
-    patchPackageJSON.call(this, config);
+    patchPackageJSON.call(this, config, null, null, null, this.cwd);
 
     config.content = this.options.readme || '';
     config.longDescription = this.options.longDescription || this.props.description || '';
-    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath('README.md'), config);
+    this.fs.copyTpl(this.templatePath('README.tmpl.md'), this.destinationPath(this.cwd + 'README.md'), config);
 
     const includeDot = {
       globOptions: {
         dot: true
       }
     };
-    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(), includeDot);
+    this.fs.copy(this.templatePath('plain/**/*'), this.destinationPath(this.cwd), includeDot);
+  }
+
+  /**
+   * When initializing a plugin from the workspace the `.yo-rc.json` config file is saved in the workspace.
+   * Therefore copy the file into the the new created plugin subdirectory and delete it from the workspace.
+   */
+  _moveConfigFile() {
+    const currentPosition = this.destinationPath('.yo-rc.json');
+    const targetPosition = this.destinationPath(this.cwd + '.yo-rc.json');
+    if (fs.existsSync(currentPosition)) {
+      this.fs.copy(currentPosition, targetPosition);
+      this.fs.delete(currentPosition);
+    }
   }
 
   end() {
     this.log(this.destinationPath())
     this.spawnCommandSync('git', ['init'], {
-      cwd: this.destinationPath()
+      cwd: this.destinationPath(this.cwd)
     });
+
     this.spawnCommandSync('git', ['add', '--all'], {
       cwd: this.destinationPath()
-    })
+    });
     this.spawnCommandSync('git', ['commit', '-am', '"Initial commit"'], {
       cwd: this.destinationPath()
-    })
+    });
     this.spawnCommandSync('git', ['checkout', '-b', 'develop'], {
       cwd: this.destinationPath()
-    })
+    });
+
+    // after all the files have been written move the config file from the workspace to the plugin subdirectory
+    if (this.isWorkspace) {
+      this._moveConfigFile();
+    }
   }
 }
 
