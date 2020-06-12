@@ -19,7 +19,7 @@ class PluginGenerator extends BasePluginGenerator {
     if (!this._isWorkspace()) {
       return;
     }
-    this.log('\n\nnext steps: ');
+    this.log('\n\nNext steps: ');
     this.log(chalk.yellow(' npm install'));
     this.log(chalk.yellow(` npm build`));
   }
