@@ -10,7 +10,7 @@ const rimraf = require('rimraf');
 const target = '../slib';
 
 /**
- * Subgenerators composed with the `init-lib-slib` subgenerator.
+ * Subgenerators composed with the `init-slib` subgenerator.
  */
 const GENERATOR_DEPENDENCIES = [
   '../generators/_node',

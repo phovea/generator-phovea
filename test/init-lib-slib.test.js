@@ -5,6 +5,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
+const testUtils=require('./testUtils');
 /**
  * Directory name to run the generator
  */
@@ -24,13 +25,6 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
-/**
- * Get the path to the templates of a specific subgenerator.
- * @param {string} subgenerator 
- * @param {string} file 
- */
-const templatePath = (subgenerator, file) => path.join(__dirname, `../generators/${subgenerator}/templates/${file}`);
-
 
 
 describe('generate lib-slib plugin with default prompt values', () => {
@@ -48,7 +42,7 @@ describe('generate lib-slib plugin with default prompt values', () => {
   });
 
   it('generates `package.json` with the correct devDependencies', () => {
-    const initWebPackage = fse.readJSONSync(templatePath('_init-web', 'package.tmpl.json'));
+    const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
     assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
   });
 });
