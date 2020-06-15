@@ -17,7 +17,7 @@ const name = 'slib';
 /**
  * Directory path to run the generator
  */
-const target = '../' + name
+const target = '../' + name;
 
 /**
  * Subgenerators composed with the `init-slib` subgenerator.
