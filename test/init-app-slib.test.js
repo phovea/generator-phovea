@@ -48,4 +48,8 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
     const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
     assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
   });
+
+  it('generates `.gitignore` that has no `/dist/` entry', () => {
+    assert.noFileContent('.gitignore','/dist/');
+  });
 });
