@@ -8,14 +8,18 @@ const fse = require('fs-extra');
 /**
  * Directory name to run the generator
  */
-const target = '../temp';
+const target = '../libslib';
 
 /**
  * Subgenerators composed with the `init-lib-slib` subgenerator.
  */
 const GENERATOR_DEPENDENCIES = [
-  '../generators/_init-web',
   '../generators/_node',
+  '../generators/_init-hybrid',
+  '../generators/init-lib',
+  '../generators/_init-web',
+  '../generators/init-slib',
+  '../generators/_init-python',
   '../generators/_check-own-version',
   '../generators/check-node-version',
 ];
@@ -34,9 +38,9 @@ describe('generate lib-slib plugin with default prompt values', () => {
 
   beforeAll(() => {
     return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
+      .run(path.join(__dirname, '../generators/init-lib-slib'))
       .inDir(path.join(__dirname, target), () => null)
-      .withGenerators(GENERATOR_DEPENDENCIES)
+      .withGenerators(GENERATOR_DEPENDENCIES);
   });
 
   afterAll(() => {
@@ -45,6 +49,6 @@ describe('generate lib-slib plugin with default prompt values', () => {
 
   it('generates `package.json` with the correct devDependencies', () => {
     const initWebPackage = fse.readJSONSync(templatePath('_init-web', 'package.tmpl.json'));
-    assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies})
+    assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
   });
-})
+});
