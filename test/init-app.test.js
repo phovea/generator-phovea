@@ -10,10 +10,10 @@ const testUtils = require('./testUtils');
 /**
  * Directory name to run the generator
  */
-const target = '../lib';
+const target = '../app';
 
 /**
- * Subgenerators composed with the `init-lib` subgenerator.
+ * Subgenerators composed with the `init-app` subgenerator.
  */
 const GENERATOR_DEPENDENCIES = [
   '../generators/_node',
@@ -23,13 +23,16 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
-describe('generate lib plugin with default prompt values', () => {
+describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
 
 
   beforeAll(() => {
     return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
+      .run(path.join(__dirname, '../generators/init-app'))
       .inDir(path.join(__dirname, target), () => null)
+      .withPrompts({
+          app:'appName'
+      })
       .withGenerators(GENERATOR_DEPENDENCIES);
   });
 
