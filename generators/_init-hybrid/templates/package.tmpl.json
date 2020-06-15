@@ -12,7 +12,7 @@
     "clean:docs": "rimraf build/docs && mkdir -m777 -p build/docs && shx --verbose cp -R docs/README.md build/docs/;",
     "docs:web": "typedoc --options typedoc.json --name <%-name%> ./src/index.ts",
     "docs:python": "sphinx-apidoc -o docs -f ./<%-name%> && sphinx-build ./docs build/docs/backend",
-    "docs": "npm run clean:docs npm run docs:web && npm run docs:python",
+    "docs": "npm run clean:docs && npm run docs:web && npm run docs:python",
     "pretest:web": "npm run compile",
     "pretest:python": "npm run check",
     "pretest": "echo hybrid",
