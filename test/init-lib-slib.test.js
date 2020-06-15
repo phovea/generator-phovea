@@ -27,7 +27,7 @@ const GENERATOR_DEPENDENCIES = [
 
 const expectedFiles = [
   'tsd.d.ts',
-
+  'jest.config.js'
 ];
 
 const unExpectedFiles = [
