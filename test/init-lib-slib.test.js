@@ -6,10 +6,18 @@ const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const testUtils = require('./testUtils');
+const {template} = require('lodash');
+
 /**
  * Directory name to run the generator
  */
-const target = '../libslib';
+const name = 'libslib';
+
+
+/**
+ * Directory path to run the generator
+ */
+const target = '../' + name
 
 /**
  * Subgenerators composed with the `init-lib-slib` subgenerator.
@@ -45,5 +53,10 @@ describe('generate lib-slib plugin with default prompt values', () => {
     const initWebDevDeps = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json')).devDependencies;
     const nodeDevDeps = fse.readJSONSync(testUtils.templatePath('_node', 'package.tmpl.json')).devDependencies;
     assert.jsonFileContent('package.json', {devDependencies: Object.assign(initWebDevDeps, nodeDevDeps)});
+  });
+
+  it('generates `package.json` with the correct scripts', () => {
+    const initHybridScripts = JSON.parse(template(JSON.stringify(fse.readJSONSync(testUtils.templatePath('_init-hybrid', 'package.tmpl.json'))))({name})).scripts;
+    assert.jsonFileContent('package.json', {scripts: initHybridScripts});
   });
 });

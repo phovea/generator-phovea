@@ -6,11 +6,18 @@ const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const testUtils=require('./testUtils');
+const {template} = require('lodash');
+
 /**
  * Directory name to run the generator
  */
-const target = '../appslib';
+const name = 'appslib';
 
+
+/**
+ * Directory path to run the generator
+ */
+const target = '../' + name
 /**
  * Subgenerators composed with the `init-app-slib` subgenerator.
  */
@@ -48,5 +55,10 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
     const initWebDevDeps = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json')).devDependencies;
     const nodeDevDeps = fse.readJSONSync(testUtils.templatePath('_node', 'package.tmpl.json')).devDependencies;
     assert.jsonFileContent('package.json', {devDependencies: Object.assign(initWebDevDeps, nodeDevDeps)});
+  });
+
+  it('generates `package.json` with the correct scripts', () => {
+    const initHybridScripts = JSON.parse(template(JSON.stringify(fse.readJSONSync(testUtils.templatePath('_init-hybrid', 'package.tmpl.json'))))({name})).scripts;
+    assert.jsonFileContent('package.json', {scripts: initHybridScripts});
   });
 });

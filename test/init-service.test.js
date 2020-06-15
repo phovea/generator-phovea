@@ -6,11 +6,22 @@ const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const testUtils = require('./testUtils');
+const {template} = require('lodash');
 
 /**
  * Directory name to run the generator
  */
-const target = '../service';
+const name = 'service';
+
+/**
+ * Service name
+ */
+const serviceName = 'sample';
+
+/**
+ * Directory path to run the generator
+ */
+const target = '../' + name
 
 /**
  * Subgenerators composed with the `init-slib` subgenerator.
@@ -39,5 +50,11 @@ describe('generate service plugin with default prompt values', () => {
   it('generates `package.json` with the correct devDependencies', () => {
     const nodeDevDeps = fse.readJSONSync(testUtils.templatePath('_node', 'package.tmpl.json')).devDependencies;
     assert.jsonFileContent('package.json', {devDependencies: nodeDevDeps});
+  });
+
+  it('generates `package.json` with the correct scripts', () => {
+    const initPythonScripts = JSON.parse(template(JSON.stringify(fse.readJSONSync(testUtils.templatePath('_init-python', 'package.tmpl.json'))))({name})).scripts;
+    const initServiceScripts = JSON.parse(template(JSON.stringify(fse.readJSONSync(testUtils.templatePath('init-service', 'package.tmpl.json'))))({name, serviceName})).scripts;
+    assert.jsonFileContent('package.json', {scripts: Object.assign(initPythonScripts, initServiceScripts)});
   });
 });
