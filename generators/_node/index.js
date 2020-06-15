@@ -169,7 +169,6 @@ class PackageJSONGenerator extends Base {
   }
 
   end() {
-    this.log(this.destinationPath())
     this.spawnCommandSync('git', ['init'], {
       cwd: this.destinationPath(this.cwd)
     });
