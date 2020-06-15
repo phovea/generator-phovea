@@ -7,7 +7,7 @@ const rimraf = require('rimraf');
 /**
  * Directory name to run the generator
  */
-const target = '../slib';
+const target = '../service';
 
 /**
  * Subgenerators composed with the `init-slib` subgenerator.
@@ -19,12 +19,12 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
-describe('generate slib plugin with default prompt values', () => {
+describe('generate service plugin with default prompt values', () => {
 
 
   beforeAll(() => {
     return helpers
-      .run(path.join(__dirname, '../generators/init-slib'))
+      .run(path.join(__dirname, '../generators/init-service'))
       .inDir(path.join(__dirname, target), () => null)
       .withGenerators(GENERATOR_DEPENDENCIES);
   });
