@@ -50,4 +50,8 @@ describe('generate lib plugin with default prompt values', () => {
     const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
+
+  it('generates `tsconfig_dev.json` with correct content', () => {
+    assert.file('tsconfig_dev.json');
+  });
 });
