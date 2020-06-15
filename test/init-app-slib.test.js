@@ -52,4 +52,9 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
   it('generates `.gitignore` that has no `/dist/` entry', () => {
     assert.noFileContent('.gitignore','/dist/');
   });
+
+  it('generates `tsconfig.json` with correct content', () => {
+    const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+    assert.jsonFileContent('tsconfig.json', initWebTsConfig);
+  });
 });
