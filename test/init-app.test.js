@@ -23,6 +23,10 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
+const expectedFiles = [
+  'tsd.d.ts'
+];
+
 describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
 
 
@@ -56,5 +60,9 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
   
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
+  });
+
+  it('generates expected plugin files', () => {
+    assert.file(expectedFiles);
   });
 });

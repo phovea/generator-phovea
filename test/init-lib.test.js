@@ -23,6 +23,12 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
+
+const expectedFiles = [
+  'tsd.d.ts'
+];
+
+
 describe('generate lib plugin with default prompt values', () => {
 
 
@@ -43,7 +49,7 @@ describe('generate lib plugin with default prompt values', () => {
   });
 
   it('generates `.gitignore` that has no `/dist/` entry', () => {
-    assert.noFileContent('.gitignore','/dist/');
+    assert.noFileContent('.gitignore', '/dist/');
   });
 
   it('generates `tsconfig.json` with correct content', () => {
@@ -53,5 +59,9 @@ describe('generate lib plugin with default prompt values', () => {
 
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
+  });
+
+  it('generates expected plugin files', () => {
+    assert.file(expectedFiles);
   });
 });

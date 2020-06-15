@@ -25,7 +25,9 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
-
+const expectedFiles = [
+  'tsd.d.ts'
+];
 
 describe('generate lib-slib plugin with default prompt values', () => {
 
@@ -57,5 +59,9 @@ describe('generate lib-slib plugin with default prompt values', () => {
 
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
+  });
+
+  it('generates expected plugin files', () => {
+    assert.file(expectedFiles);
   });
 });
