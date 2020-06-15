@@ -58,7 +58,7 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
-  it('generates `tsconfig_dev.json`', () => {
-    assert.file('tsconfig_dev.json');
+  it('generates no `tsconfig_dev.json`', () => {
+    assert.noFile('tsconfig_dev.json');
   });
 });

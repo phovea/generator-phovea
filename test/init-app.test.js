@@ -53,8 +53,8 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
     const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
-
-  it('generates `tsconfig_dev.json`', () => {
-    assert.file('tsconfig_dev.json');
+  
+  it('generates no `tsconfig_dev.json`', () => {
+    assert.noFile('tsconfig_dev.json');
   });
 });

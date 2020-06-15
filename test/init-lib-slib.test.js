@@ -55,7 +55,7 @@ describe('generate lib-slib plugin with default prompt values', () => {
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
-  it('generates `tsconfig_dev.json` with correct content', () => {
-    assert.file('tsconfig_dev.json');
+  it('generates no `tsconfig_dev.json`', () => {
+    assert.noFile('tsconfig_dev.json');
   });
 });
