@@ -27,6 +27,11 @@ const expectedFiles = [
   'tsd.d.ts'
 ];
 
+const unExpectedFiles = [
+  'webpack.config.js',
+  'tests.webpack.js'
+];
+
 describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
 
 
@@ -35,7 +40,7 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
       .run(path.join(__dirname, '../generators/init-app'))
       .inDir(path.join(__dirname, target), () => null)
       .withPrompts({
-          app:'appName'
+        app: 'appName'
       })
       .withGenerators(GENERATOR_DEPENDENCIES);
   });
@@ -50,19 +55,23 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
   });
 
   it('generates `.gitignore` that has no `/dist/` entry', () => {
-    assert.noFileContent('.gitignore','/dist/');
+    assert.noFileContent('.gitignore', '/dist/');
   });
 
   it('generates `tsconfig.json` with correct content', () => {
     const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
-  
+
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
   });
 
   it('generates expected plugin files', () => {
     assert.file(expectedFiles);
+  });
+
+  it('generates no unexpected plugin files', () => {
+    assert.noFile(unExpectedFiles);
   });
 });

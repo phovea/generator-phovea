@@ -29,6 +29,11 @@ const expectedFiles = [
   'tsd.d.ts'
 ];
 
+const unExpectedFiles = [
+  'webpack.config.js',
+  'tests.webpack.js',
+];
+
 describe('generate app-slib plugin with prompt `app: appName` and the rest default prompt values', () => {
 
 
@@ -66,5 +71,9 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
 
   it('generates expected plugin files', () => {
     assert.file(expectedFiles);
+  });
+
+  it('generates no unexpected plugin files', () => {
+    assert.noFile(unExpectedFiles);
   });
 });

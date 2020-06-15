@@ -26,7 +26,14 @@ const GENERATOR_DEPENDENCIES = [
 ];
 
 const expectedFiles = [
-  'tsd.d.ts'
+  'tsd.d.ts',
+
+];
+
+const unExpectedFiles = [
+  'webpack.config.js',
+  'tests.webpack.js',
+  'index.js'
 ];
 
 describe('generate lib-slib plugin with default prompt values', () => {
@@ -63,5 +70,9 @@ describe('generate lib-slib plugin with default prompt values', () => {
 
   it('generates expected plugin files', () => {
     assert.file(expectedFiles);
+  });
+
+  it('generates no unexpected plugin files', () => {
+    assert.noFile(unExpectedFiles);
   });
 });
