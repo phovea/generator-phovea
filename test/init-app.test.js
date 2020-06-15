@@ -44,4 +44,8 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
     const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
     assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
   });
+
+  it('generates `.gitignore` that has no `/dist/` entry', () => {
+    assert.noFileContent('.gitignore','/dist/');
+  });
 });
