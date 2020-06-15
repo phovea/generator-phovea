@@ -4,6 +4,9 @@ const path = require('path');
 const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
+const fse = require('fs-extra');
+const testUtils = require('./testUtils');
+
 /**
  * Directory name to run the generator
  */
@@ -33,7 +36,8 @@ describe('generate service plugin with default prompt values', () => {
     rimraf.sync(path.join(__dirname, target));
   });
 
-  it('generates `package.json` with no devDependencies', () => {
-    assert.jsonFileContent('package.json', {devDependencies: undefined});
+  it('generates `package.json` with the correct devDependencies', () => {
+    const nodeDevDeps = fse.readJSONSync(testUtils.templatePath('_node', 'package.tmpl.json')).devDependencies;
+    assert.jsonFileContent('package.json', {devDependencies: nodeDevDeps});
   });
 });

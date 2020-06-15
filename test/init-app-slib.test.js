@@ -45,7 +45,8 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
   });
 
   it('generates `package.json` with the correct devDependencies', () => {
-    const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
-    assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
+    const initWebDevDeps = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json')).devDependencies;
+    const nodeDevDeps = fse.readJSONSync(testUtils.templatePath('_node', 'package.tmpl.json')).devDependencies;
+    assert.jsonFileContent('package.json', {devDependencies: Object.assign(initWebDevDeps, nodeDevDeps)});
   });
 });

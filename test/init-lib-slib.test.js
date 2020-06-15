@@ -5,7 +5,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils=require('./testUtils');
+const testUtils = require('./testUtils');
 /**
  * Directory name to run the generator
  */
@@ -42,7 +42,8 @@ describe('generate lib-slib plugin with default prompt values', () => {
   });
 
   it('generates `package.json` with the correct devDependencies', () => {
-    const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
-    assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
+    const initWebDevDeps = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json')).devDependencies;
+    const nodeDevDeps = fse.readJSONSync(testUtils.templatePath('_node', 'package.tmpl.json')).devDependencies;
+    assert.jsonFileContent('package.json', {devDependencies: Object.assign(initWebDevDeps, nodeDevDeps)});
   });
 });
