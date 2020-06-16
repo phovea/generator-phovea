@@ -1,10 +1,10 @@
 {
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "src",
-    "index.js",
-    "phovea.js",
     "phovea_registry.js",
-    "build"
+    "dist"
   ],
   "engines": {
     "npm": ">= 6.12",

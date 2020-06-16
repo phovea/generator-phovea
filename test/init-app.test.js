@@ -35,6 +35,10 @@ const unExpectedFiles = [
 
 describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
 
+  /**
+   * package.tmpl.json template of the _init-web subgenerator
+   */
+  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
 
   beforeAll(() => {
     return helpers
@@ -51,8 +55,15 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
   });
 
   it('generates `package.json` with correct devDependencies', () => {
-    const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
     assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
+  });
+
+  it('generates `package.json` with a correct `main`', () => {
+    assert.jsonFileContent('package.json', {main: initWebPackage.main});
+  });
+
+  it('generates `package.json` with correct `types`', () => {
+    assert.jsonFileContent('package.json', {types: initWebPackage.types});
   });
 
   it('generates `.gitignore` that has no `/dist/` entry', () => {

@@ -36,4 +36,12 @@ describe('generate slib plugin with default prompt values', () => {
   it('generates `package.json` with no devDependencies', () => {
     assert.jsonFileContent('package.json', {devDependencies: undefined});
   });
+
+  it('generates `package.json` with a no `main`', () => {
+    assert.jsonFileContent('package.json', {main: undefined});
+  });
+
+  it('generates `package.json` with a no `types`', () => {
+    assert.jsonFileContent('package.json', {types: undefined});
+  });
 });

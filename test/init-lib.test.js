@@ -38,6 +38,15 @@ const unExpectedFiles = [
 
 describe('generate lib plugin with default prompt values', () => {
 
+  /**
+ * package.tmpl.json template of the _init-web subgenerator
+ */
+  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+
+  /**
+   * tsconfig.json template of the _init-web subgenerator
+   */
+  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -51,8 +60,15 @@ describe('generate lib plugin with default prompt values', () => {
   });
 
   it('generates `package.json` with correct devDependencies', () => {
-    const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
     assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
+  });
+
+  it('generates `package.json` with a correct `main`', () => {
+    assert.jsonFileContent('package.json', {main: initWebPackage.main});
+  });
+
+  it('generates `package.json` with correct `types`', () => {
+    assert.jsonFileContent('package.json', {types: initWebPackage.types});
   });
 
   it('generates `.gitignore` that has no `/dist/` entry', () => {
@@ -60,7 +76,6 @@ describe('generate lib plugin with default prompt values', () => {
   });
 
   it('generates `tsconfig.json` with correct content', () => {
-    const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
