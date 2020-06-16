@@ -11,24 +11,24 @@
     "node": ">= 12.13"
   },
   "scripts": {
+    "posttest": "npm run lint",
+    "clean": "rimraf dist lib && npm run clean:compile",
+    "clean:compile": "rimraf src/**/*.map src/**/*.js src/**/*.d.ts tests/**/*.js tests/**/*.map tests/**/*.d.ts demo/**/*.js demo/**/*.map demo/**/*.d.ts",
+    "compile:watch": "tsc -w",
+    "build": "npm run clean && npm run compile && npm run copy-assets && npm run copy-styles",
+    "copy-assets": "if [ -d src/assets ]; then shx --verbose cp -R src/assets/. dist/assets/; fi",
+    "copy-styles": "if [ -d src/scss ]; then shx --verbose cp -R src/scss/. dist/scss/; fi",
+    "dist": "mkdir lib && cd dist && tar cvzf ../lib/<%-name%>.tar.gz *",
     "compile": "tsc",
     "lint": "tslint -c tslint.json -p . 'src/**/*.ts?(x)' 'tests/**/*.ts?(x)'",
     "docs": "typedoc --options typedoc.json src/",
     "prebuild": "node -e \"process.exit(process.env.PHOVEA_SKIP_TESTS === undefined?1:0)\" || npm run test",
-    "pretest": "npm run compile",
     "test": "jest",
-    "posttest": "npm run lint",
     "test:watch": "jest --watch",
-    "build:dev": "webpack",
-    "build": "webpack --env prod",
-    "start": "webpack-dev-server --inline",
-    "start:hot": "webpack-dev-server --inline --hot",
-    "watch": "webpack --watch",
     "release:major": "npm version major && npm publish && git push --follow-tags",
     "release:minor": "npm version minor && npm publish && git push --follow-tags",
     "release:patch": "npm version patch && npm publish && git push --follow-tags",
-    "predist": "npm run build && npm run docs",
-    "dist": "mkdir dist && cd build && tar cvzf ../dist/<%-name%>.tar.gz *"
+    "predist": "npm run build && npm run docs"
   },
   "devDependencies": {
     "@types/jest": "24.9.1",
