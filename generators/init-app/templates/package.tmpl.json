@@ -1,6 +1,9 @@
 {
   "private": true,
   "scripts": {
+    "copy-app-assets": "shx --verbose cp src/.txt dist/ | true && shx --verbose cp src/.html dist/ | true && shx --verbose cp src/*.ejs dist/ | true",
+    "build": "npm run clean && npm run compile && npm run copy-assets && npm run copy-styles && npm run copy-app-assets",
+    "dist": "mkdir lib && cd dist && tar cvzf ../lib/<%-name.toLowerCase()%>.tar.gz *",
     "predist": "npm run build",
     "predocker": "npm run build",
     "docker": "docker build -t <%-name.toLowerCase()%> -f deploy/Dockerfile ."
