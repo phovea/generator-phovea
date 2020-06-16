@@ -15,8 +15,8 @@ const target = '../appslib';
  * Subgenerators composed with the `init-app-slib` subgenerator.
  */
 const GENERATOR_DEPENDENCIES = [
-  '../generators/_node',
   '../generators/_init-hybrid',
+  '../generators/_node',
   '../generators/init-app',
   '../generators/_init-web',
   '../generators/init-slib',
@@ -42,6 +42,11 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
    * package.tmpl.json template of the _init-web subgenerator
    */
   const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+
+  /**
+   * tsconfig.json template of the _init-web subgenerator
+   */
+  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -74,7 +79,7 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
   });
 
   it('generates `tsconfig.json` with correct content', () => {
-    const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 

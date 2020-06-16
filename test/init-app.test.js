@@ -39,6 +39,10 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
    * package.tmpl.json template of the _init-web subgenerator
    */
   const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  /**
+   * tsconfig.json template of the _init-web subgenerator
+   */
+  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -71,7 +75,6 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
   });
 
   it('generates `tsconfig.json` with correct content', () => {
-    const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
