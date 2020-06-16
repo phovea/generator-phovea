@@ -4,7 +4,7 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-import {PluginRegistry} from '<%- name==="phovea_core" ? "./src/plugin" : "phovea_core" %>';
+import {PluginRegistry} from '<%- name==="phovea_core" ? "./dist/app/PluginRegistry" : "phovea_core" %>';
 import reg from './dist/phovea';
 
 /**
