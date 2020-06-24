@@ -177,4 +177,9 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
     it('generates workspace "package.json" with correct property "description"', () => {
         assert.jsonFileContent('package.json', {description: pkg.description});
     });
+
+    it('generates workspace "package.json" with `npm-workspace` as a dependency', () => {
+        assert.jsonFileContent('package.json', {dependencies: {"npm-workspace": "^0.7.1"}});
+    });
+
 });

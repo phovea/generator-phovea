@@ -24,5 +24,8 @@
     "build:dev": "webpack",
     "build": "webpack --env prod",
     "watch": "webpack --watch"
+  },
+  "dependencies": {
+    "npm-workspace": "^0.7.1"
   }
 }

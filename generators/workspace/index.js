@@ -207,7 +207,10 @@ class Generator extends Base {
       devDependencies[key] = mergeVersions(key, devDependencies[key]);
     });
 
-    return {plugins, dependencies, devDependencies, scripts};
+    // dependencies from package.tmpl.json
+    const extraDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).dependencies;
+
+    return {plugins, dependencies: Object.assign(dependencies, extraDependencies), devDependencies, scripts};
   }
 
   _generateServerDependencies(additionalPlugins) {
