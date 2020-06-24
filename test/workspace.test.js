@@ -3,7 +3,14 @@ const path = require('path');
 const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const fse = require('fs-extra');
+const {template} = require('lodash');
 
+/**
+ * Get the path to the templates of a specific subgenerator.
+ * @param {string} subgenerator 
+ * @param {string} file 
+ */
+const templatePath = (subgenerator, file) => path.join(__dirname, `../generators/${subgenerator}/templates/${file}`);
 
 /**
  * Subgenerators composed with the `init-lib` subgenerator.
@@ -71,15 +78,28 @@ const expectedFiles = [
     'tslint.json',
     'webpack.config.js',
     'withinEnv',
-    'withinEnv.cmd'
+    'withinEnv.cmd',
+    'config/webpack.dev.js',
+    'config/webpack.prod.js'
 ];
 
 describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace sequentially', () => {
     const cwd = process.cwd();
     let workingDirectory;
     let workspace;
+
     const libPlugin = 'lib_plugin';
     const appPlugin = 'app_plugin';
+
+    const defaults = {
+        name: 'phovea_workspace',
+        version: '0.0.1',
+        description: 'helper package'
+    };
+    
+    const pkg = JSON.parse(template(JSON.stringify(fse.readJSONSync(templatePath('workspace', 'package.tmpl.json'))))(
+        {wsName: defaults.name, wsVersion: defaults.version, wsDescription: defaults.description}));
+
     beforeAll(async () => {
 
         // Run yo phovea:init-lib
@@ -121,7 +141,6 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
     });
 
     it('generates expected workspace files', () => {
-        // 'import 'tourdino/phovea_registry.js';',
         assert.file(expectedFiles);
     });
 
@@ -148,5 +167,17 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         const appEntry = `import '${appPlugin}/phovea_registry.js';`;
         assert.fileContent(`phovea_registry.js`, libEntry);
         assert.fileContent(`phovea_registry.js`, appEntry);
+    });
+
+    it('generates workspace "package.json" with correct property "name"', () => {
+        assert.jsonFileContent('package.json', {name: pkg.name});
+    });
+
+    it('generates workspace "package.json" with correct property "version"', () => {
+        assert.jsonFileContent('package.json', {version: pkg.version});
+    });
+
+    it('generates workspace "package.json" with correct property "description"', () => {
+        assert.jsonFileContent('package.json', {description: pkg.description});
     });
 });
