@@ -136,7 +136,7 @@ class Generator extends Base {
   }
 
   _generateWebDependencies(additionalPlugins) {
-    const files = glob('*/webpack.config.js', { // web plugin
+    const files = glob('*/tsconfig.json', { // web plugin
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
