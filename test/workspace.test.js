@@ -93,7 +93,7 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         version: '0.0.1',
         description: 'helper package'
     };
-    
+
     const pkg = JSON.parse(template(JSON.stringify(fse.readJSONSync(templatePath('workspace', 'package.tmpl.json'))))(
         {wsName: defaults.name, wsVersion: defaults.version, wsDescription: defaults.description}));
 
@@ -182,4 +182,7 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         assert.jsonFileContent('package.json', {dependencies: {"npm-workspace": "^0.7.1"}});
     });
 
+    it('generates workspace "package.json" with the correct scripts', () => {
+        assert.jsonFileContent('package.json', {scripts: pkg.scripts});
+    });
 });

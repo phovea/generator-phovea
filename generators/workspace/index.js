@@ -444,7 +444,7 @@ class Generator extends Base {
 
     writeTemplates.call(this, config, false);
     // replace the added entries
-    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts}, true);
+    patchPackageJSON.call(this, config, [], {devDependencies, dependencies}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
