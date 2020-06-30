@@ -606,8 +606,26 @@ function strObject(items) {
   return obj;
 }
 
+/**
+ * Use Dockerfiles from the product repo if present. Otherwise use default Dockerfiles.
+ * @param {object} p A phovea_product.json entity i.e., web, server.
+ * @param {string} cwd Directory in which to run docker command.
+ */
+function getDockerfilePath(p, cwd) {
+  const customDockerFilePath = `docker/${p.label}/Dockerfile`;
+  const hasCustomDockerfile = fs.existsSync(customDockerFilePath);
+
+  if (hasCustomDockerfile) {
+    return path.join(__dirname, `${customDockerFilePath}`);
+  }
+
+  return `${cwd} /'deploy/Dockerfile'`;
+}
+
 function buildDockerImage(p) {
   const buildInSubDir = p.type === 'web' || p.type === 'static';
+  const cwd = `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`
+  const dockerfile = getDockerfilePath(p, cwd);
   let buildArgs = '';
   // pass through http_proxy, no_proxy, and https_proxy env variables
   for (const key of Object.keys(process.env)) {
@@ -619,9 +637,9 @@ function buildDockerImage(p) {
   }
 
   // patch the docker file with the with an optional given baseImage
-  return Promise.resolve(patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
+  return Promise.resolve(patchDockerfile(p, dockerfile))
     // create the container image
-    .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image}${buildArgs} -f deploy/Dockerfile .`))
+    .then(() => docker(cwd, `build -t ${p.image}${buildArgs} -f ${dockerfile} .`))
     // tag the container image
     .then(() => argv.pushExtra ? docker(`${p.tmpDir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`) : null);
 }
