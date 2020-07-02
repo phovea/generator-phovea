@@ -619,7 +619,7 @@ function getDockerfilePath(p, cwd) {
     return path.join(__dirname, `${customDockerFilePath}`);
   }
 
-  return `${cwd} /'deploy/Dockerfile'`;
+  return `${cwd}/deploy/Dockerfile`;
 }
 
 function buildDockerImage(p) {
