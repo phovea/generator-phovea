@@ -1,10 +1,8 @@
 {
   "files": [
     "src",
-    "index.js",
-    "phovea.js",
     "phovea_registry.js",
-    "build"
+    "dist"
   ],
   "scripts": {
     "clean": "rimraf dist lib && npm run clean:compile",
