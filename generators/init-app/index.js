@@ -10,7 +10,12 @@ class PluginGenerator extends BasePluginGenerator {
       app: '',
       clientOnly: false,
       entries: {
-        app: './src/index.ts'
+        app: {
+          js: "dist/initialize.js",
+          html: "index.html",
+          template: "dist/index.template.ejs",
+          chunkName: "app"
+        }
       },
       libraries: ['d3'],
       modules: ['phovea_core', 'phovea_ui']

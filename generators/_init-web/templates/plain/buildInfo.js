@@ -49,13 +49,11 @@ function cleanupDependency(d) {
 }
 
 function resolveWorkspace() {
-  console.log('resolve parent');
   const workspaceDeps = dependencyGraph('..').dependencies;
   const modules = new Set(resolveModules());
 
   let deps = null;
   const resolveModule = (m) => {
-    console.log('resolve', m);
     const pkg = JSON.parse(fs.readFileSync(`../${m}/package.json`).toString());
     const head = gitHead('../' + m);
     const repo = pkg.repository.url;
@@ -84,8 +82,6 @@ function resolveWorkspace() {
 
   // self =
   const root = path.basename(process.cwd());
-  console.log(root);
-
   modules.delete(root);
   const base = resolveModule(root);
   base.extraDependencies = {};
@@ -98,7 +94,6 @@ function resolveWorkspace() {
 }
 
 function resolveSingle() {
-  console.log('resolve self');
   const self = dependencyGraph('.');
   const pkg = require(`./package.json`);
   const head = gitHead('.');
@@ -116,7 +111,6 @@ function resolveSingle() {
 }
 
 function generate() {
-  console.log('building buildInfo');
   const isWorkspaceContext = fs.existsSync('../phovea_registry.js');
   if (isWorkspaceContext) {
     return resolveWorkspace();

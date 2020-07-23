@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import {create} from '../src/app';
+import {App} from '../src/app/App';
 
 describe('create', () => {
   it('is method', () => {
