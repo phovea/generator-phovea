@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "postcompile": "npm run copy",
+    "copy": "npm run copy-assets && npm run copy-styles",
+    "copy-assets": "if [ -d src/assets ]; then shx --verbose cp -R src/assets/. dist/assets/; fi",
+    "copy-styles": "if [ -d src/scss ]; then shx --verbose cp -R src/scss/. dist/scss/; fi"
+ }
+}
