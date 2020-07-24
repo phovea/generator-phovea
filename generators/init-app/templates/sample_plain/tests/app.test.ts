@@ -3,6 +3,6 @@ import {App} from '../src/app/App';
 
 describe('create', () => {
   it('is method', () => {
-    expect(typeof create).toEqual('function');
+    expect(typeof App.create).toEqual('function');
   });
 });
