@@ -128,7 +128,7 @@ class Generator extends Base {
   }
 
   writing() {
-     const config = this.config.getAll();
+    const config = this.config.getAll();
     this.cwd = this.options.isWorkspace ? (config.app || config.name) + '/' : '';
     patchPackageJSON.call(this, config, [], {
       dependencies: this._generateDependencies(useDevVersion.call(this, this.cwd))
