@@ -2,7 +2,7 @@ const path = require('path');
 
 /**
  * Get the path to the templates of a specific subgenerator.
- * @param {string} subgenerator 
+ * @param {string} subgenerator
  * @param {string} fileName
  * @param {string} type Type of template, plain or processed
  */
