@@ -191,7 +191,8 @@ class Generator extends Base {
     });
     let partlyRepos = [];
     if (this.props.defaultApp) {
-      partlyRepos = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json')).partlyRepos || [this.props.defaultApp];
+      const workpaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
+      partlyRepos = workpaceFile && workpaceFile.partlyRepos ? workpaceFile.partlyRepos : [this.props.defaultApp];
       if(partlyRepos.indexOf(this.props.defaultApp)<0) partlyRepos.push(this.props.defaultApp);
       partlyRepos = partlyRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
       //add partly scripts

@@ -72,8 +72,6 @@ const expectedFiles = [
     'phovea_registry.js',
     'requirements_dev.txt',
     'requirements.txt',
-    'tsd.d.ts',
-    'tslint.json',
     'withinEnv',
     'withinEnv.cmd',
     'config/webpack.dev.js',
@@ -92,6 +90,18 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         name: 'phovea_workspace',
         version: '0.0.1',
         description: 'helper package'
+    };
+
+    const watch_content = {"all:copy": {
+        "patterns": [
+          "./app_plugin/src"
+        ],
+        "extensions": "html,scss,css",
+        "quiet": false,
+        "legacyWatch": true,
+        "delay": 2500,
+        "runOnChangeOnly": true
+      }
     };
 
     const pkg = JSON.parse(template(JSON.stringify(fse.readJSONSync(templatePath('workspace', 'package.tmpl.json'))))(
@@ -178,8 +188,8 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         assert.jsonFileContent('package.json', {description: pkg.description});
     });
 
-    it('generates workspace "package.json" with `npm-workspace` as a dependency', () => {
-        assert.jsonFileContent('package.json', {dependencies: {"npm-workspace": "^0.7.1"}});
+    it('generates workspace "package.json" with `watch` property', () => {
+        assert.jsonFileContent('package.json', {watch: watch_content});
     });
 
     it('generates workspace "package.json" with the correct scripts', () => {
