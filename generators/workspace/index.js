@@ -140,6 +140,20 @@ class Generator extends Base {
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
+    const watch = {
+      'all:copy': {
+        'patterns':
+          plugins.map((plugin) => {
+            return `./${plugin}/src`;
+          }),
+          'extensions': 'html,scss,css',
+          'quiet': false,
+          'legacyWatch': true,
+          'delay': 2500,
+          'runOnChangeOnly': true
+      }
+    };
+    const repoDependencies = Object.assign({},...plugins.map((plugin) => ({[plugin]: `./${plugin}`})));
 
     const integrateMulti = (target, source) => {
       Object.keys(source || {}).forEach((key) => {
@@ -166,10 +180,6 @@ class Generator extends Base {
         // generate scoped tasks
         scripts[`${s}:${p}`] = `cd ${p} && npm run ${s}`;
       });
-      if (pkg.scripts.start) {
-        // start script, generate one with the package name
-        scripts[p] = `cd ${p} && npm start`;
-      }
     });
 
     // add additional to install plugins
@@ -179,16 +189,32 @@ class Generator extends Base {
         integrateMulti(dependencies, k.dependencies);
       }
     });
-
+    let partlyRepos = [];
     if (this.props.defaultApp) {
+      partlyRepos = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json')).partlyRepos || [this.props.defaultApp];
+      if(partlyRepos.indexOf(this.props.defaultApp)<0) partlyRepos.push(this.props.defaultApp);
+      partlyRepos = partlyRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
+      //add partly scripts
+      scripts['partly:compile'] = partlyRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
+      scripts['partly:compile:watch'] = partlyRepos.map((repo) => `npm run compile:watch:${repo}`).join(' & ');
+      scripts['partly:copy'] = partlyRepos.map((repo) => `npm run copy:${repo}`).join(' & ');
+      scripts['partly:copy:watch'] = 'npm-watch partly:copy';
+      //add watch
+      watch['partly:copy'] = {
+        'patterns': partlyRepos.map((repo) => `./${repo}/src`),
+          'extensions': 'html,scss,css',
+          'quiet': false,
+          'legacyWatch': true,
+          'delay': 2500,
+          'runOnChangeOnly': true
+      }
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
       if (pkg) {
         integrateMulti(dependencies, pkg.dependencies);
         integrateMulti(devDependencies, pkg.devDependencies);
       }
-    }
-
+    } 
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const k = known().plugin.byName(p);
@@ -209,8 +235,12 @@ class Generator extends Base {
 
     // dependencies from package.tmpl.json
     const extraDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).dependencies;
+    // devDependencies from package.tmpl.json
+    const extraDevDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).devDependencies;
+    // scripts from package.tmpl.json
+    const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(dependencies, extraDependencies), devDependencies, scripts};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), repoDependencies), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, partlyRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -404,33 +434,40 @@ class Generator extends Base {
   }
 
   writing() {
+
+    const {plugins, dependencies, devDependencies, scripts, watch, partlyRepos} = this._generateWebDependencies(this.props.modules);
+    const sdeps = this._generateServerDependencies(this.props.modules);
+    const dockerWebHint =
+    '  #  web:\n' +
+    '  #    build:\n' +
+    '  #      context: ./deploy/web\n' +
+    '  #      dockerfile: deploy/web/Dockerfile\n' +
+    '  #    ports:\n' +
+    '  #      - \'8090:80\'\n' +
+    '  #    volumes:\n' +
+    '  #      - \'./bundles:/usr/share/nginx/html\'\n' +
+    '  #    depends_on:\n' +
+    '  #      - api\n';
+
     // save config
     this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {
       modules: this.props.modules,
-      defaultApp: this.props.defaultApp
+      defaultApp: this.props.defaultApp,
+      frontendRepos: plugins,
+      partlyRepos: partlyRepos,
     });
-
-    const {plugins, dependencies, devDependencies, scripts} = this._generateWebDependencies(this.props.modules);
-    const sdeps = this._generateServerDependencies(this.props.modules);
-
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
-    // generate default start script
-    if (this.props.defaultApp) {
-      scripts.start = `cd ${this.props.defaultApp} && npm start`;
-    }
-
+    const yaml = require('yamljs');
     const patchYamlExists = fs.existsSync(this.destinationPath('docker-compose-patch.yaml'));
     if (patchYamlExists || fs.existsSync(this.destinationPath('docker-compose-patch.yml'))) {
-      const yaml = require('yamljs');
       const file = this.fs.read(this.destinationPath(patchYamlExists ? 'docker-compose-patch.yaml' : 'docker-compose-patch.yml'));
       const patch = yaml.parse(file);
       this._patchDockerImages(patch, sdeps.dockerCompose);
     }
     {
-      const yaml = require('yamljs');
-      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
-      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2));
+      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2) );
+      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2)+ dockerWebHint);
     }
 
     const config = {};
@@ -444,7 +481,7 @@ class Generator extends Base {
 
     writeTemplates.call(this, config, false);
     // replace the added entries
-    patchPackageJSON.call(this, config, [], {devDependencies, dependencies}, true);
+    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts, watch}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));

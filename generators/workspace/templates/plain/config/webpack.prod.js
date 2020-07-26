@@ -1,77 +1,90 @@
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+//for debugging issues
+//const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+//helper module
+const webpackHelper = require('./webpackHelper');
+//general constants
 const path = require('path');
 const webpack = require('webpack');
 const resolve = require('path').resolve;
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const ManifestPlugin = require('webpack-manifest-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
-const workspaceYoRcFile = require('../.yo-rc-workspace.json');
-const defaultApp = workspaceYoRcFile.defaultApp;
-const appPkg = require('./../' + defaultApp + '/package.json');
-
-const libName = appPkg.name;
-const libDesc = appPkg.description;
-
+const base = resolve(__dirname, '../');
 const now = new Date();
+const year = (new Date()).getFullYear();
 const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
 const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth() + 1)}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
+const envMode = process.argv.indexOf('--mode') >= 0 ? process.argv[process.argv.indexOf('--mode') + 1].trim().toLowerCase() : 'production';
+const isDev = envMode === 'development';
+//workspace constants
+const workspaceYoRcFile = require('../.yo-rc-workspace.json');
+const workspaceBuildInfoFile = './package-lock.json';
+const workspaceMetaDataFile = './metaData.json';
+const workspaceRegistryFile = './phovea_registry.js';
+const workspaceAliases = workspaceYoRcFile.workspaceAliases || [];
+const workspaceRegistry = workspaceYoRcFile.registry || [];
+const workspaceName = base.substr(base.lastIndexOf('/') + 1);
+const workspaceRepos = workspaceYoRcFile.frontendRepos || [];	
+const workspaceMaxChunkSize = workspaceYoRcFile.maxChunkSize || 5000000;
+//app constants
+const envApp = process.argv.filter((e) => e.startsWith('--app='));
+const defaultApp = envApp.length > 0 ? envApp[0].substring(6).trim() : workspaceYoRcFile.defaultApp;
+const appPkg = require('./../' + defaultApp + '/package.json');
 appPkg.version = appPkg.version.replace('SNAPSHOT', buildId);
-
-const appBuildInfo = require('./../' + defaultApp + '/buildInfo.js');
-const {entries, registry, vendors, libraryAliases, libraryExternals, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
-console.log('registry', registry);
-const year = (new Date()).getFullYear();
+const libName = appPkg.name;
+const libDesc = appPkg.description;
+const {entries, registry, libraryAliases, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
+const fileLoaderRegex = RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`);
+//banner info
 const banner = '/*! ' + (appPkg.title || appPkg.name) + ' - v' + appPkg.version + ' - ' + year + '\n' +
     (appPkg.homepage ? '* ' + appPkg.homepage + '\n' : '') +
     '* Copyright (c) ' + year + ' ' + appPkg.author.name + ';' +
     ' Licensed ' + appPkg.license + '*/\n';
-
-const WorkspaceRegistryFile = './phovea_registry.js';
-const actMetaData = `${appBuildInfo.metaDataTmpFile(appPkg)}`;
-const actBuildInfoFile = `${appBuildInfo.tmpFile()}`;
-console.log('METADATA');
-console.log(actMetaData);
-console.log('BUILDINFO');
-console.log(actBuildInfoFile);
-
-const base = resolve(__dirname, '../');
-console.log(libraryExternals);
-
-/**
- * inject the registry to be included
- * @param entry
- * @returns {*}
- */
-function injectRegistry(entry) {
-    const extraFiles = [WorkspaceRegistryFile, actMetaData, actBuildInfoFile];
-    // build also the registry
-    if (typeof entry === 'string') {
-        return extraFiles.concat(entry);
-    }
-    const transformed = {};
-    Object.keys(entry).forEach((key) => {
-        transformed[key] = extraFiles.concat(entry[key]);
-    });
-    console.log(transformed);
-    return transformed;
-}
-
-
-const preCompilerFlags = {flags: (registry || {}).flags || {}};
-const includeFeature = registry ? (extension, id) => {
-    const exclude = registry.exclude || [];
-    const include = registry.include || [];
+// Merge app and workspace properties
+const mergedAliases = {
+    ...libraryAliases,
+    ...workspaceAliases
+};
+const mergedRegistry = {
+    ...registry,
+    ...workspaceRegistry
+};
+// Regex for cacheGroups
+const workspaceRegex = new RegExp(String.raw`[\\/]${workspaceName}[\\/](${workspaceRepos.join('|')})[\\/]`);
+// html webpack entries
+let HtmlWebpackPlugins = [];
+Object.values(entries).map(function (entry) {
+    HtmlWebpackPlugins.push(new HtmlWebpackPlugin({
+        inject: true,
+        template: `./${defaultApp}/` + entry['template'],
+        filename: entry['html'],
+        title: libName,
+        excludeChunks: entry['excludeChunks'],
+        chunksSortMode: 'auto',
+        minify: {
+            removeComments: true,
+            collapseWhitespace: true
+        },
+        meta: {
+            description: libDesc
+        }
+    }));
+});
+//include/exclude feature of the registry
+const preCompilerFlags = {flags: (mergedRegistry || {}).flags || {}};
+const includeFeature = mergedRegistry ? (extension, id) => {
+    const exclude = mergedRegistry.exclude || [];
+    const include = mergedRegistry.include || [];
     if (!exclude && !include) {
         return true;
     }
     const test = (f) => Array.isArray(f) ? extension.match(f[0]) && (id || '').match(f[1]) : extension.match(f);
     return include.every(test) && !exclude.some(test);
 } : () => true;
-
+//webpack config
 const config = {
-    mode: 'production',
+    mode: envMode,
     output: {
         filename: '[name].js',
         chunkFilename: '[name].js',
@@ -82,45 +95,17 @@ const config = {
         libraryTarget: 'umd',
         umdNamedDefine: true
     },
-    entry: injectRegistry(entries),
+    entry: webpackHelper.injectRegistry(defaultApp, [workspaceRegistryFile], entries),
     resolve: {
         extensions: ['.js'],
         alias:
             Object.assign({},
-                ...Object.entries(libraryAliases).
-                    map((item) => ({[item[0]]: (!(libraryExternals.includes(item[0]))) ? base + `/${item[1]}` : item[1]})
-                    )
+                ...workspaceRepos.map((item) => ({[item]: (base + `/${item}`)})),
+                ...Object.entries(mergedAliases).map((item) => ({[item[0]]: (base + `/node_modules/${item[1]}`)}))
             ),
         modules: [
-            // only use node_modules on root level
-            path.resolve(__dirname, '../node_modules')
-        ]
-    },
-    optimization: {
-        splitChunks: {
-            automaticNameDelimiter: '~',
-            maxInitialRequests: Infinity,
-            minSize: 0,
-            cacheGroups: {
-                others: {
-                    test: new RegExp(String.raw`node_modules[\\/]((?!(${vendors['others']})).*)[\\/]`),
-                    chunks: 'all',
-                },
-                phovea: {
-                    // only consider phovea repos in the root node_modules
-                    test: new RegExp(String.raw`node_modules[\\/](${vendors['phovea']})[\\/]`),
-                    chunks: 'all'
-                },
-                tdp: {
-                    test: new RegExp(String.raw`node_modules[\\/](${vendors['tdp']})[\\/]`),
-                    chunks: 'all',
-                },
-                dv: {
-                    test: new RegExp(String.raw`node_modules[\\/]((${vendors['dv']}).*)[\\/]`),
-                    chunks: 'all',
-                }
-            }
-        }
+            path.join(__dirname, '../node_modules')
+        ],
     },
     module: {
         rules: [
@@ -130,9 +115,6 @@ const config = {
             {
                 test: /\.(png|jpg|gif|webp)$/,
                 use: [
-                    {
-                        loader: 'file-loader'
-                    },
                     {
                         loader: `url-loader`,
                         options: {
@@ -179,68 +161,96 @@ const config = {
             {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
             {
                 test: require.resolve('jquery'),
-                use: [
-                    {
-                        loader: 'expose-loader',
-                        options: 'window.jQuery'
-                    }, {
-                        loader: 'expose-loader',
-                        options: 'jQuery'
-                    }, {
-                        loader: 'expose-loader',
-                        options: '$'
-                    }]
+                loader: 'expose-loader',
+                options: {
+                    exposes: ['window.jQuery', '$']
+                }
             },
             // used to remove inline loaders
-            {test: /bootstrap-sass\/assets\/javascripts\//, loader: 'imports-loader?jQuery=jquery'},
-            {test: /tmp\/metaData([a-z0-9]+)\.(txt)$/, loader: 'file-loader?name=phoveaMetaData.json'},
-            {test: /tmp\/buildInfo([a-z0-9]+)\.(txt)$/, loader: 'file-loader?name=buildInfo.json'},
-            {test: new RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`), loader: 'file-loader?name=[name].[ext]'}
+            {test: fileLoaderRegex, loader: 'file-loader?name=[name].[ext]'}
         ],
     },
+    optimization: {
+        nodeEnv: false, // will be set by DefinePlugin
+        minimize: true, // only in prod mode
+        namedModules: false, // only in prod mode
+        namedChunks: false, // only in prod mode
+        removeAvailableModules: true, // only in prod mode
+        removeEmptyChunks: true, // should always be set to true
+        mergeDuplicateChunks: true, // should always be set to true
+        providedExports: true, // should always be set to true
+        usedExports: true, // should always be set to true
+        sideEffects: true, // should always be set to true as long as we don't change our code
+        portableRecords: false, // should always be set to false
+        flagIncludedChunks: true, // only in prod mode
+        occurrenceOrder: true, // only in prod mode
+        concatenateModules: true, // only in prod mode
+        moduleIds: 'hashed', 
+        chunkIds: 'total-size', // only in prod mode
+        runtimeChunk: 'single', //one runtime instance for all entries        
+        splitChunks: {
+            chunks: 'all',
+            minSize: 10000,
+            maxSize: workspaceMaxChunkSize,
+            cacheGroups: {
+                workspace: {
+                    test: workspaceRegex,
+                    priority: -5,
+                    name: 'vendor',
+                    enforce: true,
+                },
+                vendors: {
+                    test: /[\\/]node_modules[\\/]/,
+                    priority: -10,
+                    name: 'vendor',
+                    enforce: true,
+                }                
+
+            }
+        }
+    },    
     plugins: [
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [
                 '**/*',
-                path.join(process.cwd(), './../bundles/**/*')
+                path.join(process.cwd(), '../bundles/**/*')
             ]
         }),
-        new MiniCssExtractPlugin({
-            filename: 'styles.[name].css'
-        }),
-        new HtmlWebpackPlugin({
-            filename: 'index.html',
-            title: libName,
-            template: defaultApp + '/dist/index.template.ejs',
-            inject: true,
-            chunksSortMode: 'auto',
-            minify: {
-                removeComments: true,
-                collapseWhitespace: true
-            },
-            meta: {
-                description: libDesc
-            }
-        }),
+        new MiniCssExtractPlugin(),
+        ...HtmlWebpackPlugins,
         new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify('production'),
-            __VERSION__: JSON.stringify(appPkg.version),
-            __LICENSE__: JSON.stringify(appPkg.license),
-            __BUILD_ID__: JSON.stringify(buildId),
-            __APP_CONTEXT__: JSON.stringify('/')
+            'process.env.NODE_ENV': JSON.stringify(envMode),
+            'process.env.__VERSION__': JSON.stringify(appPkg.version),
+            'process.env.__LICENSE__': JSON.stringify(appPkg.license),
+            'process.env.__BUILD_ID__': JSON.stringify(buildId),
+            'process.env.__APP_CONTEXT__': JSON.stringify('/'),
+            'process.env.__DEBUG__': JSON.stringify(isDev)
         }),
-        new BundleAnalyzerPlugin({
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
+                    //generate meta data file
+                    transform(content, path) {
+                        return webpackHelper.generateMetaDataFile({buildId}, resolve(__dirname, '../' + defaultApp));
+                    }
+                },
+                //use package-lock json as buildInfo
+                {from: workspaceBuildInfoFile, to: base + '/bundles/buildInfo.json'}
+            ]
+        }),
+        //for debugging issues
+        /*new BundleAnalyzerPlugin({
             // set to 'server' to start analyzer during build
             analyzerMode: 'disabled',
             generateStatsFile: true,
             statsOptions: {source: false}
-        }),
-        new ManifestPlugin(),
+        }),*/
         new webpack.BannerPlugin({
             banner: banner,
             raw: true
         })
-    ],
+    ]
 };
-
+//console.log(JSON.stringify(config, null, '\t'));
 module.exports = config;

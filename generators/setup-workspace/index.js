@@ -218,7 +218,9 @@ class Generator extends Base {
           this.defaultApp = defaultAppName;
           fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
             modules: [],
-            defaultApp: defaultAppName
+            defaultApp: defaultAppName,
+            frontendRepos: defaultApp.additional.map((repo) => repo.name),
+            partlyRepos: [defaultAppName]
           }, {spaces: 2});
         }
 
