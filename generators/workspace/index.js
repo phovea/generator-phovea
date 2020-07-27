@@ -456,6 +456,11 @@ class Generator extends Base {
       defaultApp: this.props.defaultApp,
       frontendRepos: plugins,
       partlyRepos: partlyRepos,
+      devServerProxy: this.props.devServerProxy || {},
+      maxChunkSize: this.props.maxChunkSize || 5000000,
+      workspaceAliases: this.props.workspaceAliases || [],
+      registry: this.props.registry || [],
+      vendors: this.props.vendors || []
     });
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
