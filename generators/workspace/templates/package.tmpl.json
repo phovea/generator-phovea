@@ -15,7 +15,7 @@
   },
   "scripts": {
     "preinstall": "rm -rf node_modules && rm package-lock.json || true",
-    "postinstall": ".//forEach rm -rf node_modules",
+    "postinstall": "npm-run-all --parallel delete-dependencies:*",
     "all:compile": "npm-run-all --parallel compile:*",
     "all:compile:watch": "npm-run-all --parallel compile:watch:*",
     "all:copy": "npm-run-all --parallel copy:*",
