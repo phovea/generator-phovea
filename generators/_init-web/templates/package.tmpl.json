@@ -12,6 +12,7 @@
   },
   "scripts": {
     "clean": "rimraf dist lib",
+    "delete-dependencies": "rimraf node_modules",
     "compile": "tsc",
     "compile:watch": "tsc -w",
     "lint": "tslint -c tslint.json -p . 'src/**/*.ts?(x)' 'tests/**/*.ts?(x)'",
