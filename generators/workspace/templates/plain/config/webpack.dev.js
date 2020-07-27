@@ -25,7 +25,7 @@ const workspaceRegistry = workspaceYoRcFile.registry || [];
 const workspaceVendors = workspaceYoRcFile.vendors || [];
 const workspaceName = base.substr(base.lastIndexOf('/') + 1);
 const workspaceProxy = workspaceYoRcFile.devServerProxy || {};
-const workspaceRepos = workspaceYoRcFile.frontendRepos || [];	
+const workspaceRepos = workspaceYoRcFile.frontendRepos || [];
 //app constants
 const envApp = process.argv.filter((e) => e.startsWith('--app='));
 const defaultApp = envApp.length > 0 ? envApp[0].substring(6).trim() : workspaceYoRcFile.defaultApp;
@@ -234,7 +234,7 @@ const config = {
         flagIncludedChunks: false, // only in dev mode
         occurrenceOrder: false, // only in dev mode
         concatenateModules: false, // only in dev mode
-        moduleIds: 'hashed', 
+        moduleIds: 'hashed',
         chunkIds: 'named', // only in dev mode
         runtimeChunk: 'single', //one runtime instance for all entries
         splitChunks: {
@@ -280,7 +280,7 @@ const config = {
                 {
                     from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
                     //generate meta data file
-                    transform(content, path) {
+                    transform() {
                         return webpackHelper.generateMetaDataFile({buildId}, resolve(__dirname, '../' + defaultApp));
                     }
                 },

@@ -28,7 +28,7 @@ function resolveScreenshot(appDirectory) {
 }
 
 function appendMetaData(additionalProperties, appDirectory) {
-  pkg = require(path.join(appDirectory,'./package.json'));
+  const pkg = require(path.join(appDirectory,'./package.json'));
   const manifest = Object.assign(additionalProperties, {
     name: pkg.name,
     displayName: pkg.displayName,
@@ -48,4 +48,4 @@ function generateMetaDataFile(additionalProperties, appDirectory) {
 module.exports = {
   generateMetaDataFile,
   injectRegistry
-}
+};

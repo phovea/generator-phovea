@@ -19,13 +19,13 @@ const envMode = process.argv.indexOf('--mode') >= 0 ? process.argv[process.argv.
 const isDev = envMode === 'development';
 //workspace constants
 const workspaceYoRcFile = require('../.yo-rc-workspace.json');
-const workspaceBuildInfoFile = './package-lock.json';
-const workspaceMetaDataFile = './metaData.json';
-const workspaceRegistryFile = './phovea_registry.js';
+const workspaceBuildInfoFile = base + '/package-lock.json';
+const workspaceMetaDataFile = base + '/metaData.json';
+const workspaceRegistryFile = base + '/phovea_registry.js';
 const workspaceAliases = workspaceYoRcFile.workspaceAliases || [];
 const workspaceRegistry = workspaceYoRcFile.registry || [];
 const workspaceName = base.substr(base.lastIndexOf('/') + 1);
-const workspaceRepos = workspaceYoRcFile.frontendRepos || [];	
+const workspaceRepos = workspaceYoRcFile.frontendRepos || [];
 const workspaceMaxChunkSize = workspaceYoRcFile.maxChunkSize || 5000000;
 //app constants
 const envApp = process.argv.filter((e) => e.startsWith('--app='));
@@ -185,9 +185,9 @@ const config = {
         flagIncludedChunks: true, // only in prod mode
         occurrenceOrder: true, // only in prod mode
         concatenateModules: true, // only in prod mode
-        moduleIds: 'hashed', 
+        moduleIds: 'hashed',
         chunkIds: 'total-size', // only in prod mode
-        runtimeChunk: 'single', //one runtime instance for all entries        
+        runtimeChunk: 'single', //one runtime instance for all entries
         splitChunks: {
             chunks: 'all',
             minSize: 10000,
@@ -204,11 +204,11 @@ const config = {
                     priority: -10,
                     name: 'vendor',
                     enforce: true,
-                }                
+                }
 
             }
         }
-    },    
+    },
     plugins: [
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [
@@ -231,7 +231,7 @@ const config = {
                 {
                     from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
                     //generate meta data file
-                    transform(content, path) {
+                    transform() {
                         return webpackHelper.generateMetaDataFile({buildId}, resolve(__dirname, '../' + defaultApp));
                     }
                 },
