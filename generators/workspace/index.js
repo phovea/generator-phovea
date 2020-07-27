@@ -208,14 +208,14 @@ class Generator extends Base {
           'legacyWatch': true,
           'delay': 2500,
           'runOnChangeOnly': true
-      }
+      };
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
       if (pkg) {
         integrateMulti(dependencies, pkg.dependencies);
         integrateMulti(devDependencies, pkg.devDependencies);
       }
-    } 
+    }
     // remove all plugins that are locally installed
     plugins.forEach((p) => {
       const k = known().plugin.byName(p);
