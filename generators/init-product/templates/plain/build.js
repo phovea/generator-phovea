@@ -665,12 +665,12 @@ function buildWeb(p) {
 
   let step;
   if (hasAdditional) {
-    step = npm(p.tmpDir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`);
+    step = npm(p.tmpDir, `run dist`);
   } else {
-    step = npm(`${p.tmpDir}/${p.name}`, `run dist${p.isHybridType ? ':web' : ''}`);
+    step = npm(`${p.tmpDir}/${p.name}`, `run dist`);
   }
   // move to target directory
-  return step.then(() => fs.renameAsync(`${p.tmpDir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`));
+  return step.then(() => fs.renameAsync(`${p.tmpDir}/dist/bundles.tar.gz`, `./build/${p.label}.tar.gz`));
 }
 
 function installPythonTestDependencies(p) {

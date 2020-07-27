@@ -28,7 +28,9 @@
     "webpack:dev:watch": "npm run webpack:dev",
     "start:watch:all": "npm-run-all --parallel all:compile:watch all:copy:watch webpack:dev:watch",
     "start:watch:partly": "npm-run-all --parallel partly:compile:watch partly:copy:watch webpack:dev:watch",
-    "start": "npm run start:watch:partly"
+    "start": "npm run start:watch:partly",
+    "predist": "npm run build",
+    "dist": "mkdir dist && cd bundles && tar cvzf ../dist/bundles.tar.gz *"
   },
   "devDependencies": {
     "clean-webpack-plugin": "~3.0.0",
