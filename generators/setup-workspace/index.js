@@ -220,7 +220,7 @@ class Generator extends Base {
             modules: [],
             defaultApp: defaultAppName,
             frontendRepos: defaultApp.additional.map((repo) => repo.name),
-            partlyRepos: [defaultAppName]
+            devRepos: [defaultAppName]
           }, {spaces: 2});
         }
 

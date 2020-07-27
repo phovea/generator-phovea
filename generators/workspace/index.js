@@ -189,20 +189,20 @@ class Generator extends Base {
         integrateMulti(dependencies, k.dependencies);
       }
     });
-    let partlyRepos = [];
+    let devRepos = [];
     if (this.props.defaultApp) {
       const workpaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
-      partlyRepos = workpaceFile && workpaceFile.partlyRepos ? workpaceFile.partlyRepos : [this.props.defaultApp];
-      if(partlyRepos.indexOf(this.props.defaultApp)<0) partlyRepos.push(this.props.defaultApp);
-      partlyRepos = partlyRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
-      //add partly scripts
-      scripts['partly:compile'] = partlyRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
-      scripts['partly:compile:watch'] = partlyRepos.map((repo) => `npm run compile:watch:${repo}`).join(' & ');
-      scripts['partly:copy'] = partlyRepos.map((repo) => `npm run copy:${repo}`).join(' & ');
-      scripts['partly:copy:watch'] = 'npm-watch partly:copy';
+      devRepos = workpaceFile && workpaceFile.devRepos ? workpaceFile.devRepos : [this.props.defaultApp];
+      if(devRepos.indexOf(this.props.defaultApp)<0) devRepos.push(this.props.defaultApp);
+      devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
+      //add dev-repos scripts
+      scripts['dev-repos:compile'] = devRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
+      scripts['dev-repos:compile:watch'] = devRepos.map((repo) => `npm run compile:watch:${repo}`).join(' & ');
+      scripts['dev-repos:copy'] = devRepos.map((repo) => `npm run copy:${repo}`).join(' & ');
+      scripts['dev-repos:copy:watch'] = 'npm-watch dev-repos:copy';
       //add watch
-      watch['partly:copy'] = {
-        'patterns': partlyRepos.map((repo) => `./${repo}/src`),
+      watch['dev-repos:copy'] = {
+        'patterns': devRepos.map((repo) => `./${repo}/src`),
           'extensions': 'html,scss,css',
           'quiet': false,
           'legacyWatch': true,
@@ -241,7 +241,7 @@ class Generator extends Base {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), repoDependencies), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, partlyRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), repoDependencies), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, dev-reposRepos: devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -436,7 +436,7 @@ class Generator extends Base {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, scripts, watch, partlyRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, scripts, watch, dev-reposRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
     '  #  web:\n' +
@@ -455,7 +455,7 @@ class Generator extends Base {
       modules: this.props.modules,
       defaultApp: this.props.defaultApp,
       frontendRepos: plugins,
-      partlyRepos: partlyRepos,
+      dev-reposRepos: dev-reposRepos,
       devServerProxy: this.props.devServerProxy || {},
       maxChunkSize: this.props.maxChunkSize || 5000000,
       workspaceAliases: this.props.workspaceAliases || [],
