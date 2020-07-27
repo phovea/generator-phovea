@@ -439,6 +439,7 @@ class Generator extends Base {
     const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
+    '  # Uncomment the following lines for testing the web production build' +
     '  #  web:\n' +
     '  #    build:\n' +
     '  #      context: ./deploy/web\n' +
