@@ -264,6 +264,11 @@ describe('find max version or range version from list', () => {
     const versions = ['~4.2.0-alpha.1', '^4.2.0-rc.0', '~4.2.0-beta.1', '^4.1.0', '5.1', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('5.1.0');
   });
+
+  it('works if versions are all ranges', () => {
+    const versions = ['^2.9.0', '~2.8.1'];
+    expect(version.findMaxVersion(versions)).toBe('^2.9.0');
+  });
 });
 
 describe('semver-intersect works for prerelease ranges', () => {
