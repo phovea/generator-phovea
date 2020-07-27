@@ -639,7 +639,7 @@ function showWebDependencies(p) {
   // `npm ls` fails if some peerDependencies are not installed
   // since this function is for debug purposes only, we catch possible errors of `npm()` and resolve it with status code `0`.
   return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'list --depth=1')
-    .catch(() => Promise.resolve(0)) // status code = 0
+    .catch(() => Promise.resolve(0)); // status code = 0
 }
 
 function cleanUpWebDependencies(p) {
@@ -682,7 +682,7 @@ function installPythonTestDependencies(p) {
 function showPythonTestDependencies(p) {
   // since this function is for debug purposes only, we catch possible errors and resolve it with status code `0`.
   return spawn('pip', 'list', {cwd: p.tmpDir})
-    .catch(() => Promise.resolve(0)) // status code = 0
+    .catch(() => Promise.resolve(0)); // status code = 0
 }
 
 function buildServer(p) {

@@ -161,7 +161,7 @@ class Generator extends Base {
       stdio: 'inherit' // log output and error of spawned process to host process
     }, cwd || {});
 
-    this.log(`\nRunning: ${cmd} ${argline}\n`)
+    this.log(`\nRunning: ${cmd} ${argline}\n`);
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 

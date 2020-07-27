@@ -8,7 +8,7 @@ describe('check isGitCommit()', () => {
   });
 
   it('check `8747a43780e4651542facd7b4feac7bcb8e3778d` === true', () => {
-    expect(version.isGitCommit('8747a43780e4651542facd7b4feac7bcb8e3778d')).toBeTruthy()
+    expect(version.isGitCommit('8747a43780e4651542facd7b4feac7bcb8e3778d')).toBeTruthy();
   });
 
   it('check `develop` === false', () => {

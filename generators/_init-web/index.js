@@ -144,7 +144,7 @@ class Generator extends Base {
 
   install() {
     if (this.options.options.install) {
-      const options = this.cwd ? {cwd: this.cwd} : {}
+      const options = this.cwd ? {cwd: this.cwd} : {};
       this.spawnCommand("npm", ["install"], options);
     }
   }
