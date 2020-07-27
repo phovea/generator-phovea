@@ -46,4 +46,4 @@ module.exports = {
   moduleNameMapper: {
     "^.+\\.(css|less|scss|sass|png|jpg|gif|svg)$": "identity-obj-proxy"
   }
-}
+};

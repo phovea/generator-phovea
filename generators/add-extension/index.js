@@ -104,13 +104,13 @@ class Generator extends Base {
     try {
       if (path) {
         const config = this.fs.readJSON(this.destinationPath(path + '.yo-rc.json'), {})[GENERATOR_PHOVEA_CONFIG];
-        return config[key]
+        return config[key];
 
       } else {
         return this.config.get(key);
       }
     } catch (e) {
-      throw new Error(chalk.red('Invalid `yo-rc.json` file in ' + path))
+      throw new Error(chalk.red('Invalid `yo-rc.json` file in ' + path));
     }
   }
 

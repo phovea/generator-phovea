@@ -161,7 +161,7 @@ class Generator extends Base {
       stdio: 'inherit' // log output and error of spawned process to host process
     }, cwd || {});
 
-    this.log(`\nRunning: ${cmd} ${argline}\n`)
+    this.log(`\nRunning: ${cmd} ${argline}\n`);
     return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
   }
 
@@ -218,7 +218,9 @@ class Generator extends Base {
           this.defaultApp = defaultAppName;
           fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
             modules: [],
-            defaultApp: defaultAppName
+            defaultApp: defaultAppName,
+            frontendRepos: defaultApp.additional.map((repo) => repo.name),
+            devRepos: [defaultAppName]
           }, {spaces: 2});
         }
 

@@ -29,12 +29,9 @@
     "build:python": "rm -rf build/source && find . -name '*.pyc' -delete && node buildPython.js && cp -r ./<%-name.toLowerCase()%> build/source/",
     "build:web": "npm run clean && npm run compile",
     "build": "npm run build:web && npm run build:python",
-    "predist:web": "npm run build:web && npm run docs:web",
     "predist:python": "npm run build:python && npm run docs:python",
     "predist": "echo hybrid",
-    "dist:web": "mkdir lib && cd dist && tar cvzf ../lib/<%-name%>.tar.gz *",
-    "dist:python": "python setup.py sdist bdist_wheel",
-    "dist": "npm run dist:web && npm run dist:python"
+    "dist:python": "python setup.py sdist bdist_wheel"
   },
   "devDependencies": {
     "@types/jest": "~26.0.5",
