@@ -2,7 +2,7 @@
 /.tscache
 /.idea
 /build/
-/dist/
+/lib/
 *.egg-info/
 *.py[cod]
 __pycache__/
@@ -21,6 +21,4 @@ __pycache__/
 node_modules/
 /src/**/*.js
 /tests/**/*.js
-*.map
-*.css
 /.cache-loader

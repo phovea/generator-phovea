@@ -6,15 +6,14 @@ const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const testUtils = require('./testUtils');
-const {template} = require('lodash');
 
 /**
  * Directory name to run the generator
  */
-const target = '../lib';
+const target = '../app';
 
 /**
- * Subgenerators composed with the `init-lib` subgenerator.
+ * Subgenerators composed with the `init-app` subgenerator.
  */
 const GENERATOR_DEPENDENCIES = [
   '../generators/_node',
@@ -24,26 +23,23 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
-
 const expectedFiles = [
   'tsd.d.ts',
-  'jest.config.js'
+  'jest.config.js',
+  'src/index.template.ejs'
 ];
 
 const unExpectedFiles = [
   'webpack.config.js',
-  'tests.webpack.js',
-  'index.js'
+  'tests.webpack.js'
 ];
 
-
-describe('generate lib plugin with default prompt values', () => {
+describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
 
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
   const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
-
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
@@ -51,8 +47,11 @@ describe('generate lib plugin with default prompt values', () => {
 
   beforeAll(() => {
     return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
+      .run(path.join(__dirname, '../generators/init-app'))
       .inDir(path.join(__dirname, target), () => null)
+      .withPrompts({
+        app: 'appName'
+      })
       .withGenerators(GENERATOR_DEPENDENCIES);
   });
 
@@ -90,29 +89,5 @@ describe('generate lib plugin with default prompt values', () => {
 
   it('generates no unexpected plugin files', () => {
     assert.noFile(unExpectedFiles);
-  });
-});
-
-describe('Generate plugin with name `phovea_core`', () => {
-
-  const prompts = {
-    name: 'phovea_core'
-  };
-
-  beforeAll(() => {
-    return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
-      .inDir(path.join(__dirname, target), () => null)
-      .withPrompts(prompts)
-      .withGenerators(GENERATOR_DEPENDENCIES);
-  });
-
-  afterAll(() => {
-    rimraf.sync(path.join(__dirname, target));
-  });
-
-  it('generates `phovea_registry.js` with import statement adapted for `phovea_core`', () => {
-    const phoveaRegistryTmpl = template(fse.readFileSync(testUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
-    assert.fileContent('phovea_registry.js', phoveaRegistryTmpl);
   });
 });
