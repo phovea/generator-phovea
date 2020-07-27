@@ -31,5 +31,6 @@
     "typescriptHero.imports.insertSpaceBeforeAndAfterImportBraces": false,
     "typescriptHero.codeOutline.enabled": false,
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
