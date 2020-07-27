@@ -241,7 +241,7 @@ class Generator extends Base {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), repoDependencies), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, dev-reposRepos: devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), repoDependencies), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -436,7 +436,7 @@ class Generator extends Base {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, scripts, watch, dev-reposRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
     '  #  web:\n' +
@@ -455,7 +455,7 @@ class Generator extends Base {
       modules: this.props.modules,
       defaultApp: this.props.defaultApp,
       frontendRepos: plugins,
-      dev-reposRepos: dev-reposRepos,
+      devRepos,
       devServerProxy: this.props.devServerProxy || {},
       maxChunkSize: this.props.maxChunkSize || 5000000,
       workspaceAliases: this.props.workspaceAliases || [],
