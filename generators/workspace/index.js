@@ -51,7 +51,8 @@ class Generator extends Base {
       name: 'phovea_workspace',
       description: 'helper package',
       version: '0.0.1',
-      skipNextStepsLog: false
+      skipNextStepsLog: false,
+      defaultApp: 'phovea'
     };
 
     // use existing workspace package.json as default
@@ -63,7 +64,11 @@ class Generator extends Base {
 
     // readme content
     this.option('noAdditionals');
-    this.option('defaultApp');
+    this.option('defaultApp', {
+      type: String,
+      default: defaultConfig.defaultApp,
+      description: 'Default application for the workspace'
+    });
 
     this.option('wsName', {
       type: String,
