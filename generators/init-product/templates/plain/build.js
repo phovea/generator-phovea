@@ -24,13 +24,13 @@ function showHelp(steps, chain) {
 possible options:
  * --quiet         ... reduce log messages
  * --serial        ... build elements sequentially
- * --skipTests     ... skip tests
+ * --skipTests     ... skip tests: will set the environment variable PHOVEA_SKIP_TESTS
  * --injectVersion ... injects the product version into the package.json of the built component
  * --useSSH        ... clone via ssh instead of https
  * --skipCleanUp   ... skip cleaning up old docker images
  * --skipSaveImage ... skip saving the generated docker images
  * --pushTo        ... push docker images to the given registry
- * --noDefaultTags ... don't push generated default tag :<timestamp>
+ * --noDefaultTags ... do not push generated default tag :<timestamp>
  * --pushExtra     ... push additional custom tag: e.g., --pushExtra=develop
  * --forceLabel    ... force to use the label even only a single service exists
  * --dryRun        ... just compute chain no execution
@@ -393,7 +393,7 @@ function patchWorkspace(p) {
   }
 
   if (argv.injectVersion) {
-    const pkgfile = `${p.tmpDir}/${p.name}/package.json`;
+    const pkgfile = `${p.tmpDir}/package.json`;
     if (fs.existsSync(pkgfile)) {
       const ppkg = require(pkgfile);
       ppkg.version = pkg.version;
@@ -627,23 +627,23 @@ function buildDockerImage(p) {
 }
 
 function createWorkspace(p) {
-  return yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, p.tmpDir)
+  return yo('workspace', {noAdditionals: true, defaultApp: p.name}, p.tmpDir)
     .then(() => patchWorkspace(p));
 }
 
 function installWebDependencies(p) {
-  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'install');
+  return npm(p.tmpDir, 'install');
 }
 
 function showWebDependencies(p) {
   // `npm ls` fails if some peerDependencies are not installed
   // since this function is for debug purposes only, we catch possible errors of `npm()` and resolve it with status code `0`.
-  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'list --depth=1')
+  return npm(p.tmpDir, 'list --depth=1')
     .catch(() => Promise.resolve(0)); // status code = 0
 }
 
 function cleanUpWebDependencies(p) {
-  return fs.emptyDirAsync(p.additional.length > 0 ? `${p.tmpDir}/node_modules` : (`${p.tmpDir}/${p.name}/node_modules`));
+  return fs.emptyDirAsync(`${p.tmpDir}/node_modules` );
 }
 
 function resolvePluginTypes(p) {
@@ -656,19 +656,8 @@ function resolvePluginTypes(p) {
   return Promise.all([resolvePluginType(p, p.tmpDir)].concat(p.additional.map((pi) => resolvePluginType(pi, p.tmpDir))));
 }
 
-function testWebAdditionals(p) {
-  return Promise.all(p.additional.map((pi) => npm(p.tmpDir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`)));
-}
-
 function buildWeb(p) {
-  const hasAdditional = p.additional.length > 0;
-
-  let step;
-  if (hasAdditional) {
-    step = npm(p.tmpDir, `run dist`);
-  } else {
-    step = npm(`${p.tmpDir}/${p.name}`, `run dist`);
-  }
+  const step = npm(p.tmpDir, `run dist`);
   // move to target directory
   return step.then(() => fs.renameAsync(`${p.tmpDir}/dist/bundles.tar.gz`, `./build/${p.label}.tar.gz`));
 }
@@ -822,7 +811,6 @@ if (require.main === module) {
       steps[`install:${suffix}`] = argv.skipTests ? () => null : () => catchProductBuild(p, installPythonTestDependencies(p));
       steps[`show:${suffix}`] = () => catchProductBuild(p, showPythonTestDependencies(p));
     }
-    steps[`test:${suffix}`] = isWeb && hasAdditional ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => null;
     steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildWeb(p))) : () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildServer(p)));
     steps[`data:${suffix}`] = () => catchProductBuild(p, downloadServerDataFiles(p));
     steps[`postbuild:${suffix}`] = isWeb ? () => catchProductBuild(p, cleanUpWebDependencies(p)) : () => null;
@@ -834,11 +822,8 @@ if (require.main === module) {
     }
     subSteps.push(`install:${suffix}`);
     subSteps.push(`show:${suffix}`);
-
-    if (!argv.skipTests) {
-      subSteps.push(`test:${suffix}`);
-    }
     subSteps.push(`build:${suffix}`);
+
     if (isServer && p.data.length > 0) {
       subSteps.push(`data:${suffix}`);
     }
@@ -858,7 +843,7 @@ if (require.main === module) {
   // create some meta steps
   {
     const stepNames = Object.keys(steps);
-    for (const meta of ['clone', 'prepare', 'build', 'test', 'postbuild', 'image', 'product', 'install', 'show']) {
+    for (const meta of ['clone', 'prepare', 'build', 'postbuild', 'image', 'product', 'install', 'show']) {
       const sub = stepNames.filter((d) => d.startsWith(`${meta}:`));
       if (sub.length <= 0) {
         continue;
