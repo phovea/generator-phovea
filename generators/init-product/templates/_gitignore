@@ -1,11 +1,13 @@
+# ignore all files and plugin repos of the workspace ...
 .*
 *.*
 /*/
 *
 
-# allow list for all files relevant for the product build
+# ... except all files relevant for the product build
 !/.circleci/
 !/.github
+!/templates/
 !.editorconfig
 !.gitattributes
 !.yo-rc.json
@@ -14,8 +16,7 @@
 !README.md
 !build.js
 !package.json
-!phovea_product.json
-!phovea_product.schema.json
+!phovea_product.*
 !Jenkinsfile
-!phovea_product
-!/templates/
+!docker_script.sh
+!docker-compose-patch.*
