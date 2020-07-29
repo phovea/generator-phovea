@@ -196,8 +196,8 @@ class Generator extends Base {
     });
     let devRepos = [];
     if (this.props.defaultApp) {
-      const workpaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
-      devRepos = workpaceFile && workpaceFile.devRepos ? workpaceFile.devRepos : [this.props.defaultApp];
+      const workspaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
+      devRepos = workspaceFile && workspaceFile.devRepos ? workspaceFile.devRepos : [this.props.defaultApp];
       if(devRepos.indexOf(this.props.defaultApp)<0) devRepos.push(this.props.defaultApp);
       devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
       //add dev-repos scripts
