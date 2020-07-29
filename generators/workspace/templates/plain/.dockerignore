@@ -3,3 +3,4 @@
 !/_docker_data/*
 !/bundles/*
 !/deploy/*
+!/build/*
