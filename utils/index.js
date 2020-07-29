@@ -77,8 +77,7 @@ function writeTemplates(config, withSamples, cwd = '') {
   };
 
   const pattern = stringifyAble(config);
-
-  const copyTpl = (base, dbase) => {
+  const copyTpl = (base, dbase, not_overwrite) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
     // copyTpl doesn't support glob options
     const f = glob(base + '/**/*', {
@@ -86,7 +85,9 @@ function writeTemplates(config, withSamples, cwd = '') {
     });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
-      this.fs.copyTpl(fi, this.destinationPath(cwd + dbase + rel), pattern);
+      if(!not_overwrite || !fs.existsSync(this.destinationPath(cwd + dbase + rel))) {
+        this.fs.copyTpl(fi, this.destinationPath(cwd + dbase + rel), pattern);
+      }
     });
   };
 
@@ -95,14 +96,17 @@ function writeTemplates(config, withSamples, cwd = '') {
       this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(cwd), includeDot);
     }
 
-    copyTpl(this.templatePath(prefix + 'processed'), '');
+    if (fs.existsSync(this.templatePath(prefix + 'plain_not_overwrite'))) {
+      copyTpl(this.templatePath(prefix + 'plain_not_overwrite'), '', true);
+    }
+
+    copyTpl(this.templatePath(prefix + 'processed'), '', false);
 
     if (config.name) {
       if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
         this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(cwd + config.name.toLowerCase() + '/'), includeDot);
       }
-
-      copyTpl(this.templatePath(prefix + 'pluginname_processed'), cwd + config.name.toLowerCase() + '/');
+      copyTpl(this.templatePath(prefix + 'pluginname_processed'), cwd + config.name.toLowerCase() + '/', false);
     }
   };
   copy('');
