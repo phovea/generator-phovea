@@ -77,7 +77,8 @@ function writeTemplates(config, withSamples, cwd = '') {
   };
 
   const pattern = stringifyAble(config);
-  const copyTpl = (base, dbase, not_overwrite) => {
+
+  const copyTpl = (base, dbase, initialize_once) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
     // copyTpl doesn't support glob options
     const f = glob(base + '/**/*', {
@@ -85,7 +86,7 @@ function writeTemplates(config, withSamples, cwd = '') {
     });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
-      if(!not_overwrite || !fs.existsSync(this.destinationPath(cwd + dbase + rel))) {
+      if(!initialize_once || !fs.existsSync(this.destinationPath(cwd + dbase + rel))) {
         this.fs.copyTpl(fi, this.destinationPath(cwd + dbase + rel), pattern);
       }
     });
@@ -96,8 +97,9 @@ function writeTemplates(config, withSamples, cwd = '') {
       this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(cwd), includeDot);
     }
 
-    if (fs.existsSync(this.templatePath(prefix + 'plain_not_overwrite'))) {
-      copyTpl(this.templatePath(prefix + 'plain_not_overwrite'), '', true);
+    const plainTemplatePath = this.templatePath(prefix + 'plain_initialize_once');
+    if (fs.existsSync(plainTemplatePath)) {
+      copyTpl(plainTemplatePath, '', true);
     }
 
     copyTpl(this.templatePath(prefix + 'processed'), '', false);
