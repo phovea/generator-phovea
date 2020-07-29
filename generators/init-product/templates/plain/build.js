@@ -24,13 +24,13 @@ function showHelp(steps, chain) {
 possible options:
  * --quiet         ... reduce log messages
  * --serial        ... build elements sequentially
- * --skipTests     ... skip tests: will set the ev PHOVEA_SKIP_TESTS
+ * --skipTests     ... skip tests: will set the environment variable PHOVEA_SKIP_TESTS
  * --injectVersion ... injects the product version into the package.json of the built component
  * --useSSH        ... clone via ssh instead of https
  * --skipCleanUp   ... skip cleaning up old docker images
  * --skipSaveImage ... skip saving the generated docker images
  * --pushTo        ... push docker images to the given registry
- * --noDefaultTags ... don't push generated default tag :<timestamp>
+ * --noDefaultTags ... do not push generated default tag :<timestamp>
  * --pushExtra     ... push additional custom tag: e.g., --pushExtra=develop
  * --forceLabel    ... force to use the label even only a single service exists
  * --dryRun        ... just compute chain no execution
@@ -391,7 +391,7 @@ function patchWorkspace(p) {
     }
     fs.writeFileSync(p.tmpDir + '/docker_script.sh', content);
   }
-  
+
   if (argv.injectVersion) {
     const pkgfile = `${p.tmpDir}/package.json`;
     if (fs.existsSync(pkgfile)) {
