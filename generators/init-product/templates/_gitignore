@@ -2,7 +2,8 @@
 *.*
 /*/
 *
-# white list for all product relevant files
+
+# allow list for all files relevant for the product build
 !/.circleci/
 !/.github
 !.editorconfig

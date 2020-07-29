@@ -202,8 +202,9 @@ class Generator extends Base {
           const baseRepo = simplifyRepoUrl(defaultApp.repo);
           const defaultAppName = baseRepo.slice(baseRepo.lastIndexOf('/') + 1);
           this.defaultApp = defaultAppName;
-          if(!fs.existsSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`))) {
-            fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
+          const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
+          if(!fs.existsSync(yoWorkspacePath)) {
+            fs.writeJsonSync(yoWorkspacePath, {
               modules: [],
               defaultApp: defaultAppName,
               frontendRepos: defaultApp.additional.map((repo) => repo.name),
