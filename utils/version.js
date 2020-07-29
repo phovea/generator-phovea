@@ -38,12 +38,12 @@ module.exports.mergeVersions = (name, versions) => {
 function findMaxVersion(versions) {
   const nonRangeVersions = versions.filter((v) => !hasRangeVersionTag(v)).map((v) => semver.prerelease(v) ? v : semver.coerce(v).version); // Filter out versions with `~` and `^`
   // Sort versions and get max. Method `semver.rcomapre()` fails when you try comparing ranges, i.e., `~2.0.0`
-  const maxNonRangeVersion = nonRangeVersions.sort(semver.rcompare)[0] || versions[versions.length - 1];
+  const maxNonRangeVersion = nonRangeVersions.sort(semver.rcompare)[0] || nonRangeVersions[nonRangeVersions.length - 1];
   if (versions.some((v) => hasRangeVersionTag(v))) {
     const maxCaretRange = findMaxCaretRange(versions); // ['^1.0.0', '^1.2.3']--> '^1.2.3'
     const maxTildeRange = findMaxTildeRange(versions); // ['~1.0.0', '~1.2.5']--> '~1.2.5'
     const maxRange = maxCaretRange && maxTildeRange ? findMaxRange(maxTildeRange, maxCaretRange) : maxTildeRange || maxCaretRange;
-    return semver.gtr(maxNonRangeVersion, maxRange) ? maxNonRangeVersion : maxRange; // check maxNonRangeVersion is greater than all the versions possible in the range.
+    return maxNonRangeVersion && semver.gtr(maxNonRangeVersion, maxRange) ? maxNonRangeVersion : maxRange; // check maxNonRangeVersion is greater than all the versions possible in the range.
   }
   return maxNonRangeVersion;
 }
