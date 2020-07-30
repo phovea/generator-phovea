@@ -7,12 +7,11 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/*.pyc": true,
-        "*/src/**/*.js": true,
-        "src/**/*.js": true,
-        "*/src/**/*.d.ts": true,
-        "src/**/*.d.ts": true,
-        "**/*.map": true,
         "**/.cache-loader": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true
     },
     "diffEditor.ignoreTrimWhitespace": false,
     "python.linting.enabled": true,
@@ -32,5 +31,6 @@
     "typescriptHero.imports.insertSpaceBeforeAndAfterImportBraces": false,
     "typescriptHero.codeOutline.enabled": false,
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+    "typescript.tsdk": "node_modules/typescript/lib"
 }

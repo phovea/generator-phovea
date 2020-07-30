@@ -24,13 +24,13 @@ function showHelp(steps, chain) {
 possible options:
  * --quiet         ... reduce log messages
  * --serial        ... build elements sequentially
- * --skipTests     ... skip tests
+ * --skipTests     ... skip tests: will set the environment variable PHOVEA_SKIP_TESTS
  * --injectVersion ... injects the product version into the package.json of the built component
  * --useSSH        ... clone via ssh instead of https
  * --skipCleanUp   ... skip cleaning up old docker images
  * --skipSaveImage ... skip saving the generated docker images
  * --pushTo        ... push docker images to the given registry
- * --noDefaultTags ... don't push generated default tag :<timestamp>
+ * --noDefaultTags ... do not push generated default tag :<timestamp>
  * --pushExtra     ... push additional custom tag: e.g., --pushExtra=develop
  * --forceLabel    ... force to use the label even only a single service exists
  * --dryRun        ... just compute chain no execution
@@ -393,7 +393,7 @@ function patchWorkspace(p) {
   }
 
   if (argv.injectVersion) {
-    const pkgfile = `${p.tmpDir}/${p.name}/package.json`;
+    const pkgfile = `${p.tmpDir}/package.json`;
     if (fs.existsSync(pkgfile)) {
       const ppkg = require(pkgfile);
       ppkg.version = pkg.version;
@@ -415,6 +415,12 @@ function patchWorkspace(p) {
     `;
     fs.writeFileSync(p.tmpDir + '/phovea_registry.js', registry);
   }
+  //copy template files of product to workspace of product
+  if (fs.existsSync(`./templates/${p.type}`)) {
+    fs.copySync(`./templates/${p.type}`, p.tmpDir);
+  }
+
+
 }
 
 function mergeCompose(composePartials) {
@@ -607,7 +613,7 @@ function strObject(items) {
 }
 
 function buildDockerImage(p) {
-  const buildInSubDir = p.type === 'web' || p.type === 'static';
+  const buildInSubDir = p.type === 'static';
   let buildArgs = '';
   // pass through http_proxy, no_proxy, and https_proxy env variables
   for (const key of Object.keys(process.env)) {
@@ -617,33 +623,34 @@ function buildDockerImage(p) {
       buildArgs += ` --build-arg ${lkey}='${process.env[key]}'`;
     }
   }
-
+  const dockerFile = `deploy${p.type === 'web' || p.type === 'api' ? '/' + p.type : ''}/Dockerfile`;
+  console.log('use dockerfile: ' + dockerFile);
   // patch the docker file with the with an optional given baseImage
-  return Promise.resolve(patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/deploy/Dockerfile`))
+  return Promise.resolve(patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/${dockerFile}`))
     // create the container image
-    .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image}${buildArgs} -f deploy/Dockerfile .`))
+    .then(() => docker(`${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}`, `build -t ${p.image}${buildArgs} -f ${dockerFile} .`))
     // tag the container image
     .then(() => argv.pushExtra ? docker(`${p.tmpDir}`, `tag ${p.image} ${p.image.substring(0, p.image.lastIndexOf(':'))}:${argv.pushExtra}`) : null);
 }
 
 function createWorkspace(p) {
-  return yo('workspace', {noAdditionals: true, defaultApp: 'phovea'}, p.tmpDir)
+  return yo('workspace', {noAdditionals: true, defaultApp: p.name, addWorkspaceRepos: false}, p.tmpDir)
     .then(() => patchWorkspace(p));
 }
 
 function installWebDependencies(p) {
-  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'install');
+  return npm(p.tmpDir, 'install');
 }
 
 function showWebDependencies(p) {
   // `npm ls` fails if some peerDependencies are not installed
   // since this function is for debug purposes only, we catch possible errors of `npm()` and resolve it with status code `0`.
-  return npm(p.additional.length > 0 ? p.tmpDir : (`${p.tmpDir}/${p.name}`), 'list --depth=1')
-    .catch(() => Promise.resolve(0)) // status code = 0
+  return npm(p.tmpDir, 'list --depth=1')
+    .catch(() => Promise.resolve(0)); // status code = 0
 }
 
 function cleanUpWebDependencies(p) {
-  return fs.emptyDirAsync(p.additional.length > 0 ? `${p.tmpDir}/node_modules` : (`${p.tmpDir}/${p.name}/node_modules`));
+  return fs.emptyDirAsync(`${p.tmpDir}/node_modules` );
 }
 
 function resolvePluginTypes(p) {
@@ -656,21 +663,10 @@ function resolvePluginTypes(p) {
   return Promise.all([resolvePluginType(p, p.tmpDir)].concat(p.additional.map((pi) => resolvePluginType(pi, p.tmpDir))));
 }
 
-function testWebAdditionals(p) {
-  return Promise.all(p.additional.map((pi) => npm(p.tmpDir, `run test${pi.isHybridType ? ':web' : ''}:${pi.name}`)));
-}
-
 function buildWeb(p) {
-  const hasAdditional = p.additional.length > 0;
-
-  let step;
-  if (hasAdditional) {
-    step = npm(p.tmpDir, `run dist${p.isHybridType ? ':web' : ''}:${p.name}`);
-  } else {
-    step = npm(`${p.tmpDir}/${p.name}`, `run dist${p.isHybridType ? ':web' : ''}`);
-  }
+  const step = npm(p.tmpDir, `run dist`);
   // move to target directory
-  return step.then(() => fs.renameAsync(`${p.tmpDir}/${p.name}/dist/${p.name}.tar.gz`, `./build/${p.label}.tar.gz`));
+  return step.then(() => fs.renameAsync(`${p.tmpDir}/dist/bundles.tar.gz`, `./build/${p.label}.tar.gz`));
 }
 
 function installPythonTestDependencies(p) {
@@ -682,7 +678,7 @@ function installPythonTestDependencies(p) {
 function showPythonTestDependencies(p) {
   // since this function is for debug purposes only, we catch possible errors and resolve it with status code `0`.
   return spawn('pip', 'list', {cwd: p.tmpDir})
-    .catch(() => Promise.resolve(0)) // status code = 0
+    .catch(() => Promise.resolve(0)); // status code = 0
 }
 
 function buildServer(p) {
@@ -696,11 +692,6 @@ function buildServer(p) {
     .then(() => fs.ensureDirAsync(`${p.tmpDir}/build/source`))
     .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/build/source`, `${p.tmpDir}/build/source/`))
     .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${p.tmpDir}/${pi.name}/build/source`, `${p.tmpDir}/build/source/`))));
-
-  // copy main deploy thing and create a docker out of it
-  act = act
-    .then(() => fs.ensureDirAsync(`${p.tmpDir}/deploy`))
-    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/deploy`, `${p.tmpDir}/deploy/`));
 
   return act;
 }
@@ -810,7 +801,7 @@ if (require.main === module) {
       }
     }
 
-    const needsWorkspace = (isWeb && hasAdditional) || isServer;
+    const needsWorkspace = isWeb || isServer;
     if(needsWorkspace) {
       steps[`prepare:${suffix}`] = () => catchProductBuild(p, createWorkspace(p));
     }
@@ -822,7 +813,6 @@ if (require.main === module) {
       steps[`install:${suffix}`] = argv.skipTests ? () => null : () => catchProductBuild(p, installPythonTestDependencies(p));
       steps[`show:${suffix}`] = () => catchProductBuild(p, showPythonTestDependencies(p));
     }
-    steps[`test:${suffix}`] = isWeb && hasAdditional ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => testWebAdditionals(p))) : () => null;
     steps[`build:${suffix}`] = isWeb ? () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildWeb(p))) : () => catchProductBuild(p, resolvePluginTypes(p).then(() => buildServer(p)));
     steps[`data:${suffix}`] = () => catchProductBuild(p, downloadServerDataFiles(p));
     steps[`postbuild:${suffix}`] = isWeb ? () => catchProductBuild(p, cleanUpWebDependencies(p)) : () => null;
@@ -834,11 +824,8 @@ if (require.main === module) {
     }
     subSteps.push(`install:${suffix}`);
     subSteps.push(`show:${suffix}`);
-
-    if (!argv.skipTests) {
-      subSteps.push(`test:${suffix}`);
-    }
     subSteps.push(`build:${suffix}`);
+
     if (isServer && p.data.length > 0) {
       subSteps.push(`data:${suffix}`);
     }
@@ -858,7 +845,7 @@ if (require.main === module) {
   // create some meta steps
   {
     const stepNames = Object.keys(steps);
-    for (const meta of ['clone', 'prepare', 'build', 'test', 'postbuild', 'image', 'product', 'install', 'show']) {
+    for (const meta of ['clone', 'prepare', 'build', 'postbuild', 'image', 'product', 'install', 'show']) {
       const sub = stepNames.filter((d) => d.startsWith(`${meta}:`));
       if (sub.length <= 0) {
         continue;

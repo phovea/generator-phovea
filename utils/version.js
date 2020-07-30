@@ -8,23 +8,32 @@ const {
 
 module.exports.mergeVersions = (name, versions) => {
   if (versions.some((v) => v === 'latest')) {
-    throw new Error(chalk.red('Invalid version. Please avoid using version latest in package.json.'))
+    throw new Error(chalk.red('Invalid version. Please avoid using version latest in package.json.'));
   }
   // create set
   versions = Array.from(new Set(versions));
   if (versions.length === 1) {
     return versions[0];
   }
-  const gitBranch = versions.find((d) => d.startsWith('github:'));
-  if (gitBranch) {
-    return gitBranch;
+  const gitBranches = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
+
+  if (gitBranches.length) {
+    const haveCommonVersions = (branches) => {
+      versions = new Set(branches.map((branch) => branch.split('#')[1]));
+      return versions.size === 1;
+    };
+    if (haveCommonVersions(gitBranches)) {
+      return gitBranches[0];
+    }
+
+    throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
   }
-  // first try to find a good intersection
+
   try {
     return intersect(...versions).toString();
   } catch (e) {
     // map to base version, sort descending take first
-    const max = findMaxVersion(versions)
+    const max = findMaxVersion(versions);
     console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
     return max.toString();
   }
@@ -38,12 +47,12 @@ module.exports.mergeVersions = (name, versions) => {
 function findMaxVersion(versions) {
   const nonRangeVersions = versions.filter((v) => !hasRangeVersionTag(v)).map((v) => semver.prerelease(v) ? v : semver.coerce(v).version); // Filter out versions with `~` and `^`
   // Sort versions and get max. Method `semver.rcomapre()` fails when you try comparing ranges, i.e., `~2.0.0`
-  const maxNonRangeVersion = nonRangeVersions.sort(semver.rcompare)[0] || versions[versions.length - 1];
+  const maxNonRangeVersion = nonRangeVersions.sort(semver.rcompare)[0] || nonRangeVersions[nonRangeVersions.length - 1];
   if (versions.some((v) => hasRangeVersionTag(v))) {
     const maxCaretRange = findMaxCaretRange(versions); // ['^1.0.0', '^1.2.3']--> '^1.2.3'
     const maxTildeRange = findMaxTildeRange(versions); // ['~1.0.0', '~1.2.5']--> '~1.2.5'
     const maxRange = maxCaretRange && maxTildeRange ? findMaxRange(maxTildeRange, maxCaretRange) : maxTildeRange || maxCaretRange;
-    return semver.gtr(maxNonRangeVersion, maxRange) ? maxNonRangeVersion : maxRange; // check maxNonRangeVersion is greater than all the versions possible in the range.
+    return maxNonRangeVersion && semver.gtr(maxNonRangeVersion, maxRange) ? maxNonRangeVersion : maxRange; // check maxNonRangeVersion is greater than all the versions possible in the range.
   }
   return maxNonRangeVersion;
 }
@@ -71,7 +80,7 @@ function findMaxRange(tildeRange, caretRange) {
  * @returns {string} Return a version string without the range tags (tilde, caret).
  */
 function removeRangeTag(range) {
-  return semver.prerelease(semver.minVersion(range)) ? semver.minVersion(range) : semver.coerce(range).version
+  return semver.prerelease(semver.minVersion(range)) ? semver.minVersion(range) : semver.coerce(range).version;
 }
 
 /**

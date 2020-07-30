@@ -8,7 +8,7 @@ describe('check isGitCommit()', () => {
   });
 
   it('check `8747a43780e4651542facd7b4feac7bcb8e3778d` === true', () => {
-    expect(version.isGitCommit('8747a43780e4651542facd7b4feac7bcb8e3778d')).toBeTruthy()
+    expect(version.isGitCommit('8747a43780e4651542facd7b4feac7bcb8e3778d')).toBeTruthy();
   });
 
   it('check `develop` === false', () => {
@@ -264,6 +264,11 @@ describe('find max version or range version from list', () => {
     const versions = ['~4.2.0-alpha.1', '^4.2.0-rc.0', '~4.2.0-beta.1', '^4.1.0', '5.1', '~2.2.0'];
     expect(version.findMaxVersion(versions)).toBe('5.1.0');
   });
+
+  it('works if versions are all ranges', () => {
+    const versions = ['^2.9.0', '~2.8.1'];
+    expect(version.findMaxVersion(versions)).toBe('^2.9.0');
+  });
 });
 
 describe('semver-intersect works for prerelease ranges', () => {
@@ -271,5 +276,38 @@ describe('semver-intersect works for prerelease ranges', () => {
   it('finds intersection of an array of prerelease ranges', () => {
     const versions = ['~4.2.0-alpha.1', '~4.2.0-beta.1',];
     expect(intersect(...versions)).toBe('~4.2.0-beta.1');
+  });
+});
+
+describe('find intersection or max version of github or gitlab version tags', () => {
+
+  it('return first correct gitlab tag', () => {
+    const name ='target360';
+    const versions=[
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      '4.0.0'
+  ];
+    expect(version.mergeVersions(name, versions)).toBe('git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop');
+  });
+
+  it('return first correct githab tag', () => {
+    const name ='phovea_core';
+    const versions=[
+      'github:phovea/phovea_core#develop',
+      'github:phovea/phovea_core#develop',
+      '5.0.0'
+  ];
+    expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#develop');
+  });
+
+  it('throws error if versions point to different branches', () => {
+    const name ='target360';
+    const versions=[
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#master',
+      '4.0.0'
+  ];
+    expect(()=>version.mergeVersions(name, versions)).toThrow();
   });
 });

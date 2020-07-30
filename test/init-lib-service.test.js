@@ -5,7 +5,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils=require('./testUtils');
+const testUtils = require('./testUtils');
 /**
  * Directory name to run the generator
  */
@@ -25,10 +25,28 @@ const GENERATOR_DEPENDENCIES = [
   '../generators/check-node-version',
 ];
 
+const expectedFiles = [
+  'tsd.d.ts',
+  'jest.config.js'
+];
 
+const unExpectedFiles = [
+  'webpack.config.js',
+  'tests.webpack.js',
+  'index.js'
+];
 
 describe('generate lib-service plugin with default prompt values', () => {
 
+  /**
+   * package.tmpl.json template of the _init-web subgenerator
+   */
+  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+
+  /**
+   * tsconfig.json template of the _init-web subgenerator
+   */
+  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -42,7 +60,34 @@ describe('generate lib-service plugin with default prompt values', () => {
   });
 
   it('generates `package.json` with the correct devDependencies', () => {
-    const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
     assert.jsonFileContent('package.json', {devDependencies: initWebPackage.devDependencies});
+  });
+
+  it('generates `package.json` with a correct `main`', () => {
+    assert.jsonFileContent('package.json', {main: initWebPackage.main});
+  });
+
+  it('generates `package.json` with correct `types`', () => {
+    assert.jsonFileContent('package.json', {types: initWebPackage.types});
+  });
+
+  it('generates `.gitignore` that has no `/dist/` entry', () => {
+    assert.noFileContent('.gitignore', '/dist/');
+  });
+
+  it('generates `tsconfig.json` with correct content', () => {
+    assert.jsonFileContent('tsconfig.json', initWebTsConfig);
+  });
+
+  it('generates no `tsconfig_dev.json`', () => {
+    assert.noFile('tsconfig_dev.json');
+  });
+
+  it('generates expected plugin files', () => {
+    assert.file(expectedFiles);
+  });
+
+  it('generates no unexpected plugin files', () => {
+    assert.noFile(unExpectedFiles);
   });
 });

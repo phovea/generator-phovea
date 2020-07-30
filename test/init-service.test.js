@@ -21,7 +21,6 @@ const GENERATOR_DEPENDENCIES = [
 
 describe('generate service plugin with default prompt values', () => {
 
-
   beforeAll(() => {
     return helpers
       .run(path.join(__dirname, '../generators/init-service'))

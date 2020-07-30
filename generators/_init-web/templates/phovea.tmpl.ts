@@ -4,15 +4,15 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-import {IRegistry} from 'phovea_core/src/plugin';
+import {IRegistry} from 'phovea_core';
 
 export default function (registry: IRegistry) {
   /// #if include('extension-type', 'extension-id')
-  // registry.push('extension-type', 'extension-id', () => System.import('./extension_impl'), {});
+  // registry.push('extension-type', 'extension-id', () => import('./extension_impl'), {});
   /// #endif
 
   // generator-phovea:begin
-  <%- extensions.map((d) => `   registry.push('${d.type}', '${d.id}', () => System.import('./${d.module}'), ${stringify(d.extras, ' ')});`).join('\n\n') %>
+  <%- extensions.map((d) => `   registry.push('${d.type}', '${d.id}', () => import('./${d.module}'), ${stringify(d.extras, ' ')});`).join('\n\n') %>
   // generator-phovea:end
 }
 
