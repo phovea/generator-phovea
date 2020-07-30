@@ -35,7 +35,7 @@ appPkg.version = appPkg.version.replace('SNAPSHOT', buildId);
 const libName = appPkg.name;
 const libDesc = appPkg.description;
 const {entries, registry, libraryAliases, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
-const fileLoaderRegex = RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`);
+const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
 //banner info
 const banner = '/*! ' + (appPkg.title || appPkg.name) + ' - v' + appPkg.version + ' - ' + year + '\n' +
     (appPkg.homepage ? '* ' + appPkg.homepage + '\n' : '') +

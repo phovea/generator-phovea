@@ -52,7 +52,8 @@ class Generator extends Base {
       description: 'helper package',
       version: '0.0.1',
       skipNextStepsLog: false,
-      defaultApp: 'phovea'
+      defaultApp: 'phovea',
+      addWorkspaceRepos: true
     };
 
     // use existing workspace package.json as default
@@ -93,6 +94,12 @@ class Generator extends Base {
       default: defaultConfig.skipNextStepsLog,
       description: 'Skip the log message with the next steps at the end'
     });
+    this.option('addWorkspaceRepos', {
+      type: Boolean,
+      default: defaultConfig.addWorkspaceRepos,
+      description: 'States whether workspace repos should be part of the dependencies. Set to `true` for local development setup. Otherwise `false` for CI build process.'
+    });
+    
   }
 
   initializing() {
@@ -196,8 +203,8 @@ class Generator extends Base {
     });
     let devRepos = [];
     if (this.props.defaultApp) {
-      const workpaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
-      devRepos = workpaceFile && workpaceFile.devRepos ? workpaceFile.devRepos : [this.props.defaultApp];
+      const workspaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
+      devRepos = workspaceFile && workspaceFile.devRepos ? workspaceFile.devRepos : [this.props.defaultApp];
       if(devRepos.indexOf(this.props.defaultApp)<0) devRepos.push(this.props.defaultApp);
       devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
       //add dev-repos scripts
@@ -246,7 +253,7 @@ class Generator extends Base {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), repoDependencies), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {

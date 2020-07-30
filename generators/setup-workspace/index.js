@@ -176,20 +176,20 @@ class Generator extends Base {
     return Promise.resolve(cmd);
   }
 
-  _cloneRepo(repo, branch, extras) {
+  _cloneRepo(repo, branch, extras, dir) {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
       extras: extras || '',
+      dir,
       cwd: this.cwd
     }, repoUrl); // repository URL as argument
   }
 
   _getProduct() {
-    return this._cloneRepo(this.productName, this.options.branch || 'master', ' --depth 1')
+    return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
       .then(() => {
-        const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        const phoveaProductJSON = `${this.cwd}/${name}/phovea_product.json`;
+        const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
 
         if(!fs.existsSync(phoveaProductJSON)) {
           throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
@@ -197,39 +197,23 @@ class Generator extends Base {
 
         this.product = fs.readJSONSync(phoveaProductJSON);
 
-        // pass through the docker overrides
-        for (const file of ['docker-compose-patch.yaml', 'docker-compose-patch.yml']) {
-          if (fs.existsSync(`${this.cwd}/${name}/${file}`)) {
-            fs.copySync(`${this.cwd}/${name}/${file}`, this.destinationPath(`${this.cwd}/${file}`));
-          }
-        }
-        if (fs.existsSync(`${this.cwd}/${name}/docker_script.sh`)) {
-          fs.copySync(`${this.cwd}/${name}/docker_script.sh`, this.destinationPath(`${this.cwd}/docker_script_patch.sh`));
-        }
-        // generic copy helper
-        if (fs.existsSync(`${this.cwd}/${name}/ws`)) {
-          fs.copySync(`${this.cwd}/${name}/ws`, this.destinationPath(`${this.cwd}`));
-        }
-
         const defaultApp = this.product.find((v) => v.type === 'web');
         if (defaultApp) {
           const baseRepo = simplifyRepoUrl(defaultApp.repo);
           const defaultAppName = baseRepo.slice(baseRepo.lastIndexOf('/') + 1);
           this.defaultApp = defaultAppName;
-          fs.writeJsonSync(this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`), {
-            modules: [],
-            defaultApp: defaultAppName,
-            frontendRepos: defaultApp.additional.map((repo) => repo.name),
-            devRepos: [defaultAppName]
-          }, {spaces: 2});
+          const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
+          if(!fs.existsSync(yoWorkspacePath)) {
+            fs.writeJsonSync(yoWorkspacePath, {
+              modules: [],
+              defaultApp: defaultAppName,
+              frontendRepos: defaultApp.additional.map((repo) => repo.name),
+              devRepos: [defaultAppName]
+            }, {spaces: 2});
+          }
         }
 
         return this.product;
-      }).then((product) => {
-        const name = this.productName.slice(this.productName.lastIndexOf('/') + 1);
-        // clean up again
-        fs.removeSync(`${this.cwd}/${name}`);
-        return product;
       });
   }
 
@@ -248,6 +232,11 @@ class Generator extends Base {
       this.fs.copyTpl(this.templatePath('lint_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/lint_${defaultApp}.xml`), {
         defaultApp: defaultApp
       });
+    }
+    //copy default files of product to templates
+    if (this.destinationPath(`${this.cwd}/templates`)) {
+      const dirs = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).isDirectory());
+      dirs.map((dir) => fs.copySync(dir, this.destinationPath(this.cwd)));
     }
   }
 
