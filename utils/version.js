@@ -15,11 +15,20 @@ module.exports.mergeVersions = (name, versions) => {
   if (versions.length === 1) {
     return versions[0];
   }
-  const gitBranch = versions.find((d) => d.startsWith('github:'));
-  if (gitBranch) {
-    return gitBranch;
+  const gitBranches = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
+
+  if (gitBranches.length) {
+    const haveCommonVersions = (branches) => {
+      versions = new Set(branches.map((branch) => branch.split('#')[1]));
+      return versions.size === 1;
+    };
+    if (haveCommonVersions(gitBranches)) {
+      return gitBranches[0];
+    }
+
+    throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
   }
-  // first try to find a good intersection
+
   try {
     return intersect(...versions).toString();
   } catch (e) {
