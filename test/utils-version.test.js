@@ -278,3 +278,35 @@ describe('semver-intersect works for prerelease ranges', () => {
     expect(intersect(...versions)).toBe('~4.2.0-beta.1');
   });
 });
+
+describe('find intersection or max version of github or gitlab version tags', () => {
+
+  it('return first correct gitlab tag', () => {
+    const name ='target360';
+    const versions=[
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      '4.0.0'
+  ];
+    expect(version.mergeVersions(name, versions)).toBe('git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop');
+  });
+
+  it('return first correct githab tag', () => {
+    const name ='phovea_core';
+    const versions=[
+      'github:phovea/phovea_core#develop',
+      'github:phovea/phovea_core#develop',
+      '5.0.0'
+  ];
+    expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#develop');
+  });
+
+  it('throws error if versions point to different branches', () => {
+    const name ='phovea_core';
+    const versions=[
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#master'
+  ];
+    expect(()=>version.mergeVersions(name, versions)).toThrow();
+  });
+});
