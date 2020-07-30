@@ -97,7 +97,7 @@ class Generator extends Base {
     this.option('addWorkspaceRepos', {
       type: Boolean,
       default: defaultConfig.addWorkspaceRepos,
-      description: 'true if the workspace repos should be part of the dependencies (desktop build) otherwise false (build process)'
+      description: 'States whether workspace repos should be part of the dependencies. Set to `true` for local development setup. Otherwise `false` for CI build process.'
     });
     
   }
