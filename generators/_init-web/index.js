@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const known = () => require('../../utils/known');
 
-function toLibraryAliasMap(moduleNames, libraryNames) {
+function toLibraryAliasMap(moduleNames = [], libraryNames = []) {
   let r = {};
   moduleNames.forEach((m) => {
     const plugin = known().plugin.byName(m);
@@ -28,7 +28,7 @@ function toLibraryAliasMap(moduleNames, libraryNames) {
   return r;
 }
 
-function toLibraryExternals(moduleNames, libraryNames) {
+function toLibraryExternals(moduleNames = [], libraryNames = []) {
   let r = [];
   moduleNames.forEach((m) => {
     const plugin = known().plugin.byName(m);
@@ -109,7 +109,8 @@ class Generator extends Base {
       return; // hybrid
     }
     this.composeWith('phovea:_node', {
-      options: this.options
+      options: this.options,
+      isWorkspace: this.options.isWorkspace
     });
   }
 
@@ -128,28 +129,28 @@ class Generator extends Base {
 
   writing() {
     const config = this.config.getAll();
+    this.cwd = this.options.isWorkspace ? (config.app || config.name) + '/' : '';
     patchPackageJSON.call(this, config, [], {
-      dependencies: this._generateDependencies(useDevVersion.call(this))
-    });
-    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
-    writeTemplates.call(this, config);
+      dependencies: this._generateDependencies(useDevVersion.call(this, this.cwd))
+    }, null, this.cwd);
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
+    writeTemplates.call(this, config, null, this.cwd);
 
     // do not overwrite existing registry file
-    if (!fs.existsSync(this.destinationPath('src/phovea.ts'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath('src/phovea.ts'), stringifyAble(config));
+    if (!fs.existsSync(this.destinationPath(this.cwd + 'src/phovea.ts'))) {
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath(this.cwd + 'src/phovea.ts'), stringifyAble(config));
     }
   }
 
   install() {
-    if (this.options.install) {
-      this.installDependencies({
-        bower: false
-      });
+    if (this.options.options.install) {
+      const options = this.cwd ? {cwd: this.cwd} : {};
+      this.spawnCommand("npm", ["install"], options);
     }
   }
 
   end() {
-    if(fs.existsSync(this.destinationPath('phovea.js'))) {
+    if (fs.existsSync(this.destinationPath(this.cwd + 'phovea.js'))) {
       this.log('\r\n');
       this.log(chalk.red(`ACTION REQUIRED!`));
       this.log(chalk.default(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.default(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.default(` now!`));

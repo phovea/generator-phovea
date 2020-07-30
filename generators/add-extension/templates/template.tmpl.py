@@ -10,9 +10,9 @@ _log = logging.getLogger(__name__)
 
 
 class Template(object):
-  def __init__(self):
-    pass
+    def __init__(self):
+        pass
 
 
 def create():
-  return Template()
+    return Template()

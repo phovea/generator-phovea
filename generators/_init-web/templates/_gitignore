@@ -1,11 +1,9 @@
 /.tscache
 /.idea
 /build/
-/dist/
+/lib/
 node_modules/
 /src/**/*.js
 /tests/**/*.js
-*.map
-*.css
 *.log
 /.cache-loader

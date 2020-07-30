@@ -3,11 +3,20 @@ const Generator = require('yeoman-generator');
 const {merge, template} = require('lodash');
 const path = require('path');
 const glob = require('glob').sync;
-const fs = require('fs');
+const fs = require('fs-extra');
+const chalk = require('chalk');
 
-function patchPackageJSON(config, unset, extra, replaceExtra) {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
-
+/**
+ * Modify package.json by passing the configuration
+ * @param {object} config Current configuration
+ * @param {*} unset
+ * @param {*} extra
+ * @param {*} replaceExtra
+ * @param {string} cwd The directory from which the generator is being called, i.e., `tdp_core/`.
+ * If cwd is provided than the `package.json` is going to be written to that subdirectory, otherwise to the current directory.
+ */
+function patchPackageJSON(config, unset, extra, replaceExtra, cwd = '') {
+  const pkg = this.fs.readJSON(this.destinationPath(cwd + 'package.json'), {});
   let pkgPatch;
   if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
     pkgPatch = JSON.parse(template(this.fs.read(this.templatePath('package.tmpl.json')))(config));
@@ -23,7 +32,7 @@ function patchPackageJSON(config, unset, extra, replaceExtra) {
 
   (unset || []).forEach((d) => delete pkg[d]);
 
-  this.fs.writeJSON(this.destinationPath('package.json'), pkg);
+  this.fs.writeJSON(this.destinationPath(cwd + 'package.json'), pkg);
 }
 
 function stringifyInline(obj, space) {
@@ -53,7 +62,14 @@ function stringifyAble(config) {
   }, config);
 }
 
-function writeTemplates(config, withSamples) {
+/**
+ * Copies the template files to the current directory or to a subdirectory if `cwd` is provided.
+ * @param {object} config Current configuration
+ * @param {*} withSamples
+ * @param {string} cwd The directory from which the generator is being called, i.e., `tdp_core/`.
+ * If `cwd` is provided than the `package.json` is going to be written to that subdirectory, otherwise to the current directory.
+ */
+function writeTemplates(config, withSamples, cwd = '') {
   const includeDot = {
     globOptions: {
       dot: true
@@ -62,7 +78,7 @@ function writeTemplates(config, withSamples) {
 
   const pattern = stringifyAble(config);
 
-  const copyTpl = (base, dbase) => {
+  const copyTpl = (base, dbase, initialize_once) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
     // copyTpl doesn't support glob options
     const f = glob(base + '/**/*', {
@@ -70,23 +86,29 @@ function writeTemplates(config, withSamples) {
     });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
-      this.fs.copyTpl(fi, this.destinationPath(dbase + rel), pattern);
+      if(!initialize_once || !fs.existsSync(this.destinationPath(cwd + dbase + rel))) {
+        this.fs.copyTpl(fi, this.destinationPath(cwd + dbase + rel), pattern);
+      }
     });
   };
 
   const copy = (prefix) => {
     if (fs.existsSync(this.templatePath(prefix + 'plain'))) {
-      this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(), includeDot);
+      this.fs.copy(this.templatePath(prefix + 'plain/**/*'), this.destinationPath(cwd), includeDot);
     }
 
-    copyTpl(this.templatePath(prefix + 'processed'), '');
+    const plainTemplatePath = this.templatePath(prefix + 'plain_initialize_once');
+    if (fs.existsSync(plainTemplatePath)) {
+      copyTpl(plainTemplatePath, '', true);
+    }
+
+    copyTpl(this.templatePath(prefix + 'processed'), '', false);
 
     if (config.name) {
       if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
-        this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(config.name.toLowerCase() + '/'), includeDot);
+        this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(cwd + config.name.toLowerCase() + '/'), includeDot);
       }
-
-      copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/');
+      copyTpl(this.templatePath(prefix + 'pluginname_processed'), cwd + config.name.toLowerCase() + '/', false);
     }
   };
   copy('');
@@ -95,8 +117,8 @@ function writeTemplates(config, withSamples) {
   }
 }
 
-function useDevVersion() {
-  const pkg = this.fs.readJSON(this.destinationPath('package.json'), {
+function useDevVersion(cwd = '') {
+  const pkg = this.fs.readJSON(this.destinationPath(cwd + 'package.json'), {
     version: '1.0.0'
   });
   // assumption having a suffix like -SNAPSHOT use the dev version
@@ -113,14 +135,48 @@ class BaseInitPluginGenerator extends Generator {
     this.option('skipInstall');
     this.option('noSamples');
     this.option('useDefaults');
+    this.cwd = '';
   }
 
   initializing() {
+    if (this._isInvalidWorkspace()) {
+      throw new Error(chalk.red('Execution failed, because a ".yo-rc.json" and ".yo-rc-workspace.json" file was found. If this directory is a workspace, please remove the ".yo-rc.json" file and try again.\n'));
+    }
+
     this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
 
     this.config.defaults({
       type: this.type
     });
+  }
+
+  _isWorkspace() {
+    return fs.existsSync(this.destinationPath('.yo-rc-workspace.json'));
+  }
+
+  _hasConfigFile() {
+    return fs.existsSync(this.destinationPath('.yo-rc.json'));
+  }
+
+  /**
+   * If there is both a `.yo-rc-workspace.json` and `.yo-rc.json` file in the current directory
+   * the workspace is invalid and the generator cannot function properly.
+   */
+  _isInvalidWorkspace() {
+    return this._isWorkspace() && this._hasConfigFile();
+  }
+
+  /**
+   * Create a subdirectory in the current directory.
+   * Initialize the property cwd.
+   * @param {string} dir Directory name.
+   */
+  _mkdir(dir) {
+    if (this._isWorkspace() && this.cwd !== dir + '/') {
+      this.cwd = dir + '/';
+      this.log('Create directory: ' + dir);
+      return new Promise((resolve) => fs.ensureDir(dir, resolve));
+    }
   }
 
   readmeAddon() {
@@ -135,28 +191,31 @@ class BaseInitPluginGenerator extends Generator {
     this.composeWith('phovea:_init-' + this.basetype, {
       options: Object.assign({
         readme: this.readmeAddon() + (this.options.readme ? `\n\n${this.options.readme}` : '')
-      }, this.options)
+      }, this.options),
+      isWorkspace: this._isWorkspace() // inform the sub generator that the cwd is the workspace to avoid reading prompt default values from the workspace package.json
     });
   }
 
   writing() {
     const config = this.config.getAll();
+    this._mkdir(config.cwd || config.name);
     if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
-      this._patchPackageJSON(config);
+      this._patchPackageJSON(config, null, null, this.cwd);
     }
     if (fs.existsSync(this.templatePath('_gitignore'))) {
-      this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
+      this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
     }
 
-    this._writeTemplates(config, !this.options.noSamples);
+    this._writeTemplates(config, !this.options.noSamples, this.cwd);
+
   }
 
-  _patchPackageJSON(config, unset, extra) {
-    return patchPackageJSON.call(this, config, unset, extra);
+  _patchPackageJSON(config, unset, extra, cwd) {
+    return patchPackageJSON.call(this, config, unset, extra, null, cwd);
   }
 
-  _writeTemplates(config, withSamples) {
-    return writeTemplates.call(this, config, withSamples);
+  _writeTemplates(config, withSamples, cwd) {
+    return writeTemplates.call(this, config, withSamples, cwd);
   }
 }
 

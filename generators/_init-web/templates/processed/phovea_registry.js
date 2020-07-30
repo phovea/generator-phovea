@@ -4,8 +4,8 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-import {register} from '<%- name==="phovea_core" ? "." : "phovea_core" %>/src/plugin';
-import reg from './src/phovea';
+import {PluginRegistry} from '<%- name==="phovea_core" ? "./dist/app/PluginRegistry" : "phovea_core" %>';
+import reg from './dist/phovea';
 
 /**
  * build a registry by registering all phovea modules
@@ -15,4 +15,4 @@ import reg from './src/phovea';
 <% - modules.filter(isWeb).map((d) => `import '${d}/phovea_registry.js';`).join('\n') %>
 
 // self
-register('<%-name%>', reg);
+PluginRegistry.getInstance().register('<%-name%>', reg);

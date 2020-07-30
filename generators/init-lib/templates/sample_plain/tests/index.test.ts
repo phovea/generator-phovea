@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import {hello} from '../src/index';
+import {hello} from '../src/hello';
 
 describe('index', () => {
   it('hello', () => {

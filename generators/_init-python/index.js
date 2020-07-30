@@ -60,16 +60,16 @@ class Generator extends Base {
       return; // hybrid
     }
     this.composeWith('phovea:_node', {
-      options: this.options
+      options: this.options,
+      isWorkspace: this.options.isWorkspace
     });
   }
 
-  _generateDependencies(useDevelopDependencies) {
-    const requirements = parseRequirements(this.fs.read(this.destinationPath('requirements.txt'), {defaults: ''}));
-    const dockerPackages = parseRequirements(this.fs.read(this.destinationPath('docker_packages.txt'), {defaults: ''}));
+  _generateDependencies(useDevelopDependencies, cwd) {
+    let requirements = parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
+    const dockerPackages = parseRequirements(this.fs.read(this.destinationPath(cwd + 'docker_packages.txt'), {defaults: ''}));
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
-
     // merge dependencies
     // support old notation, too (smodules, slibraries)
     const modules = this.config.get('modules').concat(this.config.get('smodules') || []);
@@ -77,6 +77,16 @@ class Generator extends Base {
     this.config.set('modules', modules);
     modules.filter(known().plugin.isTypeServer).forEach((m) => {
       const p = known().plugin.byName(m);
+
+     // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
+     // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
+     // and the incoming format is phovea_server>=5.0.1,<6.0.0
+      if (!useDevelopDependencies) {
+        const devRequirement = Object.keys(p.develop.requirements)[0];
+        const masterRequirment = Object.keys(p.requirements)[0];
+        requirements = _.omit(requirements, [devRequirement, masterRequirment]);
+      }
+
       _.assign(requirements, (useDevelopDependencies ? p.develop : p).requirements);
       _.assign(dockerPackages, (useDevelopDependencies ? p.develop : p).dockerPackages);
     });
@@ -88,29 +98,28 @@ class Generator extends Base {
       _.assign(requirements, p.requirements);
       _.assign(dockerPackages, p.dockerPackages);
     });
-
     return {
       requirements: concat(requirements),
       dockerPackages: concat(dockerPackages)
     };
   }
-
   writing() {
     const config = this.config.getAll();
-    const deps = this._generateDependencies(useDevVersion.call(this));
+    this.cwd = this.options.isWorkspace ? (config.cwd || config.name) + '/' : '';
+    const deps = this._generateDependencies(useDevVersion.call(this, this.cwd), this.cwd);
 
-    patchPackageJSON.call(this, config, ['devDependencies']);
-    writeTemplates.call(this, config, !this.options.noSamples);
+    patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
+    writeTemplates.call(this, config, !this.options.noSamples, this.cwd);
 
-    this.fs.write(this.destinationPath('requirements.txt'), deps.requirements.join('\n'));
-    this.fs.write(this.destinationPath('docker_packages.txt'), deps.dockerPackages.join('\n'));
+    this.fs.write(this.destinationPath(this.cwd + 'requirements.txt'), deps.requirements.join('\n'));
+    this.fs.write(this.destinationPath(this.cwd + 'docker_packages.txt'), deps.dockerPackages.join('\n'));
 
     // don't overwrite existing registry file
-    if (!fs.existsSync(this.destinationPath(config.name.toLowerCase() + '/__init__.py'))) {
-      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(config.name.toLowerCase() + '/__init__.py'), stringifyAble(config));
+    if (!fs.existsSync(this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'))) {
+      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'), stringifyAble(config));
     }
-    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
-    this.fs.copy(this.templatePath('docs_gitignore'), this.destinationPath('docs/.gitignore'));
+    this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
+    this.fs.copy(this.templatePath('docs_gitignore'), this.destinationPath(this.cwd + 'docs/.gitignore'));
   }
 
   install() {

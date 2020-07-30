@@ -1,8 +1,8 @@
 {
   "name": "generator-phovea",
   "description": "helper generator for phovea",
-  "homepage": "https://github.com/phovea/generator-phovea",
-  "version": "5.1.1",
+  "homepage": "https://phovea.caleydo.org",
+  "version": "6.0.0",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
@@ -54,6 +54,7 @@
     "yeoman-generator": "^4.6.0"
   },
   "devDependencies": {
+    "@types/yeoman-generator": "^3.1.4",
     "eslint": "^6.4.0",
     "eslint-config-xo-space": "^0.21.0",
     "gulp": "^4.0.2",
@@ -64,7 +65,8 @@
     "gulp-plumber": "^1.2.1",
     "jest-cli": "^24.9.0",
     "yeoman-assert": "^3.1.1",
-    "yeoman-test": "^2.2.0"
+    "yeoman-test": "^2.2.0",
+    "rimraf": "^3.0.2"
   },
   "eslintConfig": {
     "extends": "xo-space",

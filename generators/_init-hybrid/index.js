@@ -38,7 +38,7 @@ class Generator extends Base {
 
   default() {
     const types = this.config.get('type').split('-');
-    this.composeWith(['phovea:_node', 'phovea:init-' + types[1], 'phovea:init-' + types[0]], {options: this.options})
+    this.composeWith(['phovea:_node', 'phovea:init-' + types[1], 'phovea:init-' + types[0]], {options: this.options, isWorkspace: this.options.isWorkspace});
   }
 
   end() {

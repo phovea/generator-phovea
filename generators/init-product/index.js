@@ -23,6 +23,9 @@ function buildPossibleAdditionalPlugins(type) {
 class Generator extends Base {
 
   initializing() {
+    if (fs.existsSync(this.destinationPath('.yo-rc-workspace.json'))) {
+      throw new Error(chalk.red('Found a ".yo-rc-workspace.json" file in the current directory. Please initialize a new product in an empty directory.'));
+    }
     this.services = [];
 
     // for the update
