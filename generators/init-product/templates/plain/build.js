@@ -416,8 +416,8 @@ function patchWorkspace(p) {
     fs.writeFileSync(p.tmpDir + '/phovea_registry.js', registry);
   }
   //copy template files of product to workspace of product
-  if (fs.existsSync(`./templates/${p.label}`)) {
-    fs.copySync(`./templates/${p.label}`, p.tmpDir);
+  if (fs.existsSync(`./templates/${p.type}`)) {
+    fs.copySync(`./templates/${p.type}`, p.tmpDir);
   }
 
 

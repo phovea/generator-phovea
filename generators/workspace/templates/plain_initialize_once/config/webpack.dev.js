@@ -33,7 +33,7 @@ const appPkg = require('./../' + defaultApp + '/package.json');
 const libName = appPkg.name;
 const libDesc = appPkg.description;
 const {entries, registry, vendors, libraryAliases, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
-const fileLoaderRegex = RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`);
+const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
 // Merge app and workspace properties
 const mergedAliases = {
     ...libraryAliases,
