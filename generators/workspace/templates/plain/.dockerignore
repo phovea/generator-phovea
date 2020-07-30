@@ -2,6 +2,5 @@
 /*/*
 !/_docker_data/*
 !/bundles/*
-!/dist/*
 !/build/*
 !/deploy/*
