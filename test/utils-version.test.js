@@ -302,10 +302,11 @@ describe('find intersection or max version of github or gitlab version tags', ()
   });
 
   it('throws error if versions point to different branches', () => {
-    const name ='phovea_core';
+    const name ='target360';
     const versions=[
       'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
-      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#master'
+      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#master',
+      '4.0.0'
   ];
     expect(()=>version.mergeVersions(name, versions)).toThrow();
   });
