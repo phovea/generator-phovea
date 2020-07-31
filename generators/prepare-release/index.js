@@ -232,7 +232,7 @@ class Generator extends Base {
       }
       if(dep in this.knownRepos){
         this.dependencies[dep] = pkg.dependencies[dep];
-        pkg.dependencies[dep] = this.knownRepos[dep].version;
+        pkg.dependencies[dep] = '^' + this.knownRepos[dep].version;
         console.log('change dependencies[' + dep + ']: ' + this.knownRepos[dep].version );
       }
     });
@@ -242,7 +242,7 @@ class Generator extends Base {
       }
       if(dep in this.knownRepos){
         this.dependencies[dep] = pkg.optionalDependencies[dep];
-        pkg.optionalDependencies[dep] = this.knownRepos[dep].version;
+        pkg.optionalDependencies[dep] = '^' + this.knownRepos[dep].version;
         console.log('change optionalDependencies[' + dep + ']: ' + this.knownRepos[dep].version );
       }
     });
