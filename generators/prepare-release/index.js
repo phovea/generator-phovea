@@ -152,7 +152,7 @@ class Generator extends Base {
       throw new Error('Given repository ' + repo + ' is not part of the known repos');
     }
     if(!knownRepos[repo].name || !knownRepos[repo].version || !knownRepos[repo].owner || !knownRepos[repo].link){
-      throw new Error('The known repo file has the wrong format. It should have the following format: name | version | owner | link');
+      throw new Error('The known repo file has the wrong format. It should have the following format: name | version | owner | link | pip | npm');
     }
     Object.entries(knownRepos).forEach((d) => {
       if(d[1].version) {
@@ -232,7 +232,7 @@ class Generator extends Base {
       }
       if(dep in this.knownRepos){
         this.dependencies[dep] = pkg.dependencies[dep];
-        pkg.dependencies[dep] = '^' + this.knownRepos[dep].version;
+        pkg.dependencies[dep] = this._getDependencyVersion(pkg.dependencies[dep], this.knownRepos[dep]);
         console.log('change dependencies[' + dep + ']: ' + this.knownRepos[dep].version );
       }
     });
@@ -242,7 +242,7 @@ class Generator extends Base {
       }
       if(dep in this.knownRepos){
         this.dependencies[dep] = pkg.optionalDependencies[dep];
-        pkg.optionalDependencies[dep] = '^' + this.knownRepos[dep].version;
+        pkg.optionalDependencies[dep] = this._getDependencyVersion(pkg.optionalDependencies[dep], this.knownRepos[dep]);
         console.log('change optionalDependencies[' + dep + ']: ' + this.knownRepos[dep].version );
       }
     });
@@ -264,12 +264,13 @@ class Generator extends Base {
           return null;
         }
         if(this.knownRepos[dep]){
-          this.requirements[dep] = d ;
-          req[dep] = this._makePipRangeVersion(this.knownRepos[dep].version);
+          this.requirements[dep] = d;
+          req[dep] = this._getPipRangeVersion(d + req[d], this.knownRepos[dep]);
           console.log('change requirement[' + dep + ']: ' + req[dep] );
-        }
-        if(d.startsWith('-e git+http')){
-          delete req[d];
+        
+          if(d.startsWith('-e git+http')){
+            delete req[d];
+          }
         }
       });
       this.fs.write(`${this.repositoryCwd}/requirements.txt`, Object.keys(req).map((pi) => req[pi].startsWith('-e git+http') ? req[pi] : (pi + req[pi])).join('\n'));
@@ -280,8 +281,11 @@ class Generator extends Base {
       return this._spawnOrAbort('git', ['commit', '-am', `prepare release_${this.version}`], this.repositoryCwd);
     });
   }
-  _makePipRangeVersion(version) {
-    return `>=${version},<${Number(version.substring(0,version.indexOf('.'))) + 1}.0.0`;
+  _getDependencyVersion(developVersion, repo) {
+    return repo.npm ? '^' + repo.version : developVersion.replace('#develop', '#semver:^' + repo.version);
+  }
+  _getPipRangeVersion(developVersion, repo) {
+    return repo.pip ? `>=${repo.version},<${Number(repo.version.substring(0, repo.version.indexOf('.'))) + 1}.0.0`: developVersion.replace('@develop', '@'+repo.version);
   }
   _prepareNextDevPackage() {
     const pkg = this.fs.readJSON(`${this.repositoryCwd}/package.json`);
@@ -311,7 +315,13 @@ class Generator extends Base {
       const req = parseRequirements(this.fs.read(`${this.repositoryCwd}/requirements.txt`));
       Object.keys(this.requirements).forEach((dep) => {
         if (req[dep]) {
-          req[dep] = this.requirements[dep];
+          req[dep] = this.requirements[dep] + '@develop#egg=' + dep;
+          console.log('change requirement[' + dep + ']: ' + req[dep] );
+        } 
+      });
+      Object.keys(req).forEach((dep) => {
+        if (dep.startsWith('-e git+http')) {
+          req[dep] = dep + '@develop#egg=' + req[dep].substring(req[dep].indexOf('egg=')+ 4);
           console.log('change requirement[' + dep + ']: ' + req[dep] );
         } 
       });
