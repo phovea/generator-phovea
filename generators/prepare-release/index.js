@@ -285,7 +285,7 @@ class Generator extends Base {
     return repo.npm ? '^' + repo.version : developVersion.replace('#develop', '#semver:^' + repo.version);
   }
   _getPipRangeVersion(developVersion, repo) {
-    return repo.pip ? `>=${repo.version},<${Number(repo.version.substring(0, repo.version.indexOf('.'))) + 1}.0.0`: developVersion.replace('@develop', '@'+repo.version);
+    return repo.pip ? `>=${repo.version},<${Number(repo.version.substring(0, repo.version.indexOf('.'))) + 1}.0.0`: developVersion.replace('@develop', '@v'+repo.version);
   }
   _prepareNextDevPackage() {
     const pkg = this.fs.readJSON(`${this.repositoryCwd}/package.json`);
