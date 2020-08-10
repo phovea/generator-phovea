@@ -189,6 +189,8 @@ class Generator extends Base {
   _getProduct() {
     return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
       .then(() => {
+        // delete yo-rc.json of the product in order for the subgenerators to run in the correct directory
+        fs.unlinkSync(this.cwd+'/.yo-rc.json');
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
 
         if(!fs.existsSync(phoveaProductJSON)) {
@@ -234,10 +236,10 @@ class Generator extends Base {
       });
     }
     //copy default files of product to templates
-    if (this.destinationPath(`${this.cwd}/templates`)) {
-      const dirs = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).isDirectory());
-      dirs.map((dir) => fs.copySync(dir, this.destinationPath(this.cwd)));
-    }
+    // if (this.destinationPath(`${this.cwd}/templates`)) {
+    //   const dirs = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).isDirectory());
+    //   dirs.map((dir) => fs.copySync(dir, this.destinationPath(this.cwd)));
+    // }
   }
 
   _downloadDataFile(desc, destDir) {
