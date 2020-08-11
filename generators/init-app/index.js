@@ -10,7 +10,12 @@ class PluginGenerator extends BasePluginGenerator {
       app: '',
       clientOnly: false,
       entries: {
-        app: './src/index.ts'
+        app: {
+          js: "dist/initialize.js",
+          html: "index.html",
+          template: "dist/index.template.ejs",
+          chunkName: "app"
+        }
       },
       libraries: ['d3'],
       modules: ['phovea_core', 'phovea_ui']
@@ -34,6 +39,7 @@ class PluginGenerator extends BasePluginGenerator {
     }]).then((props) => {
       this.config.set('app', props.app);
       this.config.set('clientOnly', props.clientOnly);
+      this.config.set('cwd', props.app);
     });
   }
 
@@ -43,8 +49,9 @@ class PluginGenerator extends BasePluginGenerator {
 
   writing() {
     const config = this.config.getAll();
-    this._patchPackageJSON(config, ['main']);
-    this._writeTemplates(config, !this.options.noSamples);
+    this._mkdir(config.cwd);
+    this._patchPackageJSON(config, ['main'], null, this.cwd);
+    this._writeTemplates(config, !this.options.noSamples, this.cwd);
   }
 
   end() {

@@ -2,9 +2,8 @@
 /.tscache
 /.idea
 /build/
-/dist/
+/lib/
 *.egg-info/
-*.egg
 *.py[cod]
 __pycache__/
 *.so
@@ -14,12 +13,12 @@ __pycache__/
 *.pyc
 *.swp
 *.lock
+/.awcache
+/local_cache/*
 # due to using tox and pytest
 .tox
 .cache
 node_modules/
 /src/**/*.js
 /tests/**/*.js
-*.map
-*.css
 /.cache-loader

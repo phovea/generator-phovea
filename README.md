@@ -1,4 +1,5 @@
-# generator-phovea [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url]
+# generator-phovea 
+[![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][circleci-image]][circleci-url]
 
 helper generator for phovea
 
@@ -51,3 +52,5 @@ This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform 
 [phovea-url]: https://phovea.caleydo.org
 [npm-image]: https://badge.fury.io/js/generator-phovea.svg
 [npm-url]: https://npmjs.org/package/generator-phovea
+[circleci-image]: https://circleci.com/gh/phovea/generator-phovea.svg?style=shield
+[circleci-url]: https://circleci.com/gh/phovea/generator-phovea

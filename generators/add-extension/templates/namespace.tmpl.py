@@ -14,10 +14,10 @@ _log = logging.getLogger(__name__)
 
 @app.route('/')
 def _hello():
-  return jsonify({
-    'message': 'Hello World'
-  })
+    return jsonify({
+        'message': 'Hello World'
+    })
 
 
 def create():
-  return app
+    return app
