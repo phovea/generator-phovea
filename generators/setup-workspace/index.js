@@ -176,7 +176,7 @@ class Generator extends Base {
     return Promise.resolve(cmd);
   }
 
-  _cloneRepo(repo, branch, extras, dir) {
+  _cloneRepo(repo, branch, extras, dir = '') {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
