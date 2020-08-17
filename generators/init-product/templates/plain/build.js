@@ -392,14 +392,31 @@ function patchWorkspace(p) {
     fs.writeFileSync(p.tmpDir + '/docker_script.sh', content);
   }
 
-  if (argv.injectVersion) {
-    const pkgfile = `${p.tmpDir}/package.json`;
-    if (fs.existsSync(pkgfile)) {
-      const ppkg = require(pkgfile);
-      ppkg.version = pkg.version;
-      fs.writeJSONSync(pkgfile, ppkg);
+  function injectVersion(targetPkgFile, targetVersion) {
+    if (fs.existsSync(targetPkgFile)) {
+      const ppkg = require(targetPkgFile);
+      ppkg.version = targetVersion;
+      console.log(`Write version ${targetVersion} into ${targetPkgFile}`);
+      fs.writeJSONSync(targetPkgFile, ppkg, {spaces: 2});
     } else {
-      console.warn('cannot inject version, main package.json not found');
+      console.warn(`Cannot inject version: ${targetPkgFile} not found`);
+    }
+  }
+
+  if (argv.injectVersion) {
+    const targetPkgFile = `${p.tmpDir}/package.json`;
+    // inject version of product package.json into workspace package.json
+    injectVersion(targetPkgFile, pkg.version);
+  } else {
+    // read default app package.json
+    const defaultAppPkgFile = `${p.tmpDir}/${p.name}/package.json`;
+    if (fs.existsSync(defaultAppPkgFile)) {
+      const sourcePkg = require(defaultAppPkgFile);
+      const targetPkgFile = `${p.tmpDir}/package.json`;
+      // inject version of default app package.json into workspace package.json
+      injectVersion(targetPkgFile, sourcePkg.version);
+    } else {
+      console.warn(`Cannot read version from default app package.json: ${defaultAppPkgFile} not found`);
     }
   }
 
