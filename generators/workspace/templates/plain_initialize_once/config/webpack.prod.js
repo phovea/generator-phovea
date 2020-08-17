@@ -19,6 +19,7 @@ const envMode = process.argv.indexOf('--mode') >= 0 ? process.argv[process.argv.
 const isDev = envMode === 'development';
 //workspace constants
 const workspaceYoRcFile = require('../.yo-rc-workspace.json');
+const workspacePkg = require(base + '/package.json');
 const workspaceBuildInfoFile = base + '/package-lock.json';
 const workspaceMetaDataFile = base + '/metaData.json';
 const workspaceRegistryFile = base + '/phovea_registry.js';
@@ -232,7 +233,11 @@ const config = {
                     from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
                     //generate meta data file
                     transform() {
-                        return webpackHelper.generateMetaDataFile({buildId}, resolve(__dirname, '../' + defaultApp));
+                        const customProperties = {
+                          buildId,
+                          version: workspacePkg.version // override app version with workspace version in product build
+                        };
+                        return webpackHelper.generateMetaDataFile(resolve(__dirname, '../' + defaultApp), customProperties);
                     }
                 },
                 //use package-lock json as buildInfo
