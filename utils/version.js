@@ -1,12 +1,12 @@
 'use strict';
 
 const semver = require('semver');
-const chalk= require('chalk');
+const chalk = require('chalk');
 const {
   intersect
 } = require('semver-intersect');
 
-module.exports.mergeVersions = (name, versions) => {
+function mergeVersions(name, versions) {
   if (versions.some((v) => v === 'latest')) {
     throw new Error(chalk.red('Invalid version. Please avoid using version latest in package.json.'));
   }
@@ -18,15 +18,7 @@ module.exports.mergeVersions = (name, versions) => {
   const gitBranches = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
 
   if (gitBranches.length) {
-    const haveCommonVersions = (branches) => {
-      versions = new Set(branches.map((branch) => branch.split('#')[1]));
-      return versions.size === 1;
-    };
-    if (haveCommonVersions(gitBranches)) {
-      return gitBranches[0];
-    }
-
-    throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
+    return mergeGithubVersions(name, gitBranches);
   }
 
   try {
@@ -37,7 +29,28 @@ module.exports.mergeVersions = (name, versions) => {
     console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
     return max.toString();
   }
-};
+}
+
+module.exports.mergeVersions = mergeVersions;
+
+/**
+ * Finds the intersection of an array of versions pointing to github or gitlab
+ * @param {string} name Name of the current dependency
+ * @param {string[]} gitBranches Version strings that contain pointing to github or gitlab
+ */
+function mergeGithubVersions(name, gitBranches) {
+  const versions = Array.from(new Set(gitBranches.map((branch) => branch.split('#')[1])));
+  const prefix = gitBranches[0].split('#')[0];
+  if (versions.length === 1) {
+    return gitBranches[0];
+  }
+
+  if (versions.every((v) => v.includes('semver')) && gitBranches.every((b) => b.includes(prefix))) {
+    return `${prefix}#semver:${mergeVersions(name, versions.map((v) => v.replace('semver:', '')))}`;
+  }
+
+  throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
+}
 
 /**
  * Finds the max version of an array of versions, i.e., `['1.2.3-alpha.1', '4.0.1-beta.0', '^3.8.0', '~4.0.0', '^2.8.0', '^4.0.0', '4.0.1-rc.0']`.
@@ -73,6 +86,8 @@ function findMaxRange(tildeRange, caretRange) {
     return caretRange;
   }
 }
+
+module.exports.findMaxVersion = findMaxVersion;
 
 /**
  * Remove caret or tilde and format version.
@@ -264,5 +279,3 @@ module.exports.isGitCommit = (name) => {
   return /^[0-9a-f]+$/gi.test(name);
 };
 
-
-module.exports.findMaxVersion = findMaxVersion;

@@ -281,17 +281,17 @@ describe('semver-intersect works for prerelease ranges', () => {
 
 describe('find intersection or max version of github or gitlab version tags', () => {
 
-  it('return first correct gitlab tag', () => {
+  it('returns first correct gitlab tag', () => {
     const name ='target360';
     const versions=[
-      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
-      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#dv_develop',
       '4.0.0'
   ];
-    expect(version.mergeVersions(name, versions)).toBe('git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop');
+    expect(version.mergeVersions(name, versions)).toBe('git+ssh://git@gitlab.customer.com:Target360/plugins/target360#dv_develop');
   });
 
-  it('return first correct githab tag', () => {
+  it('returns first correct githab tag', () => {
     const name ='phovea_core';
     const versions=[
       'github:phovea/phovea_core#develop',
@@ -301,13 +301,49 @@ describe('find intersection or max version of github or gitlab version tags', ()
     expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#develop');
   });
 
-  it('throws error if versions point to different branches', () => {
+  it('throws error if versions point to different gitlab branches', () => {
     const name ='target360';
     const versions=[
-      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#dv_develop',
-      'git+ssh://git@gitlab.bayer.com:Target360/plugins/target360#master',
+      'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#dv_develop',
+      'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#master',
       '4.0.0'
   ];
     expect(()=>version.mergeVersions(name, versions)).toThrow();
+  });
+
+  it('returns correct intersection of github ranges', () => {
+    const name ='phovea_core';
+    const versions=[
+      'github:phovea/phovea_core#semver:^7.0.1',
+      'github:phovea/phovea_core#semver:^7.0.0',
+  ];
+    expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^7.0.1');
+  });
+
+  it('throws error if versions contain both github and gitlab', () => {
+    const name ='phovea_core';
+    const versions=[
+      'github:phovea/phovea_core#semver:^7.0.1',
+      'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#master',
+  ];
+  expect(()=>version.mergeVersions(name, versions)).toThrow();
+  });
+
+  it('returns github version if one of the versions is from github', () => {
+    const name ='phovea_core';
+    const versions=[
+      'github:phovea/phovea_core#semver:^7.0.1',
+      '4.0.0',
+  ];
+  expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^7.0.1');
+  });
+
+  it('returns correct max github version', () => {
+    const name ='phovea_core';
+    const versions=[
+      'github:phovea/phovea_core#semver:^7.0.1',
+      'github:phovea/phovea_core#semver:^8.0.0'
+  ];
+  expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^8.0.0');
   });
 });
