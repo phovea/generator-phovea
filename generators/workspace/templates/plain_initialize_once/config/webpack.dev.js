@@ -281,7 +281,7 @@ const config = {
                     from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
                     //generate meta data file
                     transform() {
-                        return webpackHelper.generateMetaDataFile({buildId}, resolve(__dirname, '../' + defaultApp));
+                        return webpackHelper.generateMetaDataFile(resolve(__dirname, '../' + defaultApp), {buildId});
                     }
                 },
                 //use package-lock json as buildInfo

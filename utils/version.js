@@ -1,12 +1,12 @@
 'use strict';
 
 const semver = require('semver');
-const chalk= require('chalk');
+const chalk = require('chalk');
 const {
   intersect
 } = require('semver-intersect');
 
-module.exports.mergeVersions = (name, versions) => {
+function mergeVersions(name, versions, logWarning = true) {
   if (versions.some((v) => v === 'latest')) {
     throw new Error(chalk.red('Invalid version. Please avoid using version latest in package.json.'));
   }
@@ -15,29 +15,57 @@ module.exports.mergeVersions = (name, versions) => {
   if (versions.length === 1) {
     return versions[0];
   }
-  const gitBranches = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
+  // filter for github and gitlab version strings
+  const gitRepos = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
+  // npm version strings
+  const noGitRepos = versions.filter((v) => !gitRepos.includes(v));
 
-  if (gitBranches.length) {
-    const haveCommonVersions = (branches) => {
-      versions = new Set(branches.map((branch) => branch.split('#')[1]));
-      return versions.size === 1;
-    };
-    if (haveCommonVersions(gitBranches)) {
-      return gitBranches[0];
-    }
-
-    throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
+  if (gitRepos.length) {
+    return mergeGithubVersions(name, gitRepos, noGitRepos);
   }
 
   try {
-    return intersect(...versions).toString();
+    return intersect(...noGitRepos).toString();
   } catch (e) {
     // map to base version, sort descending take first
-    const max = findMaxVersion(versions);
-    console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
+    const max = findMaxVersion(noGitRepos);
+    if (logWarning) {
+      console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
+    }
+
     return max.toString();
   }
-};
+}
+
+module.exports.mergeVersions = mergeVersions;
+
+
+/**
+ * Extracts git version strings, compares them with the npm versions and returns the intersection or max
+ * @param {string} name Name of the dependency
+ * @param {string[]} gitBranches Git version strings, i.e, `github:phovea/phovea_core#semver:~7.0.1`
+ * @param {string[]} npmVersions Npm version strings, i.e, `^7.0.0`
+ */
+function mergeGithubVersions(name, gitBranches, npmVersions) {
+  const versions = Array.from(new Set(gitBranches.map((branch) => branch.split('#')[1])));
+  const areSemverVersions = versions.every((version) => version.includes('semver'));
+  if (areSemverVersions) {
+    const prefix = gitBranches[0].split('#')[0];
+    const parsedSemver = versions.map((version) => version.replace('semver:', ''));
+    const gitVersion = mergeVersions(name, parsedSemver, false);
+    const allVersions = [gitVersion, ...npmVersions];
+    const max = mergeVersions(name, allVersions, false);
+    const areEqual = (v1, v2) => v1 === mergeVersions(name, [v1, v2], false);
+    return areEqual(gitVersion, max) ? `${prefix}#semver:${gitVersion}` : max;
+  }
+
+  const uniqueGitBranchesCount = versions.length;
+  if (uniqueGitBranchesCount === 1) {
+    return gitBranches[0];
+  }
+
+  throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
+}
 
 /**
  * Finds the max version of an array of versions, i.e., `['1.2.3-alpha.1', '4.0.1-beta.0', '^3.8.0', '~4.0.0', '^2.8.0', '^4.0.0', '4.0.1-rc.0']`.
@@ -73,6 +101,8 @@ function findMaxRange(tildeRange, caretRange) {
     return caretRange;
   }
 }
+
+module.exports.findMaxVersion = findMaxVersion;
 
 /**
  * Remove caret or tilde and format version.
@@ -264,5 +294,3 @@ module.exports.isGitCommit = (name) => {
   return /^[0-9a-f]+$/gi.test(name);
 };
 
-
-module.exports.findMaxVersion = findMaxVersion;
