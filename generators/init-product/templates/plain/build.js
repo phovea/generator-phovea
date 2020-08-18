@@ -433,8 +433,12 @@ function patchWorkspace(p) {
     fs.writeFileSync(p.tmpDir + '/phovea_registry.js', registry);
   }
   //copy template files of product to workspace of product
-  if (fs.existsSync(`./templates/${p.type}`)) {
-    fs.copySync(`./templates/${p.type}`, p.tmpDir);
+  if (fs.existsSync(`./templates/${p.type}/deploy/${p.label}`)) {
+    console.log(`Copy deploy files from`, `./templates/${p.type}/deploy/${p.label}`, `to`, `${p.tmpDir}/deploy/${p.label}`);
+    fs.copySync(`./templates/${p.type}/deploy/${p.label}`, `${p.tmpDir}/deploy/${p.label}`);
+  } else if (fs.existsSync(`./templates/${p.type}`)) {
+    console.log(`Copy deploy files from`, `./templates/${p.type}`, `to`, `${p.tmpDir}/`);
+    fs.copySync(`./templates/${p.type}`, `${p.tmpDir}/`);
   }
 
 
@@ -640,7 +644,19 @@ function buildDockerImage(p) {
       buildArgs += ` --build-arg ${lkey}='${process.env[key]}'`;
     }
   }
-  const dockerFile = `deploy${p.type === 'web' || p.type === 'api' ? '/' + p.type : ''}/Dockerfile`;
+  const additionalType = (label, type) => {
+    return fs.existsSync(`./templates/${type}/deploy/${label}`);
+  }
+
+  let dockerFile;
+   // check if label exists and use type as fallback
+  if (additionalType(p.label, p.type) && (p.type === 'web' || p.type === 'api')) {
+    dockerFile = `deploy/${p.label}/Dockerfile`;
+  } else if (p.type === 'web' || p.type === 'api') {
+    dockerFile = `deploy/${p.type}/Dockerfile`;
+  } else {
+    dockerFile = `deploy/Dockerfile`;
+  }
   console.log('use dockerfile: ' + dockerFile);
   // patch the docker file with the with an optional given baseImage
   return Promise.resolve(patchDockerfile(p, `${p.tmpDir}${buildInSubDir ? '/' + p.name : ''}/${dockerFile}`))
