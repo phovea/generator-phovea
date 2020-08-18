@@ -356,7 +356,7 @@ describe('find intersection or max version of github or gitlab version tags', ()
     expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^8.0.0');
   });
 
-  it('compares github version with npm versions', () => {
+  it('compares github version with npm version', () => {
     const name = 'phovea_core';
     const versions = [
       'github:phovea/phovea_core#semver:^7.0.1',
@@ -374,7 +374,7 @@ describe('find intersection or max version of github or gitlab version tags', ()
     expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^7.0.1');
   });
 
-  it('compares an multiple gihub and npm versions', () => {
+  it('compares multiple github and npm versions', () => {
     const name = 'phovea_core';
     const versions = [
       'github:phovea/phovea_core#semver:^7.0.1',
@@ -383,5 +383,15 @@ describe('find intersection or max version of github or gitlab version tags', ()
       '^7.0.2'
     ];
     expect(version.mergeVersions(name, versions)).toBe('^7.0.2');
+  });
+
+  it('finds the intersection of a git version and npm version', () => {
+    const name = 'phovea_core';
+    const versions = [
+      'github:phovea/phovea_core#semver:~7.0.1',
+      'github:phovea/phovea_core#semver:^6.0.1',
+      '^7.0.1',
+    ];
+    expect(version.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:~7.0.1');
   });
 });

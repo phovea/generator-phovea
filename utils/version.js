@@ -6,7 +6,7 @@ const {
   intersect
 } = require('semver-intersect');
 
-function mergeVersions(name, versions) {
+function mergeVersions(name, versions, logWarning = true) {
   if (versions.some((v) => v === 'latest')) {
     throw new Error(chalk.red('Invalid version. Please avoid using version latest in package.json.'));
   }
@@ -15,19 +15,24 @@ function mergeVersions(name, versions) {
   if (versions.length === 1) {
     return versions[0];
   }
-  const gitBranches = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
-  const rest = versions.filter((v) => !gitBranches.includes(v));
+  // filter for github and gitlab version strings
+  const gitRepos = versions.filter((d) => d.includes('github') || d.includes('gitlab'));
+  // npm version strings
+  const noGitRepos = versions.filter((v) => !gitRepos.includes(v));
 
-  if (gitBranches.length) {
-    return mergedGithubVersions(name, gitBranches, rest);
+  if (gitRepos.length) {
+    return mergeGithubVersions(name, gitRepos, noGitRepos);
   }
 
   try {
-    return intersect(...rest).toString();
+    return intersect(...noGitRepos).toString();
   } catch (e) {
     // map to base version, sort descending take first
-    const max = findMaxVersion(rest);
-    console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
+    const max = findMaxVersion(noGitRepos);
+    if (logWarning) {
+      console.warn(`cannot find common intersecting version for ${name} = ${versions.join(', ')}, taking max "${max}" for now`);
+    }
+
     return max.toString();
   }
 }
@@ -35,38 +40,30 @@ function mergeVersions(name, versions) {
 module.exports.mergeVersions = mergeVersions;
 
 
-function compareGitWithNpm(gitVersion, npmVersion) {
-  const areEqual = (v1, v2) => semver.eq(removeRangeTag(v1), removeRangeTag(v2));
-  return (!npmVersion || areEqual(gitVersion, npmVersion));
-}
-
 /**
- * Finds the intersection of an array of versions pointing to github or gitlab
- * @param {string} name Name of the current dependency
- * @param {string[]} gitBranches Version strings that contain pointing to github or gitlab
+ * Extracts git version strings, compares them with the npm versions and returns the intersection or max
+ * @param {string} name Name of the dependency
+ * @param {string[]} gitBranches Git version strings, i.e, `github:phovea/phovea_core#semver:~7.0.1`
+ * @param {string[]} npmVersions Npm version strings, i.e, `^7.0.0`
  */
-function mergedGithubVersions(name, gitBranches, rest) {
+function mergeGithubVersions(name, gitBranches, npmVersions) {
   const versions = Array.from(new Set(gitBranches.map((branch) => branch.split('#')[1])));
-  const prefix = gitBranches[0].split('#')[0];
-  if (versions.length === 1) {
-    const maxNpm = rest.length&& versions[0].includes('semver')? findMaxVersion(Array.from(new Set([...rest, versions[0].replace('semver:', '')]))) : [];
-    if (!rest || !(versions[0].includes('semver')) || compareGitWithNpm(versions[0].replace('semver:', ''), maxNpm)) {
-      return gitBranches[0];
-    }
-
-    return maxNpm;
+  const areSemverVersions = versions.every((version) => version.includes('semver'));
+  if (areSemverVersions) {
+    const prefix = gitBranches[0].split('#')[0];
+    const parsedSemver = versions.map((version) => version.replace('semver:', ''));
+    const gitVersion = mergeVersions(name, parsedSemver, false);
+    const allVersions = [gitVersion, ...npmVersions];
+    const max = mergeVersions(name, allVersions, false);
+    const areEqual = (v1, v2) => v1 === mergeVersions(name, [v1, v2], false);
+    return areEqual(gitVersion, max) ? `${prefix}#semver:${gitVersion}` : max;
   }
 
-  if (versions.every((v) => v.includes('semver')) && gitBranches.every((b) => b.includes(prefix))) {
-    const gitVersion = mergeVersions(name, versions.map((v) => v.replace('semver:', '')));
-    const maxNpm = rest.length? findMaxVersion(Array.from(new Set([...rest, gitVersion.replace('semver:', '')]))) : [];
-
-    if (!rest.length || compareGitWithNpm(gitVersion.replace('semver:', ''), maxNpm)) {
-
-      return `${prefix}#semver:${gitVersion}`;
-    }
-    return maxNpm;
+  const uniqueGitBranchesCount = versions.length;
+  if (uniqueGitBranchesCount === 1) {
+    return gitBranches[0];
   }
+
   throw new Error(chalk.red(`Versions ${chalk.white(gitBranches.join(', '))} point to different branches, which can lead to workspace errors.\nPlease use the same branch in all versions.`));
 }
 
