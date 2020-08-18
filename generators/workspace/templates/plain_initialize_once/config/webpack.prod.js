@@ -111,6 +111,24 @@ const config = {
     module: {
         rules: [
             {
+                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000, // inline <= 10kb
+                    mimetype: 'application/font-woff'
+                }
+            },
+            {
+                test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000, // inline <= 10kb
+                    mimetype: 'image/svg+xml',
+                    esModule: false
+                }
+            },
+            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
+            {
               test: /\.(css)$/,
               use: [
                   MiniCssExtractPlugin.loader, 'css-loader'
@@ -142,24 +160,6 @@ const config = {
 
                 }]
             },
-            {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'application/font-woff'
-                }
-            },
-            {
-                test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'image/svg+xml',
-                    esModule: false
-                }
-            },
-            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
             {
                 test: require.resolve('jquery'),
                 loader: 'expose-loader',
