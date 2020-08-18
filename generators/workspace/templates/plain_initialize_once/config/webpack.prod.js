@@ -110,6 +110,18 @@ const config = {
     },
     module: {
         rules: [
+            {
+              test: /\.(css)$/,
+              use: [
+                  MiniCssExtractPlugin.loader, 'css-loader'
+              ]
+            },
+            {
+                test: /\.(scss)$/,
+                use: [
+                    MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
+                ]
+            },
             {test: /\.(xml)$/, use: 'xml-loader'},
             {test: /\.(txt)$/, use: 'raw-loader'},
             {test: /\.(html)$/, use: 'html-loader'},
@@ -129,18 +141,6 @@ const config = {
                     options: Object.assign({include: includeFeature}, preCompilerFlags),
 
                 }]
-            },
-            {
-                test: /\.(css)$/,
-                use: [
-                    MiniCssExtractPlugin.loader, 'css-loader'
-                ]
-            },
-            {
-                test: /\.(scss)$/,
-                use: [
-                    MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
-                ]
             },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
