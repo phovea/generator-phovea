@@ -154,7 +154,7 @@ const config = {
                 options: {
                     limit: 10000, // inline <= 10kb
                     mimetype: 'application/font-woff'
-            }
+                }
             },
             {
                 test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
