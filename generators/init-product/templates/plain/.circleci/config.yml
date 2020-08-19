@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   build:
     working_directory: ~/phovea
@@ -45,7 +45,7 @@ jobs:
           name: Login AWS ECR and DockerHub
           command: |
             . ~/venv/bin/activate
-            cat > ~/.dockercfg << EOF
+            cat > ~/.dockercfg \<< EOF
             {
               "https://index.docker.io/v1/": {
                 "auth": "$DOCKER_AUTH"
@@ -101,6 +101,9 @@ jobs:
               fi
               aws --output text ecs run-task --cluster caleydo --task-definition ${awsFamily} --started-by CircleCIAutoUpdate
             fi
+      - slack/status:
+          success_message: ':tada: Running _$CIRCLE_JOB job_ for _$CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH branch_ has succeeded!'
+          failure_message: ':bomb: Running _$CIRCLE_JOB job_ for _$CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH branch_ has failed!'
 workflows:
   version: 2
 #  build-nightly:
@@ -127,3 +130,5 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v.*/
+orbs:
+  slack: circleci/slack@3.4.2
