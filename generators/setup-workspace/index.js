@@ -186,14 +186,30 @@ class Generator extends Base {
     }, repoUrl); // repository URL as argument
   }
 
+
+  _removeUnnecessaryProductFiles() {
+    fs.unlinkSync(this.cwd + '/.yo-rc.json');
+    fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
+    fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
+  }
+
+  /**
+   * Copies the template files of the product in the workspace
+   * @param {string} templatePath 
+   */
+  _copyProductTemplates(templatePath) {
+    const dirs = fs.readdirSync(templatePath).filter(f => fs.statSync(path.join(templatePath, f)).isDirectory());
+    dirs.forEach((dir) => fs.copySync(templatePath +'/' + dir, this.destinationPath(this.cwd)));
+  }
+
+
   _getProduct() {
     return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
       .then(() => {
-        // delete yo-rc.json of the product in order for the subgenerators to run in the correct directory
-        fs.unlinkSync(this.cwd+'/.yo-rc.json');
-        const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
+        this._removeUnnecessaryProductFiles();
 
-        if(!fs.existsSync(phoveaProductJSON)) {
+        const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
+        if (!fs.existsSync(phoveaProductJSON)) {
           throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
         }
 
@@ -235,11 +251,11 @@ class Generator extends Base {
         defaultApp: defaultApp
       });
     }
-    //copy default files of product to templates
-    // if (this.destinationPath(`${this.cwd}/templates`)) {
-    //   const dirs = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).isDirectory());
-    //   dirs.map((dir) => fs.copySync(dir, this.destinationPath(this.cwd)));
-    // }
+
+    const productTemplatesPath = this.destinationPath(`${this.cwd}/templates`);
+    if (fs.existsSync(productTemplatesPath)){
+      this._copyProductTemplates(productTemplatesPath);
+    }
   }
 
   _downloadDataFile(desc, destDir) {
@@ -386,6 +402,10 @@ class Generator extends Base {
   end() {
     if(this.hasErrors) {
       return; // skip next steps on errors
+    }
+
+    if (fs.existsSync(this.destinationPath('.yo-rc.json'))) {
+      fs.unlinkSync(this.destinationPath('.yo-rc.json'));
     }
 
     let stepCounter = 1;
