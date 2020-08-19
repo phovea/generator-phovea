@@ -126,11 +126,9 @@ AUTHORS text
 # ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
 # (among others).
 
-# Compiled files
-# ============
+
 # Mark compiled files as generated to hide them in PRs
 /dist/** linguist-generated=true
-# git config for compiled files: Hide from diff and auto-replace compiled files
-# -diff ... treat like binary
-# -merge ... take latest version, don't try to merge
+
+# Hide compiled files from git diff and auto-replace them when merging different branches
 /dist/** -diff -merge
