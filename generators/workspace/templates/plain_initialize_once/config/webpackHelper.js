@@ -27,9 +27,9 @@ function resolveScreenshot(appDirectory) {
   return `data:image/png;base64,${buffer}`;
 }
 
-function appendMetaData(additionalProperties, appDirectory) {
+function generateMetaDataFile(appDirectory, customProperties) {
   const pkg = require(path.join(appDirectory,'./package.json'));
-  const manifest = Object.assign(additionalProperties, {
+  const manifest = Object.assign({
     name: pkg.name,
     displayName: pkg.displayName,
     version: pkg.version,
@@ -37,12 +37,8 @@ function appendMetaData(additionalProperties, appDirectory) {
     homepage: pkg.homepage,
     description: pkg.description,
     screenshot: resolveScreenshot(appDirectory)
-  });
+  }, customProperties);
   return JSON.stringify(manifest, null, 2);
-}
-
-function generateMetaDataFile(additionalProperties, appDirectory) {
-  return appendMetaData(additionalProperties, appDirectory);
 }
 
 module.exports = {
