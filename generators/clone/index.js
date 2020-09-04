@@ -3,10 +3,10 @@ const Base = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
-const {toHTTPRepoUrl, toSSHRepoUrl} = require('../../utils/repo');
+const RepoUtils = require('../../utils/RepoUtils');
 function toRepository(plugin, useSSH) {
   const p = known.plugin.byName(plugin);
-  return useSSH ? toSSHRepoUrl(p.repository) : toHTTPRepoUrl(p.repository);
+  return useSSH ? RepoUtils.RtoSSHRepoUrl(p.repository) : RepoUtils.toHTTPRepoUrl(p.repository);
 }
 
 function resolveNeighbors(plugins, useSSH, types, shallow) {

@@ -3,7 +3,7 @@
  */
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
-const {simplifyRepoUrl} = require('../../utils/repo');
+const RepoUtils = require('../../utils/RepoUtils');
 const chalk = require('chalk');
 const fs = require('fs');
 
@@ -11,7 +11,7 @@ const isRequired = (v) => v.toString().length > 0;
 
 function buildPossibleAdditionalPlugins(type) {
   const toDescription = (d) => ({
-    value: {name: d.name, repo: simplifyRepoUrl(d.repository)},
+    value: {name: d.name, repo: RepoUtils.simplifyRepoUrl(d.repository)},
     name: `${d.name}: ${d.description}`,
     short: d.name
   });

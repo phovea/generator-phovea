@@ -3,7 +3,7 @@ const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const PipUtils = require('../../utils/PipUtils');
-const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
+const RepoUtils = require('../../utils/RepoUtils');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -137,7 +137,7 @@ class Generator extends Base {
   }
 
   _cloneRepo(repo, branch, extras) {
-    const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
+    const repoUrl = this.cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
     const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
@@ -332,7 +332,7 @@ class Generator extends Base {
 
   _createPullRequest(ctx) {
     const open = require('open');
-    const base = simplifyRepoUrl(ctx.repo);
+    const base = RepoUtils.simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/compare/release_${ctx.version}?expand=1`;
     return open(url, {
       wait: false
@@ -362,7 +362,7 @@ class Generator extends Base {
 
   _openReleasePage(ctx) {
     const open = require('open');
-    const base = simplifyRepoUrl(ctx.repo);
+    const base = RepoUtils.simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/releases/tag/v${ctx.version}`;
     return open(url, {
       wait: false

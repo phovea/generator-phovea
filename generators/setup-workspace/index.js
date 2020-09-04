@@ -4,11 +4,7 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
-const {
-  toHTTPRepoUrl,
-  toSSHRepoUrl,
-  simplifyRepoUrl
-} = require('../../utils/repo');
+const RepoUtils = require('../../utils/RepoUtils');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -170,14 +166,14 @@ class Generator extends Base {
     if (failed(r)) {
       this.log(r.stderr.toString());
       return this._abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
-    } else if(r.stdout) {
+    } else if (r.stdout) {
       this.log(r.stdout.toString());
     }
     return Promise.resolve(cmd);
   }
 
   _cloneRepo(repo, branch, extras, dir) {
-    const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
+    const repoUrl = this.cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
       extras: extras || '',
@@ -191,7 +187,7 @@ class Generator extends Base {
       .then(() => {
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
 
-        if(!fs.existsSync(phoveaProductJSON)) {
+        if (!fs.existsSync(phoveaProductJSON)) {
           throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
         }
 
@@ -199,11 +195,11 @@ class Generator extends Base {
 
         const defaultApp = this.product.find((v) => v.type === 'web');
         if (defaultApp) {
-          const baseRepo = simplifyRepoUrl(defaultApp.repo);
+          const baseRepo = RepoUtils.simplifyRepoUrl(defaultApp.repo);
           const defaultAppName = baseRepo.slice(baseRepo.lastIndexOf('/') + 1);
           this.defaultApp = defaultAppName;
           const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
-          if(!fs.existsSync(yoWorkspacePath)) {
+          if (!fs.existsSync(yoWorkspacePath)) {
             fs.writeJsonSync(yoWorkspacePath, {
               modules: [],
               defaultApp: defaultAppName,
@@ -382,7 +378,7 @@ class Generator extends Base {
   }
 
   end() {
-    if(this.hasErrors) {
+    if (this.hasErrors) {
       return; // skip next steps on errors
     }
 

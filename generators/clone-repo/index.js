@@ -1,9 +1,7 @@
 'use strict';
 const Base = require('yeoman-generator');
 const chalk = require('chalk');
-const {
-  simplifyRepoUrl
-} = require('../../utils/repo');
+const RepoUtils = require('../../utils/RepoUtils');
 const NpmUtils = require('../../utils/NpmUtils');
 
 function failed(spawnResult) {
@@ -145,7 +143,7 @@ class Generator extends Base {
     return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.white(`checkout commit:`), `git ${line}`);
-      let repoName = simplifyRepoUrl(repoUrl);
+      let repoName = RepoUtils.simplifyRepoUrl(repoUrl);
       repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
       return this._spawnOrAbort('git', line.split(/ +/), {
         cwd: `${this.cwd}/${repoName}`
