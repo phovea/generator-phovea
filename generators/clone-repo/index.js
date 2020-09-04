@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const {
   simplifyRepoUrl
 } = require('../../utils/repo');
-const version = require('../../utils/version');
+const NpmUtils = require('../../utils/NpmUtils');
 
 function failed(spawnResult) {
   return spawnResult.status !== 0;
@@ -105,10 +105,10 @@ class Generator extends Base {
   }
 
   _cloneRepo(repoUrl, branch, extras, cloneDirName) {
-    if (!version.isGitCommit(branch)) {
+    if (!NpmUtils.isGitCommit(branch)) {
       // modify branch name, if it is an advance version tag
       // otherwise just use the branch name as it is
-      if (version.isAdvancedVersionTag(branch)) {
+      if (NpmUtils.isAdvancedVersionTag(branch)) {
         this.log(chalk.white(`found branch with version range`), chalk.green(branch), chalk.white(`for`), chalk.green(repoUrl));
 
         const line = `ls-remote --tags ${repoUrl}`;
@@ -122,10 +122,10 @@ class Generator extends Base {
         }
 
         const gitLog = r.stdout.toString();
-        const gitVersions = version.extractVersionsFromGitLog(gitLog);
+        const gitVersions = NpmUtils.extractVersionsFromGitLog(gitLog);
         this.log(chalk.white(`found the following version tags: `), gitVersions);
 
-        const highestVersion = version.findHighestVersion(gitVersions, branch);
+        const highestVersion = NpmUtils.findHighestVersion(gitVersions, branch);
         if (!highestVersion) {
           this.log(chalk.red(`failed to find git version tag for given version range`));
           return this._abort(`failed to find git version tag for given version range`);

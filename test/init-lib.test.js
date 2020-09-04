@@ -5,7 +5,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils = require('./testUtils');
+const TestUtils = require('./TestUtils');
 const {template} = require('lodash');
 
 /**
@@ -42,12 +42,12 @@ describe('generate lib plugin with default prompt values', () => {
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
-  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  const initWebPackage = fse.readJSONSync(TestUtils.templatePath('_init-web', 'package.tmpl.json'));
 
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
-  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+  const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -112,7 +112,7 @@ describe('Generate plugin with name `phovea_core`', () => {
   });
 
   it('generates `phovea_registry.js` with import statement adapted for `phovea_core`', () => {
-    const phoveaRegistryTmpl = template(fse.readFileSync(testUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
+    const phoveaRegistryTmpl = template(fse.readFileSync(TestUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
     assert.fileContent('phovea_registry.js', phoveaRegistryTmpl);
   });
 });

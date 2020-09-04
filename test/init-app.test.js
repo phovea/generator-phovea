@@ -5,7 +5,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils = require('./testUtils');
+const TestUtils = require('./TestUtils');
 
 /**
  * Directory name to run the generator
@@ -39,11 +39,11 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
-  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  const initWebPackage = fse.readJSONSync(TestUtils.templatePath('_init-web', 'package.tmpl.json'));
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
-  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+  const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
