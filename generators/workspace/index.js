@@ -12,7 +12,6 @@ const writeTemplates = require('../../utils').writeTemplates;
 const patchPackageJSON = require('../../utils').patchPackageJSON;
 const NpmUtils = require('../../utils/NpmUtils');
 const PipUtils = require('../../utils/PipUtils');
-const {parseRequirements} = require('../../utils/pip');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -290,8 +289,8 @@ class Generator extends Base {
           set.add(ri.trim());
         });
       };
-      integrateMulti(requirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements.txt`), {defaults: ''})));
-      integrateMulti(devRequirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements_dev.txt`), {defaults: ''})));
+      integrateMulti(requirements, PipUtils.parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements.txt`), {defaults: ''})));
+      integrateMulti(devRequirements, PipUtils.parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements_dev.txt`), {defaults: ''})));
 
       addAll('docker_packages.txt', dockerPackages);
       const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});

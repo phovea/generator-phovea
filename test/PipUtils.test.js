@@ -79,4 +79,38 @@ describe('check PipUtils.toPipVersion', () => {
         const version = '^3.4.0';
         expect(PipUtils.toPipVersion(version)).toBe('^=3.4.0');
     });
+
+});
+
+describe('parse requirements.txt into an object', () => {
+
+    it('returns an empty object if requirements file is null', () => {
+        const file = null;
+        expect(PipUtils.parseRequirements(file)).toEqual({});
+    });
+
+    it('returns an empty object if the requirements file contains an string of only whitespace', () => {
+        const file = '  ';
+        expect(PipUtils.parseRequirements(file)).toEqual({});
+    });
+
+    it('returns the requirements object', () => {
+        const file = `
+        flake8^=3.7.9
+        pep8-naming~=0.9.1
+        pytest==5.3.5
+        -e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server
+        -e git+https://github.com/datavisyn/tdp_core.git@develop#egg=tdp_core
+
+
+        `;
+        const result = {
+            "flake8": "^=3.7.9",
+            "pep8-naming": "~=0.9.1",
+            "pytest": "==5.3.5",
+            "-e git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core",
+            "-e git+https://github.com/phovea/phovea_server.git": "@develop#egg=phovea_server"
+        };
+        expect(PipUtils.parseRequirements(file)).toEqual(result);
+    });
 });

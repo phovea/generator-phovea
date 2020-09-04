@@ -2,7 +2,7 @@
 const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
-const {parseRequirements} = require('../../utils/pip');
+const PipUtils = require('../../utils/PipUtils');
 const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
 
 function toBaseName(name) {
@@ -222,7 +222,7 @@ class Generator extends Base {
 
     if (fs.existsSync(`${ctx.cwd}/requirements.txt`)) {
       ctx.requirements = {};
-      const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
+      const req = PipUtils.parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       p = Promise.all(Object.keys(req).map((dep) => {
         if (dependenciesToIgnores.some((d) => dep.includes(d))) {
           return null;
@@ -294,7 +294,7 @@ class Generator extends Base {
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
     if (ctx.requirements) {
-      const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
+      const req = PipUtils.parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       Object.keys(ctx.requirements).forEach((dep) => {
         const depVersion = req[dep];
         if (depVersion && depVersion !== '') {

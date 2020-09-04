@@ -2,7 +2,7 @@
 const _ = require('lodash');
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
-const {parseRequirements} = require('../../utils/pip');
+const PipUtils = require('../../utils/PipUtils');
 const fs = require('fs');
 
 const known = () => require('../../utils/known');
@@ -66,8 +66,8 @@ class Generator extends Base {
   }
 
   _generateDependencies(useDevelopDependencies, cwd) {
-    let requirements = parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
-    const dockerPackages = parseRequirements(this.fs.read(this.destinationPath(cwd + 'docker_packages.txt'), {defaults: ''}));
+    let requirements = PipUtils.parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
+    const dockerPackages = PipUtils.parseRequirements(this.fs.read(this.destinationPath(cwd + 'docker_packages.txt'), {defaults: ''}));
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
     // merge dependencies
