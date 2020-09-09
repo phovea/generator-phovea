@@ -176,7 +176,7 @@ class Generator extends Base {
     return Promise.resolve(cmd);
   }
 
-  _cloneRepo(repo, branch, extras, dir) {
+  _cloneRepo(repo, branch, extras, dir = '') {
     const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
@@ -186,12 +186,30 @@ class Generator extends Base {
     }, repoUrl); // repository URL as argument
   }
 
+
+  _removeUnnecessaryProductFiles() {
+    fs.unlinkSync(this.cwd + '/.yo-rc.json');
+    fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
+    fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
+  }
+
+  /**
+   * Copies the template files of the product in the workspace
+   * @param {string} templatePath 
+   */
+  _copyProductTemplates(templatePath) {
+    const dirs = fs.readdirSync(templatePath).filter(f => fs.statSync(path.join(templatePath, f)).isDirectory());
+    dirs.forEach((dir) => fs.copySync(templatePath +'/' + dir, this.destinationPath(this.cwd)));
+  }
+
+
   _getProduct() {
     return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
       .then(() => {
-        const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
+        this._removeUnnecessaryProductFiles();
 
-        if(!fs.existsSync(phoveaProductJSON)) {
+        const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
+        if (!fs.existsSync(phoveaProductJSON)) {
           throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
         }
 
@@ -233,10 +251,10 @@ class Generator extends Base {
         defaultApp: defaultApp
       });
     }
-    //copy default files of product to templates
-    if (this.destinationPath(`${this.cwd}/templates`)) {
-      const dirs = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).isDirectory());
-      dirs.map((dir) => fs.copySync(dir, this.destinationPath(this.cwd)));
+
+    const productTemplatesPath = this.destinationPath(`${this.cwd}/templates`);
+    if (fs.existsSync(productTemplatesPath)){
+      this._copyProductTemplates(productTemplatesPath);
     }
   }
 
@@ -384,6 +402,10 @@ class Generator extends Base {
   end() {
     if(this.hasErrors) {
       return; // skip next steps on errors
+    }
+
+    if (fs.existsSync(this.destinationPath('.yo-rc.json'))) {
+      fs.unlinkSync(this.destinationPath('.yo-rc.json'));
     }
 
     let stepCounter = 1;
