@@ -5,6 +5,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const yeoman = require('yeoman-environment');
 const RepoUtils = require('../../utils/RepoUtils');
+const SpawnUtils = require('../../utils/SpawnUtils');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -13,9 +14,6 @@ function toBaseName(name) {
   return `Caleydo/${name}`;
 }
 
-function failed(spawnResult) {
-  return spawnResult.status !== 0;
-}
 
 function toCWD(basename) {
   let match = basename.match(/.*\/(.*)/)[1];
@@ -147,32 +145,7 @@ class Generator extends Base {
     });
   }
 
-  _abort(msg) {
-    return Promise.reject(msg ? msg : 'Step Failed: Aborting');
-  }
-
-  _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : Object.assign({
-      cwd: this.cwd,
-      stdio: 'inherit' // log output and error of spawned process to host process
-    }, cwd || {});
-
-    this.log(`\nRunning: ${cmd} ${argline}\n`);
-    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
-  }
-
-  _spawnOrAbort(cmd, argline, cwd) {
-    const r = this._spawn(cmd, argline, cwd);
-    if (failed(r)) {
-      this.log(r.stderr.toString());
-      return this._abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
-    } else if (r.stdout) {
-      this.log(r.stdout.toString());
-    }
-    return Promise.resolve(cmd);
-  }
-
-  _cloneRepo(repo, branch, extras, dir= '') {
+  _cloneRepo(repo, branch, extras, dir = '') {
     const repoUrl = this.cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
     return this._yo(`clone-repo`, {
       branch,
@@ -195,7 +168,7 @@ class Generator extends Base {
    */
   _copyProductTemplates(templatePath) {
     const dirs = fs.readdirSync(templatePath).filter(f => fs.statSync(path.join(templatePath, f)).isDirectory());
-    dirs.forEach((dir) => fs.copySync(templatePath +'/' + dir, this.destinationPath(this.cwd)));
+    dirs.forEach((dir) => fs.copySync(templatePath + '/' + dir, this.destinationPath(this.cwd)));
   }
 
 
@@ -249,7 +222,7 @@ class Generator extends Base {
     }
 
     const productTemplatesPath = this.destinationPath(`${this.cwd}/templates`);
-    if (fs.existsSync(productTemplatesPath)){
+    if (fs.existsSync(productTemplatesPath)) {
       this._copyProductTemplates(productTemplatesPath);
     }
   }
@@ -312,7 +285,7 @@ class Generator extends Base {
     }
     return this._mkdir(this.cwd + '/_backup')
       .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
-      .then(this._ifExecutable.bind(this, 'docker-compose', this._spawnOrAbort.bind(this, './docker-backup', 'restore'), 'please execute: "./docker-backup restore" manually'));
+      .then(this._ifExecutable.bind(this, 'docker-compose', SpawnUtils.spawnOrAbort.bind(this, './docker-backup', 'restore', this.cwd, true), 'please execute: "./docker-backup restore" manually'));
   }
 
   _ifExecutable(cmd, ifExists, extraMessage = '') {
@@ -377,14 +350,14 @@ class Generator extends Base {
       }))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
-      .then(() => this.options.skip.includes('install') ? null : this._spawnOrAbort('npm', 'install'))
+      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
       .then(this._downloadBackupFiles.bind(this))
       .then(() => {
         const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {
           defaults: ''
         });
         if (l.trim().length > 0 && !this.options.skip.includes('build')) {
-          return this._ifExecutable('docker-compose', this._spawnOrAbort.bind(this, 'docker-compose', 'build'), ' please run "docker-compose build" manually"');
+          return this._ifExecutable('docker-compose', SpawnUtils.spawnOrAbort.bind(this, 'docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
         }
         return null;
       })

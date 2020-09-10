@@ -3,10 +3,7 @@ const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const RepoUtils = require('../../utils/RepoUtils');
 const NpmUtils = require('../../utils/NpmUtils');
-
-function failed(spawnResult) {
-  return spawnResult.status !== 0;
-}
+const SpawnUtils = require('../../utils/SpawnUtils');
 
 /**
  * Clone a given repository and supports version ranges for git tags.
@@ -111,9 +108,9 @@ class Generator extends Base {
 
         const line = `ls-remote --tags ${repoUrl}`;
         this.log(chalk.white(`fetching possible version tags:`), `git ${line}`);
-        const r = this._spawn('git', line.split(/ +/));
+        const r = SpawnUtils.spawn('git', line.split(/ +/), this.cwd);
 
-        if (failed(r)) {
+        if (SpawnUtils.failed(r)) {
           this.log(chalk.red(`failed to fetch list of tags from git repository`), `status code: ${r.status}`);
           this.log(r.stderr.toString());
           return this._abort(`failed to fetch list of tags from git repository - status code: ${r.status}`);
@@ -135,12 +132,12 @@ class Generator extends Base {
 
       const line = `clone -b ${branch}${extras || ''} ${repoUrl}${cloneDirName}`;
       this.log(chalk.white(`clone repository:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(/ +/));
+      return SpawnUtils.spawnOrAbort('git', line.split(/ +/), this.cwd);
     }
     // clone a specific commit
     const line = `clone ${extras || ''} ${repoUrl}${cloneDirName}`;
     this.log(chalk.white(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
+    return this._spawnOrAbort('git', line.split(/ +/), this.cwd).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.white(`checkout commit:`), `git ${line}`);
       let repoName = RepoUtils.simplifyRepoUrl(repoUrl);
@@ -149,27 +146,6 @@ class Generator extends Base {
         cwd: `${this.cwd}/${repoName}`
       });
     });
-  }
-
-  _abort(msg) {
-    return Promise.reject(msg ? msg : 'Step Failed: Aborting');
-  }
-
-  _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : Object.assign({
-      cwd: this.cwd,
-      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
-    }, cwd || {});
-    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
-  }
-
-  _spawnOrAbort(cmd, argline, cwd) {
-    const r = this._spawn(cmd, argline, cwd);
-    if (failed(r)) {
-      this.log(r.stderr.toString());
-      return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
-    }
-    return Promise.resolve(r);
   }
 
 }
