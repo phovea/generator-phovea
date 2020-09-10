@@ -26,7 +26,7 @@ module.exports = class SpawnUtils {
     }
 
     /**
-     * Execute she command
+     * Execute shell command
      * @param {string} cmd Command to execute.
      * @param {string | string[]} argline Arguments to execute the command with.
      * @param {string} cwd The directory in Which the command should be excecuted.
@@ -41,7 +41,7 @@ module.exports = class SpawnUtils {
     }
 
     /**
-     * Shel command result object
+     * Shell command result object
      * @param {{}} spawnResult 
      */
     static failed(spawnResult) {
