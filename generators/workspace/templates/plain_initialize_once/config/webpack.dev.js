@@ -1,6 +1,7 @@
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 //for debugging issues
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 //helper module
@@ -148,6 +149,36 @@ const config = {
     module: {
         rules: [
             {
+                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000, // inline <= 10kb
+                    mimetype: 'application/font-woff'
+                }
+            },
+            {
+                test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000, // inline <= 10kb
+                    mimetype: 'image/svg+xml',
+                    esModule: false
+                }
+            },
+            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
+            {
+              test: /\.(css)$/,
+              use: [
+                  MiniCssExtractPlugin.loader, 'css-loader'
+              ]
+            },
+            {
+                test: /\.(scss)$/,
+                use: [
+                    MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
+                ]
+            },
+            {
                 test: /\.js$/,
                 enforce: 'pre',
                 use: ['source-map-loader'],
@@ -173,41 +204,6 @@ const config = {
 
                 }]
             },
-            {
-                test: /\.(css)$/i,
-                use: [
-                    {
-                        loader: 'style-loader',
-                    },
-                    {
-                        loader: 'css-loader'
-                    },
-                ],
-            },
-            {
-                test: /\.(scss)$/,
-                use: [
-                    'style-loader', 'css-loader', 'sass-loader'
-                ]
-            },
-            {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'application/font-woff'
-                }
-            },
-            {
-                test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'image/svg+xml',
-                    esModule: false
-                }
-            },
-            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
             {
                 test: require.resolve('jquery'),
                 loader: 'expose-loader',
@@ -267,6 +263,7 @@ const config = {
             ]
         }),
         ...HtmlWebpackPlugins,
+        new MiniCssExtractPlugin(),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(envMode),
             'process.env.__VERSION__': JSON.stringify(appPkg.version),
