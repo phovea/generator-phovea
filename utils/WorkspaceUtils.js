@@ -1,8 +1,5 @@
 const path = require('path');
 const glob = require('glob').sync;
-const known = require('../../utils/known');
-const RepoUtils = require('../../utils/RepoUtils');
-const fs = require('fs-extra');
 
 module.exports = class WorkspaceUtils {
   /**
@@ -46,5 +43,21 @@ module.exports = class WorkspaceUtils {
     const webPlugins = WorkspaceUtils.listWebPlugins(workspaceDirectory);
     const serverPlugins = WorkspaceUtils.listServerPlugins(workspaceDirectory);
     return [...new Set([].concat(...webPlugins, ...serverPlugins))].sort();
+  }
+
+  /**
+   * Extract default app from `phovea_product.json`.
+   * @param {Object} product Content of the `phovea_product.json`.
+   */
+  static findDefaultApp(product) {
+    if (!product) {
+      return null;
+    }
+    for (let p of product) {
+      if (p.type === 'web') {
+        return p.repo.slice(p.repo.lastIndexOf('/') + 1).replace('.git', '');
+      }
+    }
+    return null;
   }
 };
