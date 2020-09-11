@@ -65,4 +65,31 @@ module.exports = class RepoUtils {
     }
     return repo;
   }
+  /**
+   * Checks if repo name includes organization. If not it adds `Caleydo/` prefix.
+   * @param {string} name Name of the repo.
+   */
+  static toBaseName(name) {
+    if (name.includes('/')) {
+      return name;
+    }
+    return `Caleydo/${name}`;
+  }
+
+  /**
+   * Removes `_product` suffix from name.
+   * @param {string} basename Repo name optionaly prefixed with the organization name.
+   */
+  static toCWD(basename) {
+    try {
+      let match = basename.match(/.*\/(.*)/)[1];
+      if (match.endsWith('_product')) {
+        match = match.slice(0, -8);
+      }
+      return match;
+
+    } catch{
+      return basename;
+    }
+  }
 };

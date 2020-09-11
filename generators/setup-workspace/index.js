@@ -6,34 +6,7 @@ const path = require('path');
 const yeoman = require('yeoman-environment');
 const RepoUtils = require('../../utils/RepoUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
-
-function toBaseName(name) {
-  if (name.includes('/')) {
-    return name;
-  }
-  return `Caleydo/${name}`;
-}
-
-
-function toCWD(basename) {
-  let match = basename.match(/.*\/(.*)/)[1];
-  if (match.endsWith('_product')) {
-    match = match.slice(0, -8);
-  }
-  return match;
-}
-
-function findDefaultApp(product) {
-  if (!product) {
-    return null;
-  }
-  for (let p of product) {
-    if (p.type === 'web') {
-      return p.repo.slice(p.repo.lastIndexOf('/') + 1).replace('.git', '');
-    }
-  }
-  return null;
-}
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
 
 function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
@@ -117,8 +90,8 @@ class Generator extends Base {
       default: this.options.ssh,
       when: !this.options.ssh
     }]).then((props) => {
-      this.productName = toBaseName(props.productName || this.args[0]);
-      this.cwd = toCWD(this.productName);
+      this.productName = RepoUtils.toBaseName(props.productName || this.args[0]);
+      this.cwd = RepoUtils.toCWD(this.productName);
       this.cloneSSH = props.cloneSSH || this.options.ssh;
     });
   }
@@ -211,7 +184,7 @@ class Generator extends Base {
   }
 
   _customizeWorkspace() {
-    const defaultApp = findDefaultApp(this.product);
+    const defaultApp = WorkspaceUtils.findDefaultApp(this.product);
     if (defaultApp) {
       this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${defaultApp}.xml`), {
         defaultApp: defaultApp
@@ -345,7 +318,7 @@ class Generator extends Base {
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
       .then(this._yo.bind(this, 'workspace', {
-        defaultApp: findDefaultApp(),
+        defaultApp: WorkspaceUtils.findDefaultApp(),
         skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
       }))
       .then(this._customizeWorkspace.bind(this))

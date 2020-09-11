@@ -82,3 +82,34 @@ describe('extract `organization/repo` from a SSH or an http url', () => {
         expect(RepoUtils.simplifyRepoUrl(repo)).toBe('phovea/phovea_core');
     });
 });
+
+describe('prefix repo name with organization name`', () => {
+
+    it('repo already contains organization', () => {
+        const repo = 'Caleydo/ordino';
+        expect(RepoUtils.toBaseName(repo)).toBe(repo);
+    });
+
+    it('repo does not contain organization', () => {
+        const repo = 'ordino';
+        expect(RepoUtils.toBaseName(repo)).toBe('Caleydo/ordino');
+    });
+});
+
+describe('extact repo name from string containing `org/repo`', () => {
+
+    it('repo contains org', () => {
+        const repo = 'Caleydo/ordino';
+        expect(RepoUtils.toCWD(repo)).toBe('ordino');
+    });
+
+    it('repo is a product', () => {
+        const repo = 'Caleydo/ordino_product';
+        expect(RepoUtils.toCWD(repo)).toBe('ordino');
+    });
+
+    it('repo does not contain org', () => {
+        const repo = 'ordino';
+        expect(RepoUtils.toCWD(repo)).toBe('ordino');
+    });
+});
