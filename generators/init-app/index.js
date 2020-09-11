@@ -49,7 +49,7 @@ class PluginGenerator extends BasePluginGenerator {
 
   writing() {
     const config = this.config.getAll();
-    this._mkdir(config.cwd);
+    this._createSubDir(config.cwd);
     this._patchPackageJSON(config, ['main'], null, this.cwd);
     this._writeTemplates(config, !this.options.noSamples, this.cwd);
   }

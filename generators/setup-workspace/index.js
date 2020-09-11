@@ -7,6 +7,7 @@ const yeoman = require('yeoman-environment');
 const RepoUtils = require('../../utils/RepoUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const WorkspaceUtils = require('../../utils/WorkspaceUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
@@ -176,13 +177,6 @@ class Generator extends Base {
         return this.product;
       });
   }
-
-  _mkdir(dir) {
-    dir = dir || this.cwd;
-    this.log('Create directory: ' + dir);
-    return new Promise((resolve) => fs.ensureDir(dir, resolve));
-  }
-
   _customizeWorkspace() {
     const defaultApp = WorkspaceUtils.findDefaultApp(this.product);
     if (defaultApp) {
@@ -242,7 +236,7 @@ class Generator extends Base {
     if (data.length === 0) {
       return Promise.resolve(null);
     }
-    return this._mkdir(this.cwd + '/_data')
+    return GeneratorUtils.mkdir(this.cwd + '/_data')
       .then(() => Promise.all(data.map((d) => this._downloadDataFile(d, this.cwd + '/_data'))));
   }
 
@@ -256,7 +250,7 @@ class Generator extends Base {
     if (data.length === 0) {
       return Promise.resolve(null);
     }
-    return this._mkdir(this.cwd + '/_backup')
+    return GeneratorUtils.mkdir(this.cwd + '/_backup')
       .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
       .then(this._ifExecutable.bind(this, 'docker-compose', SpawnUtils.spawnOrAbort.bind(this, './docker-backup', 'restore', this.cwd, true), 'please execute: "./docker-backup restore" manually'));
   }
@@ -289,7 +283,7 @@ class Generator extends Base {
     this.hasErrors = false;
 
     return Promise.resolve(1)
-      .then(this._mkdir.bind(this, null))
+      .then(GeneratorUtils.mkdir(this.cwd))
       .then(this._getProduct.bind(this))
       .then((product) => {
         const names = new Set();

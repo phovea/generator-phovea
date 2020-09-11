@@ -5,6 +5,7 @@ const path = require('path');
 const glob = require('glob').sync;
 const fs = require('fs-extra');
 const chalk = require('chalk');
+const GeneratorUtils = require('./GeneratorUtils');
 
 /**
  * Modify package.json by passing the configuration
@@ -86,7 +87,7 @@ function writeTemplates(config, withSamples, cwd = '') {
     });
     f.forEach((fi) => {
       const rel = path.relative(base, fi);
-      if(!initialize_once || !fs.existsSync(this.destinationPath(cwd + dbase + rel))) {
+      if (!initialize_once || !fs.existsSync(this.destinationPath(cwd + dbase + rel))) {
         this.fs.copyTpl(fi, this.destinationPath(cwd + dbase + rel), pattern);
       }
     });
@@ -171,11 +172,10 @@ class BaseInitPluginGenerator extends Generator {
    * Initialize the property cwd.
    * @param {string} dir Directory name.
    */
-  _mkdir(dir) {
+  _createSubDir(dir) {
     if (this._isWorkspace() && this.cwd !== dir + '/') {
       this.cwd = dir + '/';
-      this.log('Create directory: ' + dir);
-      return new Promise((resolve) => fs.ensureDir(dir, resolve));
+      GeneratorUtils.mkdir(dir);
     }
   }
 
@@ -198,7 +198,7 @@ class BaseInitPluginGenerator extends Generator {
 
   writing() {
     const config = this.config.getAll();
-    this._mkdir(config.cwd || config.name);
+    this._createSubDir(config.cwd || config.name);
     if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
       this._patchPackageJSON(config, null, null, this.cwd);
     }

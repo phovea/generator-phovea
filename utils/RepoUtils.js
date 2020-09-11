@@ -77,8 +77,8 @@ module.exports = class RepoUtils {
   }
 
   /**
-   * Removes `_product` suffix from name.
-   * @param {string} basename Repo name optionaly prefixed with the organization name.
+   * Extracts repo name and removes `_product` suffix from name.
+   * @param {string} basename Repo name optionaly prefixed with the organization name, i.e, `Caleydo/ordino`.
    */
   static toCWD(basename) {
     try {
