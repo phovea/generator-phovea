@@ -2,8 +2,9 @@
 const _ = require('lodash');
 const chalk = require('chalk');
 const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
+const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 const fs = require('fs');
+const NpmUtils = require('../../utils/NpmUtils');
 
 const known = () => require('../../utils/known');
 
@@ -130,8 +131,9 @@ class Generator extends Base {
   writing() {
     const config = this.config.getAll();
     this.cwd = this.options.isWorkspace ? (config.app || config.name) + '/' : '';
+    const {version} = fs.readFileSync(this.destinationPath(this.cwd + 'packge.json'));
     patchPackageJSON.call(this, config, [], {
-      dependencies: this._generateDependencies(useDevVersion.call(this, this.cwd))
+      dependencies: this._generateDependencies(NpmUtils.useDevVersion(version))
     }, null, this.cwd);
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
     writeTemplates.call(this, config, null, this.cwd);

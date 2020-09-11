@@ -1,8 +1,9 @@
 'use strict';
 const _ = require('lodash');
 const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
+const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 const PipUtils = require('../../utils/PipUtils');
+const NpmUtils = require('../../utils/NpmUtils');
 const fs = require('fs');
 
 const known = () => require('../../utils/known');
@@ -78,9 +79,9 @@ class Generator extends Base {
     modules.filter(known().plugin.isTypeServer).forEach((m) => {
       const p = known().plugin.byName(m);
 
-     // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
-     // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
-     // and the incoming format is phovea_server>=5.0.1,<6.0.0
+      // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
+      // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
+      // and the incoming format is phovea_server>=5.0.1,<6.0.0
       if (!useDevelopDependencies) {
         const devRequirement = Object.keys(p.develop.requirements)[0];
         const masterRequirment = Object.keys(p.requirements)[0];
@@ -106,7 +107,8 @@ class Generator extends Base {
   writing() {
     const config = this.config.getAll();
     this.cwd = this.options.isWorkspace ? (config.cwd || config.name) + '/' : '';
-    const deps = this._generateDependencies(useDevVersion.call(this, this.cwd), this.cwd);
+    const {version} = fs.readFileSync(this.destinationPath(this.cwd + 'packge.json'));
+    const deps = this._generateDependencies(NpmUtils.useDevVersion(version), this.cwd);
 
     patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
     writeTemplates.call(this, config, !this.options.noSamples, this.cwd);

@@ -241,4 +241,11 @@ module.exports = class NpmUtils {
 
         return versionTags;
     }
+    /**
+     * Checks if version contains `-` thus branch is not master.
+     * @param {string} version Package.json version
+     */
+    static useDevVersion(version) {
+        return (version || '').includes('-');
+    }
 };
