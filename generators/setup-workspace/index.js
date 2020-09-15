@@ -252,7 +252,7 @@ class Generator extends Base {
     }
     return GeneratorUtils.mkdir(this.cwd + '/_backup')
       .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
-      .then(this._ifExecutable.bind(this, 'docker-compose', SpawnUtils.spawnOrAbort.bind(this, './docker-backup', 'restore', this.cwd, true), 'please execute: "./docker-backup restore" manually'));
+      .then(this._ifExecutable.bind(this, 'docker-compose', () => SpawnUtils.spawnOrAbort('./docker-backup', 'restore', this.cwd, true), 'please execute: "./docker-backup restore" manually'));
   }
 
   _ifExecutable(cmd, ifExists, extraMessage = '') {
@@ -324,7 +324,7 @@ class Generator extends Base {
           defaults: ''
         });
         if (l.trim().length > 0 && !this.options.skip.includes('build')) {
-          return this._ifExecutable('docker-compose', SpawnUtils.spawnOrAbort.bind(this, 'docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
+          return this._ifExecutable('docker-compose', () => SpawnUtils.spawnOrAbort('docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
         }
         return null;
       })

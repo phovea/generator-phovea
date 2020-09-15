@@ -12,14 +12,13 @@ module.exports = class SpawnUtils {
      */
     static spawnOrAbort(cmd, argline, cwd, verbose) {
         const result = SpawnUtils.spawn(cmd, argline, cwd, verbose);
-        const output = result.stdout.toString().trim();
-
+        const stdout = result.stdout;
         if (SpawnUtils.failed(result)) {
             console.log(result.stderr.toString());
             return SpawnUtils.abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${result.status}`);
 
-        } else if (output) {
-            console.log(output);
+        } else if (stdout && stdout.toString()) {
+            console.log(stdout.toString().trim());
         }
 
         return Promise.resolve(cmd);
