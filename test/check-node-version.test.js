@@ -9,7 +9,6 @@ const requiredNpmVersion = fs.readFileSync(path.resolve(__dirname, '../.npm-vers
 
 jest.mock('check-node-version');
 const check = require('check-node-version');
-const {version} = require('punycode');
 
 installedVersions.checkRequiredVersion = jest.fn();
 
