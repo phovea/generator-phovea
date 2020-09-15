@@ -113,7 +113,7 @@ class Generator extends Base {
         if (SpawnUtils.failed(r)) {
           this.log(chalk.red(`failed to fetch list of tags from git repository`), `status code: ${r.status}`);
           this.log(r.stderr.toString());
-          return this._abort(`failed to fetch list of tags from git repository - status code: ${r.status}`);
+          return SpawnUtils.abort(`failed to fetch list of tags from git repository - status code: ${r.status}`);
         }
 
         const gitLog = r.stdout.toString();
@@ -123,7 +123,7 @@ class Generator extends Base {
         const highestVersion = NpmUtils.findHighestVersion(gitVersions, branch);
         if (!highestVersion) {
           this.log(chalk.red(`failed to find git version tag for given version range`));
-          return this._abort(`failed to find git version tag for given version range`);
+          return SpawnUtils.abort(`failed to find git version tag for given version range`);
         }
 
         this.log(chalk.white(`use version tag`), chalk.green(highestVersion), chalk.white(`as branch name`));
@@ -137,12 +137,12 @@ class Generator extends Base {
     // clone a specific commit
     const line = `clone ${extras || ''} ${repoUrl}${cloneDirName}`;
     this.log(chalk.white(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(/ +/), this.cwd).then(() => {
+    return SpawnUtils.spawnOrAbort('git', line.split(/ +/), this.cwd).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.white(`checkout commit:`), `git ${line}`);
       let repoName = RepoUtils.simplifyRepoUrl(repoUrl);
       repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
-      return this._spawnOrAbort('git', line.split(/ +/), {
+      return SpawnUtils.spawnOrAbort('git', line.split(/ +/), {
         cwd: `${this.cwd}/${repoName}`
       });
     });
