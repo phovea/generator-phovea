@@ -3,7 +3,6 @@ const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
-const yeoman = require('yeoman-environment');
 const RepoUtils = require('../../utils/RepoUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const WorkspaceUtils = require('../../utils/WorkspaceUtils');
