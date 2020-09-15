@@ -97,36 +97,14 @@ class Generator extends Base {
     });
   }
 
-  _yo(generator, options, args) {
-    // call yo internally
-    const env = yeoman.createEnv([], {
-      cwd: this.cwd
-    }, this.env.adapter);
-    const _args = Array.isArray(args) ? args.join(' ') : args || '';
-    return new Promise((resolve, reject) => {
-      try {
-        this.log(`Running: yo phovea:${generator} ${_args}`);
-        env.lookup(() => {
-          env.run(`phovea:${generator} ${_args}`, options || {}, () => {
-            // wait a second after running yo to commit the files correctly
-            setTimeout(() => resolve(), 500);
-          });
-        });
-      } catch (e) {
-        console.error('Error', e, e.stack);
-        reject(e);
-      }
-    });
-  }
-
   _cloneRepo(repo, branch, extras, dir = '') {
     const repoUrl = this.cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
-    return this._yo(`clone-repo`, {
+    return GeneratorUtils.yo(`clone-repo`, {
       branch,
       extras: extras || '',
       dir,
       cwd: this.cwd
-    }, repoUrl); // repository URL as argument
+    }, repoUrl, this.cwd, this.env.adapter); // repository URL as argument
   }
 
 
@@ -311,10 +289,10 @@ class Generator extends Base {
         return repos;
       })
       .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
-      .then(this._yo.bind(this, 'workspace', {
+      .then(() => GeneratorUtils.yo('workspace', {
         defaultApp: WorkspaceUtils.findDefaultApp(),
         skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
-      }))
+      }, null, this.cwd, this.env.adapter))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
       .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
