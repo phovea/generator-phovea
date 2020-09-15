@@ -67,10 +67,10 @@ module.exports = class WorkspaceUtils {
  * Calls the clone repo generator with the name of the repo.
  * @param {string} repo Repository name.
  * @param {string} branch Branch to clone
- * @param {*} extras Extra git options
- * @param {*} dir Where to clone the repo
- * @param {*} cwd Where to run the generator
- * @param {*} cloneSSH SSH or HTTP url
+ * @param {Object} extras Extra git options
+ * @param {string} dir Where to clone the repo
+ * @param {string} cwd Where to run the generator
+ * @param {boolean} cloneSSH SSH or HTTP url
  */
   static cloneRepo(repo, branch, extras, dir = '', cwd, cloneSSH) {
     const repoUrl = cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
