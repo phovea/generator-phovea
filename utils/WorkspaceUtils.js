@@ -1,5 +1,7 @@
 const path = require('path');
 const glob = require('glob').sync;
+const RepoUtils = require('./RepoUtils');
+const GeneratorUtils = require('./GeneratorUtils');
 
 module.exports = class WorkspaceUtils {
   /**
@@ -60,4 +62,24 @@ module.exports = class WorkspaceUtils {
     }
     return null;
   }
+
+/**
+ * Calls the clone repo generator with the name of the repo.
+ * @param {string} repo Repository name.
+ * @param {string} branch Branch to clone
+ * @param {*} extras Extra git options
+ * @param {*} dir Where to clone the repo
+ * @param {*} cwd Where to run the generator
+ * @param {*} cloneSSH SSH or HTTP url
+ */
+  static cloneRepo(repo, branch, extras, dir = '', cwd, cloneSSH) {
+    const repoUrl = cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
+    return GeneratorUtils.yo(`clone-repo`, {
+      branch,
+      extras: extras || '',
+      dir,
+      cwd
+    }, repoUrl, cwd); // repository URL as argument
+  }
+
 };

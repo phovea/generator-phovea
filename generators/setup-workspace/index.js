@@ -96,17 +96,6 @@ class Generator extends Base {
     });
   }
 
-  _cloneRepo(repo, branch, extras, dir = '') {
-    const repoUrl = this.cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
-    return GeneratorUtils.yo(`clone-repo`, {
-      branch,
-      extras: extras || '',
-      dir,
-      cwd: this.cwd
-    }, repoUrl, this.cwd, this.env.adapter); // repository URL as argument
-  }
-
-
   _removeUnnecessaryProductFiles() {
     fs.unlinkSync(this.cwd + '/.yo-rc.json');
     fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
@@ -124,7 +113,7 @@ class Generator extends Base {
 
 
   _getProduct() {
-    return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
+    return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'master', null, '.', this.cwd, this.cloneSSH)
       .then(() => {
         this._removeUnnecessaryProductFiles();
 
@@ -287,7 +276,7 @@ class Generator extends Base {
         });
         return repos;
       })
-      .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
+      .then((repos) => Promise.all(repos.map((r) => WorkspaceUtils.cloneRepo(r.repo, r.branch, null, '', this.cwd, this.cloneSSH))))
       .then(() => GeneratorUtils.yo('workspace', {
         defaultApp: WorkspaceUtils.findDefaultApp(),
         skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
