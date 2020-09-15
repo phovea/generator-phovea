@@ -108,7 +108,6 @@ class Generator extends Base {
     const config = this.config.getAll();
     this.cwd = this.options.isWorkspace ? (config.cwd || config.name) + '/' : '';
     const {version} = this.fs.readJSON(this.destinationPath(this.cwd + 'package.json'), {version: '1.0.0'});
-    console.log(this.cwd, this.destinationPath(this.cwd + 'package.json'))
     const deps = this._generateDependencies(NpmUtils.useDevVersion(version), this.cwd);
 
     patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
