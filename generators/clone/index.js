@@ -4,10 +4,6 @@ const path = require('path');
 const glob = require('glob').sync;
 const known = require('../../utils/known');
 const RepoUtils = require('../../utils/RepoUtils');
-function toRepository(plugin, useSSH) {
-  const p = known.plugin.byName(plugin);
-  return useSSH ? RepoUtils.RtoSSHRepoUrl(p.repository) : RepoUtils.toHTTPRepoUrl(p.repository);
-}
 
 function resolveNeighbors(plugins, useSSH, types, shallow) {
   let missing = [];
@@ -28,7 +24,7 @@ function resolveNeighbors(plugins, useSSH, types, shallow) {
 
   while (missing.length > 0) {
     let next = missing.shift();
-    let repo = toRepository(next, useSSH);
+    let repo = RepoUtils.toRepository(next, useSSH);
     let args = ['clone', repo];
     if (shallow) {
       args.splice(1, 0, '--depth', '1');
@@ -130,7 +126,7 @@ class Generator extends Base {
   }
 
   writing() {
-    const repos = this.props.plugins.map((d) => toRepository(d, this.props.cloneSSH));
+    const repos = this.props.plugins.map((d) => RepoUtils.toRepository(d, this.props.cloneSSH));
 
     repos.forEach((repo) => {
       this.log(`git clone ${repo}`);

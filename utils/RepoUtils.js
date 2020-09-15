@@ -1,3 +1,5 @@
+const known = require('./known');
+
 module.exports = class RepoUtils {
 
   /**
@@ -91,5 +93,10 @@ module.exports = class RepoUtils {
     } catch{
       return basename;
     }
+  }
+
+  static toRepository(plugin, useSSH) {
+    const p = known.plugin.byName(plugin);
+    return useSSH ? RepoUtils.RtoSSHRepoUrl(p.repository) : RepoUtils.toHTTPRepoUrl(p.repository);
   }
 };
