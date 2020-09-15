@@ -1,50 +1,9 @@
 'use strict';
 const Base = require('yeoman-generator');
-const path = require('path');
-const glob = require('glob').sync;
 const known = require('../../utils/known');
 const RepoUtils = require('../../utils/RepoUtils');
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
 
-function resolveNeighbors(plugins, useSSH, types, shallow) {
-  let missing = [];
-  const addMissing = (p) => {
-    this.log(this.destinationPath(p + '/.yo-rc.json'));
-    const config = this.fs.readJSON(this.destinationPath(p + '/.yo-rc.json'), {'generator-phovea': {}})['generator-phovea'];
-    let modules = [].concat(config.modules || [], config.smodules || []);
-    this.log(`${p} => ${modules.join(' ')}`);
-    if (types && types !== 'both') {
-      // filter to just certain sub types
-      const filter = types === 'web' ? known.plugin.isTypeWeb : known.plugin.isTypeServer;
-      modules = modules.filter((m) => known.plugin.isTypeHybrid(m) || filter(m));
-    }
-    missing.push(...modules.filter((m) => plugins.indexOf(m) < 0));
-  };
-
-  plugins.forEach(addMissing);
-
-  while (missing.length > 0) {
-    let next = missing.shift();
-    let repo = RepoUtils.toRepository(next, useSSH);
-    let args = ['clone', repo];
-    if (shallow) {
-      args.splice(1, 0, '--depth', '1');
-    }
-    this.log(`git clone ${args.join(' ')}`);
-    this.spawnCommandSync('git', args, {
-      cwd: this.destinationPath()
-    });
-    plugins.push(next);
-    addMissing(next);
-  }
-}
-
-function resolveAllNeighbors(useSSH, types) {
-  const files = glob('*/.yo-rc.json', {
-    cwd: this.destinationPath()
-  });
-  const plugins = files.map(path.dirname);
-  return resolveNeighbors.call(this, plugins, useSSH, types);
-}
 
 class Generator extends Base {
   constructor(args, options) {
@@ -135,11 +94,9 @@ class Generator extends Base {
       });
     });
     if (this.props.resolve) {
-      resolveNeighbors.call(this, this.props.plugins, this.props.cloneSSH);
+      WorkspaceUtils.resolveNeighbors(this.props.plugins, this.props.cloneSSH, null, null, this.destinationPath());
     }
   }
 }
 
 module.exports = Generator;
-module.exports.resolveNeighbors = resolveNeighbors;
-module.exports.resolveAllNeighbors = resolveAllNeighbors;
