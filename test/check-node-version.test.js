@@ -9,39 +9,39 @@ const requiredNpmVersion = fs.readFileSync(path.resolve(__dirname, '../.npm-vers
 
 jest.mock('check-node-version');
 const check = require('check-node-version');
+const {version} = require('punycode');
 
 installedVersions.checkRequiredVersion = jest.fn();
 
-
-const results = {
-    versions: {
-        node: {
-            version: {
-                version: 12
+describe('check-node-version', () => {
+    const results = {
+        versions: {
+            node: {
+                version: {
+                    version: 12
+                },
             },
-        },
-        npm: {
-            version: {
-                version: 18
+            npm: {
+                version: {
+                    version: 18
+                }
             }
         }
-    }
-};
+    };
 
-const versions = {
-    installed: {
-      node: results.versions.node.version.version,
-      npm: results.versions.npm.version.version
-    },
-    required: {
-      node: requiredNodeVersion.replace('\n', ''),
-      npm: requiredNpmVersion.replace('\n', '')
-    }
-  };
+    const versions = {
+        installed: {
+            node: results.versions.node.version.version,
+            npm: results.versions.npm.version.version
+        },
+        required: {
+            node: requiredNodeVersion.replace('\n', ''),
+            npm: requiredNpmVersion.replace('\n', '')
+        }
+    };
 
-check.mockImplementation((versions, cb) => cb(false, results));
+    check.mockImplementation((_, cb) => cb(false, results));
 
-describe('check-node-version', () => {
 
     beforeAll(() => {
         return helpers
@@ -59,4 +59,10 @@ describe('check-node-version', () => {
     it('calls checkRequiredVersion with correct argument', () => {
         expect(installedVersions.checkRequiredVersion.mock.calls[0][0]).toMatchObject(versions);
     });
+
+    // it('throws error if function check returns an error', () => {
+    //     TODO do not terminate the node process in installedVersions since it also kills the test. Throw an error instead.
+    //     check.mockImplementation((_, cb) => cb(true, null));
+    //     expect(installedVersions.checkRequiredVersion.mock.calls[0][0]).toMatchObject(versions);
+    // });
 });
