@@ -2,6 +2,7 @@
 'use strict';
 const path = require('path');
 const helpers = require('yeoman-test');
+const rimraf = require('rimraf');
 const SpawnUtils = require('../utils/SpawnUtils');
 
 /**
@@ -14,10 +15,11 @@ const GENERATOR_DEPENDENCIES = [
 ];
 
 const repo = 'git@github.com:Caleydo/ordino.git';
+const target = 'cloned';
 
 const cloneRepo = (options) => helpers
     .run(path.join(__dirname, '../generators/clone-repo'))
-    .inDir(path.join(__dirname, 'cloned'), () => null)
+    .inDir(path.join(__dirname, target), () => null)
     .withArguments([repo])
     .withOptions(options)
     .withGenerators(GENERATOR_DEPENDENCIES);
@@ -29,6 +31,10 @@ describe('call clone-repo with branch develop', () => {
 
         return cloneRepo({branch: 'develop'});
     });
+
+    afterAll(() => {
+        rimraf.sync(path.join(__dirname, target));
+      });
 
     it('calls function spawnOrAbort() once with the correct argument', () => {
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(1);
@@ -43,12 +49,16 @@ describe('call clone-repo with branch develop', () => {
     });
 });
 
-describe('call clone-repo with exact version tag', () => {
+describe('call clone-repo with an exact version tag', () => {
 
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
         return cloneRepo({branch: 'v2.0.0'});
     });
+
+    afterAll(() => {
+        rimraf.sync(path.join(__dirname, target));
+      });
 
     it('calls function spawnOrAbort() once with the correct arguments', () => {
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(1);
@@ -80,6 +90,10 @@ describe('call clone-repo with an advanced version tag', () => {
         return cloneRepo({branch: '^v2.0.0'});
     });
 
+    afterAll(() => {
+        rimraf.sync(path.join(__dirname, target));
+      });
+
     it('calls function spawnOrAbort() once with the the correctly resolved version tag', () => {
         expect(SpawnUtils.spawn.mock.calls.length).toBe(1);
         const cmd = SpawnUtils.spawnOrAbort.mock.calls[0][0];
@@ -108,6 +122,10 @@ describe('call clone-repo with an advanced version tag and no remote', () => {
         return cloneRepo({branch: '^v2.0.0'});
     });
 
+    afterAll(() => {
+        rimraf.sync(path.join(__dirname, target));
+      });
+
     it('calls function abort() once and spawnOrAbort() never', () => {
         expect(SpawnUtils.abort.mock.calls.length).toBe(1);
         const msg = SpawnUtils.abort.mock.calls[0][0];
@@ -117,7 +135,7 @@ describe('call clone-repo with an advanced version tag and no remote', () => {
     });
 });
 
-describe('call clone-repo with an advanced version tag that does not resolve', () => {
+describe('call clone-repo with an advanced version tag that does not resolve to an exact version tag', () => {
 
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
@@ -135,6 +153,10 @@ describe('call clone-repo with an advanced version tag that does not resolve', (
         return cloneRepo({branch: '^v3.0.0'});
     });
 
+    afterAll(() => {
+        rimraf.sync(path.join(__dirname, target));
+      });
+
     it('calls function abort() once and spawnOrAbort() never', () => {
         expect(SpawnUtils.abort.mock.calls.length).toBe(1);
         const msg = SpawnUtils.abort.mock.calls[0][0];
@@ -146,11 +168,16 @@ describe('call clone-repo with an advanced version tag that does not resolve', (
 
 describe('call clone-repo with a git commit', () => {
 
+
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
         SpawnUtils.spawnOrAbort.mockImplementation(() => Promise.resolve());
         return cloneRepo({branch: 'e7cfd95e0ff2188d006444f93ea2ed6aeac18864'});
     });
+
+    afterAll(() => {
+        rimraf.sync(path.join(__dirname, target));
+      });
 
     it('calls function spawnOrabort() twice', () => {
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(2);
