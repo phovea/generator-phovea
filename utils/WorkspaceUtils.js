@@ -59,12 +59,14 @@ module.exports = class WorkspaceUtils {
     }
     for (let p of product) {
       if (p.type === 'web') {
-        return p.repo.slice(p.repo.lastIndexOf('/') + 1).replace('.git', '');
+        return {
+          name: p.repo.slice(p.repo.lastIndexOf('/') + 1).replace('.git', ''),
+          additional: p.additional.map(({name}) => name)
+        };
       }
+      return null;
     }
-    return null;
   }
-
   /**
    * Calls the clone repo generator with the name of the repo.
    * @param {string} repo Repository name.

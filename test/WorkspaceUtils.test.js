@@ -29,7 +29,18 @@ describe('Find default app in product object', () => {
                 label: 'ordino',
                 repo: 'Caleydo/ordino_public',
                 branch: 'develop',
-                additional: []
+                additional: [
+                    {
+                        "name": "phovea_core",
+                        "repo": "phovea/phovea_core",
+                        "branch": "develop"
+                    },
+                    {
+                        "name": "phovea_ui",
+                        "repo": "phovea/phovea_ui",
+                        "branch": "develop"
+                    }
+                ]
 
             },
             {
@@ -40,6 +51,6 @@ describe('Find default app in product object', () => {
                 additional: []
 
             }];
-        expect(WorkspaceUtils.findDefaultApp(product)).toBe('ordino_public');
+        expect(WorkspaceUtils.findDefaultApp(product)).toMatchObject({name: 'ordino_public', additional: ['phovea_core', 'phovea_ui']});
     });
 });

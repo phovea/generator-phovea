@@ -7,6 +7,7 @@ const RepoUtils = require('../../utils/RepoUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const WorkspaceUtils = require('../../utils/WorkspaceUtils');
 const GeneratorUtils = require('../../utils/GeneratorUtils');
+const {findDefaultApp} = require('../../utils/WorkspaceUtils');
 
 function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
@@ -120,31 +121,31 @@ class Generator extends Base {
     return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'master', null, '.', this.cwd, this.cloneSSH)
       .then(() => {
         this._removeUnnecessaryProductFiles();
-
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
         if (!fs.existsSync(phoveaProductJSON)) {
           throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
         }
 
         this.product = fs.readJSONSync(phoveaProductJSON);
+        const defaultApp = findDefaultApp(this.product);
+        this.defaultApp = defaultApp.name;
 
-        const defaultApp = this.product.find((v) => v.type === 'web');
-        if (defaultApp) {
-          const baseRepo = RepoUtils.simplifyRepoUrl(defaultApp.repo);
-          const defaultAppName = baseRepo.slice(baseRepo.lastIndexOf('/') + 1);
-          this.defaultApp = defaultAppName;
-          const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
-          if (!fs.existsSync(yoWorkspacePath)) {
-            fs.writeJsonSync(yoWorkspacePath, {
-              modules: [],
-              defaultApp: defaultAppName,
-              frontendRepos: defaultApp.additional.map((repo) => repo.name),
-              devRepos: [defaultAppName]
-            }, {spaces: 2});
-          }
-        }
+        this._createYoRcWorkspace(defaultApp);
         return RepoUtils.parsePhoveaProduct(this.product);
       });
+  }
+
+  _createYoRcWorkspace(defaultApp) {
+    const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
+    if (!fs.existsSync(yoWorkspacePath && this.defaultApp)) {
+      const frontendRepos = defaultApp.additional;
+      fs.writeJsonSync(yoWorkspacePath, {
+        modules: [],
+        defaultApp: this.defaultApp,
+        frontendRepos,
+        devRepos: [this.defaultApp]
+      }, {spaces: 2});
+    }
   }
 
   _customizeWorkspace() {
@@ -257,22 +258,22 @@ class Generator extends Base {
       .then(this._getProduct.bind(this))
       .then((repos) => Promise.all(repos.map((r) => WorkspaceUtils.cloneRepo(r.repo, r.branch, null, '', this.cwd, this.cloneSSH))))
       .then(() => GeneratorUtils.yo('workspace', {
-        defaultApp: WorkspaceUtils.findDefaultApp(),
+        defaultApp: this.defaultApp,
         skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
       }, null, this.cwd, this.env.adapter))
-      .then(this._customizeWorkspace.bind(this))
-      .then(this._downloadDataFiles.bind(this))
-      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
-      .then(this._downloadBackupFiles.bind(this))
-      .then(() => {
-        const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {
-          defaults: ''
-        });
-        if (l.trim().length > 0 && !this.options.skip.includes('build')) {
-          return this._ifExecutable('docker-compose', () => SpawnUtils.spawnOrAbort('docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
-        }
-        return null;
-      })
+      // .then(this._customizeWorkspace.bind(this))
+      // .then(this._downloadDataFiles.bind(this))
+      // .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
+      // .then(this._downloadBackupFiles.bind(this))
+      // .then(() => {
+      //   const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {
+      //     defaults: ''
+      //   });
+      //   if (l.trim().length > 0 && !this.options.skip.includes('build')) {
+      //     return this._ifExecutable('docker-compose', () => SpawnUtils.spawnOrAbort('docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
+      //   }
+      //   return null;
+      // })
       .catch((msg) => {
         this.log('\r\n');
         this.log(chalk.red(msg));
@@ -280,7 +281,7 @@ class Generator extends Base {
       });
   }
 
-  end() {
+  _end() {
     if (this.hasErrors) {
       return; // skip next steps on errors
     }
