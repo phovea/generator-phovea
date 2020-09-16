@@ -97,9 +97,13 @@ class Generator extends Base {
   }
 
   _removeUnnecessaryProductFiles() {
-    fs.unlinkSync(this.cwd + '/.yo-rc.json');
-    fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
-    fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
+    try {
+      fs.unlinkSync(this.cwd + '/.yo-rc.json');
+      fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
+      fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
+    } catch (e) {
+      this.log(e.message);
+    }
   }
 
   /**
@@ -139,10 +143,10 @@ class Generator extends Base {
             }, {spaces: 2});
           }
         }
-
-        return this.product;
+        return RepoUtils.parsePhoveaProduct(this.product);
       });
   }
+
   _customizeWorkspace() {
     const defaultApp = WorkspaceUtils.findDefaultApp(this.product);
     if (defaultApp) {
@@ -251,31 +255,6 @@ class Generator extends Base {
     return Promise.resolve(1)
       .then(GeneratorUtils.mkdir(this.cwd))
       .then(this._getProduct.bind(this))
-      .then((product) => {
-        const names = new Set();
-        const repos = [];
-        product.forEach((p) => {
-          const repo = p.repo || 'phovea/' + p.name;
-          if (!names.has(repo)) {
-            names.add(repo);
-            repos.push({
-              repo,
-              branch: p.branch || 'master'
-            });
-          }
-          (p.additional || []).forEach((pi) => {
-            const repo = pi.repo || 'phovea/' + pi.name;
-            if (!names.has(repo)) {
-              names.add(repo);
-              repos.push({
-                repo,
-                branch: pi.branch || 'master'
-              });
-            }
-          });
-        });
-        return repos;
-      })
       .then((repos) => Promise.all(repos.map((r) => WorkspaceUtils.cloneRepo(r.repo, r.branch, null, '', this.cwd, this.cloneSSH))))
       .then(() => GeneratorUtils.yo('workspace', {
         defaultApp: WorkspaceUtils.findDefaultApp(),

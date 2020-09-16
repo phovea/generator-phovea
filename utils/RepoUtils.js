@@ -90,7 +90,7 @@ module.exports = class RepoUtils {
       }
       return match;
 
-    } catch{
+    } catch {
       return basename;
     }
   }
@@ -98,5 +98,34 @@ module.exports = class RepoUtils {
   static toRepository(plugin, useSSH) {
     const p = known.plugin.byName(plugin);
     return useSSH ? RepoUtils.RtoSSHRepoUrl(p.repository) : RepoUtils.toHTTPRepoUrl(p.repository);
+  }
+  /**
+   * Parses the `phovea_product.json` file and returns an array of objects containing the repo name and branch
+   * @param {{}} product 
+   */
+  static parsePhoveaProduct(product) {
+    const names = new Set();
+    const repos = [];
+    product.forEach((p) => {
+      const repo = p.repo || 'phovea/' + p.name;
+      if (!names.has(repo)) {
+        names.add(repo);
+        repos.push({
+          repo,
+          branch: p.branch || 'master'
+        });
+      }
+      (p.additional || []).forEach((pi) => {
+        const repo = pi.repo || 'phovea/' + pi.name;
+        if (!names.has(repo)) {
+          names.add(repo);
+          repos.push({
+            repo,
+            branch: pi.branch || 'master'
+          });
+        }
+      });
+    });
+    return repos;
   }
 };

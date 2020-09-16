@@ -1,5 +1,7 @@
 'use strict';
 const RepoUtils = require('../utils/RepoUtils');
+const fs = require('fs-extra');
+const path = require('path');
 
 describe('transfroms repo name to an https url', () => {
 
@@ -111,5 +113,27 @@ describe('extact repo name from string containing `org/repo`', () => {
     it('repo does not contain org', () => {
         const repo = 'ordino';
         expect(RepoUtils.toCWD(repo)).toBe('ordino');
+    });
+});
+
+describe('parse phovea_product.json', () => {
+    const result = [
+        {repo: 'Caleydo/ordino_public', branch: 'develop'},
+        {repo: 'phovea/phovea_core', branch: 'develop'},
+        {repo: 'phovea/phovea_ui', branch: 'develop'},
+        {repo: 'phovea/phovea_clue', branch: 'develop'},
+        {repo: 'phovea/phovea_security_flask', branch: 'develop'},
+        {repo: 'datavisyn/tdp_core', branch: 'develop'},
+        {repo: 'Caleydo/ordino', branch: 'develop'},
+        {repo: 'Caleydo/tdp_gene', branch: 'develop'},
+        {repo: 'Caleydo/tdp_publicdb', branch: 'develop'},
+        {repo: 'phovea/phovea_server', branch: 'develop'},
+        {repo: 'phovea/phovea_data_redis', branch: 'develop'},
+        {repo: 'phovea/phovea_data_mongo', branch: 'develop'}
+    ];
+
+    const dummyProduct = fs.readJSONSync(path.join(__dirname, `templates/phovea_product_dummy.json`));
+    it('resulting object has correct structure', () => {
+        expect(RepoUtils.parsePhoveaProduct(dummyProduct)).toStrictEqual(result);
     });
 });
