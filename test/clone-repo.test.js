@@ -29,12 +29,12 @@ describe('call clone-repo with branch develop', () => {
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
 
-        return cloneRepo({branch: 'develop'});
+        return cloneRepo({branch: 'develop', extras: '--depth 1', dir: '.', cwd: 'ordino_workspace'});
     });
 
     afterAll(() => {
         rimraf.sync(path.join(__dirname, target));
-      });
+    });
 
     it('calls function spawnOrAbort() once with the correct argument', () => {
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(1);
@@ -42,10 +42,10 @@ describe('call clone-repo with branch develop', () => {
         expect(cmd).toBe('git');
 
         const options = SpawnUtils.spawnOrAbort.mock.calls[0][1];
-        expect(options).toStrictEqual(['clone', '-b', 'develop', repo]);
+        expect(options).toStrictEqual(['clone', '-b', 'develop', '--depth', '1', repo, '.']);
 
         const cwd = SpawnUtils.spawnOrAbort.mock.calls[0][2];
-        expect(cwd).toBe(undefined);
+        expect(cwd).toBe('ordino_workspace');
     });
 });
 
@@ -58,7 +58,7 @@ describe('call clone-repo with an exact version tag', () => {
 
     afterAll(() => {
         rimraf.sync(path.join(__dirname, target));
-      });
+    });
 
     it('calls function spawnOrAbort() once with the correct arguments', () => {
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(1);
@@ -92,7 +92,7 @@ describe('call clone-repo with an advanced version tag', () => {
 
     afterAll(() => {
         rimraf.sync(path.join(__dirname, target));
-      });
+    });
 
     it('calls function spawnOrAbort() once with the the correctly resolved version tag', () => {
         expect(SpawnUtils.spawn.mock.calls.length).toBe(1);
@@ -115,7 +115,7 @@ describe('call clone-repo with an advanced version tag and no remote', () => {
         SpawnUtils.spawn = jest.fn();
         SpawnUtils.spawn.mockImplementation(() => {
             return {
-                status: 1,
+                status: 128,
                 stderr: `some error`
             };
         });
@@ -124,12 +124,12 @@ describe('call clone-repo with an advanced version tag and no remote', () => {
 
     afterAll(() => {
         rimraf.sync(path.join(__dirname, target));
-      });
+    });
 
     it('calls function abort() once and spawnOrAbort() never', () => {
         expect(SpawnUtils.abort.mock.calls.length).toBe(1);
         const msg = SpawnUtils.abort.mock.calls[0][0];
-        expect(msg).toBe('failed to fetch list of tags from git repository - status code: 1');
+        expect(msg).toBe('failed to fetch list of tags from git repository - status code: 128');
 
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(0);
     });
@@ -155,7 +155,7 @@ describe('call clone-repo with an advanced version tag that does not resolve to 
 
     afterAll(() => {
         rimraf.sync(path.join(__dirname, target));
-      });
+    });
 
     it('calls function abort() once and spawnOrAbort() never', () => {
         expect(SpawnUtils.abort.mock.calls.length).toBe(1);
@@ -177,19 +177,19 @@ describe('call clone-repo with a git commit', () => {
 
     afterAll(() => {
         rimraf.sync(path.join(__dirname, target));
-      });
+    });
 
     it('calls function spawnOrabort() twice', () => {
         expect(SpawnUtils.spawnOrAbort.mock.calls.length).toBe(2);
 
     });
 
-    it('first it clones the develop branch of the repo', () => {
+    it('first it clones the the repo', () => {
         const cmd = SpawnUtils.spawnOrAbort.mock.calls[0][0];
         expect(cmd).toBe('git');
 
         const options = SpawnUtils.spawnOrAbort.mock.calls[0][1];
-        expect(options).toStrictEqual(['clone', '-b', 'develop', repo]);
+        expect(options).toStrictEqual(['clone', repo]);
 
         const cwd = SpawnUtils.spawnOrAbort.mock.calls[0][2];
         expect(cwd).toBe(undefined);
@@ -201,9 +201,9 @@ describe('call clone-repo with a git commit', () => {
         expect(cmd).toBe('git');
 
         const options = SpawnUtils.spawnOrAbort.mock.calls[1][1];
-        expect(options).toStrictEqual(['clone', '-b', 'e7cfd95e0ff2188d006444f93ea2ed6aeac18864', repo]);
+        expect(options).toStrictEqual(['checkout', 'e7cfd95e0ff2188d006444f93ea2ed6aeac18864']);
 
         const cwd = SpawnUtils.spawnOrAbort.mock.calls[1][2];
-        expect(cwd).toBe(undefined);
+        expect(cwd).toBe('ordino');
     });
 });

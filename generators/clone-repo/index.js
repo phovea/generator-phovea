@@ -134,17 +134,18 @@ class Generator extends Base {
       this.log(chalk.white(`clone repository:`), `git ${line}`);
       return SpawnUtils.spawnOrAbort('git', line.split(/ +/), this.cwd);
     }
+
     // clone a specific commit
     const line = `clone ${extras || ''} ${repoUrl}${cloneDirName}`;
     this.log(chalk.white(`clone repository:`), `git ${line}`);
+
     return SpawnUtils.spawnOrAbort('git', line.split(/ +/), this.cwd).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.white(`checkout commit:`), `git ${line}`);
       let repoName = RepoUtils.simplifyRepoUrl(repoUrl);
       repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
-      return SpawnUtils.spawnOrAbort('git', line.split(/ +/), {
-        cwd: `${this.cwd}/${repoName}`
-      });
+      const cwd = this.cwd ? `${this.cwd}/${repoName}` : repoName;
+      return SpawnUtils.spawnOrAbort('git', line.split(/ +/), cwd);
     });
   }
 
