@@ -8,7 +8,9 @@ const WorkspaceUtils = require('../utils/WorkspaceUtils');
 const assert = require('yeoman-assert');
 const fs = require('fs-extra');
 const RepoUtils = require('../utils/RepoUtils');
-const {yo} = require('../utils/GeneratorUtils');
+const TestUtils = require('./TestUtils');
+const SpawnUtils = require('../utils/SpawnUtils');
+const {template} = require('lodash');
 
 /**
  * Directory name to run the generator
@@ -38,10 +40,18 @@ describe('generator setup-workspace', () => {
     const phoveaProduct = fs.readJSONSync(path.join(__dirname, `templates/phovea_product_dummy.json`));
     beforeAll(() => {
         WorkspaceUtils.cloneRepo = jest.fn()
-            .mockImplementationOnce((repo, branch, extras, dir, cwd) => fs.writeJson(cwd + '/phovea_product.json', phoveaProduct)) // first call
+            .mockImplementationOnce((repo, branch, extras, dir, cwd) => {
+                fs.mkdirSync('dummy/templates/api/deploy/api', {recursive: true});
+                fs.writeFileSync('dummy/templates/api/deploy/api/Dockerfile', 'dummy_content');
+
+                fs.mkdirSync('dummy/templates/web/deploy/web', {recursive: true});
+                fs.writeFileSync('dummy/templates/web/deploy/web/Dockerfile', 'dummy_content');
+                return fs.writeJSON(cwd + '/phovea_product.json', phoveaProduct);
+            }) // first call
             .mockImplementation(() => Promise.resolve(null)); // just resolve promise after the firts call
 
         GeneratorUtils.yo = jest.fn();
+        SpawnUtils.spawnOrAbort = jest.fn();
         return setupWorkspace();
     });
 
@@ -125,7 +135,7 @@ describe('generator setup-workspace', () => {
         assert.jsonFileContent('dummy/.yo-rc-workspace.json', content);
     });
 
-    it('calls GeneratorUtils.yo(..args) with the correct arguments', () => {
+    it('calls `yo phovea:workspace` with the correct arguments', () => {
         const yoArgs = GeneratorUtils.yo.mock.calls;
         expect(yoArgs.length).toBe(1);
         const cmd = yoArgs[0][0];
@@ -133,7 +143,34 @@ describe('generator setup-workspace', () => {
 
         const options = yoArgs[0][1];
         expect(options).toMatchObject({'defaultApp': 'ordino_public', 'skipNextStepsLog': true});
+
+        const args = yoArgs[0][2];
+        expect(args).toBe(null);
+
+        const cwd = yoArgs[0][3];
+        expect(cwd).toBe('dummy');
     });
 
+    it('copies `.idea` template files', () => {
+        let fileContent = template(fs.readFileSync(TestUtils.templatePath('setup-workspace', 'start_defaultapp.tmpl.xml')))({defaultApp: 'ordino_public'});
+        assert.file('dummy/.idea/runConfigurations/start_ordino_public.xml');
+        assert.fileContent('dummy/.idea/runConfigurations/start_ordino_public.xml', fileContent);
 
+        fileContent = template(fs.readFileSync(TestUtils.templatePath('setup-workspace', 'lint_defaultapp.tmpl.xml')))({defaultApp: 'ordino_public'});
+        assert.file('dummy/.idea/runConfigurations/lint_ordino_public.xml');
+        assert.fileContent('dummy/.idea/runConfigurations/lint_ordino_public.xml', fileContent);
+    });
+
+    it('copies products\' template files into the workspace', () => {
+        assert.file('dummy/deploy/api/Dockerfile');
+        assert.file('dummy/deploy/web/Dockerfile');
+    });
+
+    it('calls `SpawnUtils.spawnOrAbort(...args)` with correct args', () => {
+        const [cmd, args, cwd, verbose] = SpawnUtils.spawnOrAbort.mock.calls[0];
+        expect(cmd).toBe('npm');
+        expect(args).toBe('install');
+        expect(cwd).toBe('dummy');
+        expect(verbose).toBe(true);
+    });
 });

@@ -149,7 +149,7 @@ class Generator extends Base {
   }
 
   _customizeWorkspace() {
-    const defaultApp = WorkspaceUtils.findDefaultApp(this.product);
+    const defaultApp = this.defaultApp;
     if (defaultApp) {
       this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${defaultApp}.xml`), {
         defaultApp: defaultApp
@@ -226,6 +226,12 @@ class Generator extends Base {
       .then(this._ifExecutable.bind(this, 'docker-compose', () => SpawnUtils.spawnOrAbort('./docker-backup', 'restore', this.cwd, true), 'please execute: "./docker-backup restore" manually'));
   }
 
+  /**
+   * Checks whether a command/cli tool is installed in the current system and executes provided command.
+   * @param {*} cmd Command to execute
+   * @param {*} ifExists 
+   * @param {*} extraMessage 
+   */
   _ifExecutable(cmd, ifExists, extraMessage = '') {
     const paths = process.env.PATH.split(path.delimiter);
     const pathExt = (process.env.PATHEXT || '').split(path.delimiter);
@@ -250,6 +256,19 @@ class Generator extends Base {
     return ifExists();
   }
 
+  /**
+   * Runs `docker-compose build` if `docker-compose.yml` exists in the workspace and user has installed `dokcer-compose` cli.
+   */
+  _buildDockerCompose() {
+    const file = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
+    const isNotEmpty = file.trim().length > 0;
+    if (isNotEmpty && !this.options.skip.includes('build')) {
+      return this._ifExecutable('docker-compose', () => SpawnUtils.spawnOrAbort('docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
+    }
+
+    return null;
+  }
+
   writing() {
     this.hasErrors = false;
 
@@ -257,23 +276,12 @@ class Generator extends Base {
       .then(GeneratorUtils.mkdir(this.cwd))
       .then(this._getProduct.bind(this))
       .then((repos) => Promise.all(repos.map((r) => WorkspaceUtils.cloneRepo(r.repo, r.branch, null, '', this.cwd, this.cloneSSH))))
-      .then(() => GeneratorUtils.yo('workspace', {
-        defaultApp: this.defaultApp,
-        skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
-      }, null, this.cwd, this.env.adapter))
-      // .then(this._customizeWorkspace.bind(this))
-      // .then(this._downloadDataFiles.bind(this))
-      // .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
-      // .then(this._downloadBackupFiles.bind(this))
-      // .then(() => {
-      //   const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {
-      //     defaults: ''
-      //   });
-      //   if (l.trim().length > 0 && !this.options.skip.includes('build')) {
-      //     return this._ifExecutable('docker-compose', () => SpawnUtils.spawnOrAbort('docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
-      //   }
-      //   return null;
-      // })
+      .then(() => GeneratorUtils.yo('workspace', {defaultApp: this.defaultApp, skipNextStepsLog: true}, null, this.cwd, this.env.adapter))
+      .then(this._customizeWorkspace.bind(this))
+      .then(this._downloadDataFiles.bind(this))
+      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
+      .then(this._downloadBackupFiles.bind(this))
+      .then(this._buildDockerCompose.bind(this))
       .catch((msg) => {
         this.log('\r\n');
         this.log(chalk.red(msg));
@@ -281,7 +289,7 @@ class Generator extends Base {
       });
   }
 
-  _end() {
+  end() {
     if (this.hasErrors) {
       return; // skip next steps on errors
     }

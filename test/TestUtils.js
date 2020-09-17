@@ -8,7 +8,7 @@ module.exports = class TestUtils {
      * @param {string} type Type of template, plain or processed
      */
     static templatePath(subgenerator, fileName, type = '') {
-        return path.join(__dirname, `../generators/${subgenerator}/templates/${type}/${fileName}`);
+        return path.join(__dirname, `../generators/${subgenerator}/templates/${type ? type + '/' : ''}${fileName}`);
     }
 
 };
