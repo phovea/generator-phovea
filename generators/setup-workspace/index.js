@@ -43,7 +43,6 @@ function toDownloadName(url) {
   }
   return url.substring(url.lastIndexOf('/') + 1);
 }
-
 class Generator extends Base {
 
   constructor(args, options) {
@@ -97,6 +96,9 @@ class Generator extends Base {
     });
   }
 
+  /**
+   * Removes/renames files of the cloned product that conflict with the workspace files.
+   */
   _removeUnnecessaryProductFiles() {
     try {
       fs.unlinkSync(this.cwd + '/.yo-rc.json');
@@ -108,15 +110,18 @@ class Generator extends Base {
   }
 
   /**
-   * Copies the template files of the product in the workspace
-   * @param {string} templatePath 
+   * Copies/merges the template files of the product into the workspace.
+   * @param {string} templatePath Path to the template directory of the product.
    */
   _copyProductTemplates(templatePath) {
     const dirs = fs.readdirSync(templatePath).filter(f => fs.statSync(path.join(templatePath, f)).isDirectory());
     dirs.forEach((dir) => fs.copySync(templatePath + '/' + dir, this.destinationPath(this.cwd)));
   }
 
-
+  /**
+   * Clones the product into the workspace and generates the `yo-rc-workspace.json` file.
+   * @returns The parsed phovea_product.json file.
+   */
   _getProduct() {
     return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'master', null, '.', this.cwd, this.cloneSSH)
       .then(() => {
@@ -135,6 +140,10 @@ class Generator extends Base {
       });
   }
 
+  /**
+   * Generates `yo-rc-workspace.json` file
+   * @param {string} defaultApp 
+   */
   _createYoRcWorkspace(defaultApp) {
     const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
     if (!fs.existsSync(yoWorkspacePath && this.defaultApp)) {
@@ -148,14 +157,16 @@ class Generator extends Base {
     }
   }
 
+  /**
+   * Copies the generator's and the product's template files into the workspace.
+   */
   _customizeWorkspace() {
-    const defaultApp = this.defaultApp;
-    if (defaultApp) {
-      this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${defaultApp}.xml`), {
-        defaultApp: defaultApp
+    if (this.defaultApp) {
+      this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${this.defaultApp}.xml`), {
+        defaultApp: this.defaultApp
       });
-      this.fs.copyTpl(this.templatePath('lint_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/lint_${defaultApp}.xml`), {
-        defaultApp: defaultApp
+      this.fs.copyTpl(this.templatePath('lint_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/lint_${this.defaultApp}.xml`), {
+        defaultApp: this.defaultApp
       });
     }
 
@@ -228,9 +239,9 @@ class Generator extends Base {
 
   /**
    * Checks whether a command/cli tool is installed in the current system and executes provided command.
-   * @param {*} cmd Command to execute
-   * @param {*} ifExists 
-   * @param {*} extraMessage 
+   * @param {string} cmd Cmd i.e, `docker-compose`.
+   * @param {Function} ifExists Spawn this command if the cmd is executable.
+   * @param {string} extraMessage Message to log if the cmd was not found.
    */
   _ifExecutable(cmd, ifExists, extraMessage = '') {
     const paths = process.env.PATH.split(path.delimiter);
