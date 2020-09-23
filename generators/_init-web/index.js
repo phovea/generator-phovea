@@ -7,31 +7,7 @@ const fs = require('fs');
 const NpmUtils = require('../../utils/NpmUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const RepoUtils = require('../../utils/RepoUtils');
-
 const known = () => require('../../utils/known');
-
-function toLibraryExternals(moduleNames = [], libraryNames = []) {
-  let r = [];
-  moduleNames.forEach((m) => {
-    const plugin = known().plugin.byName(m);
-    if (!plugin) {
-      this.log('cant find plugin: ', m);
-      return;
-    }
-    r.push(...(plugin.externals || []));
-    libraryNames.push(...(plugin.libraries || []));
-  });
-  libraryNames.forEach((l) => {
-    const lib = known().lib.byName(l);
-    if (!lib) {
-      this.log('cant find library: ', l);
-      return;
-    }
-    r.push(lib.name);
-    r.push(...(lib.externals || []));
-  });
-  return Array.from(new Set(r));
-}
 
 class Generator extends Base {
 
@@ -82,7 +58,7 @@ class Generator extends Base {
         this.config.set('libraries', props.libraries);
       }
       this.config.set('libraryAliases', RepoUtils.toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
-      this.config.set('libraryExternals', toLibraryExternals.call(this, this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryExternals',  RepoUtils.toLibraryExternals(this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
@@ -144,4 +120,3 @@ class Generator extends Base {
 }
 
 module.exports = Generator;
-module.exports.toLibraryExternals = toLibraryExternals;

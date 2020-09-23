@@ -2,6 +2,51 @@
 const RepoUtils = require('../utils/RepoUtils');
 const fs = require('fs-extra');
 const path = require('path');
+const known = require('../utils/known');
+
+jest.mock('../utils/known', () => {
+    return {
+        plugin: {
+            byName: jest.fn()
+        },
+        lib: {
+            byName: jest.fn()
+        }
+    };
+});
+
+const mockedPlugin = {
+    name: 'phovea_core',
+    libraries: [
+        "d3"
+    ],
+    externals: [
+        'bootstrap-sass'
+    ]
+};
+
+const mockedLib = {
+    name: 'font-awesome',
+    libraries: [
+        "jquery",
+    ],
+    externals: [
+        'marked'
+    ],
+    aliases: {
+        'd3': "d3/d3",
+        'font-awesome': 'fw/font-awesome'
+    }
+
+};
+
+known.plugin.byName.mockImplementation(() => {
+    return mockedPlugin;
+});
+known.lib.byName.mockImplementation(() => {
+    return mockedLib;
+});
+
 
 describe('transfroms repo name to an https url', () => {
 
@@ -139,32 +184,11 @@ describe('parse phovea_product.json', () => {
 });
 
 
-describe('test toLibraryAliasMap()', () => {
-
-    const mockedAliases = {
+describe('test toLibraryAliasMap works as expected', () => {
+    const aliases = {
         'd3': "d3/d3",
         'font-awesome': 'fw/font-awesome'
     };
-
-    jest.mock('../utils/known', () => {
-        return {
-            plugin: {
-                byName: () => {
-                    return {
-                        aliases: mockedAliases
-                    };
-                }
-            },
-            lib: {
-                byName: () => {
-                    return {
-                        aliases: mockedAliases
-                    };
-                }
-            }
-        };
-    });
-
 
     it('finds the correct aliases of the modules and libraries', () => {
         const moduleNames = [
@@ -176,15 +200,34 @@ describe('test toLibraryAliasMap()', () => {
         const libraryNames = [
             'd3',
             'd3v5',
-            'lineupjs', 'font-awesome',
-            'bootstrap', 'select2',
-            'd3', 'jquery',
+            'lineupjs',
+            'bootstrap',
+            'd3',
         ];
-        expect(RepoUtils.toLibraryAliasMap(moduleNames, libraryNames)).toMatchObject(mockedAliases);
+        expect(RepoUtils.toLibraryAliasMap(moduleNames, libraryNames)).toMatchObject(aliases);
     });
 
     it('returns an empty object if no modules or libraries are provided', () => {
-
         expect(RepoUtils.toLibraryAliasMap([], [])).toMatchObject({});
+    });
+});
+
+describe('test toLibraryExternals', () => {
+
+    it('finds the correct extrernals of the provided modules and libraries', () => {
+        const moduleNames = [
+            'phovea_core',
+            'phovea_d3',
+            'phovea_ui',
+            'phovea_importer',
+        ];
+        const libraryNames = [
+            'd3',
+            'd3v5',
+            'lineupjs',
+            'bootstrap',
+            'd3',
+        ];
+        expect(RepoUtils.toLibraryExternals(moduleNames, libraryNames)).toStrictEqual(['bootstrap-sass', 'font-awesome', 'marked']);
     });
 });
