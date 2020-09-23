@@ -5,6 +5,7 @@ const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
 const fs = require('fs');
 const NpmUtils = require('../../utils/NpmUtils');
+const SpawnUtils = require('../../utils/SpawnUtils');
 
 const known = () => require('../../utils/known');
 
@@ -147,8 +148,7 @@ class Generator extends Base {
 
   install() {
     if (this.options.options.install) {
-      const options = this.cwd ? {cwd: this.cwd} : {};
-      this.spawnCommand("npm", ["install"], options);
+      SpawnUtils.spawn('npm', 'install', this.cwd, true);
     }
   }
 
