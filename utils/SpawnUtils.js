@@ -32,7 +32,7 @@ module.exports = class SpawnUtils {
      */
     static spawn(cmd, argline, cwd, verbose) {
         const options = {
-            ...{cwd: cwd} || {},
+            ...cwd ? {cwd} : {},
             ...verbose ? {stdio: 'inherit'} : {}
         };
 
