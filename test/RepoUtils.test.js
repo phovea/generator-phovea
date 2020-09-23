@@ -137,3 +137,54 @@ describe('parse phovea_product.json', () => {
         expect(RepoUtils.parsePhoveaProduct(dummyProduct)).toStrictEqual(result);
     });
 });
+
+
+describe('test toLibraryAliasMap()', () => {
+
+    const mockedAliases = {
+        'd3': "d3/d3",
+        'font-awesome': 'fw/font-awesome'
+    };
+
+    jest.mock('../utils/known', () => {
+        return {
+            plugin: {
+                byName: () => {
+                    return {
+                        aliases: mockedAliases
+                    };
+                }
+            },
+            lib: {
+                byName: () => {
+                    return {
+                        aliases: mockedAliases
+                    };
+                }
+            }
+        };
+    });
+
+
+    it('finds the correct aliases of the modules and libraries', () => {
+        const moduleNames = [
+            'phovea_core',
+            'phovea_d3',
+            'phovea_ui',
+            'phovea_importer',
+        ];
+        const libraryNames = [
+            'd3',
+            'd3v5',
+            'lineupjs', 'font-awesome',
+            'bootstrap', 'select2',
+            'd3', 'jquery',
+        ];
+        expect(RepoUtils.toLibraryAliasMap(moduleNames, libraryNames)).toMatchObject(mockedAliases);
+    });
+
+    it('returns an empty object if no modules or libraries are provided', () => {
+
+        expect(RepoUtils.toLibraryAliasMap([], [])).toMatchObject({});
+    });
+});

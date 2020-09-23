@@ -1,4 +1,5 @@
-const known = require('./known');
+const known = () => require('./known');
+const _ = require('lodash');
 
 module.exports = class RepoUtils {
 
@@ -96,7 +97,7 @@ module.exports = class RepoUtils {
   }
 
   static toRepository(plugin, useSSH) {
-    const p = known.plugin.byName(plugin);
+    const p = known().plugin.byName(plugin);
     return useSSH ? RepoUtils.RtoSSHRepoUrl(p.repository) : RepoUtils.toHTTPRepoUrl(p.repository);
   }
   /**
@@ -127,5 +128,31 @@ module.exports = class RepoUtils {
       });
     });
     return repos;
+  }
+
+  /**
+   * Finds the aliases of the selected modules and libraries.
+   * @param {string[]} moduleNames Array of modules, i.e, `['phovea_clue', 'phovea_core']`
+   * @param {string[]} libraryNames 
+   */
+  static toLibraryAliasMap(moduleNames = [], libraryNames = []) {
+    let r = {};
+    moduleNames.forEach((m) => {
+      const plugin = known().plugin.byName(m);
+      if (!plugin) {
+        console.log('cant find plugin: ', m);
+        return;
+      }
+      libraryNames.push(...(plugin.libraries || []));
+    });
+    libraryNames.forEach((l) => {
+      const lib = known().lib.byName(l);
+      if (!lib) {
+        console.log('cant find library: ', l);
+        return;
+      }
+      _.merge(r, lib.aliases);
+    });
+    return r;
   }
 };

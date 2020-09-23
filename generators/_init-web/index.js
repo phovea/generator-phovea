@@ -6,29 +6,9 @@ const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils')
 const fs = require('fs');
 const NpmUtils = require('../../utils/NpmUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
+const RepoUtils = require('../../utils/RepoUtils');
 
 const known = () => require('../../utils/known');
-
-function toLibraryAliasMap(moduleNames = [], libraryNames = []) {
-  let r = {};
-  moduleNames.forEach((m) => {
-    const plugin = known().plugin.byName(m);
-    if (!plugin) {
-      this.log('cant find plugin: ', m);
-      return;
-    }
-    libraryNames.push(...(plugin.libraries || []));
-  });
-  libraryNames.forEach((l) => {
-    const lib = known().lib.byName(l);
-    if (!lib) {
-      this.log('cant find library: ', l);
-      return;
-    }
-    _.merge(r, lib.aliases);
-  });
-  return r;
-}
 
 function toLibraryExternals(moduleNames = [], libraryNames = []) {
   let r = [];
@@ -101,7 +81,7 @@ class Generator extends Base {
         this.config.set('modules', props.modules);
         this.config.set('libraries', props.libraries);
       }
-      this.config.set('libraryAliases', toLibraryAliasMap.call(this, this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryAliases', RepoUtils.toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
       this.config.set('libraryExternals', toLibraryExternals.call(this, this.config.get('modules'), this.config.get('libraries')));
     });
   }
@@ -164,5 +144,4 @@ class Generator extends Base {
 }
 
 module.exports = Generator;
-module.exports.toLibraryAliasMap = toLibraryAliasMap;
 module.exports.toLibraryExternals = toLibraryExternals;

@@ -1,7 +1,8 @@
 'use strict';
 const Base = require('../../utils').Base;
 const known = () => require('../../utils/known');
-const {toLibraryAliasMap, toLibraryExternals} = require('../_init-web');
+const {toLibraryExternals} = require('../_init-web');
+const RepoUtils = require('../../utils/RepoUtils');
 
 class Generator extends Base {
 
@@ -31,7 +32,7 @@ class Generator extends Base {
         this.config.set('modules', props.modules);
         this.config.set('libraries', props.libraries);
       }
-      this.config.set('libraryAliases', toLibraryAliasMap.call(this, this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryAliases', RepoUtils.toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
       this.config.set('libraryExternals', toLibraryExternals.call(this, this.config.get('modules'), this.config.get('libraries')));
     });
   }
