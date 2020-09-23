@@ -11,7 +11,7 @@ module.exports = class SpawnUtils {
      * @param {string} cwd The directory in Which the command should be excecuted.
      */
     static spawnOrAbort(cmd, argline, cwd, verbose) {
-        const result = SpawnUtils.spawn(cmd, argline, cwd, verbose);
+        const result = SpawnUtils.spawnSync(cmd, argline, cwd, verbose);
         const stdout = result.stdout;
         if (SpawnUtils.failed(result)) {
             console.log(result.stderr.toString());
@@ -30,7 +30,7 @@ module.exports = class SpawnUtils {
      * @param {string | string[]} argline Arguments to execute the command with.
      * @param {string} cwd The directory in Which the command should be excecuted.
      */
-    static spawn(cmd, argline, cwd, verbose) {
+    static spawnSync(cmd, argline, cwd, verbose) {
         const options = {
             ...cwd ? {cwd} : {},
             ...verbose ? {stdio: 'inherit'} : {}

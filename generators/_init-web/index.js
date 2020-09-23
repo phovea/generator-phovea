@@ -148,7 +148,7 @@ class Generator extends Base {
 
   install() {
     if (this.options.options.install) {
-      SpawnUtils.spawn('npm', 'install', this.cwd, true);
+      SpawnUtils.spawnSync('npm', 'install', this.cwd, true);
     }
   }
 

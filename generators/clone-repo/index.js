@@ -108,7 +108,7 @@ class Generator extends Base {
 
         const line = `ls-remote --tags ${repoUrl}`;
         this.log(chalk.white(`fetching possible version tags:`), `git ${line}`);
-        const r = SpawnUtils.spawn('git', line.split(/ +/), this.cwd);
+        const r = SpawnUtils.spawnSync('git', line.split(/ +/), this.cwd);
 
         if (SpawnUtils.failed(r)) {
           this.log(chalk.red(`failed to fetch list of tags from git repository`), `status code: ${r.status}`);

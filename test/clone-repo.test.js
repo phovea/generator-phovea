@@ -77,8 +77,8 @@ describe('call clone-repo with an advanced version tag', () => {
 
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
-        SpawnUtils.spawn = jest.fn();
-        SpawnUtils.spawn.mockImplementation(() => {
+        SpawnUtils.spawnSync = jest.fn();
+        SpawnUtils.spawnSync.mockImplementation(() => {
             return {
                 status: 0,
                 stdout: `
@@ -95,7 +95,7 @@ describe('call clone-repo with an advanced version tag', () => {
     });
 
     it('calls function spawnOrAbort() once with the the correctly resolved version tag', () => {
-        expect(SpawnUtils.spawn.mock.calls.length).toBe(1);
+        expect(SpawnUtils.spawnSync.mock.calls.length).toBe(1);
         const cmd = SpawnUtils.spawnOrAbort.mock.calls[0][0];
         expect(cmd).toBe('git');
 
@@ -112,8 +112,8 @@ describe('call clone-repo with an advanced version tag and no remote', () => {
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
         SpawnUtils.abort = jest.fn();
-        SpawnUtils.spawn = jest.fn();
-        SpawnUtils.spawn.mockImplementation(() => {
+        SpawnUtils.spawnSync = jest.fn();
+        SpawnUtils.spawnSync.mockImplementation(() => {
             return {
                 status: 128,
                 stderr: `some error`
@@ -140,8 +140,8 @@ describe('call clone-repo with an advanced version tag that does not resolve to 
     beforeAll(() => {
         SpawnUtils.spawnOrAbort = jest.fn();
         SpawnUtils.abort = jest.fn();
-        SpawnUtils.spawn = jest.fn();
-        SpawnUtils.spawn.mockImplementation(() => {
+        SpawnUtils.spawnSync = jest.fn();
+        SpawnUtils.spawnSync.mockImplementation(() => {
             return {
                 status: 0,
                 stdout: `
