@@ -7,6 +7,7 @@ const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const TestUtils = require('./TestUtils');
 const {template} = require('lodash');
+const SpawnUtils = require('../utils/SpawnUtils');
 
 /**
  * Directory name to run the generator
@@ -36,8 +37,16 @@ const unExpectedFiles = [
   'index.js'
 ];
 
+/**
+ * Run yo phovea:init-lib in dir
+ */
+const runInitLib = () => helpers
+  .run(path.join(__dirname, '../generators/init-lib'))
+  .withGenerators(GENERATOR_DEPENDENCIES)
+  .inDir(path.join(__dirname, target), () => null);
 
-describe('generate lib plugin with default prompt values', () => {
+
+describe('Generate lib plugin with default prompt values', () => {
 
   /**
    * package.tmpl.json template of the _init-web subgenerator
@@ -50,10 +59,7 @@ describe('generate lib plugin with default prompt values', () => {
   const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
-    return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
-      .inDir(path.join(__dirname, target), () => null)
-      .withGenerators(GENERATOR_DEPENDENCIES);
+    return runInitLib();
   });
 
   afterAll(() => {
@@ -100,11 +106,7 @@ describe('Generate plugin with name `phovea_core`', () => {
   };
 
   beforeAll(() => {
-    return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
-      .inDir(path.join(__dirname, target), () => null)
-      .withPrompts(prompts)
-      .withGenerators(GENERATOR_DEPENDENCIES);
+    return runInitLib().withPrompts(prompts);
   });
 
   afterAll(() => {
@@ -114,5 +116,33 @@ describe('Generate plugin with name `phovea_core`', () => {
   it('generates `phovea_registry.js` with import statement adapted for `phovea_core`', () => {
     const phoveaRegistryTmpl = template(fse.readFileSync(TestUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
     assert.fileContent('phovea_registry.js', phoveaRegistryTmpl);
+  });
+});
+
+describe('Test options of yo phovea:init-lib', () => {
+
+  const prompts = {
+    name: 'phovea_core'
+  };
+
+  const options = {
+    install: true
+  };
+
+  beforeAll(() => {
+    SpawnUtils.spawnSync = jest.fn();
+    return runInitLib()
+      .withPrompts(prompts)
+      .withOptions(options);
+  });
+
+  afterAll(() => {
+    rimraf.sync(path.join(__dirname, target));
+  });
+
+  it('runs npm install', () => {
+    expect(SpawnUtils.spawnSync.mock.calls.length).toBe(1);
+    const [cmd, args, cwd, verbose] = SpawnUtils.spawnSync.mock.calls[0];
+    expect([cmd, args, cwd, verbose]).toStrictEqual(['npm', 'install', '', true]);
   });
 });
