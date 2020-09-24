@@ -36,32 +36,7 @@ function patchPackageJSON(config, unset, extra, replaceExtra, cwd = '') {
   this.fs.writeJSON(this.destinationPath(cwd + 'package.json'), pkg);
 }
 
-function stringifyInline(obj, space) {
-  let base = JSON.stringify(obj, null, ' ');
-  // common style
-  base = base.replace(/"/g, '\'');
-  // prefix with space
-  base = base.split('\n').map((l) => space + l).join('\n');
-  return base.substring(space.length); // skip the first space
-}
 
-function stringifyAble(config) {
-  return Object.assign({
-    stringifyPython: (obj, space) => {
-      let base = stringifyInline(obj, space);
-      // python different true false
-      base = base.replace(/: true/g, ': True').replace(/: false/g, ': False');
-      return base;
-    },
-    stringify: stringifyInline,
-    isWeb: (p) => {
-      const {
-        plugin
-      } = require('./known');
-      return plugin.isTypeWeb(p);
-    }
-  }, config);
-}
 
 /**
  * Copies the template files to the current directory or to a subdirectory if `cwd` is provided.
@@ -77,7 +52,7 @@ function writeTemplates(config, withSamples, cwd = '') {
     }
   };
 
-  const pattern = stringifyAble(config);
+  const pattern = GeneratorUtils.stringifyAble(config);
 
   const copyTpl = (base, dbase, initialize_once) => {
     // see https://github.com/SBoudrias/mem-fs-editor/issues/25
@@ -257,5 +232,4 @@ module.exports = {
   BaseHybrid: BaseInitHybridGenerator,
   patchPackageJSON: patchPackageJSON,
   writeTemplates: writeTemplates,
-  stringifyAble: stringifyAble
 };

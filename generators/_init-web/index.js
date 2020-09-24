@@ -2,11 +2,12 @@
 const _ = require('lodash');
 const chalk = require('chalk');
 const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
+const {writeTemplates, patchPackageJSON} = require('../../utils');
 const fs = require('fs');
 const NpmUtils = require('../../utils/NpmUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const RepoUtils = require('../../utils/RepoUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 const known = () => require('../../utils/known');
 
 class Generator extends Base {
@@ -98,7 +99,7 @@ class Generator extends Base {
 
     // do not overwrite existing registry file
     if (!fs.existsSync(this.destinationPath(this.cwd + 'src/phovea.ts'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath(this.cwd + 'src/phovea.ts'), stringifyAble(config));
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath(this.cwd + 'src/phovea.ts'), GeneratorUtils.stringifyAble(config));
     }
   }
 

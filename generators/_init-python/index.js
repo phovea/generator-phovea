@@ -1,9 +1,10 @@
 'use strict';
 const _ = require('lodash');
 const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON, stringifyAble} = require('../../utils');
+const {writeTemplates, patchPackageJSON} = require('../../utils');
 const PipUtils = require('../../utils/PipUtils');
 const NpmUtils = require('../../utils/NpmUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 const fs = require('fs');
 
 const known = () => require('../../utils/known');
@@ -118,7 +119,7 @@ class Generator extends Base {
 
     // don't overwrite existing registry file
     if (!fs.existsSync(this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'))) {
-      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'), stringifyAble(config));
+      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'), GeneratorUtils.stringifyAble(config));
     }
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
     this.fs.copy(this.templatePath('docs_gitignore'), this.destinationPath(this.cwd + 'docs/.gitignore'));

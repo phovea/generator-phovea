@@ -2,11 +2,11 @@
 const Base = require('yeoman-generator');
 
 const plugins = require('../../utils/types').plugin;
-const stringifyAble = require('../../utils').stringifyAble;
 const path = require('path');
 const fs = require('fs');
 const glob = require('glob').sync;
 const chalk = require('chalk');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 function toJSONFromText(text) {
   const r = {};
@@ -182,7 +182,7 @@ class Generator extends Base {
     this._writeConfig(this.cwd, basekey, arr);
     // inject new extension
 
-    const d = stringifyAble(this.new_);
+    const d = GeneratorUtils.stringifyAble(this.new_);
 
     if (this.basetype === 'web') {
       this._injectWebExtension(d, this.cwd);

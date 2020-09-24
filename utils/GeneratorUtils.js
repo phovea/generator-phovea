@@ -28,7 +28,7 @@ module.exports = class GeneratorUtils {
         const _args = Array.isArray(args) ? args.join(' ') : args || '';
         return new Promise((resolve, reject) => {
             try {
-              console.log(`Running: yo phovea:${generator} ${_args}`);
+                console.log(`Running: yo phovea:${generator} ${_args}`);
                 env.lookup(() => {
                     env.run(`phovea:${generator} ${_args}`, options || {}, () => {
                         // wait a second after running yo to commit the files correctly
@@ -40,5 +40,41 @@ module.exports = class GeneratorUtils {
                 reject(e);
             }
         });
+    }
+
+    /**
+     * Creates object with custom formatting functions that can be called inside a template file when copying a template.
+     * @param {{}} config Config file
+     */
+    static stringifyAble(config) {
+        return Object.assign({
+            stringifyPython: (obj, space) => {
+                let base = GeneratorUtils.stringifyInline(obj, space);
+                // python different true false
+                base = base.replace(/: true/g, ': True').replace(/: false/g, ': False');
+                return base;
+            },
+            stringify: GeneratorUtils.stringifyInline,
+            isWeb: (p) => {
+                const {
+                    plugin
+                } = require('./known');
+                return plugin.isTypeWeb(p);
+            }
+        }, config);
+    }
+
+    /**
+     * Stringifies object and applies custom formatting.
+     * @param {{}} obj Object to stringify.
+     * @param {string} space String containing the spaces to use to fromat stringified object.
+     */
+    static stringifyInline(obj, space) {
+        let base = JSON.stringify(obj, null, ' ');
+        // common style
+        base = base.replace(/"/g, '\'');
+        // prefix with space
+        base = base.split('\n').map((l) => space + l).join('\n');
+        return base.substring(space.length); // skip the first space
     }
 };
