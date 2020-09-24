@@ -39,7 +39,9 @@ const setupWorkspace = () => helpers
 describe('generator setup-workspace', () => {
     const phoveaProduct = fs.readJSONSync(path.join(__dirname, `templates/phovea_product_dummy.json`));
     beforeAll(() => {
+        // mock the clone-repo function
         WorkspaceUtils.cloneRepo = jest.fn()
+            // first call
             .mockImplementationOnce((repo, branch, extras, dir, cwd) => {
                 fs.mkdirSync('dummy/templates/api/deploy/api', {recursive: true});
                 fs.writeFileSync('dummy/templates/api/deploy/api/Dockerfile', 'dummy_content');
@@ -47,7 +49,7 @@ describe('generator setup-workspace', () => {
                 fs.mkdirSync('dummy/templates/web/deploy/web', {recursive: true});
                 fs.writeFileSync('dummy/templates/web/deploy/web/Dockerfile', 'dummy_content');
                 return fs.writeJSON(cwd + '/phovea_product.json', phoveaProduct);
-            }) // first call
+            })
             .mockImplementation(() => Promise.resolve(null)); // just resolve promise after the firts call
 
         GeneratorUtils.yo = jest.fn();
@@ -63,53 +65,18 @@ describe('generator setup-workspace', () => {
         expect(WorkspaceUtils.cloneRepo.mock.calls.length).toBe(13);
     });
 
-
     it('clones product by calling `WorkspaceUtils.cloneRepo(...args)` with the correct args', () => {
-        const cloneRepoArgs = WorkspaceUtils.cloneRepo.mock.calls;
-
-        const productRepo = cloneRepoArgs[0][0];
-        expect(productRepo).toBe(product);
-
-        const branch = cloneRepoArgs[0][1];
-        expect(branch).toBe('develop');
-
-        const extra = cloneRepoArgs[0][2];
-        expect(extra).toBe(null);
-
-        const target = cloneRepoArgs[0][3];
-        const currentDir = '.';
-        expect(target).toBe(currentDir);
-
-        const cwd = cloneRepoArgs[0][4];
-        expect(cwd).toBe('dummy');
-
-        const ssh = cloneRepoArgs[0][5];
-        expect(ssh).toBe(true);
+        const [productRepo, branch, extra, target, cwd, ssh] = WorkspaceUtils.cloneRepo.mock.calls[0];
+        expect([productRepo, branch, extra, target, cwd, ssh]).toStrictEqual([product, 'develop', null, '.', 'dummy', true]);
     });
 
     it('clones all plugins by calling `WorkspaceUtils.cloneRepo(...args)` with the correct args', () => {
         const cloneRepoArgs = WorkspaceUtils.cloneRepo.mock.calls;
         RepoUtils.parsePhoveaProduct(phoveaProduct).forEach((plugin, i) => {
             const index = i + 1; // skip the product cloning call
-            const name = cloneRepoArgs[index][0];
-            expect(name).toBe(plugin.repo);
-
-            const branch = cloneRepoArgs[index][1];
-            expect(branch).toBe(plugin.branch);
-
-            const extra = cloneRepoArgs[index][2];
-            expect(extra).toBe(null);
-
-            const target = cloneRepoArgs[index][3];
-            expect(target).toBe('');
-
-            const cwd = cloneRepoArgs[index][4];
-            expect(cwd).toBe('dummy');
-
-            const ssh = cloneRepoArgs[index][5];
-            expect(ssh).toBe(true);
+            const [name, branch, extra, target, cwd, ssh] = cloneRepoArgs[index];
+            expect([name, branch, extra, target, cwd, ssh]).toStrictEqual([plugin.repo, plugin.branch, null, '', 'dummy', true]);
         });
-
     });
 
     it('creates valid `.yo-rc-workspace.json`', () => {
@@ -136,19 +103,10 @@ describe('generator setup-workspace', () => {
     });
 
     it('calls `yo phovea:workspace` with the correct arguments', () => {
-        const yoArgs = GeneratorUtils.yo.mock.calls;
-        expect(yoArgs.length).toBe(1);
-        const cmd = yoArgs[0][0];
-        expect(cmd).toBe('workspace');
-
-        const options = yoArgs[0][1];
-        expect(options).toMatchObject({'defaultApp': 'ordino_public', 'skipNextStepsLog': true});
-
-        const args = yoArgs[0][2];
-        expect(args).toBe(null);
-
-        const cwd = yoArgs[0][3];
-        expect(cwd).toBe('dummy');
+        const yoArguments = GeneratorUtils.yo.mock.calls;
+        expect(yoArguments.length).toBe(1);
+        const [generator, options, args, cwd] = yoArguments[0];
+        expect([generator, options, args, cwd]).toStrictEqual(['workspace', {'defaultApp': 'ordino_public', 'skipNextStepsLog': true}, null, 'dummy']);
     });
 
     it('copies `.idea` template files', () => {
@@ -168,9 +126,6 @@ describe('generator setup-workspace', () => {
 
     it('calls `SpawnUtils.spawnOrAbort(...args)` with correct args', () => {
         const [cmd, args, cwd, verbose] = SpawnUtils.spawnOrAbort.mock.calls[0];
-        expect(cmd).toBe('npm');
-        expect(args).toBe('install');
-        expect(cwd).toBe('dummy');
-        expect(verbose).toBe(true);
+        expect([cmd, args, cwd, verbose]).toStrictEqual(['npm', 'install', 'dummy', true]);
     });
 });
