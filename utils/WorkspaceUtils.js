@@ -129,4 +129,19 @@ module.exports = class WorkspaceUtils {
     return WorkspaceUtils.resolveNeighbors(plugins, useSSH, types, destinationPath);
   }
 
+
+  /**
+   * Creates an array of additional plugins depending on the type.
+   * @param {string} type Type of the plugin. `web, static, python`
+   */
+  static buildPossibleAdditionalPlugins(type) {
+    const toDescription = (d) => ({
+      value: {name: d.name, repo: RepoUtils.simplifyRepoUrl(d.repository)},
+      name: `${d.name}: ${d.description}`,
+      short: d.name
+    });
+
+    const plugins = known.plugin;
+    return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
+  }
 };

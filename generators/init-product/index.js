@@ -3,22 +3,11 @@
  */
 const Base = require('yeoman-generator');
 const {writeTemplates, patchPackageJSON} = require('../../utils');
-const RepoUtils = require('../../utils/RepoUtils');
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
 const chalk = require('chalk');
 const fs = require('fs');
 
 const isRequired = (v) => v.toString().length > 0;
-
-function buildPossibleAdditionalPlugins(type) {
-  const toDescription = (d) => ({
-    value: {name: d.name, repo: RepoUtils.simplifyRepoUrl(d.repository)},
-    name: `${d.name}: ${d.description}`,
-    short: d.name
-  });
-
-  const plugins = require('../../utils/known').plugin;
-  return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
-}
 
 class Generator extends Base {
 
@@ -95,7 +84,7 @@ class Generator extends Base {
       name: 'additional',
       type: 'checkbox',
       message: 'additional plugins: ',
-      choices: (act) => buildPossibleAdditionalPlugins(act.type)
+      choices: (act) => WorkspaceUtils.buildPossibleAdditionalPlugins(act.type)
     }, {
       name: 'custom',
       type: 'confirm',
