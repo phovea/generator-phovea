@@ -58,7 +58,7 @@ class Generator extends Base {
         this.config.set('libraries', props.libraries);
       }
       this.config.set('libraryAliases', RepoUtils.toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
-      this.config.set('libraryExternals',  RepoUtils.toLibraryExternals(this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryExternals', RepoUtils.toLibraryExternals(this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
@@ -112,9 +112,9 @@ class Generator extends Base {
     if (fs.existsSync(this.destinationPath(this.cwd + 'phovea.js'))) {
       this.log('\r\n');
       this.log(chalk.red(`ACTION REQUIRED!`));
-      this.log(chalk.green(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.green(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.green(` now!`));
-      this.log(chalk.green(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.green(`file from this plugin repository.`));
-      this.log(chalk.green(`If you do not migrate the content the registered extension points will be unavailable.`));
+      this.log(chalk.white(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.white(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.white(` now!`));
+      this.log(chalk.white(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.white(`file from this plugin repository.`));
+      this.log(chalk.white(`If you do not migrate the content the registered extension points will be unavailable.`));
     }
   }
 }
