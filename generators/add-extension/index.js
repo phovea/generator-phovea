@@ -187,7 +187,7 @@ class Generator extends Base {
 
     if (fs.existsSync(cwd + 'src/phovea.ts')) {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
-      importFunction = `() => System.import('${absFile}')`; // TODO remove System.import for Typescript case when switching to Webpack 4 (see https://github.com/phovea/generator-phovea/issues/286#issuecomment-566553497)
+      importFunction = `() => import('${absFile}')`; 
     } else {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
       importFunction = `function() { return import('${absFile}'); }`;
