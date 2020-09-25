@@ -1,10 +1,10 @@
 'use strict';
-const RepoUtils = require('../utils/RepoUtils');
+const RepoUtils = require('../../utils/RepoUtils');
 const fs = require('fs-extra');
 const path = require('path');
-const known = require('../utils/known');
+const known = require('../../utils/known');
 
-jest.mock('../utils/known', () => {
+jest.mock('../../utils/known', () => {
     return {
         plugin: {
             byName: jest.fn()
@@ -177,7 +177,7 @@ describe('parse phovea_product.json', () => {
         {repo: 'phovea/phovea_data_mongo', branch: 'develop'}
     ];
 
-    const dummyProduct = fs.readJSONSync(path.join(__dirname, `test-utils/templates/phovea_product_dummy.json`));
+    const dummyProduct = fs.readJSONSync(path.join(__dirname, `../test-utils/templates/phovea_product_dummy.json`));
     it('resulting object has correct structure', () => {
         expect(RepoUtils.parsePhoveaProduct(dummyProduct)).toStrictEqual(result);
     });

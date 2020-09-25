@@ -1,9 +1,8 @@
 'use strict';
-const GeneratorUtils = require('../utils/GeneratorUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 
 describe('Test `stringifyInline()` correctly stringifies object', () => {
-
 
     it('adds 1 space', () => {
         const obj = {key1: 'value1', key2: 'value2'};

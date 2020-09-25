@@ -1,5 +1,5 @@
 'use strict';
-const NpmUtils = require('../utils/NpmUtils');
+const NpmUtils = require('../../utils/NpmUtils');
 
 
 describe('mergeVersions list of versions with github or gitlab version tags', () => {

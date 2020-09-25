@@ -1,5 +1,5 @@
 'use strict';
-const PipUtils = require('../utils/PipUtils');
+const PipUtils = require('../../utils/PipUtils');
 
 describe('find intersection list of pip versions', () => {
     const pipPackage = 'alembic';

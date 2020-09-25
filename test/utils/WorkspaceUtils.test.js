@@ -1,6 +1,6 @@
 'use strict';
-const WorkspaceUtils = require('../utils/WorkspaceUtils');
-jest.mock('../utils/known');
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
+jest.mock('../../utils/known');
 
 describe('Find default app in product object', () => {
 
@@ -58,7 +58,7 @@ describe('Find default app in product object', () => {
 describe('Test `buildPossibleAdditionalPlugins()`', () => {
 
 
-    const known = require('../utils/known');
+    const known = require('../../utils/known');
     known.plugin = {
         listWeb: [{
             "name": "phovea_core",
