@@ -1,7 +1,8 @@
 'use strict';
-const BasePluginGenerator = require('../../utils').BasePython;
 
-class Generator extends BasePluginGenerator {
+const BaseInitServerGenerator = require("../../base/BaseInitServerGenerator");
+
+class Generator extends BaseInitServerGenerator {
   initializing() {
     super.initializing();
     this.config.defaults({

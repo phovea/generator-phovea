@@ -1,16 +1,15 @@
 'use strict';
 const _ = require('lodash');
 const chalk = require('chalk');
-const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON} = require('../../utils');
 const fs = require('fs');
 const NpmUtils = require('../../utils/NpmUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const RepoUtils = require('../../utils/RepoUtils');
 const GeneratorUtils = require('../../utils/GeneratorUtils');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 const known = () => require('../../utils/known');
 
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
 
   constructor(args, options) {
     super(args, options);
@@ -91,11 +90,11 @@ class Generator extends Base {
     this.cwd = this.options.isWorkspace ? (config.app || config.name) + '/' : '';
     const {version} = this.fs.readJSON(this.destinationPath(this.cwd + 'package.json'), {version: '1.0.0'});
 
-    patchPackageJSON.call(this, config, [], {
+    this._patchPackageJSON(config, [], {
       dependencies: this._generateDependencies(NpmUtils.useDevVersion(version))
     }, null, this.cwd);
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
-    writeTemplates.call(this, config, null, this.cwd);
+    this._writeTemplates.call(this, config, null, this.cwd);
 
     // do not overwrite existing registry file
     if (!fs.existsSync(this.destinationPath(this.cwd + 'src/phovea.ts'))) {

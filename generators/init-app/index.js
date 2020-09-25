@@ -1,8 +1,8 @@
 'use strict';
-const BasePluginGenerator = require('../../utils').Base;
+const BaseInitPluginGenerator = require('../../base/BaseInitPluginGenerator');
 const chalk = require('chalk');
 
-class PluginGenerator extends BasePluginGenerator {
+class PluginGenerator extends BaseInitPluginGenerator {
 
   initializing() {
     super.initializing();

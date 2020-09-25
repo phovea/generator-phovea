@@ -1,5 +1,4 @@
 'use strict';
-const Base = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const chalk = require('chalk');
@@ -8,10 +7,9 @@ const _ = require('lodash');
 const fs = require('fs');
 
 const known = () => require('../../utils/known');
-const writeTemplates = require('../../utils').writeTemplates;
-const patchPackageJSON = require('../../utils').patchPackageJSON;
 const NpmUtils = require('../../utils/NpmUtils');
 const PipUtils = require('../../utils/PipUtils');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -42,7 +40,7 @@ function rewriteDockerCompose(compose) {
   return compose;
 }
 
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
 
   constructor(args, options) {
     super(args, options);
@@ -498,9 +496,9 @@ class Generator extends Base {
     config.wsDescription = this.options.wsDescription;
     config.wsVersion = this.options.wsVersion;
 
-    writeTemplates.call(this, config, false);
+    this._writeTemplates(config, false);
     // replace the added entries
-    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts, watch}, true);
+    this._patchPackageJSON(config, [], {devDependencies, dependencies, scripts, watch}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));

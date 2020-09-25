@@ -1,15 +1,14 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON} = require('../../utils');
 const PipUtils = require('../../utils/PipUtils');
 const NpmUtils = require('../../utils/NpmUtils');
 const GeneratorUtils = require('../../utils/GeneratorUtils');
 const fs = require('fs');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
 const known = () => require('../../utils/known');
 
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
   constructor(args, options) {
     super(args, options);
 
@@ -111,8 +110,8 @@ class Generator extends Base {
     const {version} = this.fs.readJSON(this.destinationPath(this.cwd + 'package.json'), {version: '1.0.0'});
     const deps = this._generateDependencies(NpmUtils.useDevVersion(version), this.cwd);
 
-    patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
-    writeTemplates.call(this, config, !this.options.noSamples, this.cwd);
+    this._patchPackageJSON(config, ['devDependencies'], null, null, this.cwd);
+    this._writeTemplates.call(this, config, !this.options.noSamples, this.cwd);
 
     this.fs.write(this.destinationPath(this.cwd + 'requirements.txt'), deps.requirements.join('\n'));
     this.fs.write(this.destinationPath(this.cwd + 'docker_packages.txt'), deps.dockerPackages.join('\n'));

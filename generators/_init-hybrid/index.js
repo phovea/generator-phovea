@@ -1,9 +1,9 @@
 'use strict';
-const Base = require('../../utils').Base;
 const known = () => require('../../utils/known');
+const BaseInitPluginGenerator = require('../../base/BaseInitPluginGenerator');
 const RepoUtils = require('../../utils/RepoUtils');
 
-class Generator extends Base {
+class Generator extends BaseInitPluginGenerator {
 
   initializing() {
     this.config.defaults({
