@@ -4,7 +4,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const fse = require('fs-extra');
 const {template} = require('lodash');
-const dependencies = require('./generator-dependencies');
+const dependencies = require('./test-utils/generator-dependencies');
 
 /**
  * Get the path to the templates of a specific subgenerator.

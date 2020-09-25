@@ -5,9 +5,9 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const TestUtils = require('./TestUtils');
+const TestUtils = require('./test-utils/TestUtils');
 const {template} = require('lodash');
-const dependencies = require('./generator-dependencies');
+const dependencies = require('./test-utils/generator-dependencies');
 
 /**
  * Directory name to run the generator

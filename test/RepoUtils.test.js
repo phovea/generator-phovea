@@ -177,7 +177,7 @@ describe('parse phovea_product.json', () => {
         {repo: 'phovea/phovea_data_mongo', branch: 'develop'}
     ];
 
-    const dummyProduct = fs.readJSONSync(path.join(__dirname, `templates/phovea_product_dummy.json`));
+    const dummyProduct = fs.readJSONSync(path.join(__dirname, `test-utils/templates/phovea_product_dummy.json`));
     it('resulting object has correct structure', () => {
         expect(RepoUtils.parsePhoveaProduct(dummyProduct)).toStrictEqual(result);
     });

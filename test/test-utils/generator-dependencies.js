@@ -1,7 +1,7 @@
 'use-strict';
 const path = require('path');
 
-const toPath = (generator) => path.join(__dirname, '../generators/', generator);
+const toPath = (generator) => path.join(__dirname, '../../generators/', generator);
 
 const COMMON = [
     toPath('_check-own-version'),

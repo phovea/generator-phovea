@@ -8,10 +8,10 @@ const WorkspaceUtils = require('../utils/WorkspaceUtils');
 const assert = require('yeoman-assert');
 const fs = require('fs-extra');
 const RepoUtils = require('../utils/RepoUtils');
-const TestUtils = require('./TestUtils');
+const TestUtils = require('./test-utils/TestUtils');
 const SpawnUtils = require('../utils/SpawnUtils');
 const {template} = require('lodash');
-const dependencies = require('./generator-dependencies');
+const dependencies = require('./test-utils/generator-dependencies');
 
 /**
  * Directory name to run the generator
@@ -29,7 +29,7 @@ const setupWorkspace = () => helpers
 
 
 describe('generator setup-workspace', () => {
-    const phoveaProduct = fs.readJSONSync(path.join(__dirname, `templates/phovea_product_dummy.json`));
+    const phoveaProduct = fs.readJSONSync(path.join(__dirname, `test-utils/templates/phovea_product_dummy.json`));
     beforeAll(() => {
         // mock the clone-repo function
         WorkspaceUtils.cloneRepo = jest.fn()

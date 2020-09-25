@@ -4,7 +4,7 @@ const path = require('path');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const SpawnUtils = require('../utils/SpawnUtils');
-const dependencies = require('./generator-dependencies');
+const dependencies = require('./test-utils/generator-dependencies');
 
 const repo = 'git@github.com:Caleydo/ordino.git';
 const target = '../cloned';
