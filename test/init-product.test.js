@@ -7,6 +7,7 @@ const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const TestUtils = require('./TestUtils');
 const {template} = require('lodash');
+const dependencies = require('./generator-dependencies');
 
 /**
  * Directory name to run the generator
@@ -26,16 +27,6 @@ const expectedFiles = [
     'ISSUE_TEMPLATE.md',
     'LICENSE'
 ];
-
-/**
- * Subgenerators composed with the `init-slib` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-    '../generators/_node',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-];
-
 
 describe('generate a product with default prompt values', () => {
 
@@ -61,7 +52,7 @@ describe('generate a product with default prompt values', () => {
         return helpers
             .run(path.join(__dirname, '../generators/init-product'))
             .inDir(path.join(__dirname, target), () => null)
-            .withGenerators(GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_PRODUCT)
             .withPrompts({
                 ...config,
                 name: pluginName,

@@ -8,23 +8,12 @@ const fse = require('fs-extra');
 const TestUtils = require('./TestUtils');
 const {template} = require('lodash');
 const SpawnUtils = require('../utils/SpawnUtils');
+const dependencies = require('./generator-dependencies');
 
 /**
  * Directory name to run the generator
  */
 const target = '../lib';
-
-/**
- * Subgenerators composed with the `init-lib` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_node',
-  '../generators/init-lib',
-  '../generators/_init-web',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
-
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -42,7 +31,7 @@ const unExpectedFiles = [
  */
 const runInitLib = () => helpers
   .run(path.join(__dirname, '../generators/init-lib'))
-  .withGenerators(GENERATOR_DEPENDENCIES)
+  .withGenerators(dependencies.INIT_LIB)
   .inDir(path.join(__dirname, target), () => null);
 
 

@@ -6,24 +6,11 @@ const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const TestUtils = require('./TestUtils');
+const dependencies = require('./generator-dependencies');
 /**
  * Directory name to run the generator
  */
 const target = '../appslib';
-
-/**
- * Subgenerators composed with the `init-app-slib` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_init-hybrid',
-  '../generators/_node',
-  '../generators/init-app',
-  '../generators/_init-web',
-  '../generators/init-slib',
-  '../generators/_init-python',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -56,7 +43,7 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
       .withPrompts({
         app: 'appName'
       })
-      .withGenerators(GENERATOR_DEPENDENCIES);
+      .withGenerators(dependencies.INIT_APP_SLIB);
   });
 
   afterAll(() => {

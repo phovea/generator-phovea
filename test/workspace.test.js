@@ -4,6 +4,7 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const fse = require('fs-extra');
 const {template} = require('lodash');
+const dependencies = require('./generator-dependencies');
 
 /**
  * Get the path to the templates of a specific subgenerator.
@@ -11,35 +12,6 @@ const {template} = require('lodash');
  * @param {string} file 
  */
 const templatePath = (subgenerator, file) => path.join(__dirname, `../generators/${subgenerator}/templates/${file}`);
-
-/**
- * Subgenerators composed with the `init-lib` subgenerator.
- */
-const LIB_GENERATOR_DEPENDENCIES = [
-    '../generators/_node',
-    '../generators/init-lib',
-    '../generators/_init-web',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
-
-/**
- * Subgenerators composed with the `init-app` subgenerator.
- */
-const APP_GENERATOR_DEPENDENCIES = [
-    '../generators/_node',
-    '../generators/_init-web',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
-
-/**
- * Subgenerators composed with the `workspace` subgenerator.
- */
-const WORKSPACE_GENERATOR_DEPENDENCIES = [
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
 
 const expectedFiles = [
     '.idea/misc.xml',
@@ -112,7 +84,7 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         // Run yo phovea:init-lib
         await helpers
             .run(path.join(__dirname, '../generators/init-lib'))
-            .withGenerators(LIB_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_LIB)
             .inTmpDir((dir) => {
                 workingDirectory = dir;
                 fse.mkdirSync(`./${libPlugin}`);
@@ -122,7 +94,7 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         // Run yo:phovea:init-app
         await helpers
             .run(path.join(__dirname, '../generators/init-app'))
-            .withGenerators(APP_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_APP)
             .withPrompts({
                 app: 'appName'
             })
@@ -135,7 +107,7 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         // Run yo phovea:workspace
         await helpers
             .run(path.join(__dirname, '../generators/workspace'))
-            .withGenerators(WORKSPACE_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.COMMON)
             .inTmpDir(() => {
                 workspace = workingDirectory.replace('/tmp/', '');
                 process.chdir(workingDirectory);

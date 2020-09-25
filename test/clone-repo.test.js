@@ -4,25 +4,17 @@ const path = require('path');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const SpawnUtils = require('../utils/SpawnUtils');
-
-/**
- * Subgenerators composed with the `clone-repo` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-
-    '../../generators/_check-own-version',
-    '../../generators/check-node-version',
-];
+const dependencies = require('./generator-dependencies');
 
 const repo = 'git@github.com:Caleydo/ordino.git';
-const target = 'cloned';
+const target = '../cloned';
 
 const cloneRepo = (options) => helpers
     .run(path.join(__dirname, '../generators/clone-repo'))
     .inDir(path.join(__dirname, target), () => null)
     .withArguments([repo])
     .withOptions(options)
-    .withGenerators(GENERATOR_DEPENDENCIES);
+    .withGenerators(dependencies.COMMON);
 
 describe('call clone-repo with branch develop', () => {
 

@@ -1,4 +1,3 @@
-
 'use strict';
 const path = require('path');
 const assert = require('yeoman-assert');
@@ -6,22 +5,12 @@ const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const TestUtils = require('./TestUtils');
+const dependencies = require('./generator-dependencies');
 
 /**
  * Directory name to run the generator
  */
 const target = '../app';
-
-/**
- * Subgenerators composed with the `init-app` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_node',
-  '../generators/init-lib',
-  '../generators/_init-web',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -52,7 +41,7 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
       .withPrompts({
         app: 'appName'
       })
-      .withGenerators(GENERATOR_DEPENDENCIES);
+      .withGenerators(dependencies.INIT_APP);
   });
 
   afterAll(() => {

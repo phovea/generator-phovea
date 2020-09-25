@@ -3,45 +3,10 @@
 const path = require('path');
 const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
-const rimraf = require('rimraf');
 const fse = require('fs-extra');
 const TestUtils = require('./TestUtils');
 const {template} = require('lodash');
-
-
-const LIB_GENERATOR_DEPENDENCIES = [
-    '../generators/_node',
-    '../generators/init-lib',
-    '../generators/_init-web',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
-
-const SLIB_GENERATOR_DEPENDENCIES = [
-    '../generators/_node',
-    '../generators/init-slib',
-    '../generators/_init-python',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
-/**
- * Subgenerators composed with the `add-extension` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
-
-const LIB_SLIB_GENERATOR_DEPENDENCIES = [
-    '../generators/_node',
-    '../generators/_init-hybrid',
-    '../generators/init-lib',
-    '../generators/_init-web',
-    '../generators/init-slib',
-    '../generators/_init-python',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-].map((d) => path.join(__dirname, d));
+const dependencies = require('./generator-dependencies');
 
 describe('add a web extension to a web library', () => {
     const tdpViewTmpl = template(fse.readFileSync(TestUtils.templatePath('add-extension', 'tdpView.tmpl.ts')))({moduleName: 'CustomView'});
@@ -58,18 +23,18 @@ describe('add a web extension to a web library', () => {
     };
     beforeAll(async () => {
         let workingDirectory;
-        // Initialize a dummy web library
+        // initialize a dummy web library
         await helpers
             .run(path.join(__dirname, '../generators/init-lib'))
-            .withGenerators(LIB_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_LIB)
             .inTmpDir((dir) => {
                 workingDirectory = dir;
             });
 
-        // Run yo phovea:add-extension in the same directory
+        // run yo phovea:add-extension in the same directory
         await helpers
             .run(path.join(__dirname, '../generators/add-extension'))
-            .withGenerators(GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.COMMON)
             .inTmpDir(() => {
                 process.chdir(workingDirectory);
             })
@@ -104,7 +69,7 @@ describe('add a python extension to a python plugin', () => {
         // Initialize a dummy python library
         await helpers
             .run(path.join(__dirname, '../generators/init-slib'))
-            .withGenerators(SLIB_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_SLIB)
             .inTmpDir((dir) => {
                 workingDirectory = dir;
             })
@@ -113,7 +78,7 @@ describe('add a python extension to a python plugin', () => {
         // Run yo phovea:add-extension in the same directory
         await helpers
             .run(path.join(__dirname, '../generators/add-extension'))
-            .withGenerators(GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.COMMON)
             .inTmpDir(() => {
                 process.chdir(workingDirectory);
             })
@@ -142,7 +107,7 @@ describe('add a web extension to a hybrid plugin', () => {
         // Initialize a dummy hybrid plugin
         await helpers
             .run(path.join(__dirname, '../generators/init-lib-slib'))
-            .withGenerators(LIB_SLIB_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_LIB_SLIB)
             .inTmpDir((dir) => {
                 workingDirectory = dir;
             })
@@ -151,7 +116,7 @@ describe('add a web extension to a hybrid plugin', () => {
         // Run yo phovea:add-extension in the same directory
         await helpers
             .run(path.join(__dirname, '../generators/add-extension'))
-            .withGenerators(GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.COMMON)
             .inTmpDir(() => {
                 process.chdir(workingDirectory);
             })
@@ -161,7 +126,7 @@ describe('add a web extension to a hybrid plugin', () => {
         assert.file('src/SingleScore.ts');
     });
 
-    it('registers the view in phovea.ts', () => {
+    it('registers the score in phovea.ts', () => {
         const config = `registry.push('tdpScore', 'score_id', () => import('./SingleScore'), {});`;
         assert.fileContent('src/phovea.ts', config);
     });
@@ -179,10 +144,10 @@ describe('add a web extension from the workspace', () => {
     };
     beforeAll(async () => {
         let workingDirectory;
-        // Initialize a dummy hybrid plugin
+        // Initialize a dummy lib plugin
         await helpers
             .run(path.join(__dirname, '../generators/init-lib'))
-            .withGenerators(LIB_GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.INIT_LIB)
             .inTmpDir((dir) => {
                 workingDirectory = dir;
                 // simulate a workspace
@@ -195,7 +160,7 @@ describe('add a web extension from the workspace', () => {
         // Run yo phovea:add-extension in the same directory
         await helpers
             .run(path.join(__dirname, '../generators/add-extension'))
-            .withGenerators(GENERATOR_DEPENDENCIES)
+            .withGenerators(dependencies.COMMON)
             .inTmpDir(() => {
                 process.chdir(workingDirectory);
             })
@@ -206,11 +171,12 @@ describe('add a web extension from the workspace', () => {
     afterAll(() => {
         process.chdir(cwd);
     });
+
     it('generates score module inside the plugin directory', () => {
         assert.file(libPlugin + '/src/SingleScore.ts');
     });
 
-    it('registers the view in phovea.ts inside the plugin directory', () => {
+    it('registers the score in phovea.ts inside the plugin directory', () => {
         const config = `registry.push('tdpScore', 'score_id', () => import('./SingleScore'), {});`;
         assert.fileContent(libPlugin + '/src/phovea.ts', config);
     });

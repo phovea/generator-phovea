@@ -11,21 +11,13 @@ const RepoUtils = require('../utils/RepoUtils');
 const TestUtils = require('./TestUtils');
 const SpawnUtils = require('../utils/SpawnUtils');
 const {template} = require('lodash');
+const dependencies = require('./generator-dependencies');
 
 /**
  * Directory name to run the generator
  */
 const target = '../phovea_workpsace';
 
-/**
- * Sub-generators called with the setup-workspace sub-generator.
- */
-const GENERATOR_DEPENDENCIES = [
-    '../generators/workspace',
-    '../generators/_check-own-version',
-    '../generators/check-node-version',
-    '../generators/clone-repo',
-];
 const product = 'org/dummy_product';
 
 const setupWorkspace = () => helpers
@@ -33,7 +25,7 @@ const setupWorkspace = () => helpers
     .inDir(path.join(__dirname, target), () => null)
     .withArguments([product])
     .withOptions({ssh: true, branch: 'develop'})
-    .withGenerators(GENERATOR_DEPENDENCIES);
+    .withGenerators(dependencies.SETUP_WORKSPACE);
 
 
 describe('generator setup-workspace', () => {
