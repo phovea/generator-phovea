@@ -44,6 +44,7 @@ module.exports = class GeneratorUtils {
 
     /**
      * Creates object with custom formatting functions that can be called inside a template file when copying a template.
+     * 
      * @param {{}} config Config file
      */
     static stringifyAble(config) {
@@ -66,6 +67,7 @@ module.exports = class GeneratorUtils {
 
     /**
      * Stringifies object and applies custom formatting.
+     * 
      * @param {{}} obj Object to stringify.
      * @param {string} space String containing the spaces to use to fromat stringified object.
      */
@@ -76,5 +78,56 @@ module.exports = class GeneratorUtils {
         // prefix with space
         base = base.split('\n').map((l) => space + l).join('\n');
         return base.substring(space.length); // skip the first space
+    }
+
+    /**
+     * Parses a string of the format `key=value` into an object.
+     * Nested fields are defined using dot notation.
+     * 
+     * @param {string} text String to format
+     * @example
+     * 
+     * const text = `
+     *     count=3
+     *     type.lib=false
+     *    `
+     * 
+     * toJSONFromText(text)
+     * // => {count: 3, type: {lib: false }}
+     */
+    static toJSONFromText(text) {
+
+        const r = {};
+        if (typeof text !== 'string') return r;
+
+        text.split('\n').forEach((line) => {
+            const trimmedLine = line.trim();
+            if (trimmedLine.length === 0) { // ignore empty lines (e.g. new line added by editor)
+                return;
+            }
+
+            const splitPoint = trimmedLine.indexOf('=');
+            const key = trimmedLine.slice(0, splitPoint);
+            let value = trimmedLine.slice(splitPoint + 1);
+            value = value.trim();
+            if (!isNaN(parseFloat(value))) {
+                value = parseFloat(value);
+            }
+
+            if (value === 'true' || value === 'false') {
+                value = JSON.parse(value);
+            }
+
+            let obj = r;
+            const keys = key.trim().split('.');
+            keys.slice(0, keys.length - 1).forEach((k) => {
+                if (!(k in obj)) {
+                    obj[k] = {};
+                }
+                obj = obj[k];
+            });
+            obj[keys[keys.length - 1]] = value;
+        });
+        return r;
     }
 };

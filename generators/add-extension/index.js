@@ -8,34 +8,6 @@ const glob = require('glob').sync;
 const chalk = require('chalk');
 const GeneratorUtils = require('../../utils/GeneratorUtils');
 
-function toJSONFromText(text) {
-  const r = {};
-  text.split('\n').forEach((line) => {
-    const trimmedLine = line.trim();
-    if (trimmedLine.length === 0) { // ignore empty lines (e.g. new line added by editor)
-      return;
-    }
-
-    const splitPoint = trimmedLine.indexOf('=');
-    const key = trimmedLine.slice(0, splitPoint);
-    let value = trimmedLine.slice(splitPoint + 1);
-    value = value.trim();
-    if (!isNaN(parseFloat(value))) {
-      value = parseFloat(value);
-    }
-    let obj = r;
-    const keys = key.trim().split('.');
-    keys.slice(0, keys.length - 1).forEach((k) => {
-      if (!(k in obj)) {
-        obj[k] = {};
-      }
-      obj = obj[k];
-    });
-    obj[keys[keys.length - 1]] = value;
-  });
-  return r;
-}
-
 /**
  * The outside key in the `.yo-rc.json` file where the configuration is saved.
  * Used to manually add key-value pairs to the `.yo-rc.json` file.
@@ -170,7 +142,7 @@ class Generator extends Base {
         type: props.type,
         id: props.id,
         module: props.module,
-        extras: toJSONFromText(props.extras)
+        extras: GeneratorUtils.toJSONFromText(props.extras)
       };
     });
   }

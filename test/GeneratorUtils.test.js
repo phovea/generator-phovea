@@ -50,3 +50,48 @@ describe('Test `stringifyAble()`', () => {
         expect(GeneratorUtils.stringifyAble(config)).toMatchObject(config);
     });
 });
+
+describe('Test `toJSONFromText()`', () => {
+    it('parses string to object with the correct variable types ', () => {
+
+        const extras = `
+        type=lib
+        isBoolean=true
+        count=3
+        weights=[1, 2, 3]
+        `;
+
+        const extrasObject = {
+            type: 'lib',
+            isBoolean: true,
+            count: 3,
+        };
+        expect(GeneratorUtils.toJSONFromText(extras)).toMatchObject(extrasObject);
+    });
+
+    it('parses dot notation to correct nested object', () => {
+        const extras = `
+       config.name=ordino
+       config.isServer=false
+       config.number=5
+        `;
+
+        const extrasObject = {
+            config: {
+                name: 'ordino',
+                isServer: false,
+                number: 5
+            }
+        };
+
+        expect(GeneratorUtils.toJSONFromText(extras)).toMatchObject(extrasObject);
+    });
+
+    it('returns an empty object for non string inputs', () => {
+        expect(GeneratorUtils.toJSONFromText(null)).toMatchObject({});
+        expect(GeneratorUtils.toJSONFromText(undefined)).toMatchObject({});
+        expect(GeneratorUtils.toJSONFromText('')).toMatchObject({});
+        expect(GeneratorUtils.toJSONFromText(' ')).toMatchObject({});
+        expect(GeneratorUtils.toJSONFromText(1)).toMatchObject({});
+    });
+});
