@@ -21,6 +21,7 @@ describe('add a web extension to a web library', () => {
         config.database=MyDB
         `
     };
+
     beforeAll(async () => {
         let workingDirectory;
         // initialize a dummy web library

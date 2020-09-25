@@ -41,7 +41,6 @@ describe('check-node-version', () => {
 
     check.mockImplementation((_, cb) => cb(false, results));
 
-
     beforeAll(() => {
         return helpers
             .run(path.join(__dirname, '../generators/check-node-version'));

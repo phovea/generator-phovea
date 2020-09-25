@@ -29,7 +29,7 @@ const setupWorkspace = () => helpers
 
 
 describe('generator setup-workspace', () => {
-    const phoveaProduct = fs.readJSONSync(path.join(__dirname, `test-utils/templates/phovea_product_dummy.json`));
+    const phoveaProduct = require(`./test-utils/templates/phovea_product_dummy.json`);
     beforeAll(() => {
         // mock the clone-repo function
         WorkspaceUtils.cloneRepo = jest.fn()
