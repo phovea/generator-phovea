@@ -17,7 +17,7 @@ module.exports = class SpawnUtils {
             console.log(result.stderr.toString());
             return SpawnUtils.abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${result.status}`);
 
-        } else if (stdout && stdout.toString()) {
+        } else if (stdout && stdout.toString() && verbose) {
             console.log(stdout.toString().trim());
         }
 
@@ -35,7 +35,7 @@ module.exports = class SpawnUtils {
             ...cwd ? {cwd} : {},
             ...verbose ? {stdio: 'inherit'} : {}
         };
-
+        console.log(Array.isArray(argline) ? argline : argline.split(' '))
         return spawnSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
     }
 

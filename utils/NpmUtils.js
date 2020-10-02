@@ -248,4 +248,10 @@ module.exports = class NpmUtils {
     static useDevVersion(version) {
         return (version || '').includes('-');
     }
+
+    static decrementVersionByOne(version) {
+        version = semver.parse(version, {loose: true});
+        version.major -= 1;
+        return version.format();
+    }
 };

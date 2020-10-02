@@ -49,9 +49,9 @@ describe('generator setup-workspace', () => {
         return setupWorkspace();
     });
 
-    afterAll(() => {
-        rimraf.sync(path.join(__dirname, target));
-    });
+    // afterAll(() => {
+    //     rimraf.sync(path.join(__dirname, target));
+    // });
 
     it('calls WorkspaceUtils.cloneRepo(...args) 13 times (1 product + 12 plugins)', () => {
         expect(WorkspaceUtils.cloneRepo.mock.calls.length).toBe(13);
