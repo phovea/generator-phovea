@@ -11,6 +11,8 @@
     "declarationDir": "dist",
     "outDir": "dist",
     "experimentalDecorators": true,
+    "incremental": true,
+    "tsBuildInfoFile": "dist/tsBuildInfoFile",
     "noImplicitAny": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
