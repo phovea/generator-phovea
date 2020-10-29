@@ -35,7 +35,11 @@ module.exports = class SpawnUtils {
             ...cwd ? {cwd} : {},
             ...verbose ? {stdio: 'inherit'} : {}
         };
-        console.log(Array.isArray(argline) ? argline : argline.split(' '))
+
+        if (verbose) {
+            console.log(Array.isArray(argline) ? argline.join(' ') : argline);
+        }
+
         return spawnSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
     }
 
@@ -53,5 +57,18 @@ module.exports = class SpawnUtils {
      */
     static abort(msg) {
         return Promise.reject(msg ? msg : 'Step Failed: Aborting');
+    }
+
+    /**
+     * Execute a shell command and return the decoded output
+     * @param command Command to execute
+     * @param argline Arguments to execute the command with
+     */
+    static spawnWithOutput(command, argline, cwd) {
+        const options = {
+            ...cwd ? {cwd} : {},
+            encoding: 'UTF-8'
+        };
+        return spawnSync(command, Array.isArray(argline) ? argline : argline.split(' '), options).stdout.trim();
     }
 };
