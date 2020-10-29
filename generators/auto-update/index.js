@@ -6,16 +6,25 @@ const path = require('path');
 const parse = require('csv-parse/lib/sync');
 const WorkspaceUtils = require('../../utils/WorkspaceUtils');
 const tmp = require('tmp');
-const NpmUtils = require('../../utils/NpmUtils');
 const SpawnUtils = require('../../utils/SpawnUtils');
-const GithubRestUtils = require('./GithubRestUtils');
 const RepoUtils = require('../../utils/RepoUtils');
+const GithubRestUtils = require('./GithubRestUtils');
+
+const {decrementVersion} = require('../../utils/NpmUtils');
+const ora = require('ora');
 
 class Generator extends Base {
     constructor(args, options) {
         super(args, Object.assign(options, {
             skipLocalCache: true // prevents store prompts from being saved in the local `.yo-rc.json`
         }));
+
+        // this.option('verbose', {
+        //     defaults: false,
+        //     required: false,
+        //     type: Boolean
+        // });
+        this.spinner = ora();
     }
 
     initializing() {
@@ -33,17 +42,8 @@ class Generator extends Base {
                 store: true,
                 when: this.args.length === 0,
                 validate: (d) => d.trim().length > 0
-            },
-            {
-                type: "password",
-                name: "githubToken",
-                message: `Enter github token`,
-                store: true,
-                mask: true,
-            } // TODO prompts for PR title 
-        ]).then(({knownReposFile, githubToken}) => {
-
-            this.githubToken = githubToken;
+            }
+        ]).then(({knownReposFile}) => {
             this.knownRepos = this._readKnownReposFile(knownReposFile);
             this.generatorVersion = require('../../package.json').version.replace('-SNAPSHOT', '');
         });
@@ -66,50 +66,70 @@ class Generator extends Base {
             })));
     }
 
-    async default() {
-        this.cwd = tmp.dirSync({unsafeCleanup: true}).name;
-        Object.keys(this.knownRepos).forEach(async (repo) => {
-            const currentCwd = path.join(this.cwd, repo);
+    async writing() {
+        this.cwd = this.destinationPath();
+        const repos = Object.keys(this.knownRepos);
+        const logFile = await Promise.allSettled(repos.map(async (repo) => {
+            this.spinner.stop();
+            const repoDir = path.join(this.cwd, repo);
             const {link, org} = this.knownRepos[repo];
             const baseName = `${org}/${repo}`;
+
+            // readToken depeneding on organization
             await WorkspaceUtils.cloneRepo(link, 'develop', null, '', this.cwd);
-            const config = fse.readJSONSync(path.join(this.cwd, repo, '.yo-rc.json'));
-            const {localVersion = NpmUtils.decrementVersionByOne(this.generatorVersion), type} = config['generator-phovea'];
+
+            const [localVersion = decrementVersion(this.generatorVersion), type] = [
+                AutoUpdateUtils.readConfig('localVersion', repoDir),
+                AutoUpdateUtils.readConfig('type', repoDir)
+            ];
+
             const branch = `generator_update/${localVersion}_to_${this.generatorVersion}`;
+            await SpawnUtils.spawnOrAbort('git', ['checkout', '-b', branch], repoDir, this.options.verbose);
 
-            await SpawnUtils.spawnOrAbort('git', ['checkout', '-b', branch], currentCwd, false);
+            const description = await AutoUpdateUtils.autoUpdate(type, localVersion, this.generatorVersion, repoDir);
+            const fileChanges = SpawnUtils.spawnWithOutput('git', ['status', '--porcelain'], repoDir);
 
-            await AutoUpdateUtils.autoUpdate(type, localVersion, this.generatorVersion, currentCwd);
-            const fileChanges = SpawnUtils.spawnSync('git', ['diff', '--name-only'], currentCwd, false).stdout.toString().trim();
             if (fileChanges) {
-                const title = `Generator updates from version ${localVersion} to ${this.generatorVersion}`;
-                await SpawnUtils.spawnOrAbort('git', ['commit', '-am', title], currentCwd, false);
+                const title = `Generator updates from ${localVersion} to ${this.generatorVersion}`;
+                this.spinner.start(`${repo}: Commiting files`);
+                await SpawnUtils.spawnOrAbort('git', ['add', '.'], repoDir, this.options.verbose);
+                await SpawnUtils.spawnOrAbort('git', ['commit', '-am', title], repoDir, this.options.verbose);
+                this.spinner.succeed();
+                this.spinner.start(`${repo}: Pushing files\n`);
+                await SpawnUtils.spawnOrAbort('git', ['push', 'origin', branch], repoDir, this.options.verbose);
+                this.spinner.succeed();
 
-                await SpawnUtils.spawnOrAbort('git', ['push', 'origin', branch], currentCwd, false);
 
-                const credentials = {
-                    username: 'oltionchampari',
-                    token: '************************************',
-                };
                 const data = {
-                    title, // TODO get title from prompt
+                    title,
                     head: branch,
-                    body: `Description`, // TODO add description to the PR body
+                    body: description.join('\n'),
                     base: 'develop'
                 };
-                const {number} = await GithubRestUtils.createPullRequest(baseName, data, credentials);
-                const assignees = [SpawnUtils.spawnSync('git', ['config', 'user.name']).stdout.toString().trim()];
-                await GithubRestUtils.setAssignees(baseName, number, assignees, credentials);
-            }
-            // TODO propper error handling 
-            // do not interrupt execution if one repo fails 
 
+                const credentials = AutoUpdateUtils.chooseCredentials(org);
+                this.spinner.start(`${repo}: Drafting pull request`);
+                const {number} = await GithubRestUtils.createPullRequest(baseName, data, credentials);
+                const assignees = [SpawnUtils.spawnWithOutput('git', ['config', 'user.name'], repoDir)];
+                await GithubRestUtils.setAssignees(baseName, number, assignees, credentials);
+                this.spinner.succeed();
+            }
+            return description;
+        }));
+
+        logFile.map((log, index) => {
+            if (log.reason instanceof Error) {
+                log.reason = log.reason.toString();
+            }
+            log.repo = repos[index];
+            return log;
         });
+        this.spinner.stop();
+        return this.logFile = logFile;
     }
 
-
-    writing() {
-        // create error/execution log 
+    end() {
+        this.fs.writeJSON(this.destinationPath('log.json'), this.logFile);
     }
 }
 

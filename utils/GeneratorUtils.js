@@ -28,7 +28,6 @@ module.exports = class GeneratorUtils {
         const _args = Array.isArray(args) ? args.join(' ') : args || '';
         return new Promise((resolve, reject) => {
             try {
-                console.log(`Running: yo phovea:${generator} ${_args}`);
                 env.lookup(() => {
                     env.run(`phovea:${generator} ${_args}`, options || {}, () => {
                         // wait a second after running yo to commit the files correctly

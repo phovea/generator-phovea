@@ -1,6 +1,5 @@
 const rp = require('request-promise');
 const _ = require('lodash');
-const SpawnUtils = require('../../utils/SpawnUtils');
 
 class GithubRestUtils {
     static commonPostOptions() {
@@ -16,7 +15,6 @@ class GithubRestUtils {
         };
     }
     static createPullRequest(baseName, data = {}, {username, token}) {
-        console.log(`Creating Pull Request in ${baseName}`);
         const config = _.merge({},
             GithubRestUtils.commonPostOptions(),
             {
@@ -28,7 +26,7 @@ class GithubRestUtils {
         return rp(config);
     }
 
-    static setAssignees(baseName, assignees, prNumber, {username, token}) {
+    static setAssignees(baseName, prNumber, assignees, {username, token}) {
         const config = _.merge({},
             GithubRestUtils.commonPostOptions(),
             {

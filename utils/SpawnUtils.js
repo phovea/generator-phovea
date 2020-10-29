@@ -33,7 +33,9 @@ module.exports = class SpawnUtils {
     static spawnSync(cmd, argline, cwd, verbose) {
         const options = {
             ...cwd ? {cwd} : {},
-            ...verbose ? {stdio: 'inherit'} : {}
+            ...verbose ? {
+                stdio: 'inherit',
+            } : {}
         };
 
         if (verbose) {
