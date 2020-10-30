@@ -4,7 +4,7 @@ const fs = require('fs-extra');
 const chalk = require('chalk');
 const GeneratorUtils = require('../utils/GeneratorUtils');
 const BasePhoveaGenerator = require('../base/BasePhoveaGenerator');
-const config= require('./config');
+const config = require('./config');
 
 class BaseInitPluginGenerator extends BasePhoveaGenerator {
 
