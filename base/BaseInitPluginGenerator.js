@@ -4,13 +4,14 @@ const fs = require('fs-extra');
 const chalk = require('chalk');
 const GeneratorUtils = require('../utils/GeneratorUtils');
 const BasePhoveaGenerator = require('../base/BasePhoveaGenerator');
+const config= require('./config');
 
 class BaseInitPluginGenerator extends BasePhoveaGenerator {
 
     constructor(args, options, basetype) {
         super(args, options);
         this.type = path.basename(path.dirname(this.resolved)).substring(5); // init-web ... web
-        this.basetype = basetype || 'web';
+        this.basetype = basetype || config.basetype.WEB;
         // Make options available
         this.option('skipInstall');
         this.option('noSamples');

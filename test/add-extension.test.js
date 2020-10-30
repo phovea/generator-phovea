@@ -7,6 +7,7 @@ const fse = require('fs-extra');
 const TestUtils = require('./test-utils/TestUtils');
 const {template} = require('lodash');
 const dependencies = require('./test-utils/generator-dependencies');
+const {basetype} = require('../base/config');
 
 describe('add a web extension to a web library', () => {
     const tdpViewTmpl = template(fse.readFileSync(TestUtils.templatePath('add-extension', 'tdpView.tmpl.ts')))({moduleName: 'CustomView'});
@@ -98,7 +99,7 @@ describe('add a python extension to a python plugin', () => {
 
 describe('add a web extension to a hybrid plugin', () => {
     const prompts = {
-        basetype: 'web',
+        basetype: basetype.WEB,
         type: 'tdpScore',
         id: 'score_id',
         module: 'SingleScore',
@@ -137,7 +138,7 @@ describe('add a web extension from the workspace', () => {
     const cwd = process.cwd();
     const libPlugin = 'libPLugin';
     const prompts = {
-        basetype: 'web',
+        basetype: basetype.WEB,
         type: 'tdpScore',
         id: 'score_id',
         module: 'SingleScore',

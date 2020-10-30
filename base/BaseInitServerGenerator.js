@@ -1,11 +1,12 @@
 'use strict';
 
 const BaseInitPluginGenerator = require('./BaseInitPluginGenerator');
+const {basetype} = require('./config');
 
 class BaseInitServerGenerator extends BaseInitPluginGenerator {
 
     constructor(args, options) {
-        super(args, options, 'python');
+        super(args, options, basetype.PYTHON);
     }
 
     initializing() {

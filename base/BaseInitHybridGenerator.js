@@ -1,10 +1,11 @@
 'use strict';
 const BaseInitPluginGenerator = require('./BaseInitPluginGenerator');
+const {basetype} = require('./config');
 
 class BaseInitHybridGenerator extends BaseInitPluginGenerator {
 
     constructor(args, options) {
-        super(args, options, 'hybrid');
+        super(args, options, basetype.HYBRID);
     }
 
     initializing() {
