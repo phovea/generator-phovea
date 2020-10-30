@@ -1,5 +1,5 @@
 'use strict';
-const BaseInitPluginGenerator = require("./BaseInitPluginGenerator");
+const BaseInitPluginGenerator = require('./BaseInitPluginGenerator');
 
 class BaseInitHybridGenerator extends BaseInitPluginGenerator {
 

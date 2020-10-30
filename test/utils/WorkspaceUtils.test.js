@@ -31,14 +31,14 @@ describe('Find default app in product object', () => {
                 branch: 'develop',
                 additional: [
                     {
-                        "name": "phovea_core",
-                        "repo": "phovea/phovea_core",
-                        "branch": "develop"
+                        'name': 'phovea_core',
+                        'repo': 'phovea/phovea_core',
+                        'branch': 'develop'
                     },
                     {
-                        "name": "phovea_ui",
-                        "repo": "phovea/phovea_ui",
-                        "branch": "develop"
+                        'name': 'phovea_ui',
+                        'repo': 'phovea/phovea_ui',
+                        'branch': 'develop'
                     }
                 ]
 
@@ -61,31 +61,31 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
     const known = require('../../utils/known');
     known.plugin = {
         listWeb: [{
-            "name": "phovea_core",
-            "type": "lib",
-            "description": "Phovea Core Plugin",
-            "repository": "https://github.com/phovea/phovea_core.git",
-            "dependencies": {
-                "phovea_core": "^4.0.0"
+            'name': 'phovea_core',
+            'type': 'lib',
+            'description': 'Phovea Core Plugin',
+            'repository': 'https://github.com/phovea/phovea_core.git',
+            'dependencies': {
+                'phovea_core': '^4.0.0'
             },
-            "develop": {
-                "dependencies": {
-                    "phovea_core": "github:phovea/phovea_core#develop"
+            'develop': {
+                'dependencies': {
+                    'phovea_core': 'github:phovea/phovea_core#develop'
                 }
             },
-            "libraries": []
+            'libraries': []
         },],
         listServer: [{
-            "name": "phovea_server",
-            "type": "service",
-            "description": "Phovea Server Plugin",
-            "repository": "https://github.com/phovea/phovea_server.git",
-            "requirements": {
-                "phovea_server": ">=5.0.1,<6.0.0"
+            'name': 'phovea_server',
+            'type': 'service',
+            'description': 'Phovea Server Plugin',
+            'repository': 'https://github.com/phovea/phovea_server.git',
+            'requirements': {
+                'phovea_server': '>=5.0.1,<6.0.0'
             },
-            "develop": {
-                "requirements": {
-                    "-e git+https://github.com/phovea/phovea_server.git": "@develop#egg=phovea_server"
+            'develop': {
+                'requirements': {
+                    '-e git+https://github.com/phovea/phovea_server.git': '@develop#egg=phovea_server'
                 }
             }
         }],
@@ -93,11 +93,11 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
     it('builds additional web plugins', () => {
 
     const result = [{
-        "name": "phovea_core: Phovea Core Plugin",
-        "short": "phovea_core",
-        "value": {
-            "name": "phovea_core",
-            "repo": "phovea/phovea_core",
+        'name': 'phovea_core: Phovea Core Plugin',
+        'short': 'phovea_core',
+        'value': {
+            'name': 'phovea_core',
+            'repo': 'phovea/phovea_core',
         },
     }];
         expect(WorkspaceUtils.buildPossibleAdditionalPlugins('web')).toMatchObject(result);
@@ -106,11 +106,11 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
 
     it('builds additional python plugins', () => {
         const result = [{
-            "name": "phovea_server: Phovea Server Plugin",
-            "short": "phovea_server",
-            "value": {
-                "name": "phovea_server",
-                "repo": "phovea/phovea_server",
+            'name': 'phovea_server: Phovea Server Plugin',
+            'short': 'phovea_server',
+            'value': {
+                'name': 'phovea_server',
+                'repo': 'phovea/phovea_server',
             },
         }];
         expect(WorkspaceUtils.buildPossibleAdditionalPlugins('python')).toMatchObject(result);

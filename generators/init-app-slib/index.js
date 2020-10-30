@@ -1,6 +1,6 @@
 'use strict';
 
-const BaseInitHybridGenerator = require("../init-lib-service");
+const BaseInitHybridGenerator = require('../init-lib-service');
 
 class PluginGenerator extends BaseInitHybridGenerator {
 

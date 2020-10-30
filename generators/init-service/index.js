@@ -1,6 +1,6 @@
 'use strict';
 
-const BaseInitServerGenerator = require("../../base/BaseInitServerGenerator");
+const BaseInitServerGenerator = require('../../base/BaseInitServerGenerator');
 
 class Generator extends BaseInitServerGenerator {
   initializing() {

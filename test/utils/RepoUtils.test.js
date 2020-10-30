@@ -16,7 +16,7 @@ jest.mock('../../utils/known', () => {
 const mockedPlugin = {
     name: 'phovea_core',
     libraries: [
-        "d3"
+        'd3'
     ],
     externals: [
         'bootstrap-sass'
@@ -26,13 +26,13 @@ const mockedPlugin = {
 const mockedLib = {
     name: 'font-awesome',
     libraries: [
-        "jquery",
+        'jquery',
     ],
     externals: [
         'marked'
     ],
     aliases: {
-        'd3': "d3/d3",
+        'd3': 'd3/d3',
         'font-awesome': 'fw/font-awesome'
     }
 
@@ -184,7 +184,7 @@ describe('parse phovea_product.json', () => {
 
 describe('test toLibraryAliasMap works as expected', () => {
     const aliases = {
-        'd3': "d3/d3",
+        'd3': 'd3/d3',
         'font-awesome': 'fw/font-awesome'
     };
 

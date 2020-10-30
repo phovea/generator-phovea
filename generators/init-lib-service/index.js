@@ -1,4 +1,4 @@
 'use strict';
-const BaseInitHybridGenerator = require("../../base/BaseInitHybridGenerator");
+const BaseInitHybridGenerator = require('../../base/BaseInitHybridGenerator');
 
 module.exports = BaseInitHybridGenerator;
