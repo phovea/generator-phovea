@@ -24,7 +24,7 @@ class AutoUpdateUtils {
 
         const filePath = `./updates/update-${nextVersion}.js`;
         const repo = path.basename(destinationPath);
-        const {update, description} = require(filePath);
+        const { update, description } = require(filePath);
         const currentVersion = AutoUpdateUtils.readConfig('localVersion', destinationPath) || NpmUtils.decrementVersion(generatorVersion);
 
         if (currentVersion === nextVersion) {
@@ -42,6 +42,7 @@ class AutoUpdateUtils {
                 const msg = `${repo}: Update ${currentVersion} to ${nextVersion} failed with ${e.message}`;
                 spinner.fail(msg);
                 e.message = msg;
+                // does it make sense if you call the revert function? 
                 throw e;
             });
     }
@@ -58,7 +59,7 @@ class AutoUpdateUtils {
         const target = path.join(cwd + '/.yo-rc.json');
         const file = fse.readJSONSync(target);
         file['generator-phovea'][key] = value;
-        fse.writeJSONSync(target, file, {spaces: 2});
+        fse.writeJSONSync(target, file, { spaces: 2 });
     }
 
     static readConfig(key, cwd) {
@@ -67,12 +68,14 @@ class AutoUpdateUtils {
     }
 
     static chooseCredentials(org) {
-        const token = org === 'datavisyn' ? process.env.DATAVISYN_TOKEN : process.env.CALYEDO_TOKEN;
-
-        return {
-            username: 'oltionchampari', // dummy for testing actual value = caleydo_bot
-            token: token.trim()
-        };
+        return org === 'datavisyn' ?
+            {
+                username: 'datavisyn-bot',
+                token: process.env.DATAVISYN_TOKEN
+            } : {
+                username: 'caleydo-bot',
+                token: process.env.CALEYDO_TOKEN
+            };
     }
 }
 
