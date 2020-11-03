@@ -1,9 +1,14 @@
-version: 2
-jobs:
-  build:
+version: 2.1
+
+executors:
+  python-executor:
     working_directory: ~/phovea
     docker:
       - image: circleci/python:3.7-buster-node-browsers # for node version see Dockerfile on https://hub.docker.com/r/circleci/python
+
+jobs:
+  build:
+    executor: node-executor
     steps:
       - checkout
       - setup_remote_docker
@@ -30,22 +35,22 @@ jobs:
           name: Show installed npm dependencies
           command: npm list --depth=1 || true
       - restore_cache:
-          key: awscli-1.11.113
+          key: awscli-1.18.134
       - run:
           name: Install AWS CLI
           command: |
             virtualenv ~/venv
             . ~/venv/bin/activate
-            pip install awscli==1.11.113
+            pip install awscli==1.18.134
       - save_cache:
-          key: awscli-1.11.113
+          key: awscli-1.18.134
           paths:
           - ~/venv
       - run:
           name: Login AWS ECR and DockerHub
           command: |
             . ~/venv/bin/activate
-            cat > ~/.dockercfg << EOF
+            cat > ~/.dockercfg \<< EOF
             {
               "https://index.docker.io/v1/": {
                 "auth": "$DOCKER_AUTH"
@@ -102,7 +107,7 @@ jobs:
               aws --output text ecs run-task --cluster caleydo --task-definition ${awsFamily} --started-by CircleCIAutoUpdate
             fi
 workflows:
-  version: 2
+  version: 2.1
 #  build-nightly:
 #    triggers:
 #      - schedule:
