@@ -1,6 +1,7 @@
 'use strict';
 
 const spawnSync = require('child_process').spawnSync;
+const spawnPr = require('promisify-child-process').spawn;
 
 module.exports = class SpawnUtils {
 
@@ -32,7 +33,7 @@ module.exports = class SpawnUtils {
      */
     static spawnSync(cmd, argline, cwd, verbose) {
         const options = {
-            ...cwd ? {cwd} : {},
+            ...cwd ? { cwd } : {},
             ...verbose ? {
                 stdio: 'inherit',
             } : {}
@@ -68,9 +69,18 @@ module.exports = class SpawnUtils {
      */
     static spawnWithOutput(command, argline, cwd) {
         const options = {
-            ...cwd ? {cwd} : {},
+            ...cwd ? { cwd } : {},
             encoding: 'UTF-8'
         };
         return spawnSync(command, Array.isArray(argline) ? argline : argline.split(' '), options).stdout.trim();
+    }
+
+    static spawnPromise(command, argline, cwd,) {
+        const options = {
+            ...cwd ? { cwd } : {},
+            encoding: 'UTF-8'
+        };
+
+        return spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options);
     }
 };

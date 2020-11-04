@@ -4,27 +4,23 @@ const fse = require('fs-extra');
 const AutoUpdateUtils = require('./AutoUpdateUtils');
 const path = require('path');
 const parse = require('csv-parse/lib/sync');
-const WorkspaceUtils = require('../../utils/WorkspaceUtils');
-const tmp = require('tmp');
 const SpawnUtils = require('../../utils/SpawnUtils');
 const RepoUtils = require('../../utils/RepoUtils');
 const GithubRestUtils = require('./GithubRestUtils');
-
-const {decrementVersion} = require('../../utils/NpmUtils');
-const ora = require('ora');
+const { decrementVersion } = require('../../utils/NpmUtils');
+const { Listr } = require('listr2');
+const tmp = require('tmp');
 
 class Generator extends Base {
     constructor(args, options) {
         super(args, Object.assign(options, {
             skipLocalCache: true // prevents store prompts from being saved in the local `.yo-rc.json`
         }));
-
-        this.option('verbose', {
-            default: false,
+        this.option('test-run', {
+            default: true,
             required: false,
             type: Boolean
         });
-        this.spinner = ora();
     }
 
     initializing() {
@@ -43,7 +39,7 @@ class Generator extends Base {
                 when: this.args.length === 0,
                 validate: (d) => d.trim().length > 0
             }
-        ]).then(({knownReposFile}) => {
+        ]).then(({ knownReposFile }) => {
             this.knownRepos = this._readKnownReposFile(knownReposFile);
             this.generatorVersion = require('../../package.json').version.replace('-SNAPSHOT', '');
         });
@@ -67,69 +63,119 @@ class Generator extends Base {
     }
 
     async writing() {
-        this.cwd = this.destinationPath();
+        this.cwd = tmp.dirSync({ unsafeCleanup: true }).name;
         const repos = Object.keys(this.knownRepos);
-        const logFile = await Promise.allSettled(repos.map(async (repo) => {
-            this.spinner.stop();
-            const repoDir = path.join(this.cwd, repo);
-            const {link, org} = this.knownRepos[repo];
-            const baseName = `${org}/${repo}`;
-            await WorkspaceUtils.cloneRepo(link, 'develop', null, '', this.cwd);
+        const tasks = new Listr(
+            [
+                ...repos.map((repo) => {
+                    const { link, org } = this.knownRepos[repo];
+                    const repoUrl = RepoUtils.toSSHRepoUrl(link);
+                    const repoDir = path.join(this.cwd, repo);
+                    const baseName = `${org}/${repo}`;
+                    return {
+                        title: repo,
 
-            const [localVersion = decrementVersion(this.generatorVersion), type] = [
-                AutoUpdateUtils.readConfig('localVersion', repoDir),
-                AutoUpdateUtils.readConfig('type', repoDir)
-            ];
+                        task: async (ctx, task) => {
+                            return task.newListr([
+                                {
+                                    title: 'clone repo ' + repo,
+                                    task: async (ctx) => {
+                                        await SpawnUtils.spawnPromise('git', 'clone -b develop ' + repoUrl, this.cwd);
+                                        const [localVersion = decrementVersion(this.generatorVersion), type] = [
+                                            AutoUpdateUtils.readConfig('localVersion', repoDir),
+                                            AutoUpdateUtils.readConfig('type', repoDir)
+                                        ];
+                                        ctx[repo] = {};
+                                        ctx[repo].localVersion = localVersion;
+                                        ctx[repo].type = type;
+                                    }
+                                },
+                                {
+                                    title: 'checkout working branch',
+                                    task: async (ctx, task) => {
+                                        const branch = `generator_update/${ctx[repo].localVersion}_to_${this.generatorVersion}`;
+                                        ctx[repo].branch = branch;
+                                        task.title = 'checkout ' + branch;
+                                        await SpawnUtils.spawnOrAbort('git', ['checkout', '-b', branch], repoDir, this.options.verbose);
+                                    }
+                                },
+                                {
+                                    title: 'run updates',
+                                    task: async (ctx, task) => {
+                                        ctx[repo].descriptions = [];
+                                        return AutoUpdateUtils.autoUpdate(ctx[repo].type, ctx[repo].localVersion, this.generatorVersion, repoDir, task);
+                                    }
+                                },
+                                {
+                                    task: (ctx,) => {
+                                        ctx[repo].fileChanges = SpawnUtils.spawnWithOutput('git', ['status', '--porcelain'], repoDir);
+                                        if (!ctx[repo].fileChanges) {
+                                            throw new Error(repo + ': No file changes, skipping');
+                                        }
+                                    }
+                                },
+                                {
+                                    title: 'commit file changes',
+                                    enabled: () => !this.options['test-run'],
+                                    task: async (ctx) => {
+                                        ctx[repo].title = `Generator updates from ${ctx[repo].localVersion} to ${this.generatorVersion}`;
+                                        await SpawnUtils.spawnPromise('git', ['add', '.'], repoDir);
+                                        await SpawnUtils.spawnPromise('git', ['commit', '-am', ctx[repo].title], repoDir);
+                                    }
+                                },
+                                {
+                                    title: 'push changes',
+                                    enabled: () => !this.options['test-run'],
+                                    task: async (ctx) => {
+                                        await SpawnUtils.spawnPromise('git', ['push', 'origin', ctx[repo].branch], repoDir);
+                                    }
+                                },
+                                {
+                                    title: 'draft pull request',
+                                    enabled: () => !this.options['test-run'],
+                                    task: async (ctx) => {
+                                        const { title, branch, descriptions } = ctx[repo];
+                                        const data = {
+                                            title,
+                                            head: branch,
+                                            body: descriptions.join('\n'),
+                                            base: 'develop'
+                                        };
+                                        const credentials = AutoUpdateUtils.chooseCredentials(org);
+                                        const { number } = await GithubRestUtils.createPullRequest(baseName, data, credentials);
+                                        const assignees = [SpawnUtils.spawnWithOutput('git', ['config', 'user.name'], repoDir)];
+                                        await GithubRestUtils.setAssignees(baseName, number, assignees, credentials);
+                                    },
+                                }
+                            ], { concurrent: false, rendererOptions: { collapseErrors: true, showErrorMessage: true, collapse: false } });
+                        }
+                    };
+                }),
+            ], { concurrent: true, exitOnError: false, rendererOptions: { showErrorMessage: false } });
 
-            const branch = `generator_update/${localVersion}_to_${this.generatorVersion}`;
-            await SpawnUtils.spawnOrAbort('git', ['checkout', '-b', branch], repoDir, this.options.verbose);
+        await tasks.run();
+        this.errors = tasks.err[0];
 
-            const description = await AutoUpdateUtils.autoUpdate(type, localVersion, this.generatorVersion, repoDir);
-            const fileChanges = SpawnUtils.spawnWithOutput('git', ['status', '--porcelain'], repoDir);
-            console.log('here')
-            console.log( AutoUpdateUtils.chooseCredentials(org))
-
-            // if (fileChanges) {
-            //     const title = `Generator updates from ${localVersion} to ${this.generatorVersion}`;
-            //     this.spinner.start(`${repo}: Commiting files`);
-            //     await SpawnUtils.spawnOrAbort('git', ['add', '.'], repoDir, this.options.verbose);
-            //     await SpawnUtils.spawnOrAbort('git', ['commit', '-am', title], repoDir, this.options.verbose);
-            //     this.spinner.succeed();
-            //     this.spinner.start(`${repo}: Pushing files\n`);
-            //     await SpawnUtils.spawnOrAbort('git', ['push', 'origin', branch], repoDir, this.options.verbose);
-            //     this.spinner.succeed();
-
-
-            //     const data = {
-            //         title,
-            //         head: branch,
-            //         body: description.join('\n'),
-            //         base: 'develop'
-            //     };
-
-            //     const credentials = AutoUpdateUtils.chooseCredentials(org);
-            //     this.spinner.start(`${repo}: Drafting pull request`);
-            //     const {number} = await GithubRestUtils.createPullRequest(baseName, data, credentials);
-            //     const assignees = [SpawnUtils.spawnWithOutput('git', ['config', 'user.name'], repoDir)];
-            //     await GithubRestUtils.setAssignees(baseName, number, assignees, credentials);
-            //     this.spinner.succeed();
-            // }
-            return description;
-        }));
-
-        logFile.map((log, index) => {
-            if (log.reason instanceof Error) {
-                log.reason = log.reason.toString();
-            }
-            log.repo = repos[index];
-            return log;
-        });
-        this.spinner.stop();
-        return this.logFile = logFile;
+        if (this.options['test-run']) {
+            await this.prompt([
+                {
+                    type: 'confirm',
+                    name: 'review',
+                    message: 'Review changes in vscode?',
+                }]).then(({ review }) => {
+                    if (review) {
+                        SpawnUtils.spawnSync('code', ['.'], this.cwd);
+                    }
+                });
+        }
     }
 
     end() {
-        this.fs.writeJSON(this.destinationPath('log.json'), this.logFile);
+        if (this.errors) {
+            const log = this.errors.errors.map((e) => e.stack).join('\n');
+            fse.writeFile(this.destinationPath('error.log'), log);
+        }
+
     }
 }
 

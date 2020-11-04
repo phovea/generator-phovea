@@ -3,44 +3,36 @@ const path = require('path');
 const NpmUtils = require('../../utils/NpmUtils');
 const glob = require('glob').sync;
 const semver = require('semver');
-const chalk = require('chalk');
-const ora = require('ora');
 
 class AutoUpdateUtils {
-    static async autoUpdate(type, localVersion, generatorVersion, destinationPath) {
+    static async autoUpdate(type, localVersion, generatorVersion, destinationPath, task) {
+        const repo = path.basename(destinationPath);
         const excecuteUpdates = AutoUpdateUtils.getAvailableUpdates().filter((version) => semver.gtr(version, localVersion));
-        const descriptions = await excecuteUpdates.reduce((updateChain, version) => {
-            return updateChain
-                .then(async (descriptions) => {
-                    const desc = await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath);
-                    descriptions.push(desc);
-                    return descriptions;
-                });
-        }, Promise.resolve([]));
-        return descriptions;
+        return task.newListr(
+            [...excecuteUpdates.map((version) => {
+                return {
+                    title: 'update ' + version,
+                    task: async (ctx) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath))
+                };
+            })], { exitOnError: true, concurrent: false, rendererOptions: { collapse: false } }
+        );
     }
 
     static async updateLogic(nextVersion, generatorVersion, type, destinationPath) {
-
         const filePath = `./updates/update-${nextVersion}.js`;
         const repo = path.basename(destinationPath);
         const { update, description } = require(filePath);
         const currentVersion = AutoUpdateUtils.readConfig('localVersion', destinationPath) || NpmUtils.decrementVersion(generatorVersion);
-
         if (currentVersion === nextVersion) {
-            throw new Error(`Error ${repo}: Duplicate version tag "${currentVersion}"`);
+            throw new Error(`${repo}: Duplicate version tag "${currentVersion}"`);
         }
-
-        const spinner = ora(`${repo}: Running update-${nextVersion}`).start();
         return update(type, destinationPath)
             .then(async () => {
                 AutoUpdateUtils.setConfig('localVersion', nextVersion, destinationPath);
-                spinner.succeed();
                 return `#### ${currentVersion} to ${nextVersion}\n ${description}`;
             })
             .catch((e) => {
                 const msg = `${repo}: Update ${currentVersion} to ${nextVersion} failed with ${e.message}`;
-                spinner.fail(msg);
                 e.message = msg;
                 // does it make sense if you call the revert function? 
                 throw e;
@@ -73,7 +65,7 @@ class AutoUpdateUtils {
                 username: 'datavisyn-bot',
                 token: process.env.DATAVISYN_TOKEN
             } : {
-                username: 'caleydo-bot',
+                username: 'oltionchampari',
                 token: process.env.CALEYDO_TOKEN
             };
     }
