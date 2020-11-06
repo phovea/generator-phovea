@@ -10,6 +10,8 @@ const GithubRestUtils = require('./GithubRestUtils');
 const { decrementVersion } = require('../../utils/NpmUtils');
 const { Listr } = require('listr2');
 const tmp = require('tmp');
+const { chunk } = require('lodash');
+const chalk = require('chalk');
 
 class Generator extends Base {
     constructor(args, options) {
@@ -46,6 +48,11 @@ class Generator extends Base {
     }
 
     _readKnownReposFile(file) {
+        const repoName = 'Repository name';
+        const repoLink = 'Repository link';
+        const owner = 'Owner';
+        const type = 'Type';
+
         if (!fse.existsSync(file)) {
             this.env.error('Given file cannot be read: ' + file);
         }
@@ -53,34 +60,45 @@ class Generator extends Base {
             columns: true,
             skip_empty_lines: true
         });
-        return Object.assign({}, ...records.map((item) => (
+        const parsedRecords = records
+            .filter((r) => r[repoName] && r[repoName] !== 'lineupjs' && r[repoLink] && r[owner] && r[type] && r[type] !== '-');
+        return Object.assign({}, ...parsedRecords.map((item) => (
             {
-                [item.name]: {
-                    org: RepoUtils.getOrganization(item.link),
+                [item[repoName]]: {
+                    org: RepoUtils.getOrganization(item[repoLink]),
+                    link: item[repoLink],
                     ...item
                 }
             })));
     }
 
-    async writing() {
-        this.cwd = tmp.dirSync({ unsafeCleanup: true }).name;
-        const repos = Object.keys(this.knownRepos);
-        const tasks = new Listr(
+    _taskWraper(chunk) {
+        return new Listr(
             [
-                ...repos.map((repo) => {
+                ...chunk.map((repo) => {
                     const { link, org } = this.knownRepos[repo];
                     const repoUrl = RepoUtils.toSSHRepoUrl(link);
                     const repoDir = path.join(this.cwd, repo);
                     const baseName = `${org}/${repo}`;
+
                     return {
-                        title: repo,
+                        title: chalk.bold(repo),
 
                         task: async (ctx, task) => {
                             return task.newListr([
                                 {
                                     title: 'clone repo ' + repo,
+                                    options: {
+                                        persistentOutput: false,
+                                    },
+                                    task: async () => await SpawnUtils.spawnPromise('git', 'clone -b develop ' + repoUrl, this.cwd)
+                                },
+                                {
+                                    title: 'check yo-rc.json exists',
+                                    options: {
+                                        persistentOutput: false,
+                                    },
                                     task: async (ctx) => {
-                                        await SpawnUtils.spawnPromise('git', 'clone -b develop ' + repoUrl, this.cwd);
                                         const [localVersion = decrementVersion(this.generatorVersion), type] = [
                                             AutoUpdateUtils.readConfig('localVersion', repoDir),
                                             AutoUpdateUtils.readConfig('type', repoDir)
@@ -92,6 +110,9 @@ class Generator extends Base {
                                 },
                                 {
                                     title: 'checkout working branch',
+                                    options: {
+                                        persistentOutput: false,
+                                    },
                                     task: async (ctx, task) => {
                                         const branch = `generator_update/${ctx[repo].localVersion}_to_${this.generatorVersion}`;
                                         ctx[repo].branch = branch;
@@ -147,35 +168,58 @@ class Generator extends Base {
                                         await GithubRestUtils.setAssignees(baseName, number, assignees, credentials);
                                     },
                                 }
-                            ], { concurrent: false, rendererOptions: { collapseErrors: true, showErrorMessage: true, collapse: false } });
+                            ], { concurrent: false, rendererOptions: { collapseErrors: false, showErrorMessage: false, collapse: false } });
                         }
                     };
                 }),
             ], { concurrent: true, exitOnError: false, rendererOptions: { showErrorMessage: false } });
 
-        await tasks.run();
-        this.errors = tasks.err[0];
+    }
 
+    async writing() {
+        this.cwd = tmp.dirSync({ unsafeCleanup: true }).name;
+        const repos = Object.keys(this.knownRepos);
+        const chunkSize = Math.ceil(repos.length / 10);
+        const [...chunks] = chunk(repos, chunkSize);
+        const groups = chunks.map((chunk) => this._taskWraper(chunk));
+
+        await groups.reduce(async (updateChain, group) => {
+            return updateChain
+                .then(() => group.run());
+        }, Promise.resolve([]));
+
+        this.errorLog = this._composeErrorLog(groups);
         if (this.options['test-run']) {
-            await this.prompt([
-                {
-                    type: 'confirm',
-                    name: 'review',
-                    message: 'Review changes in vscode?',
-                }]).then(({ review }) => {
-                    if (review) {
-                        SpawnUtils.spawnSync('code', ['.'], this.cwd);
-                    }
-                });
+            await this._reviewChanges();
         }
     }
 
-    end() {
-        if (this.errors) {
-            const log = this.errors.errors.map((e) => e.stack).join('\n');
-            fse.writeFile(this.destinationPath('error.log'), log);
+    _composeErrorLog(groups) {
+        const errorGroups = groups.filter((group) => group.err[0]);
+        if (errorGroups.length) {
+            return errorGroups
+                .map((group) => group.err[0].errors.map(({ stack }) => stack).join('\n'))
+                .join('\n');
         }
+    }
 
+    _reviewChanges() {
+        return this.prompt([
+            {
+                type: 'confirm',
+                name: 'review',
+                message: 'Review changes in vscode?',
+            }]).then(({ review }) => {
+                if (review) {
+                    SpawnUtils.spawnSync('code', ['.'], this.cwd);
+                }
+            });
+    }
+
+    end() {
+        if (this.errorLog) {
+            fse.writeFile(this.destinationPath('error.log'), this.errors);
+        }
     }
 }
 

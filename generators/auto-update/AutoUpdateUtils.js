@@ -12,13 +12,17 @@ class AutoUpdateUtils {
             [...excecuteUpdates.map((version) => {
                 return {
                     title: 'update ' + version,
-                    task: async (ctx) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath))
+                    options: {
+                        bottomBar: Infinity,
+                        persistentOutput: true
+                    },
+                    task: async (ctx, task) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath, task))
                 };
-            })], { exitOnError: true, concurrent: false, rendererOptions: { collapse: false } }
+            })], { exitOnError: true, concurrent: false, rendererOptions: { showErrorMessage: true, collapseErrors: false, collapse: false } }
         );
     }
 
-    static async updateLogic(nextVersion, generatorVersion, type, destinationPath) {
+    static async updateLogic(nextVersion, generatorVersion, type, destinationPath, task) {
         const filePath = `./updates/update-${nextVersion}.js`;
         const repo = path.basename(destinationPath);
         const { update, description } = require(filePath);
@@ -26,7 +30,7 @@ class AutoUpdateUtils {
         if (currentVersion === nextVersion) {
             throw new Error(`${repo}: Duplicate version tag "${currentVersion}"`);
         }
-        return update(type, destinationPath)
+        return update(type, destinationPath, task)
             .then(async () => {
                 AutoUpdateUtils.setConfig('localVersion', nextVersion, destinationPath);
                 return `#### ${currentVersion} to ${nextVersion}\n ${description}`;
@@ -65,7 +69,7 @@ class AutoUpdateUtils {
                 username: 'datavisyn-bot',
                 token: process.env.DATAVISYN_TOKEN
             } : {
-                username: 'oltionchampari',
+                username: 'caleydo-bot',
                 token: process.env.CALEYDO_TOKEN
             };
     }
