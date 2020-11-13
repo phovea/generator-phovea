@@ -94,23 +94,23 @@ workflows:
     jobs:
       - build:
           filters:
-              tags:
-                  ignore: /.*/
+            tags:
+              ignore: /.*/
   build-publish-tag:
     jobs:
       - build:
           filters:
-              branches:
-                  ignore: /.*/
-              tags:
-                  only: /^v.*/
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
       - publish:
           context:
               - org-public
           requires: 
               - build
           filters:
-              branches:
-                  ignore: /.*/
-              tags:
-                  only: /^v.*/
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
