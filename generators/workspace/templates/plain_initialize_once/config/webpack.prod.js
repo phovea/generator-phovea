@@ -1,6 +1,7 @@
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 //for debugging issues
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -227,6 +228,14 @@ const config = {
             'process.env.__APP_CONTEXT__': JSON.stringify('/'),
             'process.env.__DEBUG__': JSON.stringify(isDev)
         }),
+        new Dotenv({
+            path: base + '/.env', // load this now instead of the ones in '.env'
+            safe: false, // load '.env.example' to verify the '.env' variables are all set. Can also be a string to a different file.
+            allowEmptyValues: true, // allow empty variables (e.g. `FOO=`) (treat it as empty string, rather than missing)
+            systemvars: true, // load all the predefined 'process.env' variables which will trump anything local per dotenv specs.
+            silent: true, // hide any errors
+            defaults: false // load '.env.defaults' as the default values if empty.
+        }),        
         new CopyWebpackPlugin({
             patterns: [
                 {
