@@ -49,7 +49,7 @@ jobs:
           at: ~/phovea
       - run:
           name: Authentication
-          command:  |
+          command: |
             echo -e "registry=https://$NPM_REPOSITORY" >> ~/phovea/.npmrc
             echo -e "//$NPM_REPOSITORY:authToken=$NPM_TOKEN" >> ~/phovea/.npmrc
       - run:
@@ -71,8 +71,8 @@ workflows:
     jobs:
       - build:
           filters:
-              tags:
-                  ignore: /.*/
+            tags:
+              ignore: /.*/
   build-publish-tag:
     jobs:
       - build:
