@@ -107,7 +107,7 @@ workflows:
       - publish:
           context:
               - org-public
-          requires: 
+          requires:
               - build
           filters:
             branches:
