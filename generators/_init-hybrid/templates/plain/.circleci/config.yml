@@ -142,7 +142,8 @@ workflows:
 #              only:
 #                - develop
 #    jobs:
-#      - build
+#      - python-build
+#      - web-build
   build-branches-only:
     jobs:
       - python-build:
@@ -152,7 +153,7 @@ workflows:
       - web-build:
         filters:
             tags:
-                ignore: /.*/                
+                ignore: /.*/
   build-publish-tag:
     jobs:
       - python-build:
