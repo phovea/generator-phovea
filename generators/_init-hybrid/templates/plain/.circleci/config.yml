@@ -148,26 +148,26 @@ workflows:
     jobs:
       - python-build:
           filters:
-              tags:
-                  ignore: /.*/
+            tags:
+              ignore: /.*/
       - web-build:
         filters:
-            tags:
-                ignore: /.*/
+          tags:
+            ignore: /.*/
   build-publish-tag:
     jobs:
       - python-build:
           filters:
-              branches:
-                  ignore: /.*/
-              tags:
-                  only: /^v.*/
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
       - web-build:
           filters:
-              branches:
-                  ignore: /.*/
-              tags:
-                  only: /^v.*/
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
       - python-publish:
           context:
               - org-public
@@ -176,9 +176,9 @@ workflows:
               - web-build
           filters:
               branches:
-                  ignore: /.*/
+                ignore: /.*/
               tags:
-                  only: /^v.*/
+                only: /^v.*/
       - web-publish:
           context:
               - org-public
@@ -187,6 +187,6 @@ workflows:
               - web-build
           filters:
               branches:
-                  ignore: /.*/
+                ignore: /.*/
               tags:
-                  only: /^v.*/
+                only: /^v.*/
