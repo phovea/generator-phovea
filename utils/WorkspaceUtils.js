@@ -144,4 +144,24 @@ module.exports = class WorkspaceUtils {
     const plugins = known.plugin;
     return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
   }
+
+  /**
+   * Gives the order in which the scss files should be imported in the workspace
+   * @param {string} a Repo to compare
+   * @param {string} b Repo to compare
+   */
+  static compareRepos(a, b) {
+    const weight = (plugin) => {
+      const orderedArr = ['ordino', 'tdp_core', 'phovea_clue', 'phovea_ui'];
+      if (orderedArr.indexOf(plugin) == - 1) {
+        return 100;
+      }
+      return orderedArr.indexOf(plugin);
+    };
+
+    if (weight(a) === weight(b)) {
+      return a > b; // alphabetically
+    }
+    return weight(a) - weight(b);
+  }
 };

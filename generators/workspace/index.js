@@ -10,6 +10,7 @@ const known = () => require('../../utils/known');
 const NpmUtils = require('../../utils/NpmUtils');
 const PipUtils = require('../../utils/PipUtils');
 const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
+const WorkspaceUtils= require('../../utils/WorkspaceUtils');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -444,6 +445,35 @@ class Generator extends BasePhoveaGenerator {
     });
   }
 
+  /**
+   * Collects all variables.scss and main.scss file of the frontend plugins
+   * and imports them in the correct order in the workspace.scss file.
+   * @param {string[]} plugins Frontend repos
+   */
+  _composeWorkspaceScss(plugins) {
+
+    const defaultApp = this.props.defaultApp;
+    const frontendRepos = plugins.filter((r) => {
+      const type = GeneratorUtils.readConfig('type', this.destinationPath(r));
+      return r !== defaultApp && (r === 'ordino' || !type.includes('app')); // remove app from frontendRepos
+    });
+
+    const sorted = frontendRepos.sort((a, b) => WorkspaceUtils.compareRepos(a, b));
+    sorted.unshift(defaultApp);
+    const reversed = [...sorted].reverse();
+
+    const imports = [
+      `@debug('import plugin scss variables');`,
+      ...sorted
+        .filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/abstracts/variables.scss`)))
+        .map((r) => `@import "~${r}/dist/scss/abstracts/variables";`),
+      `\n@debug('import plugin main scss');`,
+      ...reversed.filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/main.scss`)))
+        .map((r) => `@import "~${r}/dist/scss/main";`)
+    ].join('\n');
+    this.fs.write(this.destinationPath("workspace.scss"), imports);
+  }
+
   writing() {
 
     const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
@@ -473,6 +503,8 @@ class Generator extends BasePhoveaGenerator {
       registry: this.props.registry || [],
       vendors: this.props.vendors || []
     });
+
+    this._composeWorkspaceScss(plugins);
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
     const yaml = require('yamljs');
