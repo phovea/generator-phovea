@@ -447,12 +447,11 @@ class Generator extends BasePhoveaGenerator {
   }
 
   /**
-   * Collects all variables.scss and main.scss file of the frontend plugins
+   * Collects all variables.scss and main.scss files of the frontend plugins of the workspace
    * and imports them in the correct order in the workspace.scss file.
    * @param {string[]} plugins Frontend repos
    */
   _composeWorkspaceScss(plugins) {
-
     const defaultApp = this.props.defaultApp;
     const frontendRepos = plugins.filter((r) => {
       const type = GeneratorUtils.readConfig('type', this.destinationPath(r));
@@ -472,6 +471,7 @@ class Generator extends BasePhoveaGenerator {
       ...reversed.filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/main.scss`)))
         .map((r) => `@import "~${r}/dist/scss/main";`)
     ].join('\n');
+  
     this.fs.write(this.destinationPath("workspace.scss"), imports);
   }
 
