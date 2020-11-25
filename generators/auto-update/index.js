@@ -19,7 +19,7 @@ class Generator extends Base {
             skipLocalCache: true // prevents store prompts from being saved in the local `.yo-rc.json`
         }));
         this.option('test-run', {
-            default: true,
+            default: false,
             required: false,
             type: Boolean
         });
