@@ -16,22 +16,28 @@ class AutoUpdateUtils {
                         bottomBar: Infinity,
                         persistentOutput: true
                     },
-                    task: async (ctx, task) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath, task))
+                    task: async (ctx, task) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath, task, ctx))
                 };
             })], { exitOnError: true, concurrent: false, rendererOptions: { showErrorMessage: true, collapseErrors: false, collapse: false } }
         );
     }
 
-    static async updateLogic(nextVersion, generatorVersion, type, destinationPath, task) {
+    static async updateLogic(nextVersion, generatorVersion, type, destinationPath, task, ctx) {
         const filePath = `./updates/update-${nextVersion}.js`;
         const repo = path.basename(destinationPath);
         const { update, description } = require(filePath);
         const currentVersion = AutoUpdateUtils.readConfig('localVersion', destinationPath) || NpmUtils.decrementVersion(generatorVersion);
+        const setCtx = (key, value) => {
+            ctx[repo][key] = value;
+        };
         if (currentVersion === nextVersion) {
             throw new Error(`${repo}: Duplicate version tag "${currentVersion}"`);
         }
-        return update(type, destinationPath, task)
+        return update(type, destinationPath, task, setCtx)
             .then(async () => {
+                if (ctx[repo].skip) {
+                    return;
+                }
                 AutoUpdateUtils.setConfig('localVersion', nextVersion, destinationPath);
                 return `#### ${currentVersion} to ${nextVersion}\n ${description}`;
             })

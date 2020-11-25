@@ -76,11 +76,11 @@ class Generator extends Base {
         return new Listr(
             [
                 ...chunk.map((repo) => {
-                    const { link, org } = this.knownRepos[repo];
-                    const repoUrl = RepoUtils.toSSHRepoUrl(link);
+                    const { org } = this.knownRepos[repo];
+                    const { token } = AutoUpdateUtils.chooseCredentials(org);
+                    const repoUrl = `https://${token}@github.com/${org}/${repo}.git`;
                     const repoDir = path.join(this.cwd, repo);
                     const baseName = `${org}/${repo}`;
-
                     return {
                         title: chalk.bold(repo),
 
@@ -90,6 +90,7 @@ class Generator extends Base {
                                     title: 'clone repo ' + repo,
                                     options: {
                                         persistentOutput: false,
+                                        bottomBar: Infinity,
                                     },
                                     task: async () => await SpawnUtils.spawnPromise('git', 'clone -b develop ' + repoUrl, this.cwd)
                                 },
@@ -128,10 +129,11 @@ class Generator extends Base {
                                     }
                                 },
                                 {
+                                    title: 'check for file changes',
                                     task: (ctx,) => {
                                         ctx[repo].fileChanges = SpawnUtils.spawnWithOutput('git', ['status', '--porcelain'], repoDir);
                                         if (!ctx[repo].fileChanges) {
-                                            throw new Error(repo + ': No file changes, skipping');
+                                            throw new Error(repo + ': No file changes, aborting next steps');
                                         }
                                     }
                                 },
@@ -148,7 +150,7 @@ class Generator extends Base {
                                     title: 'push changes',
                                     enabled: () => !this.options['test-run'],
                                     task: async (ctx) => {
-                                        await SpawnUtils.spawnPromise('git', ['push', 'origin', ctx[repo].branch], repoDir);
+                                        await SpawnUtils.spawnPromise('git', ['push', repoUrl, ctx[repo].branch], repoDir);
                                     }
                                 },
                                 {
@@ -168,18 +170,19 @@ class Generator extends Base {
                                         await GithubRestUtils.setAssignees(baseName, number, assignees, credentials);
                                     },
                                 }
-                            ], { concurrent: false, rendererOptions: { collapseErrors: false, showErrorMessage: false, collapse: false } });
+                            ], { concurrent: false, rendererOptions: { collapseErrors: false, showErrorMessage: true, collapse: false } });
                         }
                     };
                 }),
-            ], { concurrent: true, exitOnError: false, rendererOptions: { showErrorMessage: false } });
+            ], { concurrent: true, exitOnError: false, rendererOptions: { showErrorMessage: true, collapseErrors: false } });
 
     }
 
     async writing() {
         this.cwd = tmp.dirSync({ unsafeCleanup: true }).name;
         const repos = Object.keys(this.knownRepos);
-        const chunkSize = Math.ceil(repos.length / 10);
+        // seperate repos in chunks to make logging more managable
+        const chunkSize = 8;
         const [...chunks] = chunk(repos, chunkSize);
         const groups = chunks.map((chunk) => this._taskWraper(chunk));
 
@@ -218,7 +221,8 @@ class Generator extends Base {
 
     end() {
         if (this.errorLog) {
-            fse.writeFile(this.destinationPath('error.log'), this.errors);
+            fse.writeFile(this.destinationPath('error.log'), this.errorLog);
+            this.log(chalk.green('create ') + ' error.log');
         }
     }
 }

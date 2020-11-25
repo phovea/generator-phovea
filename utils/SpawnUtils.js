@@ -75,12 +75,16 @@ module.exports = class SpawnUtils {
         return spawnSync(command, Array.isArray(argline) ? argline : argline.split(' '), options).stdout.trim();
     }
 
-    static spawnPromise(command, argline, cwd,) {
+    static async spawnPromise(command, argline, cwd,) {
         const options = {
             ...cwd ? { cwd } : {},
-            encoding: 'UTF-8'
+            encoding: 'UTF-8',
         };
+        try {
+            return await spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options);
+        } catch (e) {
+            throw new Error(e.stderr);
+        }
 
-        return spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options);
     }
 };
