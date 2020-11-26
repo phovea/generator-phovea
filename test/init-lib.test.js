@@ -75,6 +75,10 @@ describe('Generate lib plugin with default prompt values', () => {
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'lib'}});
+  });
+
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
   });

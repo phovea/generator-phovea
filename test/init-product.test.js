@@ -76,4 +76,8 @@ describe('generate a product with default prompt values', () => {
     it('generates `phovea_product.json` with the correct service', () => {
         assert.jsonFileContent('phovea_product.json', [config]);
     });
+
+    it('generates `.yo-rc.json` with correct type', () => {
+        assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'product'}});
+      });
 });
