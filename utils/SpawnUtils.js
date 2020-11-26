@@ -14,7 +14,6 @@ module.exports = class SpawnUtils {
         const result = SpawnUtils.spawnSync(cmd, argline, cwd, verbose);
         const stdout = result.stdout;
         if (SpawnUtils.failed(result)) {
-            console.log(result.stderr.toString());
             return SpawnUtils.abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${result.status}`);
 
         } else if (stdout && stdout.toString()) {
