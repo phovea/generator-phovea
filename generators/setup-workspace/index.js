@@ -192,7 +192,7 @@ class Generator extends Base {
    */
   _removeUnnecessaryProductFiles() {
     if (fs.existsSync(this.cwd + '/.yo-rc.json')) {
-    fs.unlinkSync(this.cwd + '/.yo-rc.json');
+      fs.unlinkSync(this.cwd + '/.yo-rc.json');
     }
 
     fs.rmdirSync(this.cwd + '/.git', { recursive: true });
@@ -201,7 +201,7 @@ class Generator extends Base {
 
   /**
    * Copies the template files of the product in the workspace
-   * @param {string} templatePath 
+   * @param {string} templatePath
    */
   _copyProductTemplates(templatePath) {
     const dirs = fs.readdirSync(templatePath).filter(f => fs.statSync(path.join(templatePath, f)).isDirectory());
