@@ -20,7 +20,8 @@ const expectedFiles = [
 
 const unExpectedFiles = [
   'webpack.config.js',
-  'tests.webpack.js'
+  'tests.webpack.js',
+  'src/index.template'
 ];
 
 describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
