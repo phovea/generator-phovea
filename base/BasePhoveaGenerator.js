@@ -58,7 +58,8 @@ class BasePhoveaGenerator extends Generator {
             // see https://github.com/SBoudrias/mem-fs-editor/issues/25
             // copyTpl doesn't support glob options
             const f = glob(base + '/**/*', {
-                dot: true
+                dot: true,
+                nodir: true
             });
             f.forEach((fi) => {
                 const rel = path.relative(base, fi);
