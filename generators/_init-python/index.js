@@ -106,7 +106,7 @@ class Generator extends BasePhoveaGenerator {
   }
   writing() {
     const config = this.config.getAll();
-    this.cwd = this.options.isWorkspace ? (config.cwd || config.name) + '/' : '';
+    this.cwd = this.options.isWorkspace ? (config.app || config.serviceName || config.name) + '/' : '';
     const {version} = this.fs.readJSON(this.destinationPath(this.cwd + 'package.json'), {version: '1.0.0'});
     const deps = this._generateDependencies(NpmUtils.useDevVersion(version), this.cwd);
 

@@ -84,7 +84,7 @@ class BasePhoveaGenerator extends Generator {
                 if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
                     this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(cwd + config.name.toLowerCase() + '/'), includeDot);
                 }
-                copyTpl(this.templatePath(prefix + 'pluginname_processed'), cwd + config.name.toLowerCase() + '/', false);
+                copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/', false);
             }
         };
         copy('');

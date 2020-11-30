@@ -78,7 +78,7 @@ class BaseInitPluginGenerator extends BasePhoveaGenerator {
 
     writing() {
         const config = this.config.getAll();
-        this._createSubDir(config.name);
+        this._createSubDir(config.app || config.serviceName || config.name);
         if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
             this._patchPackageJSON(config, null, null, this.cwd);
         }

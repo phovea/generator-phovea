@@ -134,7 +134,7 @@ class PackageJSONGenerator extends BasePhoveaGenerator {
 
   writing() {
     const config = _.extend({}, this.props, this.config.getAll());
-    this.cwd = this.isWorkspace ? (config.cwd || config.name) + '/' : ''; // use config.cwd for init-app or init-service generators and config.name for the rest.
+    this.cwd = this.isWorkspace ? (config.app || config.serviceName || config.name) + '/' : '';
     if (this.originUrl) {
       config.repository = this.originUrl;
     } else {
