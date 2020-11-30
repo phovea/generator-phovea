@@ -100,13 +100,12 @@ class Generator extends Base {
    * Removes/renames files of the cloned product that conflict with the workspace files.
    */
   _removeUnnecessaryProductFiles() {
-    try {
+    if (fs.existsSync(this.cwd + '/.yo-rc.json')) {
       fs.unlinkSync(this.cwd + '/.yo-rc.json');
-      fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
-      fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
-    } catch (e) {
-      this.log(e.message);
     }
+
+    fs.rmdirSync(this.cwd + '/.git', { recursive: true }); // TODO look into git submodules
+      fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
   }
 
   /**

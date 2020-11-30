@@ -21,7 +21,6 @@ class Generator extends BaseInitServerGenerator {
       default: this.config.get('serviceName')
     }]).then(({serviceName}) => {
       this.config.set('serviceName', serviceName);
-      this.config.set('cwd', serviceName);
     });
   }
 

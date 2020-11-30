@@ -40,6 +40,7 @@ describe('generator setup-workspace', () => {
 
                 fs.mkdirSync('dummy/templates/web/deploy/web', {recursive: true});
                 fs.writeFileSync('dummy/templates/web/deploy/web/Dockerfile', 'dummy_content');
+                fs.writeJSON(cwd + '/package.json', {});
                 return fs.writeJSON(cwd + '/phovea_product.json', phoveaProduct);
             })
             .mockImplementation(() => Promise.resolve(null)); // just resolve promise after the firts call

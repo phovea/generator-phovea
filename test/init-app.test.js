@@ -68,6 +68,10 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'app'}});
+  });
+
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
   });
