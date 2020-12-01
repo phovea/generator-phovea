@@ -46,10 +46,10 @@ class PluginGenerator extends BaseInitPluginGenerator {
     super.default();
   }
 
-  writing() {
+  async writing() {
     const config = this.config.getAll();
-    this._createSubDir(config.app);
-    this._patchPackageJSON(config, ['main'], null, this.cwd);
+    await this._createSubDir(config.app);
+    this._patchPackageJSON(config, ['main'], null, null, this.cwd);
     this._writeTemplates(config, !this.options.noSamples, this.cwd);
   }
 
