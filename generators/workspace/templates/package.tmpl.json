@@ -14,7 +14,7 @@
     "node": ">= 12.13"
   },
   "scripts": {
-    "preinstall": "rimraf \"node_modules/!(rimraf|.bin)\" package-lock.json || exit 0",
+    "preinstall": "rimraf node_modules package-lock.json || exit 0",
     "postinstall": "npm-run-all --parallel delete-dependencies:*",
     "all:compile": "npm-run-all --parallel compile:*",
     "all:compile:watch": "npm-run-all --parallel compile:watch:*",
