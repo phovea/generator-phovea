@@ -18,6 +18,7 @@
   },
   "main": "generators/app/index.js",
   "files": [
+    "base/",
     "generators/",
     "utils/",
     "knownPhoveaPlugins.json",
