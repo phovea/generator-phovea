@@ -20,7 +20,8 @@ const expectedFiles = [
 
 const unExpectedFiles = [
   'webpack.config.js',
-  'tests.webpack.js'
+  'tests.webpack.js',
+  'src/index.template'
 ];
 
 describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
@@ -66,6 +67,10 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
 
   it('generates `tsconfig.json` with correct content', () => {
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
+  });
+
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'app'}});
   });
 
   it('generates no `tsconfig_dev.json`', () => {

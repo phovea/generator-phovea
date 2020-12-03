@@ -35,4 +35,8 @@ describe('generate slib plugin with default prompt values', () => {
   it('generates `package.json` with a no `types`', () => {
     assert.jsonFileContent('package.json', {types: undefined});
   });
+
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'slib'}});
+  });
 });

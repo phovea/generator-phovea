@@ -58,7 +58,8 @@ class BasePhoveaGenerator extends Generator {
             // see https://github.com/SBoudrias/mem-fs-editor/issues/25
             // copyTpl doesn't support glob options
             const f = glob(base + '/**/*', {
-                dot: true
+                dot: true,
+                nodir: true
             });
             f.forEach((fi) => {
                 const rel = path.relative(base, fi);
@@ -84,7 +85,7 @@ class BasePhoveaGenerator extends Generator {
                 if (fs.existsSync(this.templatePath(prefix + 'pluginname_plain'))) {
                     this.fs.copy(this.templatePath(prefix + 'pluginname_plain/**/*'), this.destinationPath(cwd + config.name.toLowerCase() + '/'), includeDot);
                 }
-                copyTpl(this.templatePath(prefix + 'pluginname_processed'), cwd + config.name.toLowerCase() + '/', false);
+                copyTpl(this.templatePath(prefix + 'pluginname_processed'), config.name.toLowerCase() + '/', false);
             }
         };
         copy('');

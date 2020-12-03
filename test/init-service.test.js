@@ -26,4 +26,8 @@ describe('generate service plugin with default prompt values', () => {
   it('generates `package.json` with no devDependencies', () => {
     assert.jsonFileContent('package.json', {devDependencies: undefined});
   });
+
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'service'}});
+  });
 });

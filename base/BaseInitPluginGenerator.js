@@ -52,11 +52,12 @@ class BaseInitPluginGenerator extends BasePhoveaGenerator {
      * Initialize the property cwd.
      * @param {string} dir Directory name.
      */
-    _createSubDir(dir) {
+    async _createSubDir(dir) {
         if (this._isWorkspace() && this.cwd !== dir + '/') {
             this.cwd = dir + '/';
-            GeneratorUtils.mkdir(dir);
+            return GeneratorUtils.mkdir(dir);
         }
+        return Promise.resolve();
     }
 
     readmeAddon() {
@@ -76,11 +77,11 @@ class BaseInitPluginGenerator extends BasePhoveaGenerator {
         });
     }
 
-    writing() {
+    async writing() {
         const config = this.config.getAll();
-        this._createSubDir(config.cwd || config.name);
+        await this._createSubDir(config.app || config.serviceName || config.name);
         if (fs.existsSync(this.templatePath('package.tmpl.json'))) {
-            this._patchPackageJSON(config, null, null, this.cwd);
+            this._patchPackageJSON(config, null, null, null, this.cwd);
         }
         if (fs.existsSync(this.templatePath('_gitignore'))) {
             this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));

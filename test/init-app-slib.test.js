@@ -71,6 +71,10 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'app-slib'}});
+  });
+
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
   });
