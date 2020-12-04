@@ -206,7 +206,7 @@ class Generator extends BasePhoveaGenerator {
       if (devRepos.indexOf(this.props.defaultApp) < 0) devRepos.push(this.props.defaultApp);
       devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
       //add dev-repos scripts
-      const scriptPrefix = devRepos.length > 1 ? 'npm-run-all parallel ' : 'npm run ';
+      const scriptPrefix = devRepos.length > 1 ? 'npm-run-all --parallel ' : 'npm run ';
       scripts['dev-repos:compile'] = scriptPrefix + devRepos.map((repo) => `compile:${repo}`).join(' ');
       scripts['dev-repos:compile:watch'] = scriptPrefix + devRepos.map((repo) => `compile:watch:${repo}`).join(' ');
       scripts['dev-repos:copy'] = scriptPrefix + devRepos.map((repo) => `copy:${repo}`).join(' ');
