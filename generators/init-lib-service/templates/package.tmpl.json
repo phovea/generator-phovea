@@ -3,7 +3,8 @@
   "scripts": {
     "postcompile": "npm run copy",
     "copy": "npm run copy-assets && npm run copy-styles",
-    "copy-assets": "if [ -d src/assets ]; then shx --verbose cp -R src/assets/. dist/assets/; fi",
-    "copy-styles": "if [ -d src/scss ]; then shx --verbose cp -R src/scss/. dist/scss/; fi"
+    "copy-assets": "copyfiles --up 1 src/assets/\"**/*\"  src/templates//\"**/*\" dist/ ",
+    "copy-styles": "copyfiles --up 1 src/scss/\"**/*\" dist/",
+    "copy-app-assets": "copyfiles --up 1 src/\"*\".txt  src/\"*\".html src/\"*\".ejs dist/"
  }
 }
