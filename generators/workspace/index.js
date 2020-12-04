@@ -471,7 +471,8 @@ class Generator extends BasePhoveaGenerator {
       ...reversed.filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/main.scss`)))
         .map((r) => `@import "~${r}/dist/scss/main";`)
     ].join('\n');
-  
+    this.log(chalk.yellow('workspace.sccs'));
+    this.log(imports);
     this.fs.write(this.destinationPath("workspace.scss"), imports);
   }
 
