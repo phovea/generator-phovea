@@ -53,7 +53,8 @@ class Generator extends BasePhoveaGenerator {
       version: '0.0.1',
       skipNextStepsLog: false,
       defaultApp: 'phovea',
-      addWorkspaceRepos: true
+      addWorkspaceRepos: true,
+      updateWorkspaceScss: true
     };
 
     // use existing workspace package.json as default
@@ -99,7 +100,11 @@ class Generator extends BasePhoveaGenerator {
       default: defaultConfig.addWorkspaceRepos,
       description: 'States whether workspace repos should be part of the dependencies. Set to `true` for local development setup. Otherwise `false` for CI build process.'
     });
-
+    this.option('updateWorkspaceScss', {
+      type: Boolean,
+      default: defaultConfig.updateWorkspaceScss,
+      description: 'States whether the workspace.scss file should be updated/refreshed.'
+    });
   }
 
   initializing() {
@@ -506,7 +511,9 @@ class Generator extends BasePhoveaGenerator {
       vendors: this.props.vendors || []
     });
 
+    if (this.options.updateWorkspaceScss) {
     this._composeWorkspaceScss(plugins);
+    }
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
     const yaml = require('yamljs');
