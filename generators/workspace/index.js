@@ -465,7 +465,7 @@ class Generator extends BasePhoveaGenerator {
     const imports = [
       `@debug('import plugin scss variables');`,
       ...sorted
-        .filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/abstracts/variables.scss`)))
+        .filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/abstracts/_variables.scss`)))
         .map((r) => `@import "~${r}/dist/scss/abstracts/variables";`),
       `\n@debug('import plugin main scss');`,
       ...reversed.filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/main.scss`)))
