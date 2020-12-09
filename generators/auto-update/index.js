@@ -66,7 +66,6 @@ class Generator extends Base {
             {
                 [item[repoName]]: {
                     org: RepoUtils.getOrganization(item[repoLink]),
-                    link: item[repoLink],
                     ...item
                 }
             })));
