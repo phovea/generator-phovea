@@ -80,11 +80,12 @@ class Generator extends Base {
                     const repoUrl = `https://${token}@github.com/${org}/${repo}.git`;
                     const repoDir = path.join(this.cwd, repo);
                     const baseName = `${org}/${repo}`;
+                    const skipPredicate = (ctx) => !this.options['test-run'] && ctx[repo] && !ctx[repo].skip;
                     return {
                         title: chalk.bold(repo),
 
-                        task: async (ctx, task) => {
-                            return task.newListr([
+                        task: async (ctx, parent) => {
+                            return parent.newListr([
                                 {
                                     title: 'clone repo ' + repo,
                                     options: {
@@ -128,17 +129,18 @@ class Generator extends Base {
                                     }
                                 },
                                 {
-                                    title: 'check for file changes',
-                                    task: (ctx,) => {
+                                    task: (ctx, task) => {
                                         ctx[repo].fileChanges = SpawnUtils.spawnWithOutput('git', ['status', '--porcelain'], repoDir);
                                         if (!ctx[repo].fileChanges) {
-                                            throw new Error(repo + ': No file changes, aborting next steps');
+                                            task.title = 'No file changes, aborting next steps...';
+                                            ctx[repo].skip = true;
+                                            parent.skip();
                                         }
                                     }
                                 },
                                 {
                                     title: 'commit file changes',
-                                    enabled: () => !this.options['test-run'],
+                                    enabled: (ctx) => skipPredicate(ctx),
                                     task: async (ctx) => {
                                         ctx[repo].title = `Generator updates from ${ctx[repo].localVersion} to ${this.generatorVersion}`;
                                         await SpawnUtils.spawnPromise('git', ['add', '.'], repoDir);
@@ -147,14 +149,14 @@ class Generator extends Base {
                                 },
                                 {
                                     title: 'push changes',
-                                    enabled: () => !this.options['test-run'],
+                                enabled: (ctx) => skipPredicate(ctx),
                                     task: async (ctx) => {
                                         await SpawnUtils.spawnPromise('git', ['push', repoUrl, ctx[repo].branch], repoDir);
                                     }
                                 },
                                 {
                                     title: 'draft pull request',
-                                    enabled: () => !this.options['test-run'],
+                                    enabled: (ctx) => skipPredicate(ctx),
                                     task: async (ctx) => {
                                         const { title, branch, descriptions } = ctx[repo];
                                         const data = {
