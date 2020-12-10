@@ -80,10 +80,9 @@ class Generator extends Base {
                     const repoUrl = `https://${token}@github.com/${org}/${repo}.git`;
                     const repoDir = path.join(this.cwd, repo);
                     const baseName = `${org}/${repo}`;
-                    const skipPredicate = (ctx) => !this.options['test-run'] && ctx[repo] && !ctx[repo].skip;
+                    const enablePredicate = (ctx) => !this.options['test-run'] && ctx[repo] && !ctx[repo].skipNext;
                     return {
                         title: chalk.bold(repo),
-
                         task: async (ctx, parent) => {
                             return parent.newListr([
                                 {
@@ -101,7 +100,7 @@ class Generator extends Base {
                                     },
                                     task: async (ctx) => {
                                         const [currentVersion = decrementVersion(this.generatorVersion), type] = [
-                                            AutoUpdateUtils.readConfig('currentVersion', repoDir),
+                                            AutoUpdateUtils.readConfig('localVersion', repoDir),
                                             AutoUpdateUtils.readConfig('type', repoDir)
                                         ];
                                         ctx[repo] = {};
@@ -125,22 +124,22 @@ class Generator extends Base {
                                     title: 'run updates',
                                     task: async (ctx, task) => {
                                         ctx[repo].descriptions = [];
-                                        return AutoUpdateUtils.autoUpdate(repo,ctx[repo].type, ctx[repo].currentVersion, this.generatorVersion, repoDir, task);
+                                        return AutoUpdateUtils.autoUpdate(repo, ctx[repo].type, ctx[repo].currentVersion, this.generatorVersion, repoDir, task);
                                     }
                                 },
                                 {
                                     task: (ctx, task) => {
                                         ctx[repo].fileChanges = SpawnUtils.spawnWithOutput('git', ['status', '--porcelain'], repoDir);
                                         if (!ctx[repo].fileChanges) {
-                                            task.title = 'No file changes, aborting next steps...';
-                                            ctx[repo].skip = true;
+                                            task.title = 'No file changes detected, aborting ';
+                                            ctx[repo].skipNext = true;
                                             parent.skip();
                                         }
                                     }
                                 },
                                 {
                                     title: 'commit file changes',
-                                    enabled: (ctx) => skipPredicate(ctx),
+                                    enabled: (ctx) => enablePredicate(ctx),
                                     task: async (ctx) => {
                                         ctx[repo].title = `Generator updates from ${ctx[repo].currentVersion} to ${this.generatorVersion}`;
                                         await SpawnUtils.spawnPromise('git', ['add', '.'], repoDir);
@@ -149,14 +148,14 @@ class Generator extends Base {
                                 },
                                 {
                                     title: 'push changes',
-                                enabled: (ctx) => skipPredicate(ctx),
+                                    enabled: (ctx) => enablePredicate(ctx),
                                     task: async (ctx) => {
                                         await SpawnUtils.spawnPromise('git', ['push', repoUrl, ctx[repo].branch], repoDir);
                                     }
                                 },
                                 {
                                     title: 'draft pull request',
-                                    enabled: (ctx) => skipPredicate(ctx),
+                                    enabled: (ctx) => enablePredicate(ctx),
                                     task: async (ctx) => {
                                         const { title, branch, descriptions } = ctx[repo];
                                         const data = {
