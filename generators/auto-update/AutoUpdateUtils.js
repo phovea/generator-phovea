@@ -5,9 +5,9 @@ const glob = require('glob').sync;
 const semver = require('semver');
 
 class AutoUpdateUtils {
-    static async autoUpdate(repo, pluginType, currentVersion, targetVersion, cwd, task) {
+    static async autoUpdate(repo, pluginType, currentVersion, targetVersion, cwd, parent) {
         const excecuteUpdates = AutoUpdateUtils.getAvailableUpdates().filter((version) => semver.gtr(version, currentVersion));
-        return task.newListr(
+        return parent.newListr(
             [...excecuteUpdates.map((version) => {
                 return {
                     title: 'update ' + version,

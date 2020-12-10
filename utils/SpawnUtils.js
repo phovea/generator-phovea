@@ -83,7 +83,7 @@ module.exports = class SpawnUtils {
         };
         return spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options)
             .catch(e => {
-                throw new Error(`${e.message}${'\n' + e.stdout || ''}`);
+                throw new Error(`${e.message}${('\n' + e.stderr) || ''}${('\n' + e.stdout) || ''}`);
             });
     }
 };
