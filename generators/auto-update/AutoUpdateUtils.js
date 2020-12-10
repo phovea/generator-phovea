@@ -15,7 +15,7 @@ class AutoUpdateUtils {
                         bottomBar: Infinity,
                         persistentOutput: true
                     },
-                    task: async (ctx, task) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, targetVersion, pluginType, cwd, task, ctx))
+                    task: async (ctx, task) => AutoUpdateUtils.updateLogic(version, targetVersion, pluginType, cwd, task, ctx)
                 };
             })], { exitOnError: true, concurrent: false, rendererOptions: { showErrorMessage: true, collapseErrors: false, collapse: false } }
         );
@@ -38,7 +38,7 @@ class AutoUpdateUtils {
                     return;
                 }
                 AutoUpdateUtils.setConfig('localVersion', nextVersion, destinationPath);
-                return `#### ${currentVersion} to ${nextVersion}\n ${description}`;
+                return ctx[repo].descriptions.push(`#### ${currentVersion} to ${nextVersion}\n ${description}`);
             })
             .catch((e) => {
                 const msg = `${repo}: Update ${currentVersion} to ${nextVersion} failed with ${e.message}`;
@@ -68,14 +68,11 @@ class AutoUpdateUtils {
     }
 
     static chooseCredentials(org) {
-        return org === 'datavisyn' ?
-            {
-                username: 'datavisyn-bot',
-                token: process.env.DATAVISYN_TOKEN
-            } : {
-                username: 'caleydo-bot',
-                token: process.env.CALEYDO_TOKEN
-            };
+        org = org.toUpperCase();
+        return {
+            username: process.env[`${org}_USER`],
+            token: process.env[`${org}_TOKEN`]
+        };
     }
 }
 
