@@ -1,7 +1,7 @@
 'use strict';
 
 const spawnSync = require('child_process').spawnSync;
-const spawnPr = require('promisify-child-process').spawn;
+const spawnPr = require('child-process-promise').spawn;
 
 module.exports = class SpawnUtils {
 
@@ -79,12 +79,11 @@ module.exports = class SpawnUtils {
         const options = {
             ...cwd ? { cwd } : {},
             encoding: 'UTF-8',
+            capture: ['stdout', 'stderr']
         };
-        try {
-            return await spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options);
-        } catch (e) {
-            throw new Error(e.stderr);
-        }
-
+        return spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options)
+            .catch(e => {
+                throw new Error(`${e.message}${'\n' + e.stdout || ''}`);
+            });
     }
 };
