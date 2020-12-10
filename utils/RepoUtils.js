@@ -185,7 +185,7 @@ module.exports = class RepoUtils {
   }
 
   static getOrganization(url) {
-    const regex = /datavisyn|phovea|caleydo|oltionchampari/;
-    return url.toLowerCase().match(regex)[0]; // lowercase necessary since url can be `https://github.com/Caleydo/ordino.git`
+    const names = url.toLowerCase().split(/\/|:/);
+    return names[names.length - 2];
   }
 };
