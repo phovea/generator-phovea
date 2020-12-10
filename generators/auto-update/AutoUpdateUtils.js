@@ -5,9 +5,8 @@ const glob = require('glob').sync;
 const semver = require('semver');
 
 class AutoUpdateUtils {
-    static async autoUpdate(type, localVersion, generatorVersion, destinationPath, task) {
-        const repo = path.basename(destinationPath);
-        const excecuteUpdates = AutoUpdateUtils.getAvailableUpdates().filter((version) => semver.gtr(version, localVersion));
+    static async autoUpdate(repo, pluginType, currentVersion, targetVersion, cwd, task) {
+        const excecuteUpdates = AutoUpdateUtils.getAvailableUpdates().filter((version) => semver.gtr(version, currentVersion));
         return task.newListr(
             [...excecuteUpdates.map((version) => {
                 return {
@@ -16,17 +15,17 @@ class AutoUpdateUtils {
                         bottomBar: Infinity,
                         persistentOutput: true
                     },
-                    task: async (ctx, task) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, generatorVersion, type, destinationPath, task, ctx))
+                    task: async (ctx, task) => ctx[repo].descriptions.push(await AutoUpdateUtils.updateLogic(version, targetVersion, pluginType, cwd, task, ctx))
                 };
             })], { exitOnError: true, concurrent: false, rendererOptions: { showErrorMessage: true, collapseErrors: false, collapse: false } }
         );
     }
 
-    static async updateLogic(nextVersion, generatorVersion, type, destinationPath, task, ctx) {
+    static async updateLogic(nextVersion, targetVersion, type, destinationPath, task, ctx) {
         const filePath = `./updates/update-${nextVersion}.js`;
         const repo = path.basename(destinationPath);
         const { update, description } = require(filePath);
-        const currentVersion = AutoUpdateUtils.readConfig('localVersion', destinationPath) || NpmUtils.decrementVersion(generatorVersion);
+        const currentVersion = AutoUpdateUtils.readConfig('localVersion', destinationPath) || NpmUtils.decrementVersion(targetVersion);
         const setCtx = (key, value) => {
             ctx[repo][key] = value;
         };
@@ -44,7 +43,6 @@ class AutoUpdateUtils {
             .catch((e) => {
                 const msg = `${repo}: Update ${currentVersion} to ${nextVersion} failed with ${e.message}`;
                 e.message = msg;
-                // does it make sense if you call the revert function? 
                 throw e;
             });
     }

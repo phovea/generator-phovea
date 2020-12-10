@@ -100,12 +100,12 @@ class Generator extends Base {
                                         persistentOutput: false,
                                     },
                                     task: async (ctx) => {
-                                        const [localVersion = decrementVersion(this.generatorVersion), type] = [
-                                            AutoUpdateUtils.readConfig('localVersion', repoDir),
+                                        const [currentVersion = decrementVersion(this.generatorVersion), type] = [
+                                            AutoUpdateUtils.readConfig('currentVersion', repoDir),
                                             AutoUpdateUtils.readConfig('type', repoDir)
                                         ];
                                         ctx[repo] = {};
-                                        ctx[repo].localVersion = localVersion;
+                                        ctx[repo].currentVersion = currentVersion;
                                         ctx[repo].type = type;
                                     }
                                 },
@@ -115,7 +115,7 @@ class Generator extends Base {
                                         persistentOutput: false,
                                     },
                                     task: async (ctx, task) => {
-                                        const branch = `generator_update/${ctx[repo].localVersion}_to_${this.generatorVersion}`;
+                                        const branch = `generator_update/${ctx[repo].currentVersion}_to_${this.generatorVersion}`;
                                         ctx[repo].branch = branch;
                                         task.title = 'checkout ' + branch;
                                         await SpawnUtils.spawnOrAbort('git', ['checkout', '-b', branch], repoDir, this.options.verbose);
@@ -125,7 +125,7 @@ class Generator extends Base {
                                     title: 'run updates',
                                     task: async (ctx, task) => {
                                         ctx[repo].descriptions = [];
-                                        return AutoUpdateUtils.autoUpdate(ctx[repo].type, ctx[repo].localVersion, this.generatorVersion, repoDir, task);
+                                        return AutoUpdateUtils.autoUpdate(repo,ctx[repo].type, ctx[repo].currentVersion, this.generatorVersion, repoDir, task);
                                     }
                                 },
                                 {
@@ -142,7 +142,7 @@ class Generator extends Base {
                                     title: 'commit file changes',
                                     enabled: (ctx) => skipPredicate(ctx),
                                     task: async (ctx) => {
-                                        ctx[repo].title = `Generator updates from ${ctx[repo].localVersion} to ${this.generatorVersion}`;
+                                        ctx[repo].title = `Generator updates from ${ctx[repo].currentVersion} to ${this.generatorVersion}`;
                                         await SpawnUtils.spawnPromise('git', ['add', '.'], repoDir);
                                         await SpawnUtils.spawnPromise('git', ['commit', '-am', ctx[repo].title], repoDir);
                                     }
