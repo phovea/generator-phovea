@@ -21,23 +21,20 @@ class AutoUpdateUtils {
         );
     }
 
-    static async updateLogic(nextVersion, targetVersion, type, destinationPath, task, ctx) {
+    static async updateLogic(nextVersion, targetVersion, pluginType, cwd, task, ctx) {
         const filePath = `./updates/update-${nextVersion}.js`;
-        const repo = path.basename(destinationPath);
+        const repo = path.basename(cwd);
         const { update, description } = require(filePath);
-        const currentVersion = AutoUpdateUtils.readConfig('localVersion', destinationPath) || NpmUtils.decrementVersion(targetVersion);
-        const setCtx = (key, value) => {
-            ctx[repo][key] = value;
-        };
+
+        const log = (text) => task.output = text;
+
+        const currentVersion = AutoUpdateUtils.readConfig('localVersion', cwd) || NpmUtils.decrementVersion(targetVersion);
         if (currentVersion === nextVersion) {
             throw new Error(`${repo}: Duplicate version tag "${currentVersion}"`);
         }
-        return update(type, destinationPath, task, setCtx)
+        return update(repo, pluginType, cwd, log)
             .then(async () => {
-                if (ctx[repo].skip) {
-                    return;
-                }
-                AutoUpdateUtils.setConfig('localVersion', nextVersion, destinationPath);
+                AutoUpdateUtils.setConfig('localVersion', nextVersion, cwd);
                 return ctx[repo].descriptions.push(`#### ${currentVersion} to ${nextVersion}\n ${description}`);
             })
             .catch((e) => {
