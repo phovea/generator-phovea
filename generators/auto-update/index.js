@@ -86,7 +86,7 @@ class Generator extends Base {
                         task: async (ctx, parent) => {
                             return parent.newListr([
                                 {
-                                    title: 'clone repo ' + repo,
+                                    title: 'Clone repo ' + repo,
                                     options: {
                                         persistentOutput: false,
                                         bottomBar: Infinity,
@@ -94,7 +94,7 @@ class Generator extends Base {
                                     task: async () => await SpawnUtils.spawnPromise('git', 'clone -b develop ' + repoUrl, this.cwd)
                                 },
                                 {
-                                    title: 'check yo-rc.json exists',
+                                    title: 'Check if yo-rc.json exists',
                                     options: {
                                         persistentOutput: false,
                                     },
@@ -109,19 +109,19 @@ class Generator extends Base {
                                     }
                                 },
                                 {
-                                    title: 'checkout working branch',
+                                    title: 'Checkout working branch',
                                     options: {
                                         persistentOutput: false,
                                     },
                                     task: async (ctx, task) => {
                                         const branch = `generator_update/${ctx[repo].currentVersion}_to_${this.generatorVersion}`;
                                         ctx[repo].branch = branch;
-                                        task.title = 'checkout ' + branch;
+                                        task.title = 'Checkout branch ' + branch;
                                         await SpawnUtils.spawnOrAbort('git', ['checkout', '-b', branch], repoDir, this.options.verbose);
                                     }
                                 },
                                 {
-                                    title: 'run updates',
+                                    title: 'Run updates',
                                     task: async (ctx, task) => {
                                         ctx[repo].descriptions = [];
                                         return AutoUpdateUtils.autoUpdate(repo, ctx[repo].type, ctx[repo].currentVersion, this.generatorVersion, repoDir, task);
@@ -133,12 +133,13 @@ class Generator extends Base {
                                         if (!ctx[repo].fileChanges) {
                                             task.title = 'No file changes detected, aborting ';
                                             ctx[repo].skipNext = true;
+                                            task.skip();
                                             parent.skip();
                                         }
                                     }
                                 },
                                 {
-                                    title: 'commit file changes',
+                                    title: 'Commit changes',
                                     enabled: (ctx) => enablePredicate(ctx),
                                     task: async (ctx) => {
                                         ctx[repo].title = `Generator updates from ${ctx[repo].currentVersion} to ${this.generatorVersion}`;
@@ -147,14 +148,14 @@ class Generator extends Base {
                                     }
                                 },
                                 {
-                                    title: 'push changes',
+                                    title: 'Push changes',
                                     enabled: (ctx) => enablePredicate(ctx),
                                     task: async (ctx) => {
                                         await SpawnUtils.spawnPromise('git', ['push', repoUrl, ctx[repo].branch], repoDir);
                                     }
                                 },
                                 {
-                                    title: 'draft pull request',
+                                    title: 'Draft pull request',
                                     enabled: (ctx) => enablePredicate(ctx),
                                     task: async (ctx) => {
                                         const { title, branch, descriptions } = ctx[repo];
