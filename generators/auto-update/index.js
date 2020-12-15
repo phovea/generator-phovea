@@ -198,8 +198,12 @@ class Generator extends Base {
         }
     }
 
-    _composeErrorLog(groups) {
-        const errorGroups = groups.filter((group) => group.err[0]);
+    /**
+     * Formats all silent error messages 
+     * @param {Listr[]} taskGroups 
+     */
+    _composeErrorLog(taskGroups) {
+        const errorGroups = taskGroups.filter((taskGroup) => taskGroup.err[0]);
         if (errorGroups.length) {
             return errorGroups
                 .map((group) => group.err[0].errors.map(({ stack }) => stack).join('\n'))
@@ -222,8 +226,7 @@ class Generator extends Base {
 
     end() {
         if (this.errorLog) {
-            fse.writeFile(this.destinationPath('error.log'), this.errorLog);
-            this.log(chalk.green('create ') + ' error.log');
+            this.fs.write(this.destinationPath('error.log'), this.errorLog);
         }
     }
 }
