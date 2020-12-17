@@ -464,21 +464,67 @@ class Generator extends BasePhoveaGenerator {
     });
 
     const sorted = frontendRepos.sort((a, b) => WorkspaceUtils.compareRepos(a, b));
-    sorted.unshift(defaultApp);
     const reversed = [...sorted].reverse();
 
+    const toVariableImport = (repo) => {
+      if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/abstracts/_variables.scss`))) {
+        return `@import "~${repo}/dist/scss/abstracts/variables";`;
+      }
+      return '';
+    };
+
+    const toMainImport = (repo) => {
+      if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/main.scss`))) {
+        return `@import "~${repo}/dist/scss/main"; `;
+      }
+      return '';
+    };
+    const DEBUG_VARIABLES = `@debug('import scss variables');`;
+    const DEBUG_MAIN = `\n@debug('import main scss'); `;
+    const DEFAULT_APP_MAIN_BEGIN = '// generator-phovea:default-app:main:begin';
+    const DEFAULT_APP_MAIN_END = '// generator-phovea:default-app:main:end';
+    const DEFAULT_APP_VARIABLES_BEGIN = '// generator-phovea:default-app:variables:begin';
+    const DEFAULT_APP_VARIABLE_END = '// generator-phovea:default-app:variables:end';
+    const PLUGIN_MAIN_BEGIN = '// generator-phovea:plugin:main:begin';
+    const PLUGIN_MAIN_END = '// generator-phovea:plugin:main:end';
+    const PLUGIN_VARIABLES_BEGIN = '// generator-phovea:plugin:variables:begin';
+    const PLUGIN_VARIABLE_END = '// generator-phovea:plugin:variables:end';
+
+    const defaultAppImport = (repo, type = 'variables') => type === 'variables' ? toVariableImport(repo) : toMainImport(repo);
+
+
+
     const imports = [
-      `@debug('import plugin scss variables');`,
+      DEBUG_VARIABLES,
+      DEFAULT_APP_VARIABLES_BEGIN,
+      defaultAppImport(defaultApp),
+      DEFAULT_APP_VARIABLE_END,
+      PLUGIN_VARIABLES_BEGIN,
       ...sorted
-        .filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/abstracts/_variables.scss`)))
-        .map((r) => `@import "~${r}/dist/scss/abstracts/variables";`),
-      `\n@debug('import plugin main scss');`,
-      ...reversed.filter((r) => fs.existsSync(this.destinationPath(`${r}/dist/scss/main.scss`)))
-        .map((r) => `@import "~${r}/dist/scss/main";`)
-    ].join('\n');
-    this.log(chalk.yellow('workspace.sccs'));
-    this.log(imports);
+        .map((r) => toVariableImport(r))
+        .filter((r) => Boolean(r)),
+      PLUGIN_VARIABLE_END,
+      DEBUG_MAIN,
+      PLUGIN_MAIN_BEGIN,
+      ...reversed.map((r) => toMainImport(r))
+        .filter((r) => Boolean(r)),
+      PLUGIN_MAIN_END,
+      DEFAULT_APP_MAIN_BEGIN,
+      defaultAppImport(defaultApp, 'main'),
+      DEFAULT_APP_MAIN_END
+
+    ]
+      .filter((r) => Boolean(r))
+      .join('\n');
+
+    // const file = this.destinationPath('workspace.scss');
+    // TODO update workspace.scss instead of rewritting it
+    // if (fs.existsSync(file)) {
+    //   const old = this.fs.read(file);
+    //   const match = old.match(new RegExp(`^${DEFAULT_APP_VARIABLES_BEGIN}${DEFAULT_APP_VARIABLE_END}$`, 'm'));
+    // } else {
     this.fs.write(this.destinationPath("workspace.scss"), imports);
+
   }
 
   writing() {
