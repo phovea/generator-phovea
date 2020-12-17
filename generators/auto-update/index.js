@@ -76,7 +76,7 @@ class Generator extends Base {
             [
                 ...chunk.map((repo) => {
                     const { org } = this.knownRepos[repo];
-                    const { token } = AutoUpdateUtils.chooseCredentials(org);
+                    const { token } = AutoUpdateUtils.getCredentials(org);
                     const repoUrl = `https://${token}@github.com/${org}/${repo}.git`;
                     const repoDir = path.join(this.cwd, repo);
                     const baseName = `${org}/${repo}`;
@@ -179,9 +179,35 @@ class Generator extends Base {
 
     }
 
+    /**
+     * Checks if the required environment variables are set in the system.
+     * For each organization the `${org}_TOKEN` and `${org}_USER` are required.
+     * @param {Set<string>} orgs 
+     */
+    _checkEnvironmentVars(orgs) {
+        let missingEnvs = [];
+        orgs.forEach((org) => {
+            org = org.toUpperCase();
+            const { token, username } = AutoUpdateUtils.getCredentials(org);
+            if (!token) {
+                missingEnvs.push(`${org}_TOKEN`);
+            }
+            if (!username) {
+                missingEnvs.push(`${org}_USER`);
+            }
+        });
+
+        if (missingEnvs.length) {
+            this.env.error(`${chalk.red('Missing required environment variable(s):')}\n${missingEnvs.join('\n')}`);
+        }
+    }
+
     async writing() {
         this.cwd = tmp.dirSync({ unsafeCleanup: true }).name;
-        const repos = Object.keys(this.knownRepos);
+        const repos = Object.keys(this.knownRepos).slice(0, 10);
+        const orgs = new Set(repos.map((r) => this.knownRepos[r].org));
+        this._checkEnvironmentVars(orgs);
+
         // seperate repos in chunks to make logging more managable
         const chunkSize = 8;
         const [...chunks] = chunk(repos, chunkSize);

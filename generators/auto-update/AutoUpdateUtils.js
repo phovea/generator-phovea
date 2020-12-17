@@ -86,7 +86,7 @@ class AutoUpdateUtils {
         return file['generator-phovea'][key];
     }
 
-    static chooseCredentials(org) {
+    static getCredentials(org) {
         org = org.toUpperCase();
         return {
             username: process.env[`${org}_USER`],
