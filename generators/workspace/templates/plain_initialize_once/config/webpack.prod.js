@@ -36,8 +36,9 @@ const appPkg = require('./../' + defaultApp + '/package.json');
 appPkg.version = appPkg.version.replace('SNAPSHOT', buildId);
 const libName = appPkg.name;
 const libDesc = appPkg.description;
-const {entries, registry, libraryAliases, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
+const {entries, registry, libraryAliases, filesToLoad, copyFiles} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
 const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
+const copyAppFiles = copyFiles ? copyFiles.map((file) => ({from: base + '/' + defaultApp + '/' + file, to: base + '/bundles' +  file.substr(file.lastIndexOf('/'))})) : [];
 //banner info
 const banner = '/*! ' + (appPkg.title || appPkg.name) + ' - v' + appPkg.version + ' - ' + year + '\n' +
     (appPkg.homepage ? '* ' + appPkg.homepage + '\n' : '') +
@@ -237,7 +238,7 @@ const config = {
             defaults: false // load '.env.defaults' as the default values if empty.
         }),        
         new CopyWebpackPlugin({
-            patterns: [
+            patterns: copyAppFiles.concat([
                 {
                     from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
                     //generate meta data file
@@ -252,7 +253,7 @@ const config = {
                 //use package-lock json as buildInfo
                 {from: workspaceBuildInfoFile, to: base + '/bundles/buildInfo.json'}
             ]
-        }),
+        )}),
         //for debugging issues
         /*new BundleAnalyzerPlugin({
             // set to 'server' to start analyzer during build
