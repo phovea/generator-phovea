@@ -1,14 +1,13 @@
 'use strict';
 const _ = require('lodash');
 const parseAuthor = require('parse-author');
-const Base = require('yeoman-generator');
-const patchPackageJSON = require('../../utils').patchPackageJSON;
 const originUrl = require('git-remote-origin-url');
 const fs = require('fs-extra');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
 // based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
 
-class PackageJSONGenerator extends Base {
+class PackageJSONGenerator extends BasePhoveaGenerator {
 
   constructor(args, options) {
     super(args, options);
@@ -135,13 +134,13 @@ class PackageJSONGenerator extends Base {
 
   writing() {
     const config = _.extend({}, this.props, this.config.getAll());
-    this.cwd = this.isWorkspace ? (config.cwd || config.name) + '/' : ''; // use config.cwd for init-app or init-service generators and config.name for the rest.
+    this.cwd = this.isWorkspace ? (config.app || config.serviceName || config.name) + '/' : '';
     if (this.originUrl) {
       config.repository = this.originUrl;
     } else {
       config.repository = `https://github.com/${config.githubAccount}/${config.name}.git`;
     }
-    patchPackageJSON.call(this, config, null, null, null, this.cwd);
+    this._patchPackageJSON(config, null, null, null, this.cwd);
 
     config.content = this.options.readme || '';
     config.longDescription = this.options.longDescription || this.props.description || '';

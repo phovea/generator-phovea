@@ -5,25 +5,15 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils = require('./testUtils');
+const TestUtils = require('./test-utils/TestUtils');
 const {template} = require('lodash');
+const SpawnUtils = require('../utils/SpawnUtils');
+const dependencies = require('./test-utils/generator-dependencies');
 
 /**
  * Directory name to run the generator
  */
 const target = '../lib';
-
-/**
- * Subgenerators composed with the `init-lib` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_node',
-  '../generators/init-lib',
-  '../generators/_init-web',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
-
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -36,24 +26,29 @@ const unExpectedFiles = [
   'index.js'
 ];
 
+/**
+ * Run yo phovea:init-lib in dir
+ */
+const runInitLib = () => helpers
+  .run(path.join(__dirname, '../generators/init-lib'))
+  .withGenerators(dependencies.INIT_LIB)
+  .inDir(path.join(__dirname, target), () => null);
 
-describe('generate lib plugin with default prompt values', () => {
+
+describe('Generate lib plugin with default prompt values', () => {
 
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
-  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  const initWebPackage = fse.readJSONSync(TestUtils.templatePath('_init-web', 'package.tmpl.json'));
 
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
-  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+  const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
-    return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
-      .inDir(path.join(__dirname, target), () => null)
-      .withGenerators(GENERATOR_DEPENDENCIES);
+    return runInitLib();
   });
 
   afterAll(() => {
@@ -80,6 +75,10 @@ describe('generate lib plugin with default prompt values', () => {
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
   });
 
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'lib'}});
+  });
+
   it('generates no `tsconfig_dev.json`', () => {
     assert.noFile('tsconfig_dev.json');
   });
@@ -100,11 +99,7 @@ describe('Generate plugin with name `phovea_core`', () => {
   };
 
   beforeAll(() => {
-    return helpers
-      .run(path.join(__dirname, '../generators/init-lib'))
-      .inDir(path.join(__dirname, target), () => null)
-      .withPrompts(prompts)
-      .withGenerators(GENERATOR_DEPENDENCIES);
+    return runInitLib().withPrompts(prompts);
   });
 
   afterAll(() => {
@@ -112,7 +107,35 @@ describe('Generate plugin with name `phovea_core`', () => {
   });
 
   it('generates `phovea_registry.js` with import statement adapted for `phovea_core`', () => {
-    const phoveaRegistryTmpl = template(fse.readFileSync(testUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
+    const phoveaRegistryTmpl = template(fse.readFileSync(TestUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
     assert.fileContent('phovea_registry.js', phoveaRegistryTmpl);
+  });
+});
+
+describe('Test options of yo phovea:init-lib', () => {
+
+  const prompts = {
+    name: 'phovea_core'
+  };
+
+  const options = {
+    install: true
+  };
+
+  beforeAll(() => {
+    SpawnUtils.spawnSync = jest.fn();
+    return runInitLib()
+      .withPrompts(prompts)
+      .withOptions(options);
+  });
+
+  afterAll(() => {
+    rimraf.sync(path.join(__dirname, target));
+  });
+
+  it('runs npm install', () => {
+    expect(SpawnUtils.spawnSync.mock.calls.length).toBe(1);
+    const [cmd, args, cwd, verbose] = SpawnUtils.spawnSync.mock.calls[0];
+    expect([cmd, args, cwd, verbose]).toStrictEqual(['npm', 'install', '', true]);
   });
 });
