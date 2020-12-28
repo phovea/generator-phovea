@@ -104,8 +104,8 @@ class Generator extends Base {
       fs.unlinkSync(this.cwd + '/.yo-rc.json');
     }
 
-    fs.rmdirSync(this.cwd + '/.git', { recursive: true }); // TODO look into git submodules
-      fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
+    fs.rmdirSync(this.cwd + '/.git', { recursive: true });
+    fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
   }
 
   /**
