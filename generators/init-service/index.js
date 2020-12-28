@@ -1,7 +1,8 @@
 'use strict';
-const BasePluginGenerator = require('../../utils').BasePython;
 
-class Generator extends BasePluginGenerator {
+const BaseInitServerGenerator = require('../../base/BaseInitServerGenerator');
+
+class Generator extends BaseInitServerGenerator {
   initializing() {
     super.initializing();
     this.config.defaults({
@@ -20,7 +21,6 @@ class Generator extends BasePluginGenerator {
       default: this.config.get('serviceName')
     }]).then(({serviceName}) => {
       this.config.set('serviceName', serviceName);
-      this.config.set('cwd', serviceName);
     });
   }
 

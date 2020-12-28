@@ -1,7 +1,8 @@
 'use strict';
-const BaseHybrid = require('../../utils').BaseHybrid;
 
-class PluginGenerator extends BaseHybrid {
+const BaseInitHybridGenerator = require('../init-lib-service');
+
+class PluginGenerator extends BaseInitHybridGenerator {
 
   initializing() {
     super.initializing();

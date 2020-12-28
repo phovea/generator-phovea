@@ -2,39 +2,11 @@
 const Base = require('yeoman-generator');
 
 const plugins = require('../../utils/types').plugin;
-const stringifyAble = require('../../utils').stringifyAble;
 const path = require('path');
 const fs = require('fs');
 const glob = require('glob').sync;
 const chalk = require('chalk');
-
-function toJSONFromText(text) {
-  const r = {};
-  text.split('\n').forEach((line) => {
-    const trimmedLine = line.trim();
-    if (trimmedLine.length === 0) { // ignore empty lines (e.g. new line added by editor)
-      return;
-    }
-
-    const splitPoint = trimmedLine.indexOf('=');
-    const key = trimmedLine.slice(0, splitPoint);
-    let value = trimmedLine.slice(splitPoint + 1);
-    value = value.trim();
-    if (!isNaN(parseFloat(value))) {
-      value = parseFloat(value);
-    }
-    let obj = r;
-    const keys = key.trim().split('.');
-    keys.slice(0, keys.length - 1).forEach((k) => {
-      if (!(k in obj)) {
-        obj[k] = {};
-      }
-      obj = obj[k];
-    });
-    obj[keys[keys.length - 1]] = value;
-  });
-  return r;
-}
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 /**
  * The outside key in the `.yo-rc.json` file where the configuration is saved.
@@ -170,7 +142,7 @@ class Generator extends Base {
         type: props.type,
         id: props.id,
         module: props.module,
-        extras: toJSONFromText(props.extras)
+        extras: GeneratorUtils.toJSONFromText(props.extras)
       };
     });
   }
@@ -182,7 +154,7 @@ class Generator extends Base {
     this._writeConfig(this.cwd, basekey, arr);
     // inject new extension
 
-    const d = stringifyAble(this.new_);
+    const d = GeneratorUtils.stringifyAble(this.new_);
 
     if (this.basetype === 'web') {
       this._injectWebExtension(d, this.cwd);
@@ -215,7 +187,7 @@ class Generator extends Base {
 
     if (fs.existsSync(cwd + 'src/phovea.ts')) {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
-      importFunction = `() => System.import('${absFile}')`; // TODO remove System.import for Typescript case when switching to Webpack 4 (see https://github.com/phovea/generator-phovea/issues/286#issuecomment-566553497)
+      importFunction = `() => import('${absFile}')`; 
     } else {
       absFile = d.module.startsWith('~') ? d.module.slice(1) : `./src/${d.module.includes('.') ? d.module.slice(0, d.module.lastIndexOf('.')) : d.module}`;
       importFunction = `function() { return import('${absFile}'); }`;

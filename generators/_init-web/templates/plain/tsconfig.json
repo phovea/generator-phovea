@@ -18,7 +18,7 @@
     "esModuleInterop": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "preserveWatchOutput":true
+    "preserveWatchOutput": true
   },
   "include": [
     "src/**/*.ts",

@@ -2,6 +2,7 @@
 const Base = require('yeoman-generator');
 const path = require('path');
 const fs = require('fs');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 function toPluginRepo(url, useSSH) {
   const match = url.match(/(github:)?([\w\d-_]+\/)?([\w\d-_]+)(#.+)?/);
@@ -50,27 +51,6 @@ class Generator extends Base {
     this.composeWith(['phovea:_check-own-version', 'phovea:check-node-version']);
   }
 
-  _yo(generator, options) {
-    const yeoman = require('yeoman-environment');
-    // call yo internally
-    const env = yeoman.createEnv([], {
-      cwd: this.cwd
-    }, this.env.adapter);
-    env.register(require.resolve('../' + generator), 'phovea:' + generator);
-    return new Promise((resolve, reject) => {
-      try {
-        this.log('running yo phovea:' + generator);
-        env.run('phovea:' + generator, options || {}, () => {
-          // wait a second after running yo to commit the files correctly
-          setTimeout(() => resolve(), 500);
-        });
-      } catch (e) {
-        console.error('error', e, e.stack);
-        reject(e);
-      }
-    });
-  }
-
   default() {
     this.plugin = this.options.for;
 
@@ -101,7 +81,7 @@ class Generator extends Base {
       return p;
     }).filter((n) => Boolean(n));
     this.log('updating workspace');
-    return this._yo('workspace').then(() => {
+    return GeneratorUtils.yo('workspace').then(() => {
       this.log('running npm install');
       this.npmInstall();
     });

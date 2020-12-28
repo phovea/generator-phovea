@@ -1,5 +1,4 @@
 'use strict';
-const Base = require('yeoman-generator');
 const path = require('path');
 const glob = require('glob').sync;
 const chalk = require('chalk');
@@ -8,10 +7,9 @@ const _ = require('lodash');
 const fs = require('fs');
 
 const known = () => require('../../utils/known');
-const writeTemplates = require('../../utils').writeTemplates;
-const patchPackageJSON = require('../../utils').patchPackageJSON;
-const {mergeVersions, mergePipVersions} = require('../../utils/version');
-const {parseRequirements} = require('../../utils/pip');
+const NpmUtils = require('../../utils/NpmUtils');
+const PipUtils = require('../../utils/PipUtils');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -42,7 +40,7 @@ function rewriteDockerCompose(compose) {
   return compose;
 }
 
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
 
   constructor(args, options) {
     super(args, options);
@@ -99,7 +97,7 @@ class Generator extends Base {
       default: defaultConfig.addWorkspaceRepos,
       description: 'States whether workspace repos should be part of the dependencies. Set to `true` for local development setup. Otherwise `false` for CI build process.'
     });
-    
+
   }
 
   initializing() {
@@ -158,14 +156,14 @@ class Generator extends Base {
           plugins.map((plugin) => {
             return `./${plugin}/src`;
           }),
-          'extensions': 'html,scss,css',
-          'quiet': false,
-          'legacyWatch': true,
-          'delay': 2500,
-          'runOnChangeOnly': true
+        'extensions': 'html,scss,css',
+        'quiet': false,
+        'legacyWatch': true,
+        'delay': 2500,
+        'runOnChangeOnly': true
       }
     };
-    const repoDependencies = Object.assign({},...plugins.map((plugin) => ({[plugin]: `./${plugin}`})));
+    const repoDependencies = Object.assign({}, ...plugins.map((plugin) => ({[plugin]: `./${plugin}`})));
 
     const integrateMulti = (target, source) => {
       Object.keys(source || {}).forEach((key) => {
@@ -205,7 +203,7 @@ class Generator extends Base {
     if (this.props.defaultApp) {
       const workspaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
       devRepos = workspaceFile && workspaceFile.devRepos ? workspaceFile.devRepos : [this.props.defaultApp];
-      if(devRepos.indexOf(this.props.defaultApp)<0) devRepos.push(this.props.defaultApp);
+      if (devRepos.indexOf(this.props.defaultApp) < 0) devRepos.push(this.props.defaultApp);
       devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
       //add dev-repos scripts
       scripts['dev-repos:compile'] = devRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
@@ -215,11 +213,11 @@ class Generator extends Base {
       //add watch
       watch['dev-repos:copy'] = {
         'patterns': devRepos.map((repo) => `./${repo}/src`),
-          'extensions': 'html,scss,css',
-          'quiet': false,
-          'legacyWatch': true,
-          'delay': 2500,
-          'runOnChangeOnly': true
+        'extensions': 'html,scss,css',
+        'quiet': false,
+        'legacyWatch': true,
+        'delay': 2500,
+        'runOnChangeOnly': true
       };
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
@@ -240,10 +238,10 @@ class Generator extends Base {
     });
 
     Object.keys(dependencies).forEach((key) => {
-      dependencies[key] = mergeVersions(key, dependencies[key]);
+      dependencies[key] = NpmUtils.mergeVersions(key, dependencies[key]);
     });
     Object.keys(devDependencies).forEach((key) => {
-      devDependencies[key] = mergeVersions(key, devDependencies[key]);
+      devDependencies[key] = NpmUtils.mergeVersions(key, devDependencies[key]);
     });
 
     // dependencies from package.tmpl.json
@@ -253,7 +251,7 @@ class Generator extends Base {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies),  scripts: Object.assign(scripts, extraScripts), watch, devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), watch, devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -289,8 +287,8 @@ class Generator extends Base {
           set.add(ri.trim());
         });
       };
-      integrateMulti(requirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements.txt`), {defaults: ''})));
-      integrateMulti(devRequirements, parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements_dev.txt`), {defaults: ''})));
+      integrateMulti(requirements, PipUtils.parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements.txt`), {defaults: ''})));
+      integrateMulti(devRequirements, PipUtils.parseRequirements(this.fs.read(this.destinationPath(`${p}/requirements_dev.txt`), {defaults: ''})));
 
       addAll('docker_packages.txt', dockerPackages);
       const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});
@@ -397,10 +395,10 @@ class Generator extends Base {
     });
 
     Object.keys(requirements).forEach((key) => {
-      requirements[key] = mergePipVersions(key, requirements[key]);
+      requirements[key] = PipUtils.mergePipVersions(key, requirements[key]);
     });
     Object.keys(devRequirements).forEach((key) => {
-      devRequirements[key] = mergePipVersions(key, devRequirements[key]);
+      devRequirements[key] = PipUtils.mergePipVersions(key, devRequirements[key]);
     });
 
     return {
@@ -451,17 +449,17 @@ class Generator extends Base {
     const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
-    '  # Uncomment the following lines for testing the web production build\n' +
-    '  #  web:\n' +
-    '  #    build:\n' +
-    '  #      context: ./deploy/web\n' +
-    '  #      dockerfile: deploy/web/Dockerfile\n' +
-    '  #    ports:\n' +
-    '  #      - \'8090:80\'\n' +
-    '  #    volumes:\n' +
-    '  #      - \'./bundles:/usr/share/nginx/html\'\n' +
-    '  #    depends_on:\n' +
-    '  #      - api\n';
+      '  # Uncomment the following lines for testing the web production build\n' +
+      '  #  web:\n' +
+      '  #    build:\n' +
+      '  #      context: ./deploy/web\n' +
+      '  #      dockerfile: deploy/web/Dockerfile\n' +
+      '  #    ports:\n' +
+      '  #      - \'8090:80\'\n' +
+      '  #    volumes:\n' +
+      '  #      - \'./bundles:/usr/share/nginx/html\'\n' +
+      '  #    depends_on:\n' +
+      '  #      - api\n';
 
     // save config
     this.fs.extendJSON(this.destinationPath('.yo-rc-workspace.json'), {
@@ -485,8 +483,8 @@ class Generator extends Base {
       this._patchDockerImages(patch, sdeps.dockerCompose);
     }
     {
-      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2) );
-      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2)+ dockerWebHint);
+      this.fs.write(this.destinationPath('docker-compose.yml'), yaml.stringify(sdeps.dockerCompose, 100, 2));
+      this.fs.write(this.destinationPath('docker-compose-debug.yml'), yaml.stringify(sdeps.dockerComposeDebug, 100, 2) + dockerWebHint);
     }
 
     const config = {};
@@ -498,9 +496,9 @@ class Generator extends Base {
     config.wsDescription = this.options.wsDescription;
     config.wsVersion = this.options.wsVersion;
 
-    writeTemplates.call(this, config, false);
+    this._writeTemplates(config, false);
     // replace the added entries
-    patchPackageJSON.call(this, config, [], {devDependencies, dependencies, scripts, watch}, true);
+    this._patchPackageJSON(config, [], {devDependencies, dependencies, scripts, watch}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));

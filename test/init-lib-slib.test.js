@@ -5,25 +5,12 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils = require('./testUtils');
+const TestUtils = require('./test-utils/TestUtils');
+const dependencies = require('./test-utils/generator-dependencies');
 /**
  * Directory name to run the generator
  */
 const target = '../libslib';
-
-/**
- * Subgenerators composed with the `init-lib-slib` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_node',
-  '../generators/_init-hybrid',
-  '../generators/init-lib',
-  '../generators/_init-web',
-  '../generators/init-slib',
-  '../generators/_init-python',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -41,18 +28,18 @@ describe('generate lib-slib plugin with default prompt values', () => {
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
-  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  const initWebPackage = fse.readJSONSync(TestUtils.templatePath('_init-web', 'package.tmpl.json'));
 
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
-  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+  const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
       .run(path.join(__dirname, '../generators/init-lib-slib'))
       .inDir(path.join(__dirname, target), () => null)
-      .withGenerators(GENERATOR_DEPENDENCIES);
+      .withGenerators(dependencies.INIT_LIB_SLIB);
   });
 
   afterAll(() => {
@@ -77,6 +64,10 @@ describe('generate lib-slib plugin with default prompt values', () => {
 
   it('generates `tsconfig.json` with correct content', () => {
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
+  });
+
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'lib-slib'}});
   });
 
   it('generates no `tsconfig_dev.json`', () => {
