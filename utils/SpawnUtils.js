@@ -1,6 +1,7 @@
 'use strict';
 
 const spawnSync = require('child_process').spawnSync;
+const spawnPr = require('child-process-promise').spawn;
 
 module.exports = class SpawnUtils {
 
@@ -16,7 +17,7 @@ module.exports = class SpawnUtils {
         if (SpawnUtils.failed(result)) {
             return SpawnUtils.abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${result.status}`);
 
-        } else if (stdout && stdout.toString()) {
+        } else if (stdout && stdout.toString() && verbose) {
             console.log(stdout.toString().trim());
         }
 
@@ -31,9 +32,15 @@ module.exports = class SpawnUtils {
      */
     static spawnSync(cmd, argline, cwd, verbose) {
         const options = {
-            ...cwd ? {cwd} : {},
-            ...verbose ? {stdio: 'inherit'} : {}
+            ...cwd ? { cwd } : {},
+            ...verbose ? {
+                stdio: 'inherit',
+            } : {}
         };
+
+        if (verbose) {
+            console.log(Array.isArray(argline) ? argline.join(' ') : argline);
+        }
 
         return spawnSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
     }
@@ -52,5 +59,30 @@ module.exports = class SpawnUtils {
      */
     static abort(msg) {
         return Promise.reject(msg ? msg : 'Step Failed: Aborting');
+    }
+
+    /**
+     * Execute a shell command and return the decoded output
+     * @param command Command to execute
+     * @param argline Arguments to execute the command with
+     */
+    static spawnWithOutput(command, argline, cwd) {
+        const options = {
+            ...cwd ? { cwd } : {},
+            encoding: 'UTF-8'
+        };
+        return spawnSync(command, Array.isArray(argline) ? argline : argline.split(' '), options).stdout.trim();
+    }
+
+    static async spawnPromise(command, argline, cwd,) {
+        const options = {
+            ...cwd ? { cwd } : {},
+            encoding: 'UTF-8',
+            capture: ['stdout', 'stderr']
+        };
+        return spawnPr(command, Array.isArray(argline) ? argline : argline.split(' '), options)
+            .catch(e => {
+                throw new Error(`${e.message}${('\n' + e.stderr) || ''}${('\n' + e.stdout) || ''}`);
+            });
     }
 };

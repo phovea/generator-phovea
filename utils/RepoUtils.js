@@ -183,4 +183,10 @@ module.exports = class RepoUtils {
     });
     return Array.from(new Set(r));
   }
+
+  static getOrganization(url) {
+    url = url.replace(/\/$/, ''); // remove possibe `/` at the end of url
+    const names = url.toLowerCase().split(/\/|:/);
+    return names[names.length - 2];
+  }
 };
