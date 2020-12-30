@@ -3,43 +3,11 @@ const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const path = require('path');
-const yeoman = require('yeoman-environment');
-const {
-  toHTTPRepoUrl,
-  toSSHRepoUrl,
-  simplifyRepoUrl
-} = require('../../utils/repo');
-
-function toBaseName(name) {
-  if (name.includes('/')) {
-    return name;
-  }
-  return `Caleydo/${name}`;
-}
-
-function failed(spawnResult) {
-  return spawnResult.status !== 0;
-}
-
-function toCWD(basename) {
-  let match = basename.match(/.*\/(.*)/)[1];
-  if (match.endsWith('_product')) {
-    match = match.slice(0, -8);
-  }
-  return match;
-}
-
-function findDefaultApp(product) {
-  if (!product) {
-    return null;
-  }
-  for (let p of product) {
-    if (p.type === 'web') {
-      return p.repo.slice(p.repo.lastIndexOf('/') + 1).replace('.git', '');
-    }
-  }
-  return null;
-}
+const RepoUtils = require('../../utils/RepoUtils');
+const SpawnUtils = require('../../utils/SpawnUtils');
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
+const {findDefaultApp} = require('../../utils/WorkspaceUtils');
 
 function downloadFileImpl(url, dest) {
   const http = require(url.startsWith('https') ? 'https' : 'http');
@@ -75,7 +43,6 @@ function toDownloadName(url) {
   }
   return url.substring(url.lastIndexOf('/') + 1);
 }
-
 class Generator extends Base {
 
   constructor(args, options) {
@@ -123,137 +90,87 @@ class Generator extends Base {
       default: this.options.ssh,
       when: !this.options.ssh
     }]).then((props) => {
-      this.productName = toBaseName(props.productName || this.args[0]);
-      this.cwd = toCWD(this.productName);
+      this.productName = RepoUtils.toBaseName(props.productName || this.args[0]);
+      this.cwd = RepoUtils.toCWD(this.productName);
       this.cloneSSH = props.cloneSSH || this.options.ssh;
     });
   }
 
-  _yo(generator, options, args) {
-    // call yo internally
-    const env = yeoman.createEnv([], {
-      cwd: this.cwd
-    }, this.env.adapter);
-    const _args = Array.isArray(args) ? args.join(' ') : args || '';
-    return new Promise((resolve, reject) => {
-      try {
-        this.log(`Running: yo phovea:${generator} ${_args}`);
-        env.lookup(() => {
-          env.run(`phovea:${generator} ${_args}`, options || {}, () => {
-            // wait a second after running yo to commit the files correctly
-            setTimeout(() => resolve(), 500);
-          });
-        });
-      } catch (e) {
-        console.error('Error', e, e.stack);
-        reject(e);
-      }
-    });
-  }
-
-  _abort(msg) {
-    return Promise.reject(msg ? msg : 'Step Failed: Aborting');
-  }
-
-  _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : Object.assign({
-      cwd: this.cwd,
-      stdio: 'inherit' // log output and error of spawned process to host process
-    }, cwd || {});
-
-    this.log(`\nRunning: ${cmd} ${argline}\n`);
-    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
-  }
-
-  _spawnOrAbort(cmd, argline, cwd) {
-    const r = this._spawn(cmd, argline, cwd);
-    if (failed(r)) {
-      this.log(r.stderr.toString());
-      return this._abort(`Failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
-    } else if(r.stdout) {
-      this.log(r.stdout.toString());
-    }
-    return Promise.resolve(cmd);
-  }
-
-  _cloneRepo(repo, branch, extras, dir = '') {
-    const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
-    return this._yo(`clone-repo`, {
-      branch,
-      extras: extras || '',
-      dir,
-      cwd: this.cwd
-    }, repoUrl); // repository URL as argument
-  }
-
-
+  /**
+   * Removes/renames files of the cloned product that conflict with the workspace files.
+   */
   _removeUnnecessaryProductFiles() {
-    fs.unlinkSync(this.cwd + '/.yo-rc.json');
-    fs.rmdirSync(this.cwd + '/.git', {recursive: true}); // TODO look into git submodules
+    if (fs.existsSync(this.cwd + '/.yo-rc.json')) {
+      fs.unlinkSync(this.cwd + '/.yo-rc.json');
+    }
+
+    fs.rmdirSync(this.cwd + '/.git', { recursive: true });
     fs.renameSync(this.cwd + '/package.json', this.cwd + '/package_product.json');
   }
 
   /**
-   * Copies the template files of the product in the workspace
-   * @param {string} templatePath 
+   * Copies/merges the template files of the product into the workspace.
+   * @param {string} templatePath Path to the template directory of the product.
    */
   _copyProductTemplates(templatePath) {
     const dirs = fs.readdirSync(templatePath).filter(f => fs.statSync(path.join(templatePath, f)).isDirectory());
-    dirs.forEach((dir) => fs.copySync(templatePath +'/' + dir, this.destinationPath(this.cwd)));
+    dirs.forEach((dir) => fs.copySync(templatePath + '/' + dir, this.destinationPath(this.cwd)));
   }
 
-
+  /**
+   * Clones the product into the workspace and generates the `yo-rc-workspace.json` file.
+   * @returns The parsed phovea_product.json file.
+   */
   _getProduct() {
-    return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
+    return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'master', null, '.', this.cwd, this.cloneSSH)
       .then(() => {
         this._removeUnnecessaryProductFiles();
-
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
         if (!fs.existsSync(phoveaProductJSON)) {
           throw new Error('No phovea_product.json file found! Did you enter a valid phovea product repository?');
         }
 
         this.product = fs.readJSONSync(phoveaProductJSON);
+        const defaultApp = findDefaultApp(this.product);
+        this.defaultApp = defaultApp.name;
 
-        const defaultApp = this.product.find((v) => v.type === 'web');
-        if (defaultApp) {
-          const baseRepo = simplifyRepoUrl(defaultApp.repo);
-          const defaultAppName = baseRepo.slice(baseRepo.lastIndexOf('/') + 1);
-          this.defaultApp = defaultAppName;
-          const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
-          if(!fs.existsSync(yoWorkspacePath)) {
-            fs.writeJsonSync(yoWorkspacePath, {
-              modules: [],
-              defaultApp: defaultAppName,
-              frontendRepos: defaultApp.additional.map((repo) => repo.name),
-              devRepos: [defaultAppName]
-            }, {spaces: 2});
-          }
-        }
-
-        return this.product;
+        this._createYoRcWorkspace(defaultApp);
+        return RepoUtils.parsePhoveaProduct(this.product);
       });
   }
 
-  _mkdir(dir) {
-    dir = dir || this.cwd;
-    this.log('Create directory: ' + dir);
-    return new Promise((resolve) => fs.ensureDir(dir, resolve));
+  /**
+   * Generates `yo-rc-workspace.json` file
+   * @param {string} defaultApp 
+   */
+  _createYoRcWorkspace(defaultApp) {
+    const yoWorkspacePath = this.destinationPath(`${this.cwd}/.yo-rc-workspace.json`);
+    if (!fs.existsSync(yoWorkspacePath && this.defaultApp)) {
+      const frontendRepos = defaultApp.additional;
+      fs.writeJsonSync(yoWorkspacePath, {
+        modules: [],
+        defaultApp: this.defaultApp,
+        frontendRepos,
+        devRepos: [this.defaultApp]
+      }, {spaces: 2});
+    }
   }
 
+  /**
+   * Copies the generator's and the product's template files into the workspace.
+   */
   _customizeWorkspace() {
-    const defaultApp = findDefaultApp(this.product);
-    if (defaultApp) {
-      this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${defaultApp}.xml`), {
-        defaultApp: defaultApp
+    if (this.defaultApp) {
+      this.fs.copyTpl(this.templatePath('start_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/start_${this.defaultApp}.xml`), {
+        defaultApp: this.defaultApp
       });
-      this.fs.copyTpl(this.templatePath('lint_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/lint_${defaultApp}.xml`), {
-        defaultApp: defaultApp
+      this.fs.copyTpl(this.templatePath('lint_defaultapp.tmpl.xml'), this.destinationPath(`${this.cwd}/.idea/runConfigurations/lint_${this.defaultApp}.xml`), {
+        defaultApp: this.defaultApp
       });
     }
 
     const productTemplatesPath = this.destinationPath(`${this.cwd}/templates`);
-    if (fs.existsSync(productTemplatesPath)){
+    if (fs.existsSync(productTemplatesPath)) {
       this._copyProductTemplates(productTemplatesPath);
     }
   }
@@ -300,7 +217,7 @@ class Generator extends Base {
     if (data.length === 0) {
       return Promise.resolve(null);
     }
-    return this._mkdir(this.cwd + '/_data')
+    return GeneratorUtils.mkdir(this.cwd + '/_data')
       .then(() => Promise.all(data.map((d) => this._downloadDataFile(d, this.cwd + '/_data'))));
   }
 
@@ -314,11 +231,17 @@ class Generator extends Base {
     if (data.length === 0) {
       return Promise.resolve(null);
     }
-    return this._mkdir(this.cwd + '/_backup')
+    return GeneratorUtils.mkdir(this.cwd + '/_backup')
       .then(() => Promise.all(data.map((d) => this._downloadBackupFile(d, this.cwd + '/_backup'))))
-      .then(this._ifExecutable.bind(this, 'docker-compose', this._spawnOrAbort.bind(this, './docker-backup', 'restore'), 'please execute: "./docker-backup restore" manually'));
+      .then(this._ifExecutable.bind(this, 'docker-compose', () => SpawnUtils.spawnOrAbort('./docker-backup', 'restore', this.cwd, true), 'please execute: "./docker-backup restore" manually'));
   }
 
+  /**
+   * Checks whether a command/cli tool is installed in the current system and executes provided command.
+   * @param {string} cmd Cmd i.e, `docker-compose`.
+   * @param {Function} ifExists Spawn this command if the cmd is executable.
+   * @param {string} extraMessage Message to log if the cmd was not found.
+   */
   _ifExecutable(cmd, ifExists, extraMessage = '') {
     const paths = process.env.PATH.split(path.delimiter);
     const pathExt = (process.env.PATHEXT || '').split(path.delimiter);
@@ -343,55 +266,32 @@ class Generator extends Base {
     return ifExists();
   }
 
+  /**
+   * Runs `docker-compose build` if `docker-compose.yml` exists in the workspace and user has installed `dokcer-compose` cli.
+   */
+  _buildDockerCompose() {
+    const file = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {defaults: ''});
+    const isNotEmpty = file.trim().length > 0;
+    if (isNotEmpty && !this.options.skip.includes('build')) {
+      return this._ifExecutable('docker-compose', () => SpawnUtils.spawnOrAbort('docker-compose', 'build', this.cwd, true), ' please run "docker-compose build" manually"');
+    }
+
+    return null;
+  }
+
   writing() {
     this.hasErrors = false;
 
     return Promise.resolve(1)
-      .then(this._mkdir.bind(this, null))
+      .then(GeneratorUtils.mkdir(this.cwd))
       .then(this._getProduct.bind(this))
-      .then((product) => {
-        const names = new Set();
-        const repos = [];
-        product.forEach((p) => {
-          const repo = p.repo || 'phovea/' + p.name;
-          if (!names.has(repo)) {
-            names.add(repo);
-            repos.push({
-              repo,
-              branch: p.branch || 'master'
-            });
-          }
-          (p.additional || []).forEach((pi) => {
-            const repo = pi.repo || 'phovea/' + pi.name;
-            if (!names.has(repo)) {
-              names.add(repo);
-              repos.push({
-                repo,
-                branch: pi.branch || 'master'
-              });
-            }
-          });
-        });
-        return repos;
-      })
-      .then((repos) => Promise.all(repos.map((r) => this._cloneRepo(r.repo, r.branch))))
-      .then(this._yo.bind(this, 'workspace', {
-        defaultApp: findDefaultApp(),
-        skipNextStepsLog: true // skip "next steps" logs from yo phovea:workspace
-      }))
+      .then((repos) => Promise.all(repos.map((r) => WorkspaceUtils.cloneRepo(r.repo, r.branch, null, '', this.cwd, this.cloneSSH))))
+      .then(() => GeneratorUtils.yo('workspace', {defaultApp: this.defaultApp, skipNextStepsLog: true, updateWorkspaceScss: !fs.existsSync(this.destinationPath('workspace.scss'))}, null, this.cwd, this.env.adapter))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
-      .then(() => this.options.skip.includes('install') ? null : this._spawnOrAbort('npm', 'install'))
+      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
       .then(this._downloadBackupFiles.bind(this))
-      .then(() => {
-        const l = this.fs.read(this.destinationPath(`${this.cwd}/docker-compose.yml`), {
-          defaults: ''
-        });
-        if (l.trim().length > 0 && !this.options.skip.includes('build')) {
-          return this._ifExecutable('docker-compose', this._spawnOrAbort.bind(this, 'docker-compose', 'build'), ' please run "docker-compose build" manually"');
-        }
-        return null;
-      })
+      .then(this._buildDockerCompose.bind(this))
       .catch((msg) => {
         this.log('\r\n');
         this.log(chalk.red(msg));
@@ -400,7 +300,7 @@ class Generator extends Base {
   }
 
   end() {
-    if(this.hasErrors) {
+    if (this.hasErrors) {
       return; // skip next steps on errors
     }
 

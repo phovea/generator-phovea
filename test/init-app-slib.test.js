@@ -5,25 +5,12 @@ const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils = require('./testUtils');
+const TestUtils = require('./test-utils/TestUtils');
+const dependencies = require('./test-utils/generator-dependencies');
 /**
  * Directory name to run the generator
  */
 const target = '../appslib';
-
-/**
- * Subgenerators composed with the `init-app-slib` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_init-hybrid',
-  '../generators/_node',
-  '../generators/init-app',
-  '../generators/_init-web',
-  '../generators/init-slib',
-  '../generators/_init-python',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -42,12 +29,12 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
-  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  const initWebPackage = fse.readJSONSync(TestUtils.templatePath('_init-web', 'package.tmpl.json'));
 
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
-  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+  const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -56,7 +43,7 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
       .withPrompts({
         app: 'appName'
       })
-      .withGenerators(GENERATOR_DEPENDENCIES);
+      .withGenerators(dependencies.INIT_APP_SLIB);
   });
 
   afterAll(() => {
@@ -82,6 +69,10 @@ describe('generate app-slib plugin with prompt `app: appName` and the rest defau
   it('generates `tsconfig.json` with correct content', () => {
 
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
+  });
+
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'app-slib'}});
   });
 
   it('generates no `tsconfig_dev.json`', () => {

@@ -1,57 +1,15 @@
 'use strict';
 const _ = require('lodash');
 const chalk = require('chalk');
-const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
 const fs = require('fs');
-
+const NpmUtils = require('../../utils/NpmUtils');
+const SpawnUtils = require('../../utils/SpawnUtils');
+const RepoUtils = require('../../utils/RepoUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 const known = () => require('../../utils/known');
 
-function toLibraryAliasMap(moduleNames = [], libraryNames = []) {
-  let r = {};
-  moduleNames.forEach((m) => {
-    const plugin = known().plugin.byName(m);
-    if (!plugin) {
-      this.log('cant find plugin: ', m);
-      return;
-    }
-    libraryNames.push(...(plugin.libraries || []));
-  });
-  libraryNames.forEach((l) => {
-    const lib = known().lib.byName(l);
-    if (!lib) {
-      this.log('cant find library: ', l);
-      return;
-    }
-    _.merge(r, lib.aliases);
-  });
-  return r;
-}
-
-function toLibraryExternals(moduleNames = [], libraryNames = []) {
-  let r = [];
-  moduleNames.forEach((m) => {
-    const plugin = known().plugin.byName(m);
-    if (!plugin) {
-      this.log('cant find plugin: ', m);
-      return;
-    }
-    r.push(...(plugin.externals || []));
-    libraryNames.push(...(plugin.libraries || []));
-  });
-  libraryNames.forEach((l) => {
-    const lib = known().lib.byName(l);
-    if (!lib) {
-      this.log('cant find library: ', l);
-      return;
-    }
-    r.push(lib.name);
-    r.push(...(lib.externals || []));
-  });
-  return Array.from(new Set(r));
-}
-
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
 
   constructor(args, options) {
     super(args, options);
@@ -99,8 +57,8 @@ class Generator extends Base {
         this.config.set('modules', props.modules);
         this.config.set('libraries', props.libraries);
       }
-      this.config.set('libraryAliases', toLibraryAliasMap.call(this, this.config.get('modules'), this.config.get('libraries')));
-      this.config.set('libraryExternals', toLibraryExternals.call(this, this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryAliases', RepoUtils.toLibraryAliasMap(this.config.get('modules'), this.config.get('libraries')));
+      this.config.set('libraryExternals', RepoUtils.toLibraryExternals(this.config.get('modules'), this.config.get('libraries')));
     });
   }
 
@@ -129,23 +87,24 @@ class Generator extends Base {
 
   writing() {
     const config = this.config.getAll();
-    this.cwd = this.options.isWorkspace ? (config.app || config.name) + '/' : '';
-    patchPackageJSON.call(this, config, [], {
-      dependencies: this._generateDependencies(useDevVersion.call(this, this.cwd))
+    this.cwd = this.options.isWorkspace ? (config.app || config.serviceName|| config.name) + '/' : '';
+    const {version} = this.fs.readJSON(this.destinationPath(this.cwd + 'package.json'), {version: '1.0.0'});
+
+    this._patchPackageJSON(config, [], {
+      dependencies: this._generateDependencies(NpmUtils.useDevVersion(version))
     }, null, this.cwd);
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
-    writeTemplates.call(this, config, null, this.cwd);
+    this._writeTemplates.call(this, config, null, this.cwd);
 
     // do not overwrite existing registry file
     if (!fs.existsSync(this.destinationPath(this.cwd + 'src/phovea.ts'))) {
-      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath(this.cwd + 'src/phovea.ts'), stringifyAble(config));
+      this.fs.copyTpl(this.templatePath('phovea.tmpl.ts'), this.destinationPath(this.cwd + 'src/phovea.ts'), GeneratorUtils.stringifyAble(config));
     }
   }
 
   install() {
     if (this.options.options.install) {
-      const options = this.cwd ? {cwd: this.cwd} : {};
-      this.spawnCommand("npm", ["install"], options);
+      SpawnUtils.spawnSync('npm', 'install', this.cwd, true);
     }
   }
 
@@ -153,13 +112,11 @@ class Generator extends Base {
     if (fs.existsSync(this.destinationPath(this.cwd + 'phovea.js'))) {
       this.log('\r\n');
       this.log(chalk.red(`ACTION REQUIRED!`));
-      this.log(chalk.default(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.default(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.default(` now!`));
-      this.log(chalk.default(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.default(`file from this plugin repository.`));
-      this.log(chalk.default(`If you do not migrate the content the registered extension points will be unavailable.`));
+      this.log(chalk.white(`Please migrate the content of`), chalk.yellow(`phovea.js`), chalk.white(`to`), chalk.yellow(`/src/phovea.ts`) + chalk.white(` now!`));
+      this.log(chalk.white(`Afterwards you can remove the`), chalk.yellow(`phovea.js`), chalk.white(`file from this plugin repository.`));
+      this.log(chalk.white(`If you do not migrate the content the registered extension points will be unavailable.`));
     }
   }
 }
 
 module.exports = Generator;
-module.exports.toLibraryAliasMap = toLibraryAliasMap;
-module.exports.toLibraryExternals = toLibraryExternals;

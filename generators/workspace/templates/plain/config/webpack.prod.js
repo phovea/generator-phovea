@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 //for debugging issues
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 //helper module
@@ -176,6 +177,9 @@ const config = {
     optimization: {
         nodeEnv: false, // will be set by DefinePlugin
         minimize: true, // only in prod mode
+        minimizer: [
+            new CssMinimizerPlugin()
+          ],
         namedModules: false, // only in prod mode
         namedChunks: false, // only in prod mode
         removeAvailableModules: true, // only in prod mode

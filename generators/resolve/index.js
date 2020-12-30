@@ -67,7 +67,7 @@ class Generator extends Base {
   }
 
   writing() {
-    resolveAllNeighbors.call(this, this.props.cloneSSH, this.props.type, this.options.shallow);
+    resolveAllNeighbors(this.props.cloneSSH, this.props.type, this.options.shallow, this.destinationPath());
   }
 }
 

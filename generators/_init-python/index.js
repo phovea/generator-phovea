@@ -1,13 +1,14 @@
 'use strict';
 const _ = require('lodash');
-const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON, stringifyAble, useDevVersion} = require('../../utils');
-const {parseRequirements} = require('../../utils/pip');
+const PipUtils = require('../../utils/PipUtils');
+const NpmUtils = require('../../utils/NpmUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 const fs = require('fs');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
 const known = () => require('../../utils/known');
 
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
   constructor(args, options) {
     super(args, options);
 
@@ -66,8 +67,8 @@ class Generator extends Base {
   }
 
   _generateDependencies(useDevelopDependencies, cwd) {
-    let requirements = parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
-    const dockerPackages = parseRequirements(this.fs.read(this.destinationPath(cwd + 'docker_packages.txt'), {defaults: ''}));
+    let requirements = PipUtils.parseRequirements(this.fs.read(this.destinationPath(cwd + 'requirements.txt'), {defaults: ''}));
+    const dockerPackages = PipUtils.parseRequirements(this.fs.read(this.destinationPath(cwd + 'docker_packages.txt'), {defaults: ''}));
 
     const concat = (p) => Object.keys(p).map((pi) => pi + p[pi]);
     // merge dependencies
@@ -78,9 +79,9 @@ class Generator extends Base {
     modules.filter(known().plugin.isTypeServer).forEach((m) => {
       const p = known().plugin.byName(m);
 
-     // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
-     // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
-     // and the incoming format is phovea_server>=5.0.1,<6.0.0
+      // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
+      // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
+      // and the incoming format is phovea_server>=5.0.1,<6.0.0
       if (!useDevelopDependencies) {
         const devRequirement = Object.keys(p.develop.requirements)[0];
         const masterRequirment = Object.keys(p.requirements)[0];
@@ -105,18 +106,19 @@ class Generator extends Base {
   }
   writing() {
     const config = this.config.getAll();
-    this.cwd = this.options.isWorkspace ? (config.cwd || config.name) + '/' : '';
-    const deps = this._generateDependencies(useDevVersion.call(this, this.cwd), this.cwd);
+    this.cwd = this.options.isWorkspace ? (config.app || config.serviceName || config.name) + '/' : '';
+    const {version} = this.fs.readJSON(this.destinationPath(this.cwd + 'package.json'), {version: '1.0.0'});
+    const deps = this._generateDependencies(NpmUtils.useDevVersion(version), this.cwd);
 
-    patchPackageJSON.call(this, config, ['devDependencies'], null, null, this.cwd);
-    writeTemplates.call(this, config, !this.options.noSamples, this.cwd);
+    this._patchPackageJSON(config, ['devDependencies'], null, null, this.cwd);
+    this._writeTemplates.call(this, config, !this.options.noSamples, this.cwd);
 
     this.fs.write(this.destinationPath(this.cwd + 'requirements.txt'), deps.requirements.join('\n'));
     this.fs.write(this.destinationPath(this.cwd + 'docker_packages.txt'), deps.dockerPackages.join('\n'));
 
     // don't overwrite existing registry file
     if (!fs.existsSync(this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'))) {
-      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'), stringifyAble(config));
+      this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'), GeneratorUtils.stringifyAble(config));
     }
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
     this.fs.copy(this.templatePath('docs_gitignore'), this.destinationPath(this.cwd + 'docs/.gitignore'));
