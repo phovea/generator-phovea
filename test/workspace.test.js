@@ -47,7 +47,8 @@ const expectedFiles = [
     'withinEnv',
     'withinEnv.cmd',
     'config/webpack.dev.js',
-    'config/webpack.prod.js'
+    'config/webpack.prod.js',
+    'workspace.scss'
 ];
 
 describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace sequentially', () => {

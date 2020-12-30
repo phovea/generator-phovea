@@ -1,8 +1,20 @@
 
 const fs = require('fs-extra');
 const yeoman = require('yeoman-environment');
+const path = require('path');
 
 module.exports = class GeneratorUtils {
+
+    /**
+     * Read a key from `.yo-rc.json` in some path
+     * @param {*} key Key to read
+     * @param {*} cwd Path to file
+     */
+    static readConfig(key, cwd) {
+        const file = fs.readJSONSync(path.join(cwd + '/.yo-rc.json'));
+        return file['generator-phovea'][key];
+    }
+
     /**
      * Creates directory in the given path.
      * @param {string} dir Directory

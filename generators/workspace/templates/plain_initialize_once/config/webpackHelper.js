@@ -13,7 +13,7 @@ function injectRegistry(defaultApp, extraFiles, entry) {
   }
   const transformed = {};
   Object.keys(entry).forEach((key) => {
-      transformed[key] = extraFiles.concat(`./${defaultApp}/` + entry[key]['js']);
+      transformed[key] = extraFiles.concat(`./workspace.scss`, `./${defaultApp}/` + entry[key]['js']);
   });
   return transformed;
 }

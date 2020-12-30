@@ -10,6 +10,8 @@ const known = () => require('../../utils/known');
 const NpmUtils = require('../../utils/NpmUtils');
 const PipUtils = require('../../utils/PipUtils');
 const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
+const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;
@@ -51,7 +53,8 @@ class Generator extends BasePhoveaGenerator {
       version: '0.0.1',
       skipNextStepsLog: false,
       defaultApp: 'phovea',
-      addWorkspaceRepos: true
+      addWorkspaceRepos: true,
+      updateWorkspaceScss: true
     };
 
     // use existing workspace package.json as default
@@ -97,7 +100,11 @@ class Generator extends BasePhoveaGenerator {
       default: defaultConfig.addWorkspaceRepos,
       description: 'States whether workspace repos should be part of the dependencies. Set to `true` for local development setup. Otherwise `false` for CI build process.'
     });
-
+    this.option('updateWorkspaceScss', {
+      type: Boolean,
+      default: defaultConfig.updateWorkspaceScss,
+      description: 'States whether the workspace.scss file should be updated/refreshed.'
+    });
   }
 
   initializing() {
@@ -444,6 +451,83 @@ class Generator extends BasePhoveaGenerator {
     });
   }
 
+  /**
+   * Collects all variables.scss and main.scss files of the frontend plugins of the workspace
+   * and imports them in the correct order in the workspace.scss file.
+   * @param {string[]} plugins Frontend repos
+   */
+  _composeWorkspaceScss(plugins) {
+    const defaultApp = this.props.defaultApp;
+    const frontendRepos = plugins.filter((r) => {
+      const type = GeneratorUtils.readConfig('type', this.destinationPath(r));
+      return r !== defaultApp && (r === 'ordino' || !type.includes('app')); // remove app from frontendRepos
+    });
+
+    const sorted = frontendRepos.sort((a, b) => WorkspaceUtils.compareRepos(a, b));
+    const reversed = [...sorted].reverse();
+
+    const toVariableImport = (repo) => {
+      if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/abstracts/_variables.scss`))) {
+        return `@import "~${repo}/dist/scss/abstracts/variables";`;
+      }
+      return '';
+    };
+
+    const toMainImport = (repo) => {
+      if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/main.scss`))) {
+        return `@import "~${repo}/dist/scss/main"; `;
+      }
+      return '';
+    };
+    const DEBUG_VARIABLES = `@debug('import scss variables');`;
+    const DEBUG_MAIN = `\n@debug('import main scss'); `;
+    const DEFAULT_APP_MAIN_BEGIN = '// generator-phovea:default-app:main:begin';
+    const DEFAULT_APP_MAIN_END = '// generator-phovea:default-app:main:end';
+    const DEFAULT_APP_VARIABLES_BEGIN = '// generator-phovea:default-app:variables:begin';
+    const DEFAULT_APP_VARIABLE_END = '// generator-phovea:default-app:variables:end';
+    const PLUGIN_MAIN_BEGIN = '// generator-phovea:plugin:main:begin';
+    const PLUGIN_MAIN_END = '// generator-phovea:plugin:main:end';
+    const PLUGIN_VARIABLES_BEGIN = '// generator-phovea:plugin:variables:begin';
+    const PLUGIN_VARIABLE_END = '// generator-phovea:plugin:variables:end';
+
+    const defaultAppImport = (repo, type = 'variables') => type === 'variables' ? toVariableImport(repo) : toMainImport(repo);
+
+
+
+    const imports = [
+      DEBUG_VARIABLES,
+      DEFAULT_APP_VARIABLES_BEGIN,
+      defaultAppImport(defaultApp),
+      DEFAULT_APP_VARIABLE_END,
+      PLUGIN_VARIABLES_BEGIN,
+      ...sorted
+        .map((r) => toVariableImport(r))
+        .filter((r) => Boolean(r)),
+      PLUGIN_VARIABLE_END,
+      DEBUG_MAIN,
+      PLUGIN_MAIN_BEGIN,
+      ...reversed.map((r) => toMainImport(r))
+        .filter((r) => Boolean(r)),
+      PLUGIN_MAIN_END,
+      DEFAULT_APP_MAIN_BEGIN,
+      defaultAppImport(defaultApp, 'main'),
+      DEFAULT_APP_MAIN_END
+
+    ]
+      .filter((r) => Boolean(r))
+      .join('\n');
+
+    // const file = this.destinationPath('workspace.scss');
+    // TODO update workspace.scss instead of rewritting it
+    // if (fs.existsSync(file)) {
+    //   const old = this.fs.read(file);
+    //   const match = old.match(new RegExp(`^${DEFAULT_APP_VARIABLES_BEGIN}${DEFAULT_APP_VARIABLE_END}$`, 'm'));
+    // } else {
+    console.log('Generated workspaces.scss: \n', imports);
+    this.fs.write(this.destinationPath("workspace.scss"), imports);
+
+  }
+
   writing() {
 
     const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
@@ -473,6 +557,10 @@ class Generator extends BasePhoveaGenerator {
       registry: this.props.registry || [],
       vendors: this.props.vendors || []
     });
+
+    if (this.options.updateWorkspaceScss) {
+    this._composeWorkspaceScss(plugins);
+    }
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
     const yaml = require('yamljs');
