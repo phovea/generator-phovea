@@ -12,7 +12,7 @@ const webpackHelper = require('./webpackHelper');
 const path = require('path');
 const webpack = require('webpack');
 const resolve = require('path').resolve;
-const base = resolve(__dirname, '../');
+const workspacePath = resolve(__dirname, '../');
 const now = new Date();
 const year = (new Date()).getFullYear();
 const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
@@ -20,24 +20,25 @@ const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth() + 1)}${prefix
 const envMode = process.argv.indexOf('--mode') >= 0 ? process.argv[process.argv.indexOf('--mode') + 1].trim().toLowerCase() : 'production';
 const isDev = envMode === 'development';
 //workspace constants
-const workspaceYoRcFile = require('../.yo-rc-workspace.json');
-const workspacePkg = require(base + '/package.json');
-const workspaceBuildInfoFile = base + '/package-lock.json';
-const workspaceMetaDataFile = base + '/metaData.json';
-const workspaceRegistryFile = base + '/phovea_registry.js';
+const workspaceYoRcFile = require(path.join(workspacePath, '.yo-rc-workspace.json'));
+const workspacePkg = require(path.join(workspacePath, 'package.json'));
+const workspaceBuildInfoFile = path.join(workspacePath, 'package-lock.json');
+const workspaceMetaDataFile = path.join(workspacePath, 'metaData.json');
+const workspaceRegistryFile = path.join(workspacePath, 'phovea_registry.js');
 const workspaceAliases = workspaceYoRcFile.workspaceAliases || [];
 const workspaceRegistry = workspaceYoRcFile.registry || [];
-const workspaceName = base.substr(base.lastIndexOf('/') + 1);
+const workspaceName = workspacePath.substr(workspacePath.lastIndexOf('/') + 1);
 const workspaceRepos = workspaceYoRcFile.frontendRepos || [];
 const workspaceMaxChunkSize = workspaceYoRcFile.maxChunkSize || 5000000;
 //app constants
 const envApp = process.argv.filter((e) => e.startsWith('--app='));
 const defaultApp = envApp.length > 0 ? envApp[0].substring(6).trim() : workspaceYoRcFile.defaultApp;
-const appPkg = require('./../' + defaultApp + '/package.json');
+const defaultAppPath = path.join(workspacePath, defaultApp);
+const appPkg = require(path.join(defaultAppPath, 'package.json'));
 appPkg.version = appPkg.version.replace('SNAPSHOT', buildId);
 const libName = appPkg.name;
 const libDesc = appPkg.description;
-const {entries, registry, libraryAliases, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
+const {entries, registry, libraryAliases, filesToLoad} = require(path.join(defaultAppPath, '.yo-rc.json'))['generator-phovea'];
 const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
 //banner info
 const banner = '/*! ' + (appPkg.title || appPkg.name) + ' - v' + appPkg.version + ' - ' + year + '\n' +
@@ -60,7 +61,7 @@ let HtmlWebpackPlugins = [];
 Object.values(entries).map(function (entry) {
     HtmlWebpackPlugins.push(new HtmlWebpackPlugin({
         inject: true,
-        template: `./${defaultApp}/` + entry['template'],
+        template: path.join(defaultAppPath, entry['template']),
         filename: entry['html'],
         title: libName,
         excludeChunks: entry['excludeChunks'],
@@ -91,23 +92,23 @@ const config = {
     output: {
         filename: '[name].js',
         chunkFilename: '[name].js',
-        path: path.resolve(__dirname, './../bundles'),
+        path: path.join(workspacePath, 'bundles'),
         pathinfo: false,
         publicPath: '',
         library: libName,
         libraryTarget: 'umd',
         umdNamedDefine: true
     },
-    entry: webpackHelper.injectRegistry(defaultApp, [workspaceRegistryFile], entries),
+    entry: webpackHelper.injectRegistry(workspacePath, defaultAppPath, [workspaceRegistryFile], entries),
     resolve: {
         extensions: ['.js'],
         alias:
             Object.assign({},
-                ...workspaceRepos.map((item) => ({[item]: (base + `/${item}`)})),
-                ...Object.entries(mergedAliases).map((item) => ({[item[0]]: (base + `/node_modules/${item[1]}`)}))
+              ...workspaceRepos.map((item) => ({[item]: (workspacePath + `/${item}`)})),
+              ...Object.entries(mergedAliases).map((item) => ({[item[0]]: path.join(workspacePath, 'node_modules', item[1])}))
             ),
         modules: [
-            path.join(__dirname, '../node_modules')
+          path.join(workspacePath, 'node_modules')
         ],
     },
     module: {
@@ -219,7 +220,7 @@ const config = {
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [
                 '**/*',
-                path.join(process.cwd(), '../bundles/**/*')
+                path.join(workspacePath, 'bundles/**/*')
             ]
         }),
         new MiniCssExtractPlugin(),
@@ -233,28 +234,28 @@ const config = {
             'process.env.__DEBUG__': JSON.stringify(isDev)
         }),
         new Dotenv({
-            path: base + '/.env', // load this now instead of the ones in '.env'
+            path: path.join(workspacePath, '.env'), // load this now instead of the ones in '.env'
             safe: false, // load '.env.example' to verify the '.env' variables are all set. Can also be a string to a different file.
             allowEmptyValues: true, // allow empty variables (e.g. `FOO=`) (treat it as empty string, rather than missing)
             systemvars: true, // load all the predefined 'process.env' variables which will trump anything local per dotenv specs.
             silent: true, // hide any errors
             defaults: false // load '.env.defaults' as the default values if empty.
-        }),        
+        }),
         new CopyWebpackPlugin({
             patterns: [
                 {
-                    from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
+                    from: workspaceMetaDataFile, to: path.join(workspacePath, 'bundles', 'phoveaMetaData.json'),
                     //generate meta data file
                     transform() {
                         const customProperties = {
                           buildId,
                           version: workspacePkg.version // override app version with workspace version in product build
                         };
-                        return webpackHelper.generateMetaDataFile(resolve(__dirname, '../' + defaultApp), customProperties);
+                        return webpackHelper.generateMetaDataFile(defaultAppPath, customProperties);
                     }
                 },
                 //use package-lock json as buildInfo
-                {from: workspaceBuildInfoFile, to: base + '/bundles/buildInfo.json'}
+                {from: workspaceBuildInfoFile, to: path.join(workspacePath, 'bundles', 'buildInfo.json')}
             ]
         }),
         //for debugging issues

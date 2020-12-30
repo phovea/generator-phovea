@@ -6,14 +6,17 @@ const fs = require('fs');
  * @param entry
  * @returns {*}
  */
-function injectRegistry(defaultApp, extraFiles, entry) {
+function injectRegistry(workspacePath, defaultAppPath, extraFiles, entry) {
   // build also the registry
   if (typeof entry === 'string') {
       return extraFiles.concat(entry);
   }
   const transformed = {};
   Object.keys(entry).forEach((key) => {
-      transformed[key] = extraFiles.concat(`./workspace.scss`, `./${defaultApp}/` + entry[key]['js']);
+    const workspaceSCSS = entry[key]['scss'] ? path.join(defaultAppPath, entry[key]['scss']) : path.join(workspacePath, `workspace.scss`);
+    const entryJS = path.join(defaultAppPath, entry[key]['js']);
+
+    transformed[key] = extraFiles.concat(workspaceSCSS, entryJS);
   });
   return transformed;
 }
