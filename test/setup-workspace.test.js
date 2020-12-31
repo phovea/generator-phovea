@@ -99,7 +99,7 @@ describe('generator setup-workspace', () => {
         const yoArguments = GeneratorUtils.yo.mock.calls;
         expect(yoArguments.length).toBe(1);
         const [generator, options, args, cwd] = yoArguments[0];
-        expect([generator, options, args, cwd]).toStrictEqual(['workspace', {'defaultApp': 'ordino_public', 'skipNextStepsLog': true, 'updateWorkspaceScss': true}, null, 'dummy']);
+        expect([generator, options, args, cwd]).toStrictEqual(['workspace', {'defaultApp': 'ordino_public', 'skipNextStepsLog': true}, null, 'dummy']);
     });
 
     it('copies `.idea` template files', () => {

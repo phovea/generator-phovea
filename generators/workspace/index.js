@@ -53,8 +53,7 @@ class Generator extends BasePhoveaGenerator {
       version: '0.0.1',
       skipNextStepsLog: false,
       defaultApp: 'phovea',
-      addWorkspaceRepos: true,
-      updateWorkspaceScss: true
+      addWorkspaceRepos: true
     };
 
     // use existing workspace package.json as default
@@ -99,11 +98,6 @@ class Generator extends BasePhoveaGenerator {
       type: Boolean,
       default: defaultConfig.addWorkspaceRepos,
       description: 'States whether workspace repos should be part of the dependencies. Set to `true` for local development setup. Otherwise `false` for CI build process.'
-    });
-    this.option('updateWorkspaceScss', {
-      type: Boolean,
-      default: defaultConfig.updateWorkspaceScss,
-      description: 'States whether the workspace.scss file should be updated/refreshed.'
     });
   }
 
@@ -454,13 +448,31 @@ class Generator extends BasePhoveaGenerator {
   /**
    * Collects all variables.scss and main.scss files of the frontend plugins of the workspace
    * and imports them in the correct order in the workspace.scss file.
-   * @param {string[]} plugins Frontend repos
+   * @param {string[]} frontendPlugins Frontend plugins
    */
-  _composeWorkspaceScss(plugins) {
+  _checkWorkspaceScss(frontendPlugins) {
+    if (fs.existsSync(this.destinationPath('workspace.scss'))) {
+      const content = fs.readFileSync(this.destinationPath('workspace.scss'), 'utf-8');
+      frontendPlugins.map((repo) => {
+        if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/main.scss`))) {
+          if(!content.includes(`${repo}/dist/scss/main`)) {
+            this.log(chalk.yellow(`main.scss of repository '${repo}' in workspace.scss not found`));
+          }
+        }
+      });
+    } else {
+      this._generateWorkspaceScss(frontendPlugins);      
+    }
+  }
+  /**
+   * Collects all variables.scss and main.scss files of the frontend plugins of the workspace
+   * and imports them in the correct order in the workspace.scss file.
+   * @param {string[]} frontendPlugins Frontend plugins of the given workspace
+   */
+  _generateWorkspaceScss(frontendPlugins) {
     const defaultApp = this.props.defaultApp;
-    const frontendRepos = plugins.filter((r) => {
-      const type = GeneratorUtils.readConfig('type', this.destinationPath(r));
-      return r !== defaultApp && (r === 'ordino' || !type.includes('app')); // remove app from frontendRepos
+    const frontendRepos = frontendPlugins.filter((r) => {
+      return r !== defaultApp; // remove app from frontendRepos
     });
 
     const sorted = frontendRepos.sort((a, b) => WorkspaceUtils.compareRepos(a, b));
@@ -491,8 +503,6 @@ class Generator extends BasePhoveaGenerator {
     const PLUGIN_VARIABLE_END = '// generator-phovea:plugin:variables:end';
 
     const defaultAppImport = (repo, type = 'variables') => type === 'variables' ? toVariableImport(repo) : toMainImport(repo);
-
-
 
     const imports = [
       DEBUG_VARIABLES,
@@ -558,9 +568,8 @@ class Generator extends BasePhoveaGenerator {
       vendors: this.props.vendors || []
     });
 
-    if (this.options.updateWorkspaceScss) {
-    this._composeWorkspaceScss(plugins);
-    }
+    this._checkWorkspaceScss(plugins);
+
     // merge scripts together server wins
     extend(scripts, sdeps.scripts);
     const yaml = require('yamljs');
