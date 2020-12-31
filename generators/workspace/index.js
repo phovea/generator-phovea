@@ -527,13 +527,7 @@ class Generator extends BasePhoveaGenerator {
       .filter((r) => Boolean(r))
       .join('\n');
 
-    // const file = this.destinationPath('workspace.scss');
-    // TODO update workspace.scss instead of rewritting it
-    // if (fs.existsSync(file)) {
-    //   const old = this.fs.read(file);
-    //   const match = old.match(new RegExp(`^${DEFAULT_APP_VARIABLES_BEGIN}${DEFAULT_APP_VARIABLE_END}$`, 'm'));
-    // } else {
-    console.log('Generated workspaces.scss: \n', imports);
+    this.log('Generated workspaces.scss: \n', imports);
     this.fs.write(this.destinationPath("workspace.scss"), imports);
 
   }
