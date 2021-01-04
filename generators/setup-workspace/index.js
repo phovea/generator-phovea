@@ -286,7 +286,7 @@ class Generator extends Base {
       .then(GeneratorUtils.mkdir(this.cwd))
       .then(this._getProduct.bind(this))
       .then((repos) => Promise.all(repos.map((r) => WorkspaceUtils.cloneRepo(r.repo, r.branch, null, '', this.cwd, this.cloneSSH))))
-      .then(() => GeneratorUtils.yo('workspace', {defaultApp: this.defaultApp, skipNextStepsLog: true, updateWorkspaceScss: !fs.existsSync(this.destinationPath('workspace.scss'))}, null, this.cwd, this.env.adapter))
+      .then(() => GeneratorUtils.yo('workspace', {defaultApp: this.defaultApp, skipNextStepsLog: true}, null, this.cwd, this.env.adapter))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
       .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
