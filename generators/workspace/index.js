@@ -461,9 +461,10 @@ class Generator extends BasePhoveaGenerator {
         }
       });
     } else {
-      this._generateWorkspaceScss(frontendPlugins);      
+      this._generateWorkspaceScss(frontendPlugins);
     }
   }
+  
   /**
    * Collects all variables.scss and main.scss files of the frontend plugins of the workspace
    * and imports them in the correct order in the workspace.scss file.
