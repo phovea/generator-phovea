@@ -5,7 +5,6 @@
 import './404.html';
 import './robots.txt';
 
-import './scss/main.scss';
 import {App} from './app/App';
 import {AppHeaderLink, AppHeader} from 'phovea_ui';
 import {APP_NAME} from './language';

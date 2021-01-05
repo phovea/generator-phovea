@@ -1,14 +1,9 @@
 'use strict';
 const Base = require('yeoman-generator');
 const chalk = require('chalk');
-const {
-  simplifyRepoUrl
-} = require('../../utils/repo');
-const version = require('../../utils/version');
-
-function failed(spawnResult) {
-  return spawnResult.status !== 0;
-}
+const RepoUtils = require('../../utils/RepoUtils');
+const NpmUtils = require('../../utils/NpmUtils');
+const SpawnUtils = require('../../utils/SpawnUtils');
 
 /**
  * Clone a given repository and supports version ranges for git tags.
@@ -105,30 +100,30 @@ class Generator extends Base {
   }
 
   _cloneRepo(repoUrl, branch, extras, cloneDirName) {
-    if (!version.isGitCommit(branch)) {
+    if (!NpmUtils.isGitCommit(branch)) {
       // modify branch name, if it is an advance version tag
       // otherwise just use the branch name as it is
-      if (version.isAdvancedVersionTag(branch)) {
+      if (NpmUtils.isAdvancedVersionTag(branch)) {
         this.log(chalk.white(`found branch with version range`), chalk.green(branch), chalk.white(`for`), chalk.green(repoUrl));
 
         const line = `ls-remote --tags ${repoUrl}`;
         this.log(chalk.white(`fetching possible version tags:`), `git ${line}`);
-        const r = this._spawn('git', line.split(/ +/));
+        const r = SpawnUtils.spawnSync('git', line.split(/ +/), this.cwd);
 
-        if (failed(r)) {
+        if (SpawnUtils.failed(r)) {
           this.log(chalk.red(`failed to fetch list of tags from git repository`), `status code: ${r.status}`);
           this.log(r.stderr.toString());
-          return this._abort(`failed to fetch list of tags from git repository - status code: ${r.status}`);
+          return SpawnUtils.abort(`failed to fetch list of tags from git repository - status code: ${r.status}`);
         }
 
         const gitLog = r.stdout.toString();
-        const gitVersions = version.extractVersionsFromGitLog(gitLog);
+        const gitVersions = NpmUtils.extractVersionsFromGitLog(gitLog);
         this.log(chalk.white(`found the following version tags: `), gitVersions);
 
-        const highestVersion = version.findHighestVersion(gitVersions, branch);
+        const highestVersion = NpmUtils.findHighestVersion(gitVersions, branch);
         if (!highestVersion) {
           this.log(chalk.red(`failed to find git version tag for given version range`));
-          return this._abort(`failed to find git version tag for given version range`);
+          return SpawnUtils.abort(`failed to find git version tag for given version range`);
         }
 
         this.log(chalk.white(`use version tag`), chalk.green(highestVersion), chalk.white(`as branch name`));
@@ -137,41 +132,21 @@ class Generator extends Base {
 
       const line = `clone -b ${branch}${extras || ''} ${repoUrl}${cloneDirName}`;
       this.log(chalk.white(`clone repository:`), `git ${line}`);
-      return this._spawnOrAbort('git', line.split(/ +/));
+      return SpawnUtils.spawnOrAbort('git', line.split(/ +/), this.cwd);
     }
+
     // clone a specific commit
     const line = `clone ${extras || ''} ${repoUrl}${cloneDirName}`;
     this.log(chalk.white(`clone repository:`), `git ${line}`);
-    return this._spawnOrAbort('git', line.split(/ +/)).then(() => {
+
+    return SpawnUtils.spawnOrAbort('git', line.split(/ +/), this.cwd).then(() => {
       const line = `checkout ${branch}`;
       this.log(chalk.white(`checkout commit:`), `git ${line}`);
-      let repoName = simplifyRepoUrl(repoUrl);
+      let repoName = RepoUtils.simplifyRepoUrl(repoUrl);
       repoName = repoName.slice(repoName.lastIndexOf('/') + 1);
-      return this._spawnOrAbort('git', line.split(/ +/), {
-        cwd: `${this.cwd}/${repoName}`
-      });
+      const cwd = this.cwd ? `${this.cwd}/${repoName}` : repoName;
+      return SpawnUtils.spawnOrAbort('git', line.split(/ +/), cwd);
     });
-  }
-
-  _abort(msg) {
-    return Promise.reject(msg ? msg : 'Step Failed: Aborting');
-  }
-
-  _spawn(cmd, argline, cwd) {
-    const options = cwd === false ? {} : Object.assign({
-      cwd: this.cwd,
-      stdio: ['inherit', 'pipe', 'pipe'] // pipe `stdout` and `stderr` to host process
-    }, cwd || {});
-    return this.spawnCommandSync(cmd, Array.isArray(argline) ? argline : argline.split(' '), options);
-  }
-
-  _spawnOrAbort(cmd, argline, cwd) {
-    const r = this._spawn(cmd, argline, cwd);
-    if (failed(r)) {
-      this.log(r.stderr.toString());
-      return this._abort(`failed: "${cmd} ${Array.isArray(argline) ? argline.join(' ') : argline}" - status code: ${r.status}`);
-    }
-    return Promise.resolve(r);
   }
 
 }
