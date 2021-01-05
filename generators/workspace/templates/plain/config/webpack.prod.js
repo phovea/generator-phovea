@@ -40,7 +40,7 @@ const libName = appPkg.name;
 const libDesc = appPkg.description;
 const {entries, registry, libraryAliases, filesToLoad, copyFiles} = require(path.join(defaultAppPath, '.yo-rc.json'))['generator-phovea'];
 const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
-const copyAppFiles = copyFiles ? copyFiles.map((file) => ({from: base + '/' + defaultApp + '/' + file, to: base + '/bundles' +  file.substr(file.lastIndexOf('/'))})) : [];
+const copyAppFiles = copyFiles ? copyFiles.map((file) => ({from: path.join(defaultAppPath, file), to: path.join(workspacePath, 'bundles', path.basename(file)) })) : [];
 //banner info
 const banner = '/*! ' + (appPkg.title || appPkg.name) + ' - v' + appPkg.version + ' - ' + year + '\n' +
     (appPkg.homepage ? '* ' + appPkg.homepage + '\n' : '') +
