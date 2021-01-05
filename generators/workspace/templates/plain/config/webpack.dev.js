@@ -35,8 +35,9 @@ const defaultAppPath = path.join(workspacePath, defaultApp);
 const appPkg = require(path.join(defaultAppPath, 'package.json'));
 const libName = appPkg.name;
 const libDesc = appPkg.description;
-const {entries, registry, vendors, libraryAliases, filesToLoad} = require(path.join(defaultAppPath, '.yo-rc.json'))['generator-phovea'];
+const {entries, registry, vendors, libraryAliases, filesToLoad, copyFiles} = require(path.join(defaultAppPath, '.yo-rc.json'))['generator-phovea'];
 const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
+const copyAppFiles = copyFiles ? copyFiles.map((file) => ({from: path.join(defaultAppPath, file), to: path.join(workspacePath, 'bundles', path.basename(file)) })) : [];
 // Merge app and workspace properties
 const mergedAliases = {
     ...libraryAliases,
@@ -283,7 +284,7 @@ const config = {
             defaults: false // load '.env.defaults' as the default values if empty.
         }),
         new CopyWebpackPlugin({
-            patterns: [
+            patterns: copyAppFiles.concat([
                 {
                     from: workspaceMetaDataFile, to: path.join(workspacePath, 'bundles', 'phoveaMetaData.json'),
                     //generate meta data file
@@ -294,7 +295,7 @@ const config = {
                 //use package-lock json as buildInfo
                 {from: workspaceBuildInfoFile, to: path.join(workspacePath, 'bundles', 'buildInfo.json')}
             ]
-        }),
+        )}),
         //for debugging issues
         /*new BundleAnalyzerPlugin({
             // set to 'server' to start analyzer during build

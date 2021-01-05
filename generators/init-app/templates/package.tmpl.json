@@ -6,7 +6,7 @@
     "copy": "npm run copy-assets && npm run copy-styles && npm run copy-app-assets",
     "copy-assets": "shx --verbose cp -R src/assets/. dist/assets/ || echo 'no file copied'",
     "copy-styles": "shx --verbose cp -R src/scss/. dist/scss/ || echo 'no file copied'",
-    "copy-app-assets": "(shx --verbose cp src/*.txt dist/ || echo 'no file copied') && (shx --verbose cp src/*.html dist/ || echo 'no file copied') && (shx --verbose cp src/*.ejs dist/ || echo 'no file copied')",
+    "copy-app-assets": "shx --verbose cp src/*.{txt,html,ejs,json} dist/ || echo 'no file copied'",
     "dist": "mkdir lib && cd dist && tar cvzf ../lib/<%-name.toLowerCase()%>.tar.gz *",
     "predist": "npm run build",
     "predocker": "npm run build",
