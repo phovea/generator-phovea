@@ -1,11 +1,21 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Error 50X</title>
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Yantramanav:wght@400;700&display=swap" rel="stylesheet"> 
     <style>
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        font-family: 'Yantramanav', 'sans-serif';
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
       #error-box {
         position: absolute;
         text-align: center;
@@ -43,16 +53,10 @@
       }
     </style>
 </head>
-<body style="height: 100%; font-family: 'Yantramanav', 'sans-serif'">
-<div class="container" style="height: 100%">
-  <main style="height: 100%">
-    <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
-      <div id="error-box">
-        <h1>Error 50x</h1>
-        <p>Something went wrong. Sorry for the inconvenience, we are working on it.</p>
-      </div>
-    </div>
-  </main>
-</div>
+<body>
+  <div id="error-box">
+    <h1>Error 50x</h1>
+    <p>Something went wrong. Sorry for the inconvenience, we are working on it.</p>
+  </div>
 </body>
 </html>
