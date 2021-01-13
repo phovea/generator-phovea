@@ -2,8 +2,6 @@
  * Created by Caleydo Team on 31.08.2016.
  */
 
-import './404.html';
-import './robots.txt';
 
 import {App} from './app/App';
 import {AppHeaderLink, AppHeader} from 'phovea_ui';
