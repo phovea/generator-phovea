@@ -37,7 +37,7 @@ describe('generate a product with default prompt values', () => {
         web: {
         repo: 'phovea/wep_app',
         branch: 'master',
-        additional: {
+        additionals: {
             phovea_core: {
                 'repo': 'phovea/phovea_core'
             },

@@ -3,7 +3,7 @@
     "type": "web",
     "repo": "Caleydo/ordino_public",
     "branch": "develop",
-    "additional": {
+    "additionals": {
       "phovea_core": {
         "repo": "phovea/phovea_core",
         "branch": "develop"
@@ -41,7 +41,7 @@
   "api": {
     "repo": "phovea/phovea_server",
     "branch": "develop",
-    "additional": {
+    "additionals": {
       "phovea_security_flask": {
         "repo": "phovea/phovea_security_flask",
         "branch": "develop"
