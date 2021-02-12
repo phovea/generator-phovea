@@ -59,13 +59,13 @@ jobs:
           path: dist
           destination: dist-python
       - persist_to_workspace:
-          root: ~/phovea-python
-          paths: .
+          root: ~/.
+          paths: phovea-python
   python-publish:
     executor: python-executor
     steps:
       - attach_workspace:
-          at: ~/phovea-python
+          at: ~/.
       - run:
           name: Install twine
           command: |
@@ -118,13 +118,13 @@ jobs:
           path: dist
           destination: dist-web
       - persist_to_workspace:
-          root: ~/phovea-web
-          paths: .
+          root: ~/.
+          paths: phovea-web
   web-publish:
     executor: node-executor
     steps:
       - attach_workspace:
-          at: ~/phovea-web
+          at: ~/.
       - run:
           name: Authentication
           command:  |
