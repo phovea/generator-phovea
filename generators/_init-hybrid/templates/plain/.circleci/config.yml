@@ -54,10 +54,10 @@ jobs:
           name: Build
           command: |
             . ~/venv/bin/activate
-            npm run dist
+            npm run dist:python
       - store_artifacts:
           path: dist
-          destination: dist
+          destination: dist-python
       - persist_to_workspace:
           root: ~/phovea
           paths: .
@@ -113,9 +113,10 @@ jobs:
           command: npm list --depth=1 || true
       - run:
           name: Build
-          command: npm run dist
+          command: npm run dist:web
       - store_artifacts:
           path: dist
+          destination: dist-web
       - persist_to_workspace:
           root: ~/phovea
           paths: .
@@ -127,8 +128,7 @@ jobs:
       - run:
           name: Authentication
           command:  |
-            echo -e "registry=https://$NPM_REPOSITORY" >> ~/.npmrc
-            echo -e "//$NPM_REPOSITORY:authToken=$NPM_TOKEN" >> ~/.npmrc
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
       - run:
           name: Publish package
           command: npm publish
