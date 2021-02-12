@@ -66,6 +66,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/.
+      - run: ls -a    
       - run:
           name: Install twine
           command: |
@@ -125,6 +126,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/.
+      - run: ls -a    
       - run:
           name: Authentication
           command:  |
