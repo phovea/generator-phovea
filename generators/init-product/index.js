@@ -1,26 +1,14 @@
 /**
  * Created by Samuel Gratzl on 28.11.2016.
  */
-const Base = require('yeoman-generator');
-const {writeTemplates, patchPackageJSON} = require('../../utils');
-const {simplifyRepoUrl} = require('../../utils/repo');
+const WorkspaceUtils = require('../../utils/WorkspaceUtils');
 const chalk = require('chalk');
 const fs = require('fs');
+const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
 const isRequired = (v) => v.toString().length > 0;
 
-function buildPossibleAdditionalPlugins(type) {
-  const toDescription = (d) => ({
-    value: {name: d.name, repo: simplifyRepoUrl(d.repository)},
-    name: `${d.name}: ${d.description}`,
-    short: d.name
-  });
-
-  const plugins = require('../../utils/known').plugin;
-  return ((type === 'web' || type === 'static') ? plugins.listWeb : plugins.listServer).map(toDescription);
-}
-
-class Generator extends Base {
+class Generator extends BasePhoveaGenerator {
 
   initializing() {
     if (fs.existsSync(this.destinationPath('.yo-rc-workspace.json'))) {
@@ -95,7 +83,7 @@ class Generator extends Base {
       name: 'additional',
       type: 'checkbox',
       message: 'additional plugins: ',
-      choices: (act) => buildPossibleAdditionalPlugins(act.type)
+      choices: (act) => WorkspaceUtils.buildPossibleAdditionalPlugins(act.type)
     }, {
       name: 'custom',
       type: 'confirm',
@@ -123,8 +111,8 @@ class Generator extends Base {
 
   writing() {
     const config = this.config.getAll();
-    patchPackageJSON.call(this, config);
-    writeTemplates.call(this, config);
+    this._patchPackageJSON.call(this, config);
+    this._writeTemplates.call(this, config);
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath('.gitignore'));
     // don't overwrite existing registry file
     if (!fs.existsSync(this.destinationPath('phovea_product.json'))) {

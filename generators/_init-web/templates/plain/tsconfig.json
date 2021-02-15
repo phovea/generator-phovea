@@ -11,12 +11,14 @@
     "declarationDir": "dist",
     "outDir": "dist",
     "experimentalDecorators": true,
+    "incremental": true,
+    "tsBuildInfoFile": "dist/tsBuildInfoFile",
     "noImplicitAny": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "preserveWatchOutput":true
+    "preserveWatchOutput": true
   },
   "include": [
     "src/**/*.ts",

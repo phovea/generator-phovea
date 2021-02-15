@@ -1,27 +1,16 @@
-
 'use strict';
 const path = require('path');
 const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
 const fse = require('fs-extra');
-const testUtils = require('./testUtils');
+const TestUtils = require('./test-utils/TestUtils');
+const dependencies = require('./test-utils/generator-dependencies');
 
 /**
  * Directory name to run the generator
  */
 const target = '../app';
-
-/**
- * Subgenerators composed with the `init-app` subgenerator.
- */
-const GENERATOR_DEPENDENCIES = [
-  '../generators/_node',
-  '../generators/init-lib',
-  '../generators/_init-web',
-  '../generators/_check-own-version',
-  '../generators/check-node-version',
-];
 
 const expectedFiles = [
   'tsd.d.ts',
@@ -31,7 +20,8 @@ const expectedFiles = [
 
 const unExpectedFiles = [
   'webpack.config.js',
-  'tests.webpack.js'
+  'tests.webpack.js',
+  'src/index.template'
 ];
 
 describe('generate app plugin with prompt `app: appName` and the rest default prompt values', () => {
@@ -39,11 +29,11 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
   /**
    * package.tmpl.json template of the _init-web subgenerator
    */
-  const initWebPackage = fse.readJSONSync(testUtils.templatePath('_init-web', 'package.tmpl.json'));
+  const initWebPackage = fse.readJSONSync(TestUtils.templatePath('_init-web', 'package.tmpl.json'));
   /**
    * tsconfig.json template of the _init-web subgenerator
    */
-  const initWebTsConfig = fse.readJSONSync(testUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
+  const initWebTsConfig = fse.readJSONSync(TestUtils.templatePath('_init-web', 'tsconfig.json', 'plain'));
 
   beforeAll(() => {
     return helpers
@@ -52,7 +42,7 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
       .withPrompts({
         app: 'appName'
       })
-      .withGenerators(GENERATOR_DEPENDENCIES);
+      .withGenerators(dependencies.INIT_APP);
   });
 
   afterAll(() => {
@@ -77,6 +67,10 @@ describe('generate app plugin with prompt `app: appName` and the rest default pr
 
   it('generates `tsconfig.json` with correct content', () => {
     assert.jsonFileContent('tsconfig.json', initWebTsConfig);
+  });
+
+  it('generates `.yo-rc.json` with correct type', () => {
+    assert.jsonFileContent('.yo-rc.json', {"generator-phovea": {type: 'app'}});
   });
 
   it('generates no `tsconfig_dev.json`', () => {

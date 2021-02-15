@@ -1,8 +1,8 @@
 'use strict';
-const BasePluginGenerator = require('../../utils').Base;
+const BaseInitPluginGenerator = require('../../base/BaseInitPluginGenerator');
 const chalk = require('chalk');
 
-class PluginGenerator extends BasePluginGenerator {
+class PluginGenerator extends BaseInitPluginGenerator {
 
   initializing() {
     super.initializing();
@@ -39,7 +39,6 @@ class PluginGenerator extends BasePluginGenerator {
     }]).then((props) => {
       this.config.set('app', props.app);
       this.config.set('clientOnly', props.clientOnly);
-      this.config.set('cwd', props.app);
     });
   }
 
@@ -47,10 +46,10 @@ class PluginGenerator extends BasePluginGenerator {
     super.default();
   }
 
-  writing() {
+  async writing() {
     const config = this.config.getAll();
-    this._mkdir(config.cwd);
-    this._patchPackageJSON(config, ['main'], null, this.cwd);
+    await this._createSubDir(config.app);
+    this._patchPackageJSON(config, ['main'], null, null, this.cwd);
     this._writeTemplates(config, !this.options.noSamples, this.cwd);
   }
 

@@ -1,6 +1,8 @@
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 //for debugging issues
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 //helper module
@@ -9,31 +11,33 @@ const webpackHelper = require('./webpackHelper');
 const path = require('path');
 const webpack = require('webpack');
 const resolve = require('path').resolve;
-const base = resolve(__dirname, '../');
+const workspacePath = resolve(__dirname, '../');
 const now = new Date();
 const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
 const buildId = `${now.getUTCFullYear()}${prefix(now.getUTCMonth() + 1)}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
 const envMode = process.argv.indexOf('--mode') >= 0 ? process.argv[process.argv.indexOf('--mode') + 1].trim().toLowerCase() : 'development';
 const isDev = envMode === 'development';
 //workspace constants
-const workspaceYoRcFile = require('../.yo-rc-workspace.json');
-const workspaceBuildInfoFile = base + '/package-lock.json';
-const workspaceMetaDataFile = base + '/metaData.json';
-const workspaceRegistryFile = base + '/phovea_registry.js';
+const workspaceYoRcFile = require(path.join(workspacePath, '.yo-rc-workspace.json'));
+const workspaceBuildInfoFile = path.join(workspacePath, 'package-lock.json');
+const workspaceMetaDataFile = path.join(workspacePath, 'metaData.json');
+const workspaceRegistryFile = path.join(workspacePath, 'phovea_registry.js');
 const workspaceAliases = workspaceYoRcFile.workspaceAliases || [];
 const workspaceRegistry = workspaceYoRcFile.registry || [];
 const workspaceVendors = workspaceYoRcFile.vendors || [];
-const workspaceName = base.substr(base.lastIndexOf('/') + 1);
+const workspaceName = workspacePath.substr(workspacePath.lastIndexOf('/') + 1);
 const workspaceProxy = workspaceYoRcFile.devServerProxy || {};
 const workspaceRepos = workspaceYoRcFile.frontendRepos || [];
 //app constants
 const envApp = process.argv.filter((e) => e.startsWith('--app='));
 const defaultApp = envApp.length > 0 ? envApp[0].substring(6).trim() : workspaceYoRcFile.defaultApp;
-const appPkg = require('./../' + defaultApp + '/package.json');
+const defaultAppPath = path.join(workspacePath, defaultApp);
+const appPkg = require(path.join(defaultAppPath, 'package.json'));
 const libName = appPkg.name;
 const libDesc = appPkg.description;
-const {entries, registry, vendors, libraryAliases, filesToLoad} = require('./../' + defaultApp + '/.yo-rc.json')['generator-phovea'];
+const {entries, registry, vendors, libraryAliases, filesToLoad, copyFiles} = require(path.join(defaultAppPath, '.yo-rc.json'))['generator-phovea'];
 const fileLoaderRegex = filesToLoad && filesToLoad['file-loader'] ? RegExp(String.raw`(.*)\/(${filesToLoad['file-loader']})\.(html|txt)$`) : RegExp(/^$/);
+const copyAppFiles = copyFiles ? copyFiles.map((file) => ({from: path.join(defaultAppPath, file), to: path.join(workspacePath, 'bundles', path.basename(file)) })) : [];
 // Merge app and workspace properties
 const mergedAliases = {
     ...libraryAliases,
@@ -64,7 +68,7 @@ let HtmlWebpackPlugins = [];
 Object.values(entries).map(function (entry) {
     HtmlWebpackPlugins.push(new HtmlWebpackPlugin({
         inject: true,
-        template: `./${defaultApp}/` + entry['template'],
+        template: path.join(defaultAppPath, entry['template']),
         filename: entry['html'],
         title: libName,
         excludeChunks: entry['excludeChunks'],
@@ -94,29 +98,29 @@ const config = {
     mode: envMode,
     devtool: 'inline-source-map',
     output: {
-        path: path.join(__dirname, './../bundles'),
+        path: path.join(workspacePath, 'bundles'),
         filename: '[name].[contenthash].js',
         publicPath: '',
         library: libName,
         libraryTarget: 'umd',
         umdNamedDefine: false
     },
-    entry: webpackHelper.injectRegistry(defaultApp, [workspaceRegistryFile], entries),
+    entry: webpackHelper.injectRegistry(workspacePath, defaultAppPath, [workspaceRegistryFile], entries),
     resolve: {
         cacheWithContext: false, //for performance: we don't use context specific plugins
         symlinks: false, //don't need symlinks because of alias for workspace
         extensions: ['.js'],
         alias:
             Object.assign({},
-                ...workspaceRepos.map((item) => ({[item]: (base + `/${item}`)})),
-                ...Object.entries(mergedAliases).map((item) => ({[item[0]]: (base + `/node_modules/${item[1]}`)}))
+                ...workspaceRepos.map((item) => ({[item]: (workspacePath + `/${item}`)})),
+                ...Object.entries(mergedAliases).map((item) => ({[item[0]]: path.join(workspacePath, 'node_modules', item[1])}))
             ),
         modules: [
-            path.join(__dirname, '../node_modules')
+            path.join(workspacePath, 'node_modules')
         ],
     },
     devServer: {
-        contentBase: resolve(__dirname, './../bundles/'),
+        contentBase: resolve(workspacePath, 'bundles'),
         compress: true,
         host: 'localhost',
         open: false,
@@ -148,6 +152,36 @@ const config = {
     module: {
         rules: [
             {
+                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000, // inline <= 10kb
+                    mimetype: 'application/font-woff'
+                }
+            },
+            {
+                test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000, // inline <= 10kb
+                    mimetype: 'image/svg+xml',
+                    esModule: false
+                }
+            },
+            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
+            {
+              test: /\.(css)$/,
+              use: [
+                  MiniCssExtractPlugin.loader, 'css-loader'
+              ]
+            },
+            {
+                test: /\.(scss)$/,
+                use: [
+                    MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
+                ]
+            },
+            {
                 test: /\.js$/,
                 enforce: 'pre',
                 use: ['source-map-loader'],
@@ -173,41 +207,6 @@ const config = {
 
                 }]
             },
-            {
-                test: /\.(css)$/i,
-                use: [
-                    {
-                        loader: 'style-loader',
-                    },
-                    {
-                        loader: 'css-loader'
-                    },
-                ],
-            },
-            {
-                test: /\.(scss)$/,
-                use: [
-                    'style-loader', 'css-loader', 'sass-loader'
-                ]
-            },
-            {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'application/font-woff'
-                }
-            },
-            {
-                test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'image/svg+xml',
-                    esModule: false
-                }
-            },
-            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
             {
                 test: require.resolve('jquery'),
                 loader: 'expose-loader',
@@ -263,10 +262,11 @@ const config = {
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [
                 '**/*',
-                path.join(process.cwd(), '../bundles/**/*')
+                path.join(workspacePath, 'bundles/**/*')
             ]
         }),
         ...HtmlWebpackPlugins,
+        new MiniCssExtractPlugin(),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(envMode),
             'process.env.__VERSION__': JSON.stringify(appPkg.version),
@@ -275,19 +275,27 @@ const config = {
             'process.env.__APP_CONTEXT__': JSON.stringify('/'),
             'process.env.__DEBUG__': JSON.stringify(isDev)
         }),
+        new Dotenv({
+            path: path.join(workspacePath, '.env'), // load this now instead of the ones in '.env'
+            safe: false, // load '.env.example' to verify the '.env' variables are all set. Can also be a string to a different file.
+            allowEmptyValues: true, // allow empty variables (e.g. `FOO=`) (treat it as empty string, rather than missing)
+            systemvars: true, // load all the predefined 'process.env' variables which will trump anything local per dotenv specs.
+            silent: true, // hide any errors
+            defaults: false // load '.env.defaults' as the default values if empty.
+        }),
         new CopyWebpackPlugin({
-            patterns: [
+            patterns: copyAppFiles.concat([
                 {
-                    from: workspaceMetaDataFile, to: base + '/bundles/phoveaMetaData.json',
+                    from: workspaceMetaDataFile, to: path.join(workspacePath, 'bundles', 'phoveaMetaData.json'),
                     //generate meta data file
                     transform() {
-                        return webpackHelper.generateMetaDataFile(resolve(__dirname, '../' + defaultApp), {buildId});
+                        return webpackHelper.generateMetaDataFile(defaultAppPath, {buildId});
                     }
                 },
                 //use package-lock json as buildInfo
-                {from: workspaceBuildInfoFile, to: base + '/bundles/buildInfo.json'}
+                {from: workspaceBuildInfoFile, to: path.join(workspacePath, 'bundles', 'buildInfo.json')}
             ]
-        }),
+        )}),
         //for debugging issues
         /*new BundleAnalyzerPlugin({
             // set to 'server' to start analyzer during build
