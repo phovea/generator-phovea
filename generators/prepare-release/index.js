@@ -491,7 +491,7 @@ class Generator extends Base {
   _formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers) {
     const title = pullRequestsTitles.filter((title) => title.trim() && title.trim().length > 2) // remove empty strings and invalid titles
       .map((message) => message.replace('"', '')); // `git log` creates extra newline characters and quotes
-    return title.map((t, i) => `* ${t} (${this.repository.name}#${pullRequestsNumbers[i]})`).join('\n');
+      return title.map((t, i) => `* ${t} (${this.repository.link.replace("https://github.com/","")}#${pullRequestsNumbers[i]})`).join('\n');
   }
 
 
