@@ -12,6 +12,7 @@
 !templates/web/deploy
 !templates/web/deploy/web
 !templates/web/deploy/web/*
+!templates/web/deploy/**/*
 !templates/api/
 !templates/api/deploy
 !templates/api/deploy/api
