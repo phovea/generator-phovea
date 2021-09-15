@@ -2,7 +2,6 @@
 'use strict';
 const path = require('path');
 const helpers = require('yeoman-test');
-const rimraf = require('rimraf');
 const GeneratorUtils = require('../utils/GeneratorUtils');
 const WorkspaceUtils = require('../utils/WorkspaceUtils');
 const assert = require('yeoman-assert');

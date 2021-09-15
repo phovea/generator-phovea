@@ -11,7 +11,6 @@ const NpmUtils = require('../../utils/NpmUtils');
 const PipUtils = require('../../utils/PipUtils');
 const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 const WorkspaceUtils = require('../../utils/WorkspaceUtils');
-const GeneratorUtils = require('../../utils/GeneratorUtils');
 
 function mergeWith(target, source) {
   const mergeArrayUnion = (a, b) => Array.isArray(a) ? _.union(a, b) : undefined;

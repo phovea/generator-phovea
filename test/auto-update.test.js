@@ -1,20 +1,9 @@
 
 'use strict';
 const path = require('path');
-const assert = require('yeoman-assert');
 const helpers = require('yeoman-test');
 const rimraf = require('rimraf');
-const fse = require('fs-extra');
 const dependencies = require('./test-utils/generator-dependencies');
-const WorkspaceUtils = require('../utils/WorkspaceUtils');
-const parse = require('csv-parse/lib/sync');
-const tmp = require('tmp');
-const AutoUpdateUtils = require('../generators/auto-update/AutoUpdateUtils');
-const RepoUtils = require('../utils/RepoUtils');
-const NpmUtils = require('../utils/NpmUtils');
-const SpawnUtils = require('../utils/SpawnUtils');
-const GithubRestUtils = require('../generators/auto-update/GithubRestUtils');
-const targetVersion = require('../package.json').version.replace('-SNAPSHOT', '');
 
 const target = '../update';
 const dummyToken = '********************';

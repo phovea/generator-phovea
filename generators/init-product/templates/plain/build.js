@@ -646,7 +646,7 @@ function buildDockerImage(p) {
   }
   const additionalType = (label, type) => {
     return fs.existsSync(`./templates/${type}/deploy/${label}`);
-  }
+  };
 
   let dockerFile;
    // check if label exists and use type as fallback
