@@ -1,5 +1,5 @@
 'use strict';
-const installedVersions = require('../utils/installedVersions');
+const installedVersions = require('../../utils/installedVersions');
 
 describe('installedVersions() behaves as expected', () => {
   beforeEach(() => {

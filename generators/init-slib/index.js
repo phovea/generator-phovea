@@ -1,8 +1,8 @@
 'use strict';
-const BasePluginGenerator = require('../../utils').BasePython;
 const fs = require('fs');
+const BaseInitServerGenerator = require('../../base/BaseInitServerGenerator');
 
-class PluginGenerator extends BasePluginGenerator {
+class PluginGenerator extends BaseInitServerGenerator {
 
   initializing() {
     super.initializing();
@@ -12,10 +12,13 @@ class PluginGenerator extends BasePluginGenerator {
     return super.default();
   }
 
-  writing() {
-    super.writing();
-    if (!fs.existsSync(this.destinationPath(this.config.get('name') + '/config.json'))) {
-      this.fs.writeJSON(this.destinationPath(this.config.get('name') + '/config.json'), {});
+  async writing() {
+    await super.writing();
+    const config = this.config.getAll();
+    const cwd = this.destinationPath(this._isWorkspace() ? (config.app || config.serviceName || config.name) + '/' + config.name.toLowerCase() : config.name);
+    if (!fs.existsSync(cwd + '/config.json')) {
+      await this._createSubDir(cwd);
+      this.fs.writeJSON(cwd + '/config.json', {});
     }
   }
 }

@@ -1,4 +1,4 @@
 'use strict';
-var BasePluginGenerator = require('../../utils').Base;
+const BaseInitPluginGenerator = require('../../base/BaseInitPluginGenerator');
 
-module.exports = BasePluginGenerator;
+module.exports = BaseInitPluginGenerator;

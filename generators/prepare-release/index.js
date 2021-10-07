@@ -2,8 +2,8 @@
 const Base = require('yeoman-generator');
 const chalk = require('chalk');
 const fs = require('fs-extra');
-const {parseRequirements} = require('../../utils/pip');
-const {toHTTPRepoUrl, toSSHRepoUrl, simplifyRepoUrl} = require('../../utils/repo');
+const PipUtils = require('../../utils/PipUtils');
+const RepoUtils = require('../../utils/RepoUtils');
 
 function toBaseName(name) {
   if (name.includes('/')) {
@@ -137,7 +137,7 @@ class Generator extends Base {
   }
 
   _cloneRepo(repo, branch, extras) {
-    const repoUrl = this.cloneSSH ? toSSHRepoUrl(repo) : toHTTPRepoUrl(repo);
+    const repoUrl = this.cloneSSH ? RepoUtils.toSSHRepoUrl(repo) : RepoUtils.toHTTPRepoUrl(repo);
     const line = `clone -b ${branch}${extras || ''} ${repoUrl}`;
     this.log(chalk.blue(`clone repository:`), `git ${line}`);
     return this._spawnOrAbort('git', line.split(' '));
@@ -222,7 +222,7 @@ class Generator extends Base {
 
     if (fs.existsSync(`${ctx.cwd}/requirements.txt`)) {
       ctx.requirements = {};
-      const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
+      const req = PipUtils.parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       p = Promise.all(Object.keys(req).map((dep) => {
         if (dependenciesToIgnores.some((d) => dep.includes(d))) {
           return null;
@@ -294,7 +294,7 @@ class Generator extends Base {
     });
     this.fs.writeJSON(`${ctx.cwd}/package.json`, pkg);
     if (ctx.requirements) {
-      const req = parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
+      const req = PipUtils.parseRequirements(this.fs.read(`${ctx.cwd}/requirements.txt`));
       Object.keys(ctx.requirements).forEach((dep) => {
         const depVersion = req[dep];
         if (depVersion && depVersion !== '') {
@@ -332,7 +332,7 @@ class Generator extends Base {
 
   _createPullRequest(ctx) {
     const open = require('open');
-    const base = simplifyRepoUrl(ctx.repo);
+    const base = RepoUtils.simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/compare/release_${ctx.version}?expand=1`;
     return open(url, {
       wait: false
@@ -362,7 +362,7 @@ class Generator extends Base {
 
   _openReleasePage(ctx) {
     const open = require('open');
-    const base = simplifyRepoUrl(ctx.repo);
+    const base = RepoUtils.simplifyRepoUrl(ctx.repo);
     const url = `https://github.com/${base}/releases/tag/v${ctx.version}`;
     return open(url, {
       wait: false
