@@ -178,7 +178,13 @@ const config = {
             {
                 test: /\.(scss)$/,
                 use: [
-                    MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
+                    MiniCssExtractPlugin.loader, 'css-loader', 
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            implementation: require("sass")
+                        }
+                    }
                 ]
             },
             {
