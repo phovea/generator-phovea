@@ -14,7 +14,7 @@ jest.mock('../../utils/known', () => {
 });
 
 const mockedPlugin = {
-    name: 'phovea_core',
+    name: 'tdp_core',
     libraries: [
         'd3'
     ],
@@ -49,13 +49,13 @@ known.lib.byName.mockImplementation(() => {
 describe('transfroms repo name to an https url', () => {
 
     it('repo is already an http url', () => {
-        const repo = 'https://github.com/phovea/phovea_core.git';
+        const repo = 'https://github.com/datavisyn/tdp_core.git';
         expect(RepoUtils.toHTTPRepoUrl(repo)).toBe(repo);
     });
 
     it('repo has format `organization/repo`', () => {
-        const repo = 'phovea/phovea_core';
-        expect(RepoUtils.toHTTPRepoUrl(repo)).toBe('https://github.com/phovea/phovea_core.git');
+        const repo = 'datavisyn/tdp_core';
+        expect(RepoUtils.toHTTPRepoUrl(repo)).toBe('https://github.com/datavisyn/tdp_core.git');
     });
 
     it('repo is only the name of the repo', () => {
@@ -64,26 +64,26 @@ describe('transfroms repo name to an https url', () => {
     });
 
     it('repo is an SSH url', () => {
-        const repo = 'git@github.com:phovea/phovea_core.git';
-        expect(RepoUtils.toHTTPRepoUrl(repo)).toBe('https://github.com/phovea/phovea_core.git');
+        const repo = 'git@github.com:datavisyn/tdp_core.git';
+        expect(RepoUtils.toHTTPRepoUrl(repo)).toBe('https://github.com/datavisyn/tdp_core.git');
     });
 });
 
 describe('transfroms repo to a SSH url', () => {
 
     it('repo is already a SSH url', () => {
-        const repo = 'git@github.com:phovea/phovea_core.git';
+        const repo = 'git@github.com:datavisyn/tdp_core.git';
         expect(RepoUtils.toSSHRepoUrl(repo)).toBe(repo);
     });
 
     it('repo is an http url', () => {
-        const repo = 'http://github.com/phovea/phovea_core.git';
-        expect(RepoUtils.toSSHRepoUrl(repo)).toBe('git@github.com:phovea/phovea_core.git');
+        const repo = 'http://github.com/datavisyn/tdp_core.git';
+        expect(RepoUtils.toSSHRepoUrl(repo)).toBe('git@github.com:datavisyn/tdp_core.git');
     });
 
     it('repo is an https url', () => {
-        const repo = 'https://github.com/phovea/phovea_core.git';
-        expect(RepoUtils.toSSHRepoUrl(repo)).toBe('git@github.com:phovea/phovea_core.git');
+        const repo = 'https://github.com/datavisyn/tdp_core.git';
+        expect(RepoUtils.toSSHRepoUrl(repo)).toBe('git@github.com:datavisyn/tdp_core.git');
     });
 
     it('repo is only the name of the repo', () => {
@@ -100,13 +100,13 @@ describe('transfroms a http(s) to a SSH url', () => {
     });
 
     it('repo is already a SSH url', () => {
-        const repo = 'git@github.com:phovea/phovea_core.git';
+        const repo = 'git@github.com:datavisyn/tdp_core.git';
         expect(RepoUtils.toSSHRepoUrlFromHTTP(repo)).toBe(repo);
     });
 
     it('repo is an http url', () => {
-        const repo = 'http://github.com/phovea/phovea_core.git';
-        expect(RepoUtils.toSSHRepoUrlFromHTTP(repo)).toBe('git@github.com:phovea/phovea_core.git');
+        const repo = 'http://github.com/datavisyn/tdp_core.git';
+        expect(RepoUtils.toSSHRepoUrlFromHTTP(repo)).toBe('git@github.com:datavisyn/tdp_core.git');
     });
 });
 
@@ -118,13 +118,13 @@ describe('extract `organization/repo` from a SSH or an http url', () => {
     });
 
     it('repo is a SSH url', () => {
-        const repo = 'git@github.com:phovea/phovea_core.git';
-        expect(RepoUtils.simplifyRepoUrl(repo)).toBe('phovea/phovea_core');
+        const repo = 'git@github.com:datavisyn/tdp_core.git';
+        expect(RepoUtils.simplifyRepoUrl(repo)).toBe('datavisyn/tdp_core');
     });
 
     it('repo is an http url', () => {
-        const repo = 'http://github.com/phovea/phovea_core.git';
-        expect(RepoUtils.simplifyRepoUrl(repo)).toBe('phovea/phovea_core');
+        const repo = 'http://github.com/datavisyn/tdp_core.git';
+        expect(RepoUtils.simplifyRepoUrl(repo)).toBe('datavisyn/tdp_core');
     });
 });
 
@@ -162,17 +162,11 @@ describe('extact repo name from string containing `org/repo`', () => {
 describe('parse phovea_product.json', () => {
     const result = [
         {repo: 'Caleydo/ordino_public', branch: 'develop'},
-        {repo: 'phovea/phovea_core', branch: 'develop'},
-        {repo: 'phovea/phovea_ui', branch: 'develop'},
-        {repo: 'phovea/phovea_clue', branch: 'develop'},
-        {repo: 'phovea/phovea_security_flask', branch: 'develop'},
         {repo: 'datavisyn/tdp_core', branch: 'develop'},
         {repo: 'Caleydo/ordino', branch: 'develop'},
         {repo: 'Caleydo/tdp_gene', branch: 'develop'},
         {repo: 'Caleydo/tdp_publicdb', branch: 'develop'},
         {repo: 'phovea/phovea_server', branch: 'develop'},
-        {repo: 'phovea/phovea_data_redis', branch: 'develop'},
-        {repo: 'phovea/phovea_data_mongo', branch: 'develop'}
     ];
 
     const dummyProduct = require('../test-utils/templates/phovea_product_dummy.json');
@@ -190,9 +184,8 @@ describe('test toLibraryAliasMap works as expected', () => {
 
     it('finds the correct aliases of the modules and libraries', () => {
         const moduleNames = [
-            'phovea_core',
+            'tdp_core',
             'phovea_d3',
-            'phovea_ui',
             'phovea_importer',
         ];
         const libraryNames = [
@@ -214,9 +207,8 @@ describe('test toLibraryExternals', () => {
 
     it('finds the correct extrernals of the provided modules and libraries', () => {
         const moduleNames = [
-            'phovea_core',
+            'tdp_core',
             'phovea_d3',
-            'phovea_ui',
             'phovea_importer',
         ];
         const libraryNames = [

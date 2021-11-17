@@ -132,7 +132,7 @@ module.exports = class RepoUtils {
 
   /**
    * Finds the aliases of the selected modules and libraries.
-   * @param {string[]} moduleNames Array of modules, i.e, `['phovea_clue', 'phovea_core']`
+   * @param {string[]} moduleNames Array of modules, i.e, `['tdp_core']`
    * @param {string[]} libraryNames Array of libraries, i.e, `['d3', 'font-awesome]`
    */
   static toLibraryAliasMap(moduleNames = [], libraryNames = []) {
@@ -158,7 +158,7 @@ module.exports = class RepoUtils {
 
   /**
    * Finds the externals of the selected modules and libraries.
-   * @param {string[]} moduleNames Array of modules, i.e, `['phovea_clue', 'phovea_core']`
+   * @param {string[]} moduleNames Array of modules, i.e, `['tdp_core']`
    * @param {string[]} libraryNames Array of libraries, i.e, `['d3', 'font-awesome]`
    */
   static toLibraryExternals(moduleNames = [], libraryNames = []) {

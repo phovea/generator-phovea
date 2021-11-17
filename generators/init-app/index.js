@@ -18,7 +18,7 @@ class PluginGenerator extends BaseInitPluginGenerator {
         }
       },
       libraries: ['d3'],
-      modules: ['phovea_core', 'phovea_ui']
+      modules: ['tdp_core']
     });
   }
 

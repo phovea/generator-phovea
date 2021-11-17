@@ -1,5 +1,5 @@
 
-import {BaseUtils} from 'phovea_core';
+import {BaseUtils} from 'tdp_core';
 
 export interface IHelloOptions {
   name?: string;

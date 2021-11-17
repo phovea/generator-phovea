@@ -40,11 +40,8 @@ describe('generate a product with default prompt values', () => {
         repo: 'phovea/wep_app',
         branch: 'master',
         additional: [{
-            'name': 'phovea_core',
-            'repo': 'phovea/phovea_core',
-        }, {
-            'name': 'phovea_ui',
-            'repo': 'phovea/phovea_ui',
+            'name': 'tdp_core',
+            'repo': 'datavisyn/tdp_core',
         }]
     };
 

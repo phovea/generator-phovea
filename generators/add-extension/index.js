@@ -68,7 +68,7 @@ class Generator extends Base {
 
   /**
    * Reads a key in the `.yo.rc.json` either from the current directory or a subdirectory.
-   * @param {string} path Directory name of the plugin, i.e., `phovea_core/`.
+   * @param {string} path Directory name of the plugin, i.e., `tdp_core/`.
    * @param {string} key Key in the config file.
    * @return {string} The value of the key. Throws an error if the `.yo.rc.json` file has an invalid structure.
    */
@@ -88,7 +88,7 @@ class Generator extends Base {
 
   /**
    * Saves configuration to the `.yo-rc.json file` either in the current directory or inside the plugin folder if the generator is executed from the workspace.
-   * @param {string} path  Directory name of the plugin, i.e., `phovea_core/`.
+   * @param {string} path  Directory name of the plugin, i.e., `tdp_core/`.
    * @param {string} key Key in the config file.
    * @param {string} value Value to assign to key.
    */
