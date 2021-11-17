@@ -13,11 +13,10 @@ describe('Find default app in product object', () => {
         const product = [
             {
                 type: 'api',
-                label: 'phovea_ui',
-                repo: 'phovea/phovea_ui',
+                label: 'tdp_core',
+                repo: 'datavisyn/tdp_core',
                 branch: 'develop',
                 additional: []
-
             }];
         expect(WorkspaceUtils.findDefaultApp(product)).toBe(null);
     });
@@ -31,13 +30,8 @@ describe('Find default app in product object', () => {
                 branch: 'develop',
                 additional: [
                     {
-                        'name': 'phovea_core',
-                        'repo': 'phovea/phovea_core',
-                        'branch': 'develop'
-                    },
-                    {
-                        'name': 'phovea_ui',
-                        'repo': 'phovea/phovea_ui',
+                        'name': 'tdp_core',
+                        'repo': 'datavisyn/tdp_core',
                         'branch': 'develop'
                     }
                 ]
@@ -51,7 +45,7 @@ describe('Find default app in product object', () => {
                 additional: []
 
             }];
-        expect(WorkspaceUtils.findDefaultApp(product)).toMatchObject({name: 'ordino_public', additional: ['phovea_core', 'phovea_ui']});
+        expect(WorkspaceUtils.findDefaultApp(product)).toMatchObject({name: 'ordino_public', additional: ['tdp_core']});
     });
 });
 
@@ -61,16 +55,16 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
     const known = require('../../utils/known');
     known.plugin = {
         listWeb: [{
-            'name': 'phovea_core',
+            'name': 'tdp_core',
             'type': 'lib',
             'description': 'Phovea Core Plugin',
-            'repository': 'https://github.com/phovea/phovea_core.git',
+            'repository': 'https://github.com/datavisyn/tdp_core.git',
             'dependencies': {
-                'phovea_core': '^4.0.0'
+                'tdp_core': '^4.0.0'
             },
             'develop': {
                 'dependencies': {
-                    'phovea_core': 'github:phovea/phovea_core#develop'
+                    'tdp_core': 'github:datavisyn/tdp_core#develop'
                 }
             },
             'libraries': []
@@ -93,11 +87,11 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
     it('builds additional web plugins', () => {
 
     const result = [{
-        'name': 'phovea_core: Phovea Core Plugin',
-        'short': 'phovea_core',
+        'name': 'tdp_core: Phovea Core Plugin',
+        'short': 'tdp_core',
         'value': {
-            'name': 'phovea_core',
-            'repo': 'phovea/phovea_core',
+            'name': 'tdp_core',
+            'repo': 'datavisyn/tdp_core',
         },
     }];
         expect(WorkspaceUtils.buildPossibleAdditionalPlugins('web')).toMatchObject(result);

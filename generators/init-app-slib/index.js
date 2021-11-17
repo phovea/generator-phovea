@@ -7,7 +7,7 @@ class PluginGenerator extends BaseInitHybridGenerator {
   initializing() {
     super.initializing();
     this.config.defaults({
-      modules: ['phovea_core', 'phovea_ui', 'phovea_server'],
+      modules: ['tdp_core', 'phovea_server'],
       libraries: ['d3']
     });
   }

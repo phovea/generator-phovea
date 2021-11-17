@@ -46,7 +46,7 @@ module.exports = class NpmUtils {
     /**
      * Extracts git version strings, compares them with the npm versions and returns the intersection or max
      * @param {string} name Name of the dependency
-     * @param {string[]} gitBranches Git version strings, i.e, `github:phovea/phovea_core#semver:~7.0.1`
+     * @param {string[]} gitBranches Git version strings, i.e, `github:datavisyn/tdp_core#semver:~7.0.1`
      * @param {string[]} npmVersions Npm version strings, i.e, `^7.0.0`
      */
     static mergeGithubVersions(name, gitBranches, npmVersions) {

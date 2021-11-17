@@ -152,7 +152,7 @@ module.exports = class WorkspaceUtils {
    */
   static compareRepos(a, b) {
     const weight = (plugin) => {
-      const orderedArr = ['ordino', 'tdp_core', 'phovea_clue', 'phovea_ui'];
+      const orderedArr = ['ordino', 'tdp_core'];
       if (orderedArr.indexOf(plugin) == - 1) {
         return 100;
       }

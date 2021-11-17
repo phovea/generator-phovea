@@ -4,7 +4,7 @@
  * Licensed under the new BSD license, available at http://caleydo.org/license
  **************************************************************************** */
 
-import {IRegistry} from 'phovea_core';
+import {IRegistry} from 'tdp_core';
 
 export default function (registry: IRegistry) {
   /// #if include('extension-type', 'extension-id')

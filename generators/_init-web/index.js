@@ -27,7 +27,7 @@ class Generator extends BasePhoveaGenerator {
       libraries: [],
       libraryAliases: {},
       libraryExternals: [],
-      modules: ['phovea_core'],
+      modules: ['tdp_core'],
       entries: './index.js',
       ignores: [],
       extensions: []

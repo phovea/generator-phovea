@@ -1,7 +1,5 @@
 name,link,owner,version,pip,npm
-phovea_clue_dummy,https://github.com/phovea/phovea_clue_dummy,John,v6.0.0,x,x
-phovea_core_dummy,https://github.com/phovea/phovea_core_dummy,John,v5.0.1,,x
+tdp_core_dummy,https://github.com/datavisyn/tdp_core_dummy,John,v5.0.1,,x
 phovea_d3_dummy,https://github.com/phovea/phovea_d3_dummy,John,v5.0.0,,x
 phovea_data_hdf_dummy,https://github.com/phovea/phovea_data_hdf_dummy,John,v6.0.0,x,
-tdp_matomo_dummy,https://github.com/datavisyn/tdp_matomo_dummy,John,v5.0.0,x,
 gapminder_dummy,https://github.com/Caleydo/gapminder,John,v4.0.0,,

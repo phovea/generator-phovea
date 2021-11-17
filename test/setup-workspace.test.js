@@ -76,10 +76,6 @@ describe('generator setup-workspace', () => {
             'modules': [],
             'defaultApp': 'ordino_public',
             'frontendRepos': [
-                'phovea_core',
-                'phovea_ui',
-                'phovea_clue',
-                'phovea_security_flask',
                 'tdp_core',
                 'ordino',
                 'tdp_gene',
