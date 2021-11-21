@@ -150,8 +150,7 @@ class Generator extends Base {
       fs.writeJsonSync(yoWorkspacePath, {
         modules: [],
         defaultApp: this.defaultApp,
-        frontendRepos,
-        devRepos: [this.defaultApp]
+        frontendRepos
       }, {spaces: 2});
     }
   }

@@ -199,26 +199,7 @@ class Generator extends BasePhoveaGenerator {
         integrateMulti(dependencies, k.dependencies);
       }
     });
-    let devRepos = [];
     if (this.props.defaultApp) {
-      const workspaceFile = this.fs.readJSON(this.destinationPath('.yo-rc-workspace.json'));
-      devRepos = workspaceFile && workspaceFile.devRepos ? workspaceFile.devRepos : [this.props.defaultApp];
-      if (devRepos.indexOf(this.props.defaultApp) < 0) devRepos.push(this.props.defaultApp);
-      devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
-      //add dev-repos scripts
-      scripts['dev-repos:compile'] = devRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
-      scripts['dev-repos:compile:watch'] = devRepos.map((repo) => `npm run compile:watch:${repo}`).join(' & ');
-      scripts['dev-repos:copy'] = devRepos.map((repo) => `npm run copy:${repo}`).join(' & ');
-      scripts['dev-repos:copy:watch'] = 'npm-watch dev-repos:copy';
-      //add watch
-      watch['dev-repos:copy'] = {
-        'patterns': devRepos.map((repo) => `./${repo}/src`),
-        'extensions': 'html,scss,css',
-        'quiet': false,
-        'legacyWatch': true,
-        'delay': 2500,
-        'runOnChangeOnly': true
-      };
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
       if (pkg) {
@@ -251,7 +232,7 @@ class Generator extends BasePhoveaGenerator {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), watch, devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), watch};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -453,8 +434,8 @@ class Generator extends BasePhoveaGenerator {
     if (fs.existsSync(this.destinationPath('workspace.scss'))) {
       const content = fs.readFileSync(this.destinationPath('workspace.scss'), 'utf-8');
       frontendPlugins.map((repo) => {
-        if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/main.scss`))) {
-          if(!content.includes(`${repo}/dist/scss/main`)) {
+        if (fs.existsSync(this.destinationPath(`${repo}/scss/main.scss`))) {
+          if(!content.includes(`${repo}/scss/main`)) {
             this.log(chalk.yellow(`main.scss of repository '${repo}' in workspace.scss not found`));
           }
         }
@@ -479,15 +460,15 @@ class Generator extends BasePhoveaGenerator {
     const reversed = [...sorted].reverse();
 
     const toVariableImport = (repo) => {
-      if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/abstracts/_variables.scss`))) {
-        return `@import "~${repo}/dist/scss/abstracts/variables";`;
+      if (fs.existsSync(this.destinationPath(`${repo}/scss/abstracts/_variables.scss`))) {
+        return `@import "~${repo}/scss/abstracts/variables";`;
       }
       return '';
     };
 
     const toMainImport = (repo) => {
-      if (fs.existsSync(this.destinationPath(`${repo}/dist/scss/main.scss`))) {
-        return `@import "~${repo}/dist/scss/main"; `;
+      if (fs.existsSync(this.destinationPath(`${repo}/scss/main.scss`))) {
+        return `@import "~${repo}/scss/main"; `;
       }
       return '';
     };
@@ -534,7 +515,7 @@ class Generator extends BasePhoveaGenerator {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, scripts, watch} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
       '  # Uncomment the following lines for testing the web production build\n' +
@@ -554,7 +535,6 @@ class Generator extends BasePhoveaGenerator {
       modules: this.props.modules,
       defaultApp: this.props.defaultApp,
       frontendRepos: plugins,
-      devRepos,
       devServerProxy: this.props.devServerProxy || {},
       maxChunkSize: this.props.maxChunkSize || 5000000,
       workspaceAliases: this.props.workspaceAliases || [],

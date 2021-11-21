@@ -80,9 +80,6 @@ describe('generator setup-workspace', () => {
                 'ordino',
                 'tdp_gene',
                 'tdp_publicdb'
-            ],
-            'devRepos': [
-                'ordino_public'
             ]
         };
 

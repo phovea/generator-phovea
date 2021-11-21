@@ -1,4 +1,5 @@
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
@@ -57,25 +58,7 @@ const mergedRegistry = {
 };
 // Regex for cacheGroups
 const workspaceRegex = new RegExp(String.raw`[\\/]${workspaceName}[\\/](${workspaceRepos.join('|')})[\\/]`);
-// html webpack entries
-let HtmlWebpackPlugins = [];
-Object.values(entries).map(function (entry) {
-    HtmlWebpackPlugins.push(new HtmlWebpackPlugin({
-        inject: true,
-        template: path.join(defaultAppPath, entry['template']),
-        filename: entry['html'],
-        title: libName,
-        excludeChunks: entry['excludeChunks'],
-        chunksSortMode: 'auto',
-        minify: {
-            removeComments: true,
-            collapseWhitespace: true
-        },
-        meta: {
-            description: libDesc
-        }
-    }));
-});
+
 //include/exclude feature of the registry
 const preCompilerFlags = {flags: (mergedRegistry || {}).flags || {}};
 const includeFeature = mergedRegistry ? (extension, id) => {
@@ -87,7 +70,8 @@ const includeFeature = mergedRegistry ? (extension, id) => {
     const test = (f) => Array.isArray(f) ? extension.match(f[0]) && (id || '').match(f[1]) : extension.match(f);
     return include.every(test) && !exclude.some(test);
 } : () => true;
-//webpack config
+
+// webpack config
 const config = {
     mode: envMode,
     output: {
@@ -102,18 +86,52 @@ const config = {
     },
     entry: webpackHelper.injectRegistry(workspacePath, defaultAppPath, [workspaceRegistryFile], entries),
     resolve: {
-        extensions: ['.js'],
-        alias:
-            Object.assign({},
-              ...workspaceRepos.map((item) => ({[item]: (workspacePath + `/${item}`)})),
-              ...Object.entries(mergedAliases).map((item) => ({[item[0]]: path.join(workspacePath, 'node_modules', item[1])}))
+        extensions: ['.tsx', '.ts', '.js'],
+        alias: Object.assign({},
+                // Because '<repo>' now points to src, we need to "unrewrite" other imports like phovea_registry or dist.
+                // TODO: Ideally, no workspace repos import from other workspace repos from dist directly. 
+                // TODO: phovea_registry.js should be part of /src?
+                ...workspaceRepos.map((repo) => ({[`${repo}/phovea_registry.js$`]: path.join(workspacePath, repo, 'phovea_registry.js')})),
+                ...workspaceRepos.map((repo) => ({[`${repo}/dist`]: path.join(workspacePath, repo, 'dist')})),
+                // Rewrite all '<repo>' imports to '<repo>/src'.
+                ...workspaceRepos.map((repo) => ({[repo]: path.join(workspacePath, repo, 'src')})),
+                // Other aliases point to the node_modules
+                ...Object.entries(mergedAliases).map((item) => ({[item[0]]: path.join(workspacePath, 'node_modules', item[1])}))
             ),
         modules: [
-          path.join(workspacePath, 'node_modules')
+            path.join(workspacePath, 'node_modules')
         ],
     },
     module: {
         rules: [
+            {
+                test: /\.(j|t)sx?$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        cacheDirectory: true,
+                        babelrc: false,
+                        presets: [
+                            [
+                                "@babel/preset-env",
+                                // TODO: Define target of build
+                                { targets: { browsers: "last 2 versions" } }
+                            ],
+                            "@babel/preset-typescript",
+                            "@babel/preset-react"
+                        ],
+                        plugins: [
+                            // https://exerror.com/babel-referenceerror-regeneratorruntime-is-not-defined/#Solution_3_For_Babel_7_User
+                            "@babel/transform-runtime",
+                            // plugin-proposal-decorators is only needed if you're using experimental decorators in TypeScript
+                            ["@babel/plugin-proposal-decorators", { legacy: true }],
+                            ["@babel/plugin-proposal-class-properties", { loose: false }],
+                            "react-refresh/babel"
+                        ]
+                    }
+                }
+            },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'url-loader',
@@ -213,11 +231,25 @@ const config = {
                     name: 'vendor',
                     enforce: true,
                 }
-
             }
-        }
+        },
     },
     plugins: [
+        // For each workspace repo, create an instance of the TS checker to compile typescript.
+        ...workspaceRepos.map((repo) => new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                diagnosticOptions: {
+                    semantic: true,
+                    syntactic: true,
+                },
+                // Actually build the repo and don't just type-check
+                build: true,
+                // Recommended for use with babel-loader
+                mode: "write-references",
+                // Use the corresponding config file of the repo folder
+                configFile: path.join(workspacePath, repo, 'tsconfig.json')
+            },
+        })),
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [
                 '**/*',
@@ -225,7 +257,21 @@ const config = {
             ]
         }),
         new MiniCssExtractPlugin(),
-        ...HtmlWebpackPlugins,
+        ...Object.values(entries).map((entry) => new HtmlWebpackPlugin({
+            inject: true,
+            template: path.join(defaultAppPath, entry['template']),
+            filename: entry['html'],
+            title: libName,
+            excludeChunks: entry['excludeChunks'],
+            chunksSortMode: 'auto',
+            minify: {
+                removeComments: true,
+                collapseWhitespace: true
+            },
+            meta: {
+                description: libDesc
+            }
+        })),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(envMode),
             'process.env.__VERSION__': JSON.stringify(appPkg.version),
@@ -259,18 +305,23 @@ const config = {
                 {from: workspaceBuildInfoFile, to: path.join(workspacePath, 'bundles', 'buildInfo.json')}
             ]
         )}),
-        //for debugging issues
+        // For debugging issues
         /*new BundleAnalyzerPlugin({
             // set to 'server' to start analyzer during build
             analyzerMode: 'disabled',
             generateStatsFile: true,
             statsOptions: {source: false}
-        }),*/
+        })*/
         new webpack.BannerPlugin({
             banner: banner,
             raw: true
         })
     ]
 };
-//console.log(JSON.stringify(config, null, '\t'));
+
+// For debugging the loader performance, wrap the config before exporting:
+// const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
+// const smp = new SpeedMeasurePlugin();
+// module.exports = smp.wrap(config);
+
 module.exports = config;
