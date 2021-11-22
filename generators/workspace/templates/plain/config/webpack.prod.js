@@ -59,7 +59,7 @@ const mergedRegistry = {
 // Regex for cacheGroups
 const workspaceRegex = new RegExp(String.raw`[\\/]${workspaceName}[\\/](${workspaceRepos.join('|')})[\\/]`);
 
-//include/exclude feature of the registry
+// include/exclude feature of the registry
 const preCompilerFlags = {flags: (mergedRegistry || {}).flags || {}};
 const includeFeature = mergedRegistry ? (extension, id) => {
     const exclude = mergedRegistry.exclude || [];
@@ -75,8 +75,10 @@ const includeFeature = mergedRegistry ? (extension, id) => {
 const config = {
     mode: envMode,
     output: {
-        filename: '[name].js',
-        chunkFilename: '[name].js',
+        filename: '[name].[fullhash:8].js',
+        sourceMapFilename: '[name].[fullhash:8].map',
+        chunkFilename: '[id].[fullhash:8].js',
+        assetModuleFilename: 'assets/[hash][ext][query]',
         path: path.join(workspacePath, 'bundles'),
         pathinfo: false,
         publicPath: '',
@@ -101,6 +103,9 @@ const config = {
         modules: [
             path.join(workspacePath, 'node_modules')
         ],
+        fallback: {
+            util: require.resolve("util/")
+        }
     },
     module: {
         rules: [
@@ -133,23 +138,18 @@ const config = {
                 }
             },
             {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'application/font-woff'
-                }
+                test: [
+                    /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                    /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/
+                ],
+                type: 'asset'
             },
             {
                 test: /\.svg(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000, // inline <= 10kb
-                    mimetype: 'image/svg+xml',
-                    esModule: false
-                }
+                // css-loader is messing up SVGs: https://github.com/webpack/webpack/issues/13835
+                // Pin css-loader and always load them as file-resource.
+                type: 'asset/resource'
             },
-            {test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader'},
             {
               test: /\.(css)$/,
               use: [
@@ -162,25 +162,28 @@ const config = {
                     MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
                 ]
             },
-            {test: /\.(xml)$/, use: 'xml-loader'},
-            {test: /\.(txt)$/, use: 'raw-loader'},
-            {test: /\.(html)$/, use: 'html-loader'},
             {
-                test: /\.(png|jpg|gif|webp)$/,
-                use: [
-                    {
-                        loader: `url-loader`,
-                        options: {
-                            esModule: false
-                        }
-                    }]
+                test: /\.(xml)$/,
+                use: 'xml-loader'
             },
             {
-                test: /(.*)\/phovea(_registry)?\.(js|ts)$/, use: [{
+                test: /\.(txt)$/, 
+                type: 'asset/source'
+            },
+            {
+                test: /\.(html)$/, 
+                use: 'html-loader'
+            },
+            {
+                test: /\.(png|jpg|gif|webp)$/,
+                type: 'asset/inline'
+            },
+            {
+                test: /(.*)\/phovea(_registry)?\.(js|ts)$/,
+                use: {
                     loader: 'ifdef-loader',
                     options: Object.assign({include: includeFeature}, preCompilerFlags),
-
-                }]
+                }
             },
             {
                 test: require.resolve('jquery'),
@@ -190,7 +193,13 @@ const config = {
                 }
             },
             // used to remove inline loaders
-            {test: fileLoaderRegex, loader: 'file-loader?name=[name].[ext]'}
+            {
+                test: fileLoaderRegex,
+                loader: 'file-loader', options: {
+                    name: '[name].[ext]'
+                }
+            }
+            // TODO: Avoid legacy loaders and use asset modules instead: https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
         ],
     },
     optimization: {
@@ -199,8 +208,8 @@ const config = {
         minimizer: [
             new CssMinimizerPlugin()
           ],
-        namedModules: false, // only in prod mode
-        namedChunks: false, // only in prod mode
+        moduleIds: 'deterministic', // only in prod mode
+        chunkIds: 'deterministic', // only in prod mode
         removeAvailableModules: true, // only in prod mode
         removeEmptyChunks: true, // should always be set to true
         mergeDuplicateChunks: true, // should always be set to true
@@ -209,10 +218,7 @@ const config = {
         sideEffects: true, // should always be set to true as long as we don't change our code
         portableRecords: false, // should always be set to false
         flagIncludedChunks: true, // only in prod mode
-        occurrenceOrder: true, // only in prod mode
         concatenateModules: true, // only in prod mode
-        moduleIds: 'hashed',
-        chunkIds: 'total-size', // only in prod mode
         runtimeChunk: 'single', //one runtime instance for all entries
         splitChunks: {
             chunks: 'all',
@@ -256,7 +262,6 @@ const config = {
                 path.join(workspacePath, 'bundles/**/*')
             ]
         }),
-        new MiniCssExtractPlugin(),
         ...Object.values(entries).map((entry) => new HtmlWebpackPlugin({
             inject: true,
             template: path.join(defaultAppPath, entry['template']),
@@ -272,6 +277,7 @@ const config = {
                 description: libDesc
             }
         })),
+        new MiniCssExtractPlugin(),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(envMode),
             'process.env.__VERSION__': JSON.stringify(appPkg.version),
@@ -320,6 +326,7 @@ const config = {
 };
 
 // For debugging the loader performance, wrap the config before exporting:
+// TODO: Currently broken because of mini-css-extract-plugin: https://github.com/stephencookdev/speed-measure-webpack-plugin/issues/167
 // const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 // const smp = new SpeedMeasurePlugin();
 // module.exports = smp.wrap(config);

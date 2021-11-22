@@ -30,7 +30,7 @@
     "build:web": "npm run clean && npm run compile",
     "build": "npm run build:web && npm run build:python",
     "predist:python": "npm run build:python && npm run docs:python",
-    "predist": "echo hybrid",
+    "predist": "npm run build:web",
     "dist:python": "python setup.py sdist bdist_wheel"
   },
   "devDependencies": {

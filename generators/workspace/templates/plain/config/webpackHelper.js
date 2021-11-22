@@ -44,7 +44,14 @@ function generateMetaDataFile(appDirectory, customProperties) {
   return JSON.stringify(manifest, null, 2);
 }
 
+function getBuildId() {
+  const now = new Date();
+  const prefix = (n) => n < 10 ? ('0' + n) : n.toString();
+  return `${now.getUTCFullYear()}${prefix(now.getUTCMonth() + 1)}${prefix(now.getUTCDate())}-${prefix(now.getUTCHours())}${prefix(now.getUTCMinutes())}${prefix(now.getUTCSeconds())}`;
+}
+
 module.exports = {
   generateMetaDataFile,
-  injectRegistry
+  injectRegistry,
+  getBuildId
 };
