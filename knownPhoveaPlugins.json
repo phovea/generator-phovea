@@ -1,24 +1,6 @@
 {
   "plugins": [
     {
-      "name": "phovea_importer",
-      "type": "lib",
-      "description": "Phovea Importer Plugin",
-      "repository": "https://github.com/phovea/phovea_importer.git",
-      "dependencies": {
-        "phovea_importer": "^9.0.0"
-      },
-      "develop": {
-        "dependencies": {
-          "phovea_importer": "github:phovea/phovea_importer#develop"
-        }
-      },
-      "libraries": [
-        "d3",
-        "papaparse"
-      ]
-    },
-    {
       "name": "phovea_server",
       "type": "service",
       "description": "Phovea Server Plugin",
