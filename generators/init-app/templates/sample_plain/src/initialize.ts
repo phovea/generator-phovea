@@ -4,7 +4,7 @@
 
 
 import {App} from './app/App';
-import {AppHeaderLink, AppHeader} from 'phovea_ui';
+import {AppHeaderLink, AppHeader} from 'tdp_core';
 import {APP_NAME} from './language';
 
 AppHeader.create(

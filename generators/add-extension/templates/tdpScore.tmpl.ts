@@ -1,5 +1,5 @@
 import {IScore, IScoreRow} from 'tdp_core/src/extensions';
-import {resolve} from 'phovea_core/src/idtype';
+import {resolve} from 'tdp_core/src/idtype';
 import {numberCol} from 'tdp_core/src/lineup';
 import {nameLookupDesc, FormDialog} from 'tdp_core/src/form';
 import {getTDPScore} from 'tdp_core/src/rest';

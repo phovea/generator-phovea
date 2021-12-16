@@ -92,7 +92,7 @@
               "title": "name of the repo",
               "default": "",
               "examples": [
-                "phovea_core"
+                "tdp_core"
               ]
             },
             "repo": {

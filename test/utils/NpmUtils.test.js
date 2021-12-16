@@ -15,13 +15,13 @@ describe('mergeVersions list of versions with github or gitlab version tags', ()
     });
 
     it('returns first correct github tag', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#develop',
-            'github:phovea/phovea_core#develop',
+            'github:datavisyn/tdp_core#develop',
+            'github:datavisyn/tdp_core#develop',
             '5.0.0'
         ];
-        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#develop');
+        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:datavisyn/tdp_core#develop');
     });
 
     it('throws error if versions point to different gitlab branches', () => {
@@ -35,73 +35,73 @@ describe('mergeVersions list of versions with github or gitlab version tags', ()
     });
 
     it('returns correct intersection of github ranges', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
-            'github:phovea/phovea_core#semver:^7.0.0',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^7.0.0',
         ];
-        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^7.0.1');
+        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:datavisyn/tdp_core#semver:^7.0.1');
     });
 
     it('throws error if versions contain both github and gitlab', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
             'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#master',
         ];
         expect(() => NpmUtils.mergeVersions(name, versions)).toThrow();
     });
 
     it('throws error if versions are 2 different github versions', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
-            'github:phovea/phovea_core#develop',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#develop',
         ];
         expect(() => NpmUtils.mergeVersions(name, versions)).toThrow();
     });
 
     it('returns github version if one of the versions is a github semver version bigger than the rest', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
             '4.0.0',
         ];
-        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^7.0.1');
+        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:datavisyn/tdp_core#semver:^7.0.1');
     });
 
     it('returns correct max github version', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
-            'github:phovea/phovea_core#semver:^8.0.0'
+            'github:datavisyn/tdp_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^8.0.0'
         ];
-        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^8.0.0');
+        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:datavisyn/tdp_core#semver:^8.0.0');
     });
 
     it('compares github version with npm version', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
             '^8.0.0'
         ];
         expect(NpmUtils.mergeVersions(name, versions)).toBe('^8.0.0');
     });
 
     it('compares an equal github version with an npm version', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
             '^7.0.1'
         ];
-        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:^7.0.1');
+        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:datavisyn/tdp_core#semver:^7.0.1');
     });
 
     it('compares multiple github and npm versions', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:^7.0.1',
-            'github:phovea/phovea_core#semver:^6.0.1',
+            'github:datavisyn/tdp_core#semver:^7.0.1',
+            'github:datavisyn/tdp_core#semver:^6.0.1',
             '^7.0.1',
             '^7.0.2'
         ];
@@ -109,13 +109,13 @@ describe('mergeVersions list of versions with github or gitlab version tags', ()
     });
 
     it('finds the intersection of a git version and npm version', () => {
-        const name = 'phovea_core';
+        const name = 'tdp_core';
         const versions = [
-            'github:phovea/phovea_core#semver:~7.0.1',
-            'github:phovea/phovea_core#semver:^6.0.1',
+            'github:datavisyn/tdp_core#semver:~7.0.1',
+            'github:datavisyn/tdp_core#semver:^6.0.1',
             '^7.0.1',
         ];
-        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:phovea/phovea_core#semver:~7.0.1');
+        expect(NpmUtils.mergeVersions(name, versions)).toBe('github:datavisyn/tdp_core#semver:~7.0.1');
     });
 });
 

@@ -1,7 +1,7 @@
-import {IPluginDesc} from 'phovea_core/src/plugin';
+import {IPluginDesc} from 'tdp_core/src/plugin';
 import {INamedSet} from 'tdp_core/src/storage';
 import {IStartMenuSection, IStartMenuSectionOptions} from 'ordino/src/extensions';
-import {resolve} from 'phovea_core/src/idtype';
+import {resolve} from 'tdp_core/src/idtype';
 import NamedSetList from 'tdp_core/src/storage/NamedSetList';
 
 export default class <%-moduleName%> implements IStartMenuSection {
