@@ -184,9 +184,7 @@ describe('test toLibraryAliasMap works as expected', () => {
 
     it('finds the correct aliases of the modules and libraries', () => {
         const moduleNames = [
-            'tdp_core',
-            'phovea_d3',
-            'phovea_importer',
+            'tdp_core'
         ];
         const libraryNames = [
             'd3',
@@ -207,9 +205,7 @@ describe('test toLibraryExternals', () => {
 
     it('finds the correct extrernals of the provided modules and libraries', () => {
         const moduleNames = [
-            'tdp_core',
-            'phovea_d3',
-            'phovea_importer',
+            'tdp_core'
         ];
         const libraryNames = [
             'd3',
