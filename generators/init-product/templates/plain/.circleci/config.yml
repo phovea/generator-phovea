@@ -4,7 +4,7 @@ executors:
   node-executor:
     working_directory: ~/phovea
     docker:
-      - image: circleci/python:3.7-buster-node-browsers # for node version see Dockerfile on https://hub.docker.com/r/circleci/python
+      - image: circleci/python:3.7.11-buster-node-browsers # for node version see Dockerfile on https://hub.docker.com/r/circleci/python
 
 orbs:
   aws-ecr: circleci/aws-ecr@6.15.3
