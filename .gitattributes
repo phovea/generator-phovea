@@ -67,7 +67,6 @@ Dockerfile text eol=lf
 # misc config
 *.yaml text
 *.yml text
-.editorconfig text
 Dockerfile text
 
 # build config

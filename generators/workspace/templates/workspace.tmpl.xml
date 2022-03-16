@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="settings.javascript.linters.tslint" />
+    <property name="settings.editor.selected.configurable" value="settings.javascript.linters.eslint" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="js-tslint-package" value="$PROJECT_DIR$/node_modules/tslint" />
+    <property name="js-eslint-package" value="$PROJECT_DIR$/node_modules/eslint" />
     <property name="editor.config.accepted" value="true" />
   </component>
   <component name="PyDebuggerOptionsProvider">
