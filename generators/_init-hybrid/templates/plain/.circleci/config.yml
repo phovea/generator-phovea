@@ -8,7 +8,7 @@ executors:
   node-executor:
     working_directory: ~/phovea-web
     docker:
-      - image: circleci/node:12.13-buster-browsers
+      - image: circleci/node:14.17-buster
 
 jobs:
   python-build:
@@ -53,7 +53,7 @@ jobs:
       - run:
           name: Remove all from dist folder
           command: |
-            rm -rf dist && mkdir dist          
+            rm -rf dist && mkdir dist
       - run:
           name: Build
           command: |
@@ -70,7 +70,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/.
-      - run: ls -a    
+      - run: ls -a
       - run:
           name: Install twine
           command: |
@@ -130,7 +130,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/.
-      - run: ls -a    
+      - run: ls -a
       - run:
           name: Authentication
           command:  |

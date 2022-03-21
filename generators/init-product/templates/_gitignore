@@ -17,7 +17,6 @@
 !templates/api/deploy
 !templates/api/deploy/api
 !templates/api/deploy/api/*
-!.editorconfig
 !.gitattributes
 !.yo-rc.json
 !ISSUE_TEMPLATE.md

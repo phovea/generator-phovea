@@ -1,4 +1,5 @@
 /.tscache
+/.eslintcache
 /.idea
 /build/
 /dist/tsBuildInfoFile

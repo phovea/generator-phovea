@@ -23,7 +23,6 @@ const expectedFiles = [
     '.circleci/config.yml',
     '.gitignore',
     'README.md',
-    '.editorconfig',
     'ISSUE_TEMPLATE.md',
     'LICENSE'
 ];
