@@ -99,7 +99,7 @@ const config = {
     devtool: 'inline-source-map',
     output: {
         path: path.join(workspacePath, 'bundles'),
-        filename: '[name].[contenthash].js',
+        filename: '[name].[hash].js',
         publicPath: '',
         library: libName,
         libraryTarget: 'umd',
@@ -120,7 +120,7 @@ const config = {
         ],
     },
     devServer: {
-        contentBase: resolve(workspacePath, 'bundles'),
+        static: resolve(workspacePath, 'bundles'),
         compress: true,
         host: 'localhost',
         open: false,
@@ -143,11 +143,14 @@ const config = {
                 secure: false
             }
         }, workspaceProxy),
-        watchOptions: {
-            poll: true,
-            aggregateTimeout: 30000,
-            ignored: /node_modules/
-        }
+        client: {
+          overlay: false,
+        },
+    },
+    watchOptions: {
+        poll: true,
+        aggregateTimeout: 2000,
+        ignored: /node_modules/
     },
     module: {
         rules: [
