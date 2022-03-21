@@ -104,16 +104,26 @@ module.exports = (env, options) => {
         // TODO: Evaluate proper devtool mapping. This is the one recommended by webpack.
         devtool: 'eval-cheap-module-source-map', // TODO: only in dev, but should use source-map in prod: https://webpack.js.org/guides/production/#source-mapping
         output: {
+            // The build folder.
             path: path.join(workspacePath, 'bundles'),
-            filename: '[name].[fullhash:8].js',
-            sourceMapFilename: '[name].[fullhash:8].map',
-            chunkFilename: '[id].[fullhash:8].js',
-            assetModuleFilename: 'assets/[hash][ext][query]',
-            publicPath: '',
-            library: libName,
-            libraryTarget: 'umd',
-            umdNamedDefine: false, // TODO: is true in prod,
-            pathinfo: false // TODO: exists only and is false in prod
+            // There will be one main bundle, and one file per asynchronous chunk.
+            filename: '[name].[contenthash:8].js',
+            // There are also additional JS chunk files if you use code splitting.
+            chunkFilename: '[name].[contenthash:8].chunk.js',
+            assetModuleFilename: 'assets/[name].[hash][ext]',
+            // webpack uses `publicPath` to determine where the app is being served from.
+            // It requires a trailing slash, or the file assets will get an incorrect path.
+            // We inferred the "public path" (such as / or /my-project) from homepage.
+            publicPath: '/',
+            // Add /* filename */ comments to generated require()s in the output.
+            pathinfo: isDev,
+            // Clean the build folder
+            clean: true,
+
+            // TODO:
+            library: libName, // TODO: Required?
+            libraryTarget: 'umd', // TODO: Required?
+            umdNamedDefine: false, // TODO: Required?
         },
         entry: webpackHelper.injectRegistry(workspacePath, defaultAppPath, [workspaceRegistryFile], entries),
         resolve: {
@@ -127,6 +137,7 @@ module.exports = (env, options) => {
                         // TODO: phovea_registry.js should be part of /src?
                         [`${repo}/phovea_registry.js$`]: path.join(workspacePath, repo, 'phovea_registry.js'),
                         // Rewrite all '<repo>' imports to '<repo>/src'.
+                        [`${repo}/dist`]: path.join(workspacePath, repo, 'src'),
                         [repo]: path.join(workspacePath, repo, 'src')
                     })),
                     // Other aliases point to the node_modules
@@ -143,14 +154,10 @@ module.exports = (env, options) => {
             // TODO: In dev, this is not required I guess?
             // static: resolve(workspacePath, 'bundles'),
             host: 'localhost',
-            open: false,
             hot: true,
             client: {
                 // Do not show the full-page error overlay
-                overlay: {
-                    errors: false,
-                    warnings: false,
-                },
+                overlay: false,
             },
             proxy: Object.assign({
                 '/api/*': {
@@ -277,49 +284,39 @@ module.exports = (env, options) => {
                 new CssMinimizerPlugin()
             ] : [],
             moduleIds: 'deterministic',
-            chunkIds: isDev ? 'named' : 'deterministic', // only in dev mode
-            removeAvailableModules: isProd, // only in dev mode, because of performance issue
-            removeEmptyChunks: true, // should always be set to true
-            mergeDuplicateChunks: true, // should always be set to true
-            providedExports: true, // should always be set to true
-            usedExports: true, // should always be set to true
-            sideEffects: true, // should always be set to true as long as we don't change our code
-            portableRecords: false, // should always be set to false
-            flagIncludedChunks: isProd, // only in dev mode
-            concatenateModules: isProd, // only in dev mode
             runtimeChunk: 'single', //one runtime instance for all entries
-            splitChunks: {
-                chunks: 'all',
-                minSize: isProd ? 10000 : undefined,
-                maxSize: isProd ? workspaceMaxChunkSize : undefined,
-                cacheGroups: {
-                    ...Object.assign({}, ...workspaceRepos.map((repo) => ({
-                        [repo]: {
-                            test: new RegExp(String.raw`[\\/]${workspaceName}[\\/](${repo})[\\/]`),
-                            priority: -5,
-                            name: repo
-                        }
-                    }))),
-                    // workspace: {
-                    //     test: workspaceRegex,
-                    //     priority: -5,
-                    //     name: isProd ? 'vendor' : (module) => {
-                    //         const key = Object.keys(mergedVendors).find((key) => vendorWorkspaceRegex[key].test(module.context));
-                    //         return key ? key : 'workspace';
-                    //     },
-                    //     enforce: isProd ? true : undefined
-                    // },
-                    vendors: {
-                        test: /[\\/]node_modules[\\/]/,
-                        priority: -10,
-                        name: isProd ? 'vendor' : (module) => {
-                            const key = Object.keys(mergedVendors).find((key) => vendorRegex[key].test(module.context));
-                            return key ? key : 'vendors';
-                        },
-                        enforce: isProd ? true : undefined
-                    }
-                }
-            },
+            // splitChunks: {
+            //     chunks: 'all',
+            //     minSize: isProd ? 10000 : undefined,
+            //     maxSize: isProd ? workspaceMaxChunkSize : undefined,
+            //     cacheGroups: {
+            //         ...Object.assign({}, ...workspaceRepos.map((repo) => ({
+            //             [repo]: {
+            //                 test: new RegExp(String.raw`[\\/]${workspaceName}[\\/](${repo})[\\/]`),
+            //                 priority: -5,
+            //                 name: repo
+            //             }
+            //         }))),
+            //         // workspace: {
+            //         //     test: workspaceRegex,
+            //         //     priority: -5,
+            //         //     name: isProd ? 'vendor' : (module) => {
+            //         //         const key = Object.keys(mergedVendors).find((key) => vendorWorkspaceRegex[key].test(module.context));
+            //         //         return key ? key : 'workspace';
+            //         //     },
+            //         //     enforce: isProd ? true : undefined
+            //         // },
+            //         vendors: {
+            //             test: /[\\/]node_modules[\\/]/,
+            //             priority: -10,
+            //             name: isProd ? 'vendor' : (module) => {
+            //                 const key = Object.keys(mergedVendors).find((key) => vendorRegex[key].test(module.context));
+            //                 return key ? key : 'vendors';
+            //             },
+            //             enforce: isProd ? true : undefined
+            //         }
+            //     }
+            // },
         },
         plugins: [
             // For each workspace repo, create an instance of the TS checker to compile typescript.
@@ -347,12 +344,6 @@ module.exports = (env, options) => {
                     }
                 },
             })),
-            new CleanWebpackPlugin({
-                cleanOnceBeforeBuildPatterns: [
-                    '**/*',
-                    path.join(workspacePath, 'bundles/**/*')
-                ]
-            }),
             new MiniCssExtractPlugin(), // TODO: Was below HtmlWebpackPlugin in dev
             ...Object.values(entries).map((entry) => new HtmlWebpackPlugin({
                 inject: true,
