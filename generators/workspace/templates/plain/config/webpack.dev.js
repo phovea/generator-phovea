@@ -124,7 +124,8 @@ const config = {
         compress: true,
         host: 'localhost',
         open: false,
-        proxy: Object.assign({
+        proxy: {
+            ...workspaceProxy,
             '/api/*': {
                 target: 'http://localhost:9000',
                 secure: false,
@@ -142,7 +143,7 @@ const config = {
                 target: 'http://localhost:9000',
                 secure: false
             }
-        }, workspaceProxy),
+        },
         client: {
           overlay: false,
         },
