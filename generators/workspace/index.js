@@ -597,6 +597,7 @@ class Generator extends BasePhoveaGenerator {
 
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.sort().join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
+    this.fs.write(this.destinationPath('requirements_workspace.txt'), sdeps.plugins.map((p) => `-e ./${p}`).sort().join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
 
     if (fs.existsSync(this.destinationPath('docker_script_patch.sh'))) {
