@@ -125,23 +125,28 @@ const config = {
         host: 'localhost',
         open: false,
         proxy: {
+            // Append on top to allow overriding /api/v1/ for example
             ...workspaceProxy,
-            '/api/*': {
-                target: 'http://localhost:9000',
-                secure: false,
-                ws: true
-            },
-            '/login': {
-                target: 'http://localhost:9000',
-                secure: false
-            },
-            '/logout': {
-                target: 'http://localhost:9000',
-                secure: false
-            },
-            '/loggedinas': {
-                target: 'http://localhost:9000',
-                secure: false
+            ...{
+                '/api/*': {
+                    target: 'http://localhost:9000',
+                    secure: false,
+                    ws: true
+                },
+                '/login': {
+                    target: 'http://localhost:9000',
+                    secure: false
+                },
+                '/logout': {
+                    target: 'http://localhost:9000',
+                    secure: false
+                },
+                '/loggedinas': {
+                    target: 'http://localhost:9000',
+                    secure: false
+                },
+                // Append on bottom to allow override of exact key matches like /api/*
+                ...workspaceProxy
             }
         },
         client: {
