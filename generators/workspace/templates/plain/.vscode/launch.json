@@ -6,7 +6,7 @@
         "configurations": [
             {
                 // remember to activate the debugger in your workspace config.json
-                "name": "Python: phovea_server",
+                "name": "Debug visyn server",
                 "type": "python",
                 "request": "attach",
                 "port": 5678,
