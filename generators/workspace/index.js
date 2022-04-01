@@ -194,6 +194,8 @@ class Generator extends BasePhoveaGenerator {
       scripts[`docker-run:${p}`] = `docker-compose run -w /phovea/${p} api`;
       scripts[`docker-exec:${p}`] = `docker-compose exec -w /phovea/${p} api`;
     });
+    scripts['docker-run'] = 'docker-compose run api';
+    scripts['docker-exec'] = 'docker-compose exec api';
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
