@@ -99,7 +99,7 @@ const config = {
     devtool: 'inline-source-map',
     output: {
         path: path.join(workspacePath, 'bundles'),
-        filename: '[name].[contenthash].js',
+        filename: '[name].[hash].js',
         publicPath: '',
         library: libName,
         libraryTarget: 'umd',
@@ -120,34 +120,43 @@ const config = {
         ],
     },
     devServer: {
-        contentBase: resolve(workspacePath, 'bundles'),
+        static: resolve(workspacePath, 'bundles'),
         compress: true,
         host: 'localhost',
         open: false,
-        proxy: Object.assign({
-            '/api/*': {
-                target: 'http://localhost:9000',
-                secure: false,
-                ws: true
-            },
-            '/login': {
-                target: 'http://localhost:9000',
-                secure: false
-            },
-            '/logout': {
-                target: 'http://localhost:9000',
-                secure: false
-            },
-            '/loggedinas': {
-                target: 'http://localhost:9000',
-                secure: false
+        proxy: {
+            // Append on top to allow overriding /api/v1/ for example
+            ...workspaceProxy,
+            ...{
+                '/api/*': {
+                    target: 'http://localhost:9000',
+                    secure: false,
+                    ws: true
+                },
+                '/login': {
+                    target: 'http://localhost:9000',
+                    secure: false
+                },
+                '/logout': {
+                    target: 'http://localhost:9000',
+                    secure: false
+                },
+                '/loggedinas': {
+                    target: 'http://localhost:9000',
+                    secure: false
+                },
+                // Append on bottom to allow override of exact key matches like /api/*
+                ...workspaceProxy
             }
-        }, workspaceProxy),
-        watchOptions: {
-            poll: true,
-            aggregateTimeout: 30000,
-            ignored: /node_modules/
-        }
+        },
+        client: {
+          overlay: false,
+        },
+    },
+    watchOptions: {
+        poll: true,
+        aggregateTimeout: 2000,
+        ignored: /node_modules/
     },
     module: {
         rules: [
