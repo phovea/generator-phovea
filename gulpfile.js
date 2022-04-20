@@ -1,6 +1,6 @@
 'use strict';
 const {series, src, watch} = require('gulp');
-const eslint = require('gulp-eslint');
+const eslint = require('gulp-eslint-new');
 const excludeGitignore = require('gulp-exclude-gitignore');
 const plumber = require('gulp-plumber');
 const jest = require('gulp-jest').default;
@@ -32,5 +32,5 @@ exports.test = runTest;
 exports.testWatch = series(runTest, testWatch);
 exports.lint = lint;
 exports.lintWatch = series(lint, lintWatch);
-exports.prepublish = series(lint, runTest);
+exports.prepublish = series(lint);
 exports.default = series(lint, runTest);
