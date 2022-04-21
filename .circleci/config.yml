@@ -12,6 +12,12 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Set default npm install path to $HOME/.local to avoid permission issues
+          command: npm config set prefix $HOME/.local
+      - run:
+          name: Install yo globally (as it is required in the tests)
+          command: npm i -g yo
+      - run:
           name: Show Node.js and npm version
           command: |
             node -v
@@ -24,7 +30,9 @@ jobs:
       - save_cache:
           key: deps1-{{ .Branch }}-{{ checksum "package.json" }}
           paths: ./node_modules
-
+      - run:
+          name: Run npm link to make the generator-phovea globally accessible (as required in tests)
+          command: npm link
       - run:
           name: Show installed npm dependencies
           command: npm list --depth=1 || true
