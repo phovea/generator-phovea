@@ -32,5 +32,5 @@ exports.test = runTest;
 exports.testWatch = series(runTest, testWatch);
 exports.lint = lint;
 exports.lintWatch = series(lint, lintWatch);
-exports.prepublish = series(lint);
+exports.prepublish = series(lint, runTest);
 exports.default = series(lint, runTest);

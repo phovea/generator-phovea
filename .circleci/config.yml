@@ -63,7 +63,7 @@ workflows:
       - build:
           filters:
             tags:
-              ignore: /.*/
+              ignore: /^v.*/
   build-publish-tag:
     jobs:
       - build:

@@ -58,8 +58,9 @@ describe('generate lib-slib plugin with default prompt values', () => {
     assert.jsonFileContent('package.json', {types: initWebPackage.types});
   });
 
-  it('generates `.gitignore` that has no `/dist/` entry', () => {
-    assert.noFileContent('.gitignore', '/dist/');
+  it('generates `.gitignore` that has no `/dist/` but a `/dist/tsBuildInfoFile` entry', () => {
+    assert.noFileContent('.gitignore', '/dist/\n');
+    assert.fileContent('.gitignore', '/dist/tsBuildInfoFile\n');
   });
 
   it('generates `tsconfig.json` with correct content', () => {
