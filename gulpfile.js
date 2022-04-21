@@ -20,6 +20,7 @@ function lintWatch() {
 function runTest() {
   process.env.NODE_ENV = 'test';
   return src('test/')// using src('test/**/*.js') will cause the task to be run twice
+    // TODO: why do we want to accept failing tests? gulp-plumber prevents pipe breaking caused by errors from gulp plugins
     .pipe(plumber())
     .pipe(jest());
 }
@@ -32,5 +33,5 @@ exports.test = runTest;
 exports.testWatch = series(runTest, testWatch);
 exports.lint = lint;
 exports.lintWatch = series(lint, lintWatch);
-exports.prepublish = series(lint);
+exports.prepublish = series(lint, runTest);
 exports.default = series(lint, runTest);

@@ -24,7 +24,6 @@ jobs:
       - save_cache:
           key: deps1-{{ .Branch }}-{{ checksum "package.json" }}
           paths: ./node_modules
-
       - run:
           name: Show installed npm dependencies
           command: npm list --depth=1 || true
@@ -63,7 +62,7 @@ workflows:
       - build:
           filters:
             tags:
-              ignore: /.*/
+              ignore: /^v.*/
   build-publish-tag:
     jobs:
       - build:
