@@ -1,0 +1,13 @@
+{
+  "modules": [],
+  "defaultApp": "ordino_public",
+  "frontendRepos": [
+    "tdp_core",
+    "ordino",
+    "tdp_gene",
+    "tdp_publicdb"
+  ],
+  "devRepos": [
+    "ordino_public"
+  ]
+}

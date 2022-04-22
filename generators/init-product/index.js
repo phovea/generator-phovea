@@ -72,7 +72,7 @@ class Generator extends BasePhoveaGenerator {
     }, {
       name: 'repo',
       message: 'primary repository (<githubAccount>/<repo>):',
-      default: (act) => act.type === 'api' ? 'phovea/phovea_server' : null,
+      default: (act) => act.type === 'api' ? 'datavisyn/tdp_core' : null,
       validate: isRequired
     }, {
       name: 'branch',

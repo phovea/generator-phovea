@@ -15,13 +15,3 @@ def phovea(registry):
     <% - sextensions.map((d) => `    registry.append('${d.type}', '${d.id}', '${name.toLowerCase()}.${d.module}', ${stringifyPython(d.extras, '  ')})`).join('\n\n')%>
     # generator-phovea:end
     pass
-
-
-def phovea_config():
-    """
-    :return: file pointer to config file
-    """
-    from os import path
-    here = path.abspath(path.dirname(__file__))
-    config_file = path.join(here, 'config.json')
-    return config_file if path.exists(config_file) else None

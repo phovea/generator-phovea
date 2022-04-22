@@ -165,8 +165,7 @@ describe('parse phovea_product.json', () => {
         {repo: 'datavisyn/tdp_core', branch: 'develop'},
         {repo: 'Caleydo/ordino', branch: 'develop'},
         {repo: 'Caleydo/tdp_gene', branch: 'develop'},
-        {repo: 'Caleydo/tdp_publicdb', branch: 'develop'},
-        {repo: 'phovea/phovea_server', branch: 'develop'},
+        {repo: 'Caleydo/tdp_publicdb', branch: 'develop'}
     ];
 
     const dummyProduct = require('../test-utils/templates/phovea_product_dummy.json');
