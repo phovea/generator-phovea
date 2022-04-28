@@ -32,5 +32,7 @@
     "typescriptHero.codeOutline.enabled": false,
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
     "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "python.analysis.extraPaths": [ <%- servermodules.map((d) => `"\${workspaceFolder}/${d}"`).join(', ') %> ],
+    "python.autoComplete.extraPaths": [ <%- servermodules.map((d) => `"\${workspaceFolder}/${d}"`).join(', ') %> ]
 }

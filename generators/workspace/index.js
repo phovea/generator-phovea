@@ -587,6 +587,7 @@ class Generator extends BasePhoveaGenerator {
     config.workspace = path.basename(this.destinationPath());
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins.filter((d) => fs.existsSync(this.destinationPath(d + '/phovea_registry.js')));
+    config.servermodules = sdeps.plugins;
     config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
     config.wsName = this.options.wsName;
     config.wsDescription = this.options.wsDescription;
