@@ -29,12 +29,12 @@ describe('Test `stringifyInline()` correctly stringifies object', () => {
 describe('Test `stringifyAble()`', () => {
     const config = {
         type: 'slib',
-        modules: ['phovea_server'],
+        modules: ['tdp_core'],
         libraries: [],
         sextensions: [],
     };
-    it('isWeb returns false', () => {
-        expect(GeneratorUtils.stringifyAble(config).isWeb('phovea_server')).toBe(false);
+    it('isWeb returns true', () => {
+        expect(GeneratorUtils.stringifyAble(config).isWeb('tdp_core')).toBe(true);
     });
 
     it('formats boolean to python boolean', () => {

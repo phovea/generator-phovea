@@ -16,9 +16,8 @@ class PluginGenerator extends BaseInitServerGenerator {
     await super.writing();
     const config = this.config.getAll();
     const cwd = this.destinationPath(this._isWorkspace() ? (config.app || config.serviceName || config.name) + '/' + config.name.toLowerCase() : config.name);
-    if (!fs.existsSync(cwd + '/config.json')) {
+    if (!fs.existsSync(cwd)) {
       await this._createSubDir(cwd);
-      this.fs.writeJSON(cwd + '/config.json', {});
     }
   }
 }

@@ -57,7 +57,7 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
         listWeb: [{
             'name': 'tdp_core',
             'type': 'lib',
-            'description': 'Phovea Core Plugin',
+            'description': 'Core Plugin',
             'repository': 'https://github.com/datavisyn/tdp_core.git',
             'dependencies': {
                 'tdp_core': '^4.0.0'
@@ -70,16 +70,16 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
             'libraries': []
         },],
         listServer: [{
-            'name': 'phovea_server',
+            'name': 'tdp_core',
             'type': 'service',
-            'description': 'Phovea Server Plugin',
-            'repository': 'https://github.com/phovea/phovea_server.git',
+            'description': 'Core Plugin',
+            'repository': 'https://github.com/datavisyn/tdp_core.git',
             'requirements': {
-                'phovea_server': '>=5.0.1,<6.0.0'
+                'tdp_core': '^4.0.0'
             },
             'develop': {
                 'requirements': {
-                    '-e git+https://github.com/phovea/phovea_server.git': '@develop#egg=phovea_server'
+                    '-e git+https://github.com/datavisyn/tdp_core.git': '@develop#egg=tdp_core'
                 }
             }
         }],
@@ -87,7 +87,7 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
     it('builds additional web plugins', () => {
 
     const result = [{
-        'name': 'tdp_core: Phovea Core Plugin',
+        'name': 'tdp_core: Core Plugin',
         'short': 'tdp_core',
         'value': {
             'name': 'tdp_core',
@@ -100,11 +100,11 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
 
     it('builds additional python plugins', () => {
         const result = [{
-            'name': 'phovea_server: Phovea Server Plugin',
-            'short': 'phovea_server',
+            'name': 'tdp_core: Core Plugin',
+            'short': 'tdp_core',
             'value': {
-                'name': 'phovea_server',
-                'repo': 'phovea/phovea_server',
+                'name': 'tdp_core',
+                'repo': 'datavisyn/tdp_core',
             },
         }];
         expect(WorkspaceUtils.buildPossibleAdditionalPlugins('python')).toMatchObject(result);

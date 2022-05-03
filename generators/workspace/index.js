@@ -190,7 +190,12 @@ class Generator extends BasePhoveaGenerator {
         // generate scoped tasks
         scripts[`${s}:${p}`] = `cd ${p} && npm run ${s}`;
       });
+
+      scripts[`docker-run:${p}`] = `docker-compose run -w /phovea/${p} api`;
+      scripts[`docker-exec:${p}`] = `docker-compose exec -w /phovea/${p} api`;
     });
+    scripts['docker-run'] = 'docker-compose run api';
+    scripts['docker-exec'] = 'docker-compose exec api';
 
     // add additional to install plugins
     additionalPlugins.forEach((p) => {
@@ -582,6 +587,7 @@ class Generator extends BasePhoveaGenerator {
     config.workspace = path.basename(this.destinationPath());
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
     config.webmodules = plugins.filter((d) => fs.existsSync(this.destinationPath(d + '/phovea_registry.js')));
+    config.servermodules = sdeps.plugins;
     config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
     config.wsName = this.options.wsName;
     config.wsDescription = this.options.wsDescription;
@@ -597,6 +603,7 @@ class Generator extends BasePhoveaGenerator {
 
     this.fs.write(this.destinationPath('requirements.txt'), sdeps.requirements.sort().join('\n'));
     this.fs.write(this.destinationPath('requirements_dev.txt'), sdeps.devRequirements.sort().join('\n'));
+    this.fs.write(this.destinationPath('requirements_workspace.txt'), sdeps.plugins.map((p) => `-e /phovea/${p}`).sort().join('\n'));
     this.fs.write(this.destinationPath('docker_packages.txt'), sdeps.dockerPackages.sort().join('\n'));
 
     if (fs.existsSync(this.destinationPath('docker_script_patch.sh'))) {

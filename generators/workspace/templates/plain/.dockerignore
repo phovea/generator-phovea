@@ -1,5 +1,5 @@
 # copy just the ones that are actually copied
-/*/*
+/*/.git
 !/_docker_data/*
 !/bundles/*
 !/build/*

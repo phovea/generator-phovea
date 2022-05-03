@@ -23,26 +23,11 @@ const INIT_SLIB = [
     toPath('_init-python'),
 ];
 
-const INIT_SERVICE = [
-    ...COMMON,
-    toPath('_node'),
-    toPath('init-service'),
-    toPath('_init-python'),
-];
-
-
 const INIT_LIB_SLIB = Array.from(new Set([
     ...INIT_LIB,
     ...INIT_SLIB,
     toPath('_init-hybrid')
 ]));
-
-const INIT_LIB_SERVICE = Array.from(new Set([
-    ...INIT_LIB,
-    ...INIT_SERVICE,
-    toPath('_init-hybrid')
-]));
-
 
 const INIT_APP = [
     ...COMMON,
@@ -74,9 +59,7 @@ const dependencies = {
     INIT_SLIB,
     INIT_LIB_SLIB,
     INIT_APP,
-    INIT_SERVICE,
     INIT_APP_SLIB,
-    INIT_LIB_SERVICE,
     INIT_PRODUCT,
     SETUP_WORKSPACE
 };

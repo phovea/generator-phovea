@@ -1,8 +1,0 @@
-{
-  "scripts": {
-    "start": "python phovea_server --use_reloader --env dev <%-serviceName%>",
-    "predocker": "npm run build",
-    "docker": "docker build -t <%-name%> -f deploy/Dockerfile .",
-    "docker:dev": "docker build -t <%-name%> -f deploy/Dockerfile_dev ."
-  }
-}

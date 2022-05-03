@@ -15,7 +15,7 @@ const dependencies = require('./test-utils/generator-dependencies');
 /**
  * Directory name to run the generator
  */
-const target = '../phovea_workpsace';
+const target = '../phovea_workspace';
 
 const product = 'org/dummy_product';
 
@@ -53,8 +53,8 @@ describe('generator setup-workspace', () => {
     //     rimraf.sync(path.join(__dirname, target));
     // });
 
-    it('calls WorkspaceUtils.cloneRepo(...args) 13 times (1 product + 12 plugins)', () => {
-        expect(WorkspaceUtils.cloneRepo.mock.calls.length).toBe(13);
+    it('calls WorkspaceUtils.cloneRepo(...args) 6 times (1 product + 5 plugins defined in phovea_product_dummy.json)', () => {
+        expect(WorkspaceUtils.cloneRepo.mock.calls.length).toBe(6);
     });
 
     it('clones product by calling `WorkspaceUtils.cloneRepo(...args)` with the correct args', () => {

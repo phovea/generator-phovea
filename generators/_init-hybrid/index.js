@@ -7,7 +7,7 @@ class Generator extends BaseInitPluginGenerator {
 
   initializing() {
     this.config.defaults({
-      modules: ['phovea_server', 'tdp_core']
+      modules: ['tdp_core']
     });
   }
 

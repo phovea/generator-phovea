@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="lint_ordino_public" type="js.build_tools.npm" factoryName="npm"
+                 temporary="true" nameIsGenerated="true">
+    <package-json value="$PROJECT_DIR$/package.json"/>
+    <command value="run"/>
+    <scripts>
+      <script value="lint:ordino_public"/>
+    </scripts>
+    <node-interpreter value="project"/>
+    <envs/>
+    <method/>
+  </configuration>
+</component>
