@@ -432,16 +432,12 @@ function patchWorkspace(p) {
     `;
     fs.writeFileSync(p.tmpDir + '/phovea_registry.js', registry);
   }
+  
   //copy template files of product to workspace of product
-  if (fs.existsSync(`./templates/${p.type}/deploy/${p.label}`)) {
-    console.log(`Copy deploy files from`, `./templates/${p.type}/deploy/${p.label}`, `to`, `${p.tmpDir}/deploy/${p.label}`);
-    fs.copySync(`./templates/${p.type}/deploy/${p.label}`, `${p.tmpDir}/deploy/${p.label}`);
-  } else if (fs.existsSync(`./templates/${p.type}`)) {
+  if (fs.existsSync(`./templates/${p.type}`)) {
     console.log(`Copy deploy files from`, `./templates/${p.type}`, `to`, `${p.tmpDir}/`);
-    fs.copySync(`./templates/${p.type}`, `${p.tmpDir}/`);
+    fs.copySync(`./templates/${p.type}`, p.tmpDir);
   }
-
-
 }
 
 function mergeCompose(composePartials) {
