@@ -30,7 +30,7 @@
   ],
   "engines": {
     "npm": ">= 6.12",
-    "node": ">= 12.13"
+    "node": ">= 14.19"
   },
   "dependencies": {
     "@types/yeoman-generator": "^3.1.4",
