@@ -79,7 +79,7 @@ describe('Test `buildPossibleAdditionalPlugins()`', () => {
             },
             'develop': {
                 'requirements': {
-                    '-e git+https://github.com/datavisyn/tdp_core.git': '@develop#egg=tdp_core'
+                    'git+https://github.com/datavisyn/tdp_core.git': '@develop#egg=tdp_core'
                 }
             }
         }],

@@ -99,7 +99,7 @@ describe('parse requirements.txt into an object', () => {
         flake8^=3.7.9
         pep8-naming~=0.9.1
         pytest==5.3.5
-        -e git+https://github.com/datavisyn/tdp_core.git@develop#egg=tdp_core
+        git+https://github.com/datavisyn/tdp_core.git@develop#egg=tdp_core
 
 
         `;
@@ -107,7 +107,7 @@ describe('parse requirements.txt into an object', () => {
             'flake8': '^=3.7.9',
             'pep8-naming': '~=0.9.1',
             'pytest': '==5.3.5',
-            '-e git+https://github.com/datavisyn/tdp_core.git': '@develop#egg=tdp_core'
+            'git+https://github.com/datavisyn/tdp_core.git': '@develop#egg=tdp_core'
         };
         expect(PipUtils.parseRequirements(file)).toEqual(result);
     });
