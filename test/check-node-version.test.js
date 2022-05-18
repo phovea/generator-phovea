@@ -17,7 +17,7 @@ describe('check-node-version', () => {
         versions: {
             node: {
                 version: {
-                    version: 12
+                    version: 14
                 },
             },
             npm: {
