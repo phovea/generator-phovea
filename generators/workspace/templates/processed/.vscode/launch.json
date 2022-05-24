@@ -25,7 +25,7 @@
                 "port": 9222,
                 "request": "attach",
                 "type": "chrome",
-                "urlFilter": "http://localhost:8080/*",
+                "urlFilter": "http://localhost/*",
                 "sourceMapPathOverrides": {
                     "webpack://<%- workspace %>/*": "${workspaceFolder}/*"
                 }
