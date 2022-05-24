@@ -6,14 +6,14 @@
       "description": "Targid Discovery Platform",
       "repository": "https://github.com/datavisyn/tdp_core.git",
       "dependencies": {
-        "tdp_core": "github:datavisyn/tdp_core#semver:^13.0.0"
+        "tdp_core": "git+ssh://git@github.com:datavisyn/tdp_core#semver:^13.0.0"
       },
       "requirements": {
         "tdp_core@git+https://github.com/datavisyn/tdp_core.git": "@v13.0.0#egg=tdp_core"
       },
       "develop": {
         "dependencies": {
-          "tdp_core": "github:datavisyn/tdp_core#develop"
+          "tdp_core": "git+ssh://git@github.com:datavisyn/tdp_core#develop"
         },
         "requirements": {
           "tdp_core@git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core"

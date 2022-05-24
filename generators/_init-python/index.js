@@ -80,7 +80,7 @@ class Generator extends BasePhoveaGenerator {
       const p = known().plugin.byName(m);
 
       // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
-      // in the format -e git+https://github.com/datavisyn/tdp_core.git@v2.2.0#egg=tdp_core 
+      // in the format git+https://github.com/datavisyn/tdp_core.git@v2.2.0#egg=tdp_core 
       // and the incoming format is tdp_core>=5.0.1,<6.0.0
       if (!useDevelopDependencies) {
         const devRequirement = Object.keys(p.develop.requirements)[0];
