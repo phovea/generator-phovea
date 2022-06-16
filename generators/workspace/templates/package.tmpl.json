@@ -35,6 +35,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
+    "@webpack-cli/serve": "1.6.1",
     "clean-webpack-plugin": "~3.0.0",
     "copy-webpack-plugin": "~6.3.2",
     "css-loader": "~4.3.0",
