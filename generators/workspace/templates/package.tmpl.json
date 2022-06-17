@@ -11,7 +11,7 @@
   "private": true,
   "engines": {
     "npm": ">=6.12",
-    "node": ">= 12.13"
+    "node": ">= 14.19"
   },
   "scripts": {
     "preinstall": "rimraf node_modules package-lock.json || exit 0",
@@ -35,6 +35,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
+    "@webpack-cli/serve": "1.6.1",
     "clean-webpack-plugin": "~3.0.0",
     "copy-webpack-plugin": "~6.3.2",
     "css-loader": "~4.3.0",
@@ -63,7 +64,7 @@
     "prettier": "^2.5.1",
     "raw-loader": "~4.0.2",
     "rimraf": "~3.0.2",
-    "sass": "^1.29.0",
+    "sass": "1.52.1",
     "sass-loader": "~9.0.2",
     "shx": "~0.3.3",
     "source-map-loader": "~1.1.3",

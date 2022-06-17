@@ -3,6 +3,7 @@
 /.eslintcache
 /.idea
 /build/
+/dist_python/
 /lib/
 *.egg-info/
 *.egg

@@ -30,14 +30,9 @@
     {
       "type": "api",
       "label": "ordino_server",
-      "repo": "phovea/phovea_server",
+      "repo": "datavisyn/tdp_core",
       "branch": "develop",
       "additional": [
-        {
-          "name": "tdp_core",
-          "repo": "datavisyn/tdp_core",
-          "branch": "develop"
-        },
         {
           "name": "tdp_publicdb",
           "repo": "Caleydo/tdp_publicdb",

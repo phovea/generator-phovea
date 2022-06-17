@@ -1,216 +1,27 @@
 {
   "plugins": [
     {
-      "name": "phovea_server",
-      "type": "service",
-      "description": "Phovea Server Plugin",
-      "repository": "https://github.com/phovea/phovea_server.git",
-      "requirements": {
-        "phovea_server": ">=8.0.0,<9.0.0"
-      },
-      "develop": {
-        "requirements": {
-          "-e git+https://github.com/phovea/phovea_server.git": "@develop#egg=phovea_server"
-        }
-      }
-    },
-    {
       "name": "tdp_core",
       "type": "lib-slib",
       "description": "Targid Discovery Platform",
       "repository": "https://github.com/datavisyn/tdp_core.git",
       "dependencies": {
-        "tdp_core": "github:datavisyn/tdp_core#semver:^13.0.0"
+        "tdp_core": "git+ssh://git@github.com:datavisyn/tdp_core#semver:^15.0.0"
       },
       "requirements": {
-        "-e git+https://github.com/datavisyn/tdp_core.git": "@v13.0.0#egg=tdp_core"
+        "tdp_core@git+https://github.com/datavisyn/tdp_core.git": "@v15.0.0#egg=tdp_core"
       },
       "develop": {
         "dependencies": {
-          "tdp_core": "github:datavisyn/tdp_core#develop"
+          "tdp_core": "git+ssh://git@github.com:datavisyn/tdp_core#develop"
         },
         "requirements": {
-          "-e git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core"
+          "tdp_core@git+https://github.com/datavisyn/tdp_core.git": "@develop#egg=tdp_core"
         }
       },
       "libraries": [
       ]
     }
   ],
-  "libraries": [
-    {
-      "name": "d3",
-      "type": "web",
-      "description": "D3 v3 Library",
-      "aliases": {
-        "d3": "d3/d3"
-      },
-      "dependencies": {
-        "@types/d3": "~3.5.36",
-        "d3": "~3.5.17"
-      }
-    },
-    {
-      "name": "d3v5",
-      "type": "web",
-      "description": "D3 v5 Library",
-      "aliases": {
-        "d3": "d3/d3"
-      },
-      "dependencies": {
-        "@types/d3": "~5.7.2",
-        "d3": "~5.16.0"
-      }
-    },
-    {
-      "name": "jquery",
-      "type": "web",
-      "description": "JQuery 3.5",
-      "aliases": {},
-      "dependencies": {
-        "@types/jquery": "~3.5.5",
-        "jquery": "~3.5.1"
-      }
-    },
-    {
-      "name": "papaparse",
-      "type": "web",
-      "description": "PapaParse",
-      "aliases": {},
-      "dependencies": {
-        "@types/papaparse": "~5.2.5",
-        "papaparse": "~5.3.0"
-      }
-    },
-    {
-      "name": "lineupjs",
-      "type": "web",
-      "description": "LineUp.js",
-      "aliases": {},
-      "dependencies": {
-        "lineupjs": "^4.1.2"
-      }
-    },
-    {
-      "name": "font-awesome",
-      "type": "web",
-      "description": "Font Awesome",
-      "aliases": {},
-      "dependencies": {
-        "@fortawesome/fontawesome-free": "^5.15.1"
-      }
-    },
-    {
-      "name": "bootstrap",
-      "type": "web",
-      "description": "Bootstrap 5",
-      "aliases": {},
-      "externals": [
-        "bootstrap-sass"
-      ],
-      "dependencies": {
-        "@types/bootstrap": "~5.1.0",
-        "bootstrap-sass": "~5.1.0"
-      }
-    },
-    {
-      "name": "select2",
-      "type": "web",
-      "description": "select2 JQuery Plugin",
-      "aliases": {},
-      "externals": [],
-      "dependencies": {
-        "@types/select2": "~4.0.47",
-        "select2": "~4.0.53"
-      }
-    },
-    {
-      "name": "moment",
-      "type": "web",
-      "description": "Moment.js",
-      "aliases": {},
-      "externals": [],
-      "dependencies": {
-        "moment": "~2.29.1"
-      }
-    },
-    {
-      "name": "scrollTo",
-      "type": "web",
-      "description": "select2 JQuery Plugin",
-      "aliases": {
-        "scrollTo": "jquery.scrollto/jquery.scrollTo.js"
-      },
-      "externals": [],
-      "dependencies": {
-        "@types/jquery.scrollto": "~1.4.28",
-        "jquery.scrollto": "~2.1.2"
-      }
-    },
-    {
-      "name": "lodash",
-      "type": "web",
-      "description": "lodash",
-      "aliases": {},
-      "externals": [],
-      "dependencies": {
-        "@types/lodash": "~4.14.168",
-        "lodash": "~4.17.20"
-      }
-    },
-    {
-      "name": "marked",
-      "type": "web",
-      "description": "Marked",
-      "aliases": {},
-      "externals": [
-        "marked"
-      ],
-      "dependencies": {
-        "@types/marked": "~3.0.0",
-        "marked": "~3.0.4"
-      }
-    },
-    {
-      "name": "file-saver",
-      "type": "web",
-      "description": "File Saver.js https://github.com/eligrey/FileSaver.js/",
-      "aliases": {},
-      "externals": [
-        "file-saver"
-      ],
-      "dependencies": {
-        "@types/file-saver": "~2.0.1",
-        "file-saver": "2.0.5"
-      }
-    },
-    {
-      "name": "datavisyn-scatterplot",
-      "type": "web",
-      "description": "Datavisyn Canvas Scatterplot",
-      "aliases": {},
-      "externals": [
-        "datavisyn-scatterplot"
-      ],
-      "dependencies": {
-        "datavisyn-scatterplot": "^4.0.0"
-      }
-    },
-    {
-      "name": "redis",
-      "type": "python",
-      "description": "Redis Server",
-      "requirements": {
-        "redis": "~=2.10.6"
-      }
-    },
-    {
-      "name": "mongodb",
-      "type": "python",
-      "description": "Mongo DB",
-      "requirements": {
-        "pymongo": "~=3.11.1"
-      }
-    }
-  ]
+  "libraries": []
 }

@@ -2,7 +2,7 @@
   "name": "generator-phovea",
   "description": "helper generator for phovea",
   "homepage": "https://phovea.caleydo.org",
-  "version": "10.0.0",
+  "version": "10.0.1-SNAPSHOT",
   "author": {
     "name": "Caleydo Team",
     "email": "contact@caleydo.org",
@@ -30,7 +30,7 @@
   ],
   "engines": {
     "npm": ">= 6.12",
-    "node": ">= 12.13"
+    "node": ">= 14.19"
   },
   "dependencies": {
     "@types/yeoman-generator": "^3.1.4",

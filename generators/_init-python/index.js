@@ -20,7 +20,7 @@ class Generator extends BasePhoveaGenerator {
 
   initializing() {
     this.config.defaults({
-      modules: ['phovea_server'],
+      modules: ['tdp_core'],
       libraries: [],
       sextensions: [],
       unknown: {
@@ -80,8 +80,8 @@ class Generator extends BasePhoveaGenerator {
       const p = known().plugin.byName(m);
 
       // avoid having a requirement twice in two different formats that occurs when in the requirements.txt a requirement is written 
-      // in the format -e git+https://github.com/phovea/phovea_server.git@v2.2.0#egg=phovea_server 
-      // and the incoming format is phovea_server>=5.0.1,<6.0.0
+      // in the format git+https://github.com/datavisyn/tdp_core.git@v2.2.0#egg=tdp_core 
+      // and the incoming format is tdp_core>=5.0.1,<6.0.0
       if (!useDevelopDependencies) {
         const devRequirement = Object.keys(p.develop.requirements)[0];
         const masterRequirment = Object.keys(p.requirements)[0];
@@ -121,7 +121,6 @@ class Generator extends BasePhoveaGenerator {
       this.fs.copyTpl(this.templatePath('__init__.tmpl.py'), this.destinationPath(this.cwd + config.name.toLowerCase() + '/__init__.py'), GeneratorUtils.stringifyAble(config));
     }
     this.fs.copy(this.templatePath('_gitignore'), this.destinationPath(this.cwd + '.gitignore'));
-    this.fs.copy(this.templatePath('docs_gitignore'), this.destinationPath(this.cwd + 'docs/.gitignore'));
   }
 
   install() {

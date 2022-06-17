@@ -17,7 +17,7 @@ class PluginGenerator extends BaseInitPluginGenerator {
           chunkName: "app"
         }
       },
-      libraries: ['d3'],
+      libraries: [],
       modules: ['tdp_core']
     });
   }

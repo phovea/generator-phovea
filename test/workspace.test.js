@@ -26,7 +26,6 @@ const expectedFiles = [
     '.idea/codeStyles/codeStyleConfig.xml',
     '.idea/codeStyles/Project.xml',
     '.idea/inspectionProfiles/profiles_settings.xml',
-    '.idea/runConfigurations/phovea_server.xml',
     '.vscode/settings.json',
     '.dockerignore',
     '.yo-rc-workspace.json',

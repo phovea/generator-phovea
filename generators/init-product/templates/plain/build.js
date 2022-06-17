@@ -432,16 +432,12 @@ function patchWorkspace(p) {
     `;
     fs.writeFileSync(p.tmpDir + '/phovea_registry.js', registry);
   }
+  
   //copy template files of product to workspace of product
-  if (fs.existsSync(`./templates/${p.type}/deploy/${p.label}`)) {
-    console.log(`Copy deploy files from`, `./templates/${p.type}/deploy/${p.label}`, `to`, `${p.tmpDir}/deploy/${p.label}`);
-    fs.copySync(`./templates/${p.type}/deploy/${p.label}`, `${p.tmpDir}/deploy/${p.label}`);
-  } else if (fs.existsSync(`./templates/${p.type}`)) {
+  if (fs.existsSync(`./templates/${p.type}`)) {
     console.log(`Copy deploy files from`, `./templates/${p.type}`, `to`, `${p.tmpDir}/`);
-    fs.copySync(`./templates/${p.type}`, `${p.tmpDir}/`);
+    fs.copySync(`./templates/${p.type}`, p.tmpDir);
   }
-
-
 }
 
 function mergeCompose(composePartials) {
@@ -715,20 +711,23 @@ function showPythonTestDependencies(p) {
 }
 
 function buildServer(p) {
-  let act = npm(`${p.tmpDir}/${p.name}`, `run build${p.isHybridType ? ':python' : ''}`);
+  let act = spawn('make', ['build'], {cwd: `${p.tmpDir}/${p.name}`, env});
   for (const pi of p.additional) {
-    act = act.then(() => npm(`${p.tmpDir}/${pi.name}`, `run build${pi.isHybridType ? ':python' : ''}`));
+    act = act.then(() => spawn('make', ['build'], {cwd: `${p.tmpDir}/${pi.name}`, env}));
   }
 
   // copy all together
   act = act
-    .then(() => fs.ensureDirAsync(`${p.tmpDir}/build/source`))
-    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/build/source`, `${p.tmpDir}/build/source/`))
-    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${p.tmpDir}/${pi.name}/build/source`, `${p.tmpDir}/build/source/`))));
+    .then(() => fs.ensureDirAsync(`${p.tmpDir}/build/lib`))
+    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/build/lib`, `${p.tmpDir}/build/source/`))
+    .then(() => fs.copyAsync(`${p.tmpDir}/${p.name}/${p.name.toLowerCase()}.egg-info`, `${p.tmpDir}/build/source/${p.name.toLowerCase()}.egg-info`))
+    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${p.tmpDir}/${pi.name}/build/lib`, `${p.tmpDir}/build/source/`))))
+    .then(() => Promise.all(p.additional.map((pi) => fs.copyAsync(`${p.tmpDir}/${pi.name}/${pi.name.toLowerCase()}.egg-info`, `${p.tmpDir}/build/source/${pi.name.toLowerCase()}.egg-info`))));
 
   return act;
 }
 
+// TODO: Check if this is used anywhere, as it should be part of the new build process.
 function downloadServerDataFiles(p) {
   if (!argv.serial) {
     return Promise.all(p.data.map((d) => downloadDataFile(d, `${p.tmpDir}/build/source/_data`, p.tmpDir)));
