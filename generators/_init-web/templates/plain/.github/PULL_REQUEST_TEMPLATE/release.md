@@ -16,7 +16,7 @@
 In case of dependent Phovea/TDP repositories follow [dependency tree](https://wiki.datavisyn.io/phovea/fundamentals/development-process#dependency-hierarchy) from the top:
 
 * [ ] Release dependent repositories if they contain changes first before proceeding here
-* [ ] Replace git dependencies in *package.json* with new version range (e.g., `"tdp_core": "^2.3.1"` when published on npm **or** `"tdp_core": "git+ssh://git@github.com:datavisyn/tdp_core#semver:^8.0.0"` for non-published repositories)
+* [ ] Replace git dependencies in *package.json* with new version range (e.g., `"tdp_core": "^15.0.0"` when published on npm **or** `"tdp_core": "git+ssh://git@github.com:datavisyn/tdp_core#semver:^15.0.0"` for non-published repositories)
 * [ ] Commit and push new dependencies
 * [ ] Wait until build is successful
 * [ ] Repeat with other repositories/dependencies or proceed with next section
