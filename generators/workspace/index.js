@@ -150,19 +150,6 @@ class Generator extends BasePhoveaGenerator {
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
-    const watch = {
-      'all:copy': {
-        'patterns':
-          plugins.map((plugin) => {
-            return `./${plugin}/src`;
-          }),
-        'extensions': 'html,scss,css',
-        'quiet': false,
-        'legacyWatch': true,
-        'delay': 2500,
-        'runOnChangeOnly': true
-      }
-    };
     const repoDependencies = Object.assign({}, ...plugins.map((plugin) => ({[plugin]: `./${plugin}`})));
 
     const integrateMulti = (target, source) => {
@@ -210,20 +197,6 @@ class Generator extends BasePhoveaGenerator {
       devRepos = workspaceFile && workspaceFile.devRepos ? workspaceFile.devRepos : [this.props.defaultApp];
       if (devRepos.indexOf(this.props.defaultApp) < 0) devRepos.push(this.props.defaultApp);
       devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
-      //add dev-repos scripts
-      scripts['dev-repos:compile'] = devRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
-      scripts['dev-repos:compile:watch'] = devRepos.map((repo) => `npm run compile:watch:${repo}`).join(' & ');
-      scripts['dev-repos:copy'] = devRepos.map((repo) => `npm run copy:${repo}`).join(' & ');
-      scripts['dev-repos:copy:watch'] = 'npm-watch dev-repos:copy';
-      //add watch
-      watch['dev-repos:copy'] = {
-        'patterns': devRepos.map((repo) => `./${repo}/src`),
-        'extensions': 'html,scss,css',
-        'quiet': false,
-        'legacyWatch': true,
-        'delay': 2500,
-        'runOnChangeOnly': true
-      };
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
       if (pkg) {
@@ -256,7 +229,7 @@ class Generator extends BasePhoveaGenerator {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), watch, devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -299,32 +272,6 @@ class Generator extends BasePhoveaGenerator {
       const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});
       if (script) {
         dockerScripts.push(script);
-      }
-
-      {
-        const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
-
-        // vagrantify commands
-        const cmds = Object.keys(pkg.scripts);
-
-        let toPatch;
-        if (cmds.includes('test:python')) { // hybrid
-          toPatch = /^(check|(test|dist|start|watch):python)$/;
-        } else { // regular server
-          toPatch = /^(check|test|dist|start|watch)$/;
-        }
-
-        // no pre post test tasks
-        cmds.filter((s) => toPatch.test(s)).forEach((s) => {
-          // generate scoped tasks
-          let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
-          if (/^(start|watch)/g.test(s)) {
-            // special case for start to have the right working directory
-            let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
-            cmd = `.${path.sep}withinEnv "${fixedscript}"`;
-          }
-          scripts[`${s}:${p}`] = cmd;
-        });
       }
 
       // merge docker-compose
@@ -539,7 +486,7 @@ class Generator extends BasePhoveaGenerator {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, scripts, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
       '  # Uncomment the following lines for testing the web production build\n' +
@@ -595,7 +542,7 @@ class Generator extends BasePhoveaGenerator {
 
     this._writeTemplates(config, false);
     // replace the added entries
-    this._patchPackageJSON(config, [], {devDependencies, dependencies, scripts, watch}, true);
+    this._patchPackageJSON(config, [], {devDependencies, dependencies, scripts}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));

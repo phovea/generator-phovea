@@ -10,29 +10,22 @@
   "license": "BSD-3-Clause",
   "private": true,
   "engines": {
-    "npm": ">=6.12",
-    "node": ">= 14.19"
+    "npm": ">=8",
+    "node": ">=16"
   },
   "scripts": {
-    "preinstall": "rimraf node_modules package-lock.json || exit 0",
-    "postinstall": "npm-run-all --parallel delete-dependencies:*",
     "all:compile": "npm-run-all --parallel compile:*",
-    "all:compile:watch": "npm-run-all --parallel compile:watch:*",
-    "all:copy": "npm-run-all --parallel copy:*",
-    "all:copy:watch": "npm-watch all:copy",
-    "build:dev:watch": "visyn_scripts build --mode development --watch",
-    "build:dev": "visyn_scripts build --mode development",
-    "build": "visyn_scripts build --mode production",
+    "all:lint": "npm-run-all --parallel lint:*",
+    "all:test": "npm-run-all --parallel test:*",
     "bundle-report": "webpack-bundle-analyzer --port 4300 bundles/stats.json",
-    "webpack:dev": "visyn_scripts start",
-    "webpack:dev:watch": "visyn_scripts start",
-    "start:watch:all": "npm-run-all --parallel all:compile:watch all:copy:watch webpack:dev:watch",
-    "start:watch:dev-repos": "npm-run-all --parallel dev-repos:compile:watch dev-repos:copy:watch webpack:dev:watch",
-    "start": "npm run start:watch:dev-repos",
-    "predist": "npm run build",
-    "dist": "mkdir dist && cd bundles && tar cvzf ../dist/bundles.tar.gz *"
+    "dist": "npm run build && mkdir dist && cd bundles && tar cvzf ../dist/bundles.tar.gz *",
+    "postinstall": "npm-run-all --parallel delete-dependencies:*",
+    "start": "visyn_scripts start",
+    "build": "npm run webpack:prod",
+    "webpack:dev": "visyn_scripts build --mode development",
+    "webpack:prod": "NODE_OPTIONS=--max-old-space-size=1536 visyn_scripts build --mode production"
   },
   "devDependencies": {
-    "visyn_scripts": "git+ssh://git@github.com:datavisyn/visyn_scripts#webpack5"
+    "npm-run-all": "^4.1.5"
   }
 }
