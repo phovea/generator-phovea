@@ -38,8 +38,8 @@ class Generator extends BasePhoveaGenerator {
       validate: isRequired
     }, {
       name: 'branch',
-      message: 'repository branch (master) or tag (tags/v1.0.0): ',
-      default: 'master',
+      message: 'repository branch (main) or tag (tags/v1.0.0): ',
+      default: 'main',
       validate: isRequired
     }, {
       name: 'custom',
@@ -76,8 +76,8 @@ class Generator extends BasePhoveaGenerator {
       validate: isRequired
     }, {
       name: 'branch',
-      message: 'primary repository branch (master) or tag (tags/v1.0.0): ',
-      default: 'master',
+      message: 'primary repository branch (main) or tag (tags/v1.0.0): ',
+      default: 'main',
       validate: isRequired
     }, {
       name: 'additional',

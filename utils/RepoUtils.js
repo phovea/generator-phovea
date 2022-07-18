@@ -113,7 +113,7 @@ module.exports = class RepoUtils {
         names.add(repo);
         repos.push({
           repo,
-          branch: p.branch || 'master'
+          branch: p.branch || 'main'
         });
       }
       (p.additional || []).forEach((pi) => {
@@ -122,7 +122,7 @@ module.exports = class RepoUtils {
           names.add(repo);
           repos.push({
             repo,
-            branch: pi.branch || 'master'
+            branch: pi.branch || 'main'
           });
         }
       });

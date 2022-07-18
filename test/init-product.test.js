@@ -37,7 +37,7 @@ describe('generate a product with default prompt values', () => {
         type: 'web',
         label: 'Web App',
         repo: 'phovea/wep_app',
-        branch: 'master',
+        branch: 'main',
         additional: [{
             'name': 'tdp_core',
             'repo': 'datavisyn/tdp_core',

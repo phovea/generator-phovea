@@ -56,7 +56,7 @@ class Generator extends Base {
 
     this.option('branch', {
       alias: 'b',
-      defaults: 'master',
+      defaults: 'main',
       type: String
     });
 
@@ -122,7 +122,7 @@ class Generator extends Base {
    * @returns The parsed phovea_product.json file.
    */
   _getProduct() {
-    return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'master', null, '.', this.cwd, this.cloneSSH)
+    return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'main', null, '.', this.cwd, this.cloneSSH)
       .then(() => {
         this._removeUnnecessaryProductFiles();
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;

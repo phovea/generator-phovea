@@ -9,7 +9,7 @@
 
 * [x] Create new `release-x.x.x` branch (based on `develop` branch)
 * [ ] Collect changes and write [release notes](#release-notes)
-* [ ] Draft release PR in GitHub that merges the `release-x.x.x` into the `master` branch
+* [ ] Draft release PR in GitHub that merges the `release-x.x.x` into the `main` branch
 
 ### Update version
 
@@ -18,7 +18,7 @@
 * [ ] Commit and push *package.json* and *package-lock.json* with new version number
 * [ ] Wait until build is successful
 * [ ] Assign reviewer and wait for final review
-* [ ] Merge this pull request into master branch
+* [ ] Merge this pull request into main branch
 
 ### Publish npm release
 
@@ -35,7 +35,7 @@
 
 ### Prepeare next develop release
 
-* [ ] Merge `master` into `develop` branch
+* [ ] Merge `main` into `develop` branch
 * [ ] Update version in *package.json* and *package-lock.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Commit and push changes
 

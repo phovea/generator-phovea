@@ -84,8 +84,8 @@ class Generator extends BasePhoveaGenerator {
       // and the incoming format is tdp_core>=5.0.1,<6.0.0
       if (!useDevelopDependencies) {
         const devRequirement = Object.keys(p.develop.requirements)[0];
-        const masterRequirment = Object.keys(p.requirements)[0];
-        requirements = _.omit(requirements, [devRequirement, masterRequirment]);
+        const mainRequirment = Object.keys(p.requirements)[0];
+        requirements = _.omit(requirements, [devRequirement, mainRequirment]);
       }
 
       _.assign(requirements, (useDevelopDependencies ? p.develop : p).requirements);
