@@ -441,10 +441,10 @@ class Generator extends Base {
       .then(this._waitForConfirmation.bind(this, 'Did you merge the pull request after checking that CircleCI was successful?'))
       .then(this._waitForConfirmation.bind(this, 'Please publish the repository if needed'))
       .then(this._fetch.bind(this))
-      .then(this._checkoutBranch.bind(this, '-t origin/master'))
+      .then(this._checkoutBranch.bind(this, '-t origin/main'))
       .then(this._tag.bind(this))
       .then(this._checkoutBranch.bind(this, 'develop'))
-      .then(this._merge.bind(this, 'origin/master'))
+      .then(this._merge.bind(this, 'origin/main'))
       .then(this._prepareNextDevPackage.bind(this))
       .then(this._waitForConfirmation.bind(this, 'Please check, if the changes for the develop branch is correct'))
       .then(this._pushBranch.bind(this, false, true))
@@ -475,8 +475,8 @@ class Generator extends Base {
    * using the `git log` command.
    */
   _collectReleaseNotes() {
-    const pullRequestsDescriptions = this._spawnOnHost('git', ['log', 'origin/master..develop', '--merges', '--pretty=format:"%s']).split('\n');
-    const pullRequestsTitles = this._spawnOnHost('git', ['log', 'origin/master..develop', '--merges', '--pretty=format:"%b']).split('\n');
+    const pullRequestsDescriptions = this._spawnOnHost('git', ['log', 'origin/main..develop', '--merges', '--pretty=format:"%s']).split('\n');
+    const pullRequestsTitles = this._spawnOnHost('git', ['log', 'origin/main..develop', '--merges', '--pretty=format:"%b']).split('\n');
     const pullRequestsNumbers = this._extractPullRequestsNumbers(pullRequestsDescriptions);
     this.releaseNotes = this._formatReleaseNotes(pullRequestsTitles, pullRequestsNumbers);
     return Promise.resolve();
@@ -525,7 +525,7 @@ class Generator extends Base {
         title: 'Release ' + this.version,
         head: this.releaseBranch,
         body: this.releaseNotes,
-        base: 'master'
+        base: 'main'
       },
       headers: {
         'User-Agent': 'request'

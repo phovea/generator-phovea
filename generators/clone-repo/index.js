@@ -33,7 +33,7 @@ class Generator extends Base {
     // Correct version: `-b '^^^^v2.0.0'`
     this.option('branch', {
       alias: 'b',
-      defaults: 'master',
+      defaults: 'main',
       required: false,
       type: String
     });

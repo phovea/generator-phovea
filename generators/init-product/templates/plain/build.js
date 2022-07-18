@@ -315,7 +315,7 @@ function cloneRepo(p, cwd) {
   // either of them has to be defined
   p.name = p.name || fromRepoUrl(p.repo);
   p.repo = p.repo || `phovea/${p.name}`;
-  p.branch = p.branch || 'master';
+  p.branch = p.branch || 'main';
 
   return yo('clone-repo', {
     branch: p.branch,

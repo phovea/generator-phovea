@@ -89,7 +89,7 @@ class Generator extends Base {
 
     this.option('branch', {
       alias: 'b',
-      defaults: 'master',
+      defaults: 'main',
       type: String
     });
 
@@ -187,7 +187,7 @@ class Generator extends Base {
   }
 
   _getProduct() {
-    return this._cloneRepo(this.productName, this.options.branch || 'master', null, '.')
+    return this._cloneRepo(this.productName, this.options.branch || 'main', null, '.')
       .then(() => {
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
 
@@ -340,7 +340,7 @@ class Generator extends Base {
             names.add(repo);
             repos.push({
               repo,
-              branch: p.branch || 'master'
+              branch: p.branch || 'main'
             });
           }
           (p.additional || []).forEach((pi) => {
@@ -349,7 +349,7 @@ class Generator extends Base {
               names.add(repo);
               repos.push({
                 repo,
-                branch: pi.branch || 'master'
+                branch: pi.branch || 'main'
               });
             }
           });

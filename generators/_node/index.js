@@ -6,7 +6,7 @@ const patchPackageJSON = require('../../utils').patchPackageJSON;
 const originUrl = require('git-remote-origin-url');
 const fs = require('fs-extra');
 
-// based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
+// based on https://github.com/yeoman/generator-node/blob/main/generators/app/index.js
 
 class PackageJSONGenerator extends Base {
 

@@ -9,7 +9,7 @@
 
 * [x] Create new `release-x.x.x` branch (based on `develop` branch)
 * [ ] Collect changes and write [release notes](#release-notes)
-* [ ] Draft release PR in GitHub that merges the `release-x.x.x` into the `master` branch
+* [ ] Draft release PR in GitHub that merges the `release-x.x.x` into the `main` branch
 
 ### Release dependencies first
 
@@ -29,7 +29,7 @@ In case of dependent Phovea/TDP repositories follow [dependency tree](https://wi
 * [ ] Update this version number following [semver](https://semver.org)
 * [ ] Commit and push *package.json* with new version number
 * [ ] Assign reviewer and wait for final review
-* [ ] Merge this pull request into master branch
+* [ ] Merge this pull request into main branch
 * [ ] Add release label (i.e., `release: major`, `release: minor`, or `release: patch`)
 
 ### Publish pip release
@@ -58,7 +58,7 @@ The steps of this section are only necessary if the code is public and should be
 ### Prepeare next develop release
 
 * [ ] Switch to `develop` branch
-* [ ] Merge `master` branch into `develop` (`git merge origin/master`)
+* [ ] Merge `main` branch into `develop` (`git merge origin/main`)
 * [ ] Update version in *package.json* to `<next patch version>-SNAPSHOT` (e.g., `2.3.1` to `2.3.2-SNAPSHOT`)
 * [ ] Revert dependencies in *requirements.txt* to develop branches (e.g., `-e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server`)
 * [ ] Commit and push changes

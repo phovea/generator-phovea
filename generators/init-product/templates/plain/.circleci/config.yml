@@ -60,7 +60,7 @@ jobs:
           command: |
             . ~/venv/bin/activate
             case "${CIRCLE_BRANCH}${CIRCLE_TAG}" in
-            master)
+            main)
               awsTag="latest"
               ;;
             *)

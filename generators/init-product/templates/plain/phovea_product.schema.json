@@ -66,9 +66,9 @@
         "$id": "phovea_product/items/properties/branch",
         "type": "string",
         "title": "the branch, tag, or sha1 commit to use",
-        "default": "master",
+        "default": "main",
         "examples": [
-          "master",
+          "main",
           "v1.2.3",
           "dc7486a472a987a2f6a38cd18b9b069487f1a4c8",
           "develop"
@@ -119,9 +119,9 @@
               "$id": "phovea_product/items/properties/additional/items/properties/branch",
               "type": "string",
               "title": "the branch, tag, or sha1 commit to use",
-              "default": "master",
+              "default": "main",
               "examples": [
-                "master",
+                "main",
                 "v1.2.3",
                 "dc7486a472a987a2f6a38cd18b9b069487f1a4c8",
                 "develop"
