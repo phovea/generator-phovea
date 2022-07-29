@@ -141,7 +141,7 @@ class Generator extends BasePhoveaGenerator {
       cwd: this.destinationPath()
     }).filter((p) => {
       const config = this.fs.readJSON(this.destinationPath(p));
-      return config['generator-phovea'].type.includes('app');
+      return config?.['generator-phovea']?.type?.includes('app');
     }).map(path.dirname);
   }
 
