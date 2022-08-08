@@ -166,11 +166,13 @@ class Generator extends BasePhoveaGenerator {
     // generate dependencies
     let dependencies = {};
     let devDependencies = {};
+    let overrides = {};
     let scripts = {};
     plugins.forEach((p) => {
       const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
       integrateMulti(dependencies, pkg.dependencies);
       integrateMulti(devDependencies, pkg.devDependencies);
+      integrateMulti(overrides, pkg.overrides);
 
       // no pre post test tasks
       Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
@@ -202,6 +204,7 @@ class Generator extends BasePhoveaGenerator {
       if (pkg) {
         integrateMulti(dependencies, pkg.dependencies);
         integrateMulti(devDependencies, pkg.devDependencies);
+        integrateMulti(overrides, pkg.overrides);
       }
     }
     // remove all plugins that are locally installed
@@ -221,15 +224,24 @@ class Generator extends BasePhoveaGenerator {
     Object.keys(devDependencies).forEach((key) => {
       devDependencies[key] = NpmUtils.mergeVersions(key, devDependencies[key]);
     });
+    Object.keys(overrides).forEach((key) => {
+      overrides[key] = Array.from(new Set(overrides[key]));
+      if (overrides[key].length !== 1) {
+        console.error(`"overrides" of ${key} in package.json could not be merged, using first of: ${overrides[key]}`)
+      }
+      overrides[key] = overrides[key][0];
+    });
 
     // dependencies from package.tmpl.json
     const extraDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).dependencies;
     // devDependencies from package.tmpl.json
     const extraDevDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).devDependencies;
+    // overrides from package.tmpl.json
+    const extraOverrides = this.fs.readJSON(this.templatePath('package.tmpl.json')).overrides || {};
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides), scripts: Object.assign(scripts, extraScripts), devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -486,7 +498,7 @@ class Generator extends BasePhoveaGenerator {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, scripts, devRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, overrides, scripts, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
       '  # Uncomment the following lines for testing the web production build\n' +
@@ -542,7 +554,7 @@ class Generator extends BasePhoveaGenerator {
 
     this._writeTemplates(config, false);
     // replace the added entries
-    this._patchPackageJSON(config, [], {devDependencies, dependencies, scripts}, true);
+    this._patchPackageJSON(config, [], {devDependencies, overrides, dependencies, scripts}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
