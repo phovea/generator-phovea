@@ -106,11 +106,6 @@ describe('Generate plugin with name `tdp_core`', () => {
   afterAll(() => {
     rimraf.sync(path.join(__dirname, target));
   });
-
-  it('generates `phovea_registry.js` with import statement adapted for `tdp_core`', () => {
-    const phoveaRegistryTmpl = template(fse.readFileSync(TestUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
-    assert.fileContent('phovea_registry.js', phoveaRegistryTmpl);
-  });
 });
 
 describe('Test options of yo phovea:init-lib', () => {

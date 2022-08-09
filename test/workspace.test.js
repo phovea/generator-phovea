@@ -40,7 +40,7 @@ const expectedFiles = [
     'docker-compose.yml',
     'forEach.cmd',
     'package.json',
-    'phovea_registry.js',
+    'phovea_registry.ts',
     'requirements_dev.txt',
     'requirements.txt',
     'withinEnv',
@@ -127,11 +127,11 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         assert.fileContent(`.idea/${workspace}.iml`, appEntry);
     });
 
-    it(`imports all workspace plugins in "phovea_registry.js"`, () => {
-        const libEntry = `import '${libPlugin}/phovea_registry.js';`;
-        const appEntry = `import '${appPlugin}/phovea_registry.js';`;
-        assert.fileContent(`phovea_registry.js`, libEntry);
-        assert.fileContent(`phovea_registry.js`, appEntry);
+    it(`imports all workspace plugins in "phovea_registry.ts"`, () => {
+        const libEntry = `import '${libPlugin}/src/phovea_registry.ts';`;
+        const appEntry = `import '${appPlugin}/src/phovea_registry.ts';`;
+        assert.fileContent(`phovea_registry.ts`, libEntry);
+        assert.fileContent(`phovea_registry.ts`, appEntry);
     });
 
     it('generates workspace "package.json" with correct property "name"', () => {
