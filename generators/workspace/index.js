@@ -241,7 +241,7 @@ class Generator extends BasePhoveaGenerator {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides), scripts: Object.assign(scripts, extraScripts), devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides, repoDependencies), scripts: Object.assign(scripts, extraScripts), devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
