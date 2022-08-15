@@ -238,10 +238,11 @@ class Generator extends BasePhoveaGenerator {
     const extraDevDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).devDependencies;
     // overrides from package.tmpl.json
     const extraOverrides = this.fs.readJSON(this.templatePath('package.tmpl.json')).overrides || {};
+    const extraResolutions = this.fs.readJSON(this.templatePath('package.tmpl.json')).resolutions || {};
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides, repoDependencies), scripts: Object.assign(scripts, extraScripts), devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides, repoDependencies), resolutions: Object.assign(overrides, extraResolutions, repoDependencies), scripts: Object.assign(scripts, extraScripts), devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -498,7 +499,7 @@ class Generator extends BasePhoveaGenerator {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, overrides, scripts, devRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, overrides, resolutions, scripts, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
       '  # Uncomment the following lines for testing the web production build\n' +
@@ -554,7 +555,7 @@ class Generator extends BasePhoveaGenerator {
 
     this._writeTemplates(config, false);
     // replace the added entries
-    this._patchPackageJSON(config, [], {devDependencies, overrides, dependencies, scripts}, true);
+    this._patchPackageJSON(config, [], {devDependencies, overrides, resolutions, dependencies, scripts}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
