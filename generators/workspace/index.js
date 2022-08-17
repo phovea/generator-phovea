@@ -150,7 +150,7 @@ class Generator extends BasePhoveaGenerator {
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
-    const repoDependencies = Object.assign({}, ...plugins.map((plugin) => ({[plugin]: `./${plugin}`})));
+    const repoDependencies = Object.assign({}, ...plugins.map((plugin) => ({[plugin]: `link:./${plugin}`})));
 
     const integrateMulti = (target, source) => {
       Object.keys(source || {}).forEach((key) => {
@@ -242,7 +242,7 @@ class Generator extends BasePhoveaGenerator {
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides, repoDependencies), resolutions: Object.assign(overrides, extraResolutions, repoDependencies), scripts: Object.assign(scripts, extraScripts), devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides), resolutions: Object.assign(overrides, extraResolutions), scripts: Object.assign(scripts, extraScripts), devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
