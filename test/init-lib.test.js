@@ -129,9 +129,9 @@ describe('Test options of yo phovea:init-lib', () => {
     rimraf.sync(path.join(__dirname, target));
   });
 
-  it('runs npm install', () => {
+  it('runs yarn install', () => {
     expect(SpawnUtils.spawnSync.mock.calls.length).toBe(1);
     const [cmd, args, cwd, verbose] = SpawnUtils.spawnSync.mock.calls[0];
-    expect([cmd, args, cwd, verbose]).toStrictEqual(['npm', 'install', '', true]);
+    expect([cmd, args, cwd, verbose]).toStrictEqual(['yarn', 'install', '', true]);
   });
 });

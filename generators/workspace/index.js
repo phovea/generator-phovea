@@ -594,8 +594,8 @@ class Generator extends BasePhoveaGenerator {
 
     this.log('\n\nNext steps: ');
 
-    this.log(chalk.red(' npm install'));
-    this.log(chalk.red(' docker-compose up'));
+    this.log(chalk.red(' yarn install'));
+    this.log(chalk.red(' docker compose up'));
   }
 }
 
