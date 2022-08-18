@@ -63,7 +63,6 @@
     "@types/yeoman-generator": "^3.1.4",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
-    "eslint-config-xo-space": "^0.21.0",
     "gulp": "^4.0.2",
     "gulp-eslint-new": "^1.4.2",
     "gulp-exclude-gitignore": "^1.2.0",

@@ -40,13 +40,11 @@ const expectedFiles = [
     'docker-compose.yml',
     'forEach.cmd',
     'package.json',
-    'phovea_registry.js',
+    'phovea_registry.ts',
     'requirements_dev.txt',
     'requirements.txt',
     'withinEnv',
     'withinEnv.cmd',
-    'config/webpack.dev.js',
-    'config/webpack.prod.js',
     'workspace.scss'
 ];
 
@@ -62,18 +60,6 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         name: 'phovea_workspace',
         version: '0.0.1',
         description: 'helper package'
-    };
-
-    const watch_content = {"all:copy": {
-        "patterns": [
-          "./app_plugin/src"
-        ],
-        "extensions": "html,scss,css",
-        "quiet": false,
-        "legacyWatch": true,
-        "delay": 2500,
-        "runOnChangeOnly": true
-      }
     };
 
     const pkg = JSON.parse(template(JSON.stringify(fse.readJSONSync(templatePath('workspace', 'package.tmpl.json'))))(
@@ -141,11 +127,11 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
         assert.fileContent(`.idea/${workspace}.iml`, appEntry);
     });
 
-    it(`imports all workspace plugins in "phovea_registry.js"`, () => {
-        const libEntry = `import '${libPlugin}/phovea_registry.js';`;
-        const appEntry = `import '${appPlugin}/phovea_registry.js';`;
-        assert.fileContent(`phovea_registry.js`, libEntry);
-        assert.fileContent(`phovea_registry.js`, appEntry);
+    it(`imports all workspace plugins in "phovea_registry.ts"`, () => {
+        const libEntry = `import '${libPlugin}/src/phovea_registry.ts';`;
+        const appEntry = `import '${appPlugin}/src/phovea_registry.ts';`;
+        assert.fileContent(`phovea_registry.ts`, libEntry);
+        assert.fileContent(`phovea_registry.ts`, appEntry);
     });
 
     it('generates workspace "package.json" with correct property "name"', () => {
@@ -158,10 +144,6 @@ describe('Run yo phovea:init-lib, yo phovea:init-app and yo:phovea:workspace seq
 
     it('generates workspace "package.json" with correct property "description"', () => {
         assert.jsonFileContent('package.json', {description: pkg.description});
-    });
-
-    it('generates workspace "package.json" with `watch` property', () => {
-        assert.jsonFileContent('package.json', {watch: watch_content});
     });
 
     it('generates workspace "package.json" with the correct scripts', () => {

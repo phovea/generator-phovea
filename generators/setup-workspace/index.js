@@ -315,7 +315,7 @@ class Generator extends Base {
     this.log(chalk.green((stepCounter++) + '. Switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
 
     if (this.options.skip.includes('install')) {
-      this.log(chalk.green((stepCounter++) + '. Install npm dependencies: '), chalk.yellow('npm install'));
+      this.log(chalk.green((stepCounter++) + '. Install dependencies: '), chalk.yellow('yarn install'));
     }
 
     if (this.options.skip.includes('build')) {
