@@ -289,7 +289,7 @@ class Generator extends Base {
       .then(() => GeneratorUtils.yo('workspace', {defaultApp: this.defaultApp, skipNextStepsLog: true}, null, this.cwd, this.env.adapter))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
-      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
+      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('yarn', 'install', this.cwd, true))
       .then(this._downloadBackupFiles.bind(this))
       .then(this._buildDockerCompose.bind(this))
       .catch((msg) => {

@@ -104,7 +104,7 @@ class Generator extends BasePhoveaGenerator {
 
   install() {
     if (this.options.options.install) {
-      SpawnUtils.spawnSync('npm', 'install', this.cwd, true);
+      SpawnUtils.spawnSync('yarn', 'install', this.cwd, true);
     }
   }
 
