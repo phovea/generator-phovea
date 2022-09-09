@@ -90,7 +90,7 @@ module.exports = class PipUtils {
         file.split('\n').forEach((line) => {
             line = line.trim();
 
-            if (line.startsWith('-e')) {
+            if (line.startsWith('-e') || line.includes('@')) {
                 // editable special dependency
                 const branchSeparator = line.indexOf('@');
                 const name = line.slice(0, branchSeparator).trim();

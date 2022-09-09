@@ -38,7 +38,7 @@ jobs:
           name: Build and deploy
           command: |
             case "${CIRCLE_BRANCH}${CIRCLE_TAG}" in
-            master)
+            main)
               awsTag="latest"
               ;;
             *)

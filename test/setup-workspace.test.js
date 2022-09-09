@@ -114,6 +114,6 @@ describe('generator setup-workspace', () => {
 
     it('calls `SpawnUtils.spawnOrAbort(...args)` with correct args', () => {
         const [cmd, args, cwd, verbose] = SpawnUtils.spawnOrAbort.mock.calls[0];
-        expect([cmd, args, cwd, verbose]).toStrictEqual(['npm', 'install', 'dummy', true]);
+        expect([cmd, args, cwd, verbose]).toStrictEqual(['yarn', 'install', 'dummy', true]);
     });
 });

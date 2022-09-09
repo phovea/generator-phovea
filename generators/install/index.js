@@ -64,7 +64,7 @@ class Generator extends Base {
       // regular dependency
       this.before = this.fs.readJSON(this.destinationPath('../package.json'));
       this.log('installing: ', this.pkgs.join(' '));
-      this.npmInstall(this.pkgs, {
+      this.yarnInstall(this.pkgs, {
         save: true
       });
       return;
@@ -82,8 +82,8 @@ class Generator extends Base {
     }).filter((n) => Boolean(n));
     this.log('updating workspace');
     return GeneratorUtils.yo('workspace').then(() => {
-      this.log('running npm install');
-      this.npmInstall();
+      this.log('running yarn install');
+      this.yarnInstall();
     });
   }
 

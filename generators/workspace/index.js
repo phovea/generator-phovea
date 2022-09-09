@@ -141,7 +141,7 @@ class Generator extends BasePhoveaGenerator {
       cwd: this.destinationPath()
     }).filter((p) => {
       const config = this.fs.readJSON(this.destinationPath(p));
-      return config['generator-phovea'].type.includes('app');
+      return config?.['generator-phovea']?.type?.includes('app');
     }).map(path.dirname);
   }
 
@@ -150,20 +150,7 @@ class Generator extends BasePhoveaGenerator {
       cwd: this.destinationPath()
     });
     const plugins = files.map(path.dirname);
-    const watch = {
-      'all:copy': {
-        'patterns':
-          plugins.map((plugin) => {
-            return `./${plugin}/src`;
-          }),
-        'extensions': 'html,scss,css',
-        'quiet': false,
-        'legacyWatch': true,
-        'delay': 2500,
-        'runOnChangeOnly': true
-      }
-    };
-    const repoDependencies = Object.assign({}, ...plugins.map((plugin) => ({[plugin]: `./${plugin}`})));
+    const repoDependencies = Object.assign({}, ...plugins.map((plugin) => ({[plugin]: `link:./${plugin}`})));
 
     const integrateMulti = (target, source) => {
       Object.keys(source || {}).forEach((key) => {
@@ -179,11 +166,13 @@ class Generator extends BasePhoveaGenerator {
     // generate dependencies
     let dependencies = {};
     let devDependencies = {};
+    let overrides = {};
     let scripts = {};
     plugins.forEach((p) => {
       const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
       integrateMulti(dependencies, pkg.dependencies);
       integrateMulti(devDependencies, pkg.devDependencies);
+      integrateMulti(overrides, pkg.overrides);
 
       // no pre post test tasks
       Object.keys(pkg.scripts).filter((s) => !/^(pre|post).*/g.test(s)).forEach((s) => {
@@ -210,25 +199,12 @@ class Generator extends BasePhoveaGenerator {
       devRepos = workspaceFile && workspaceFile.devRepos ? workspaceFile.devRepos : [this.props.defaultApp];
       if (devRepos.indexOf(this.props.defaultApp) < 0) devRepos.push(this.props.defaultApp);
       devRepos = devRepos.filter((plugin) => plugins.indexOf(plugin) >= 0);
-      //add dev-repos scripts
-      scripts['dev-repos:compile'] = devRepos.map((repo) => `npm run compile:${repo}`).join(' & ');
-      scripts['dev-repos:compile:watch'] = devRepos.map((repo) => `npm run compile:watch:${repo}`).join(' & ');
-      scripts['dev-repos:copy'] = devRepos.map((repo) => `npm run copy:${repo}`).join(' & ');
-      scripts['dev-repos:copy:watch'] = 'npm-watch dev-repos:copy';
-      //add watch
-      watch['dev-repos:copy'] = {
-        'patterns': devRepos.map((repo) => `./${repo}/src`),
-        'extensions': 'html,scss,css',
-        'quiet': false,
-        'legacyWatch': true,
-        'delay': 2500,
-        'runOnChangeOnly': true
-      };
       // enforce that the dependencies of the default app are the last one to have a setup suitable for the default app thus more predictable
       const pkg = this.fs.readJSON(this.destinationPath(this.props.defaultApp + '/package.json'));
       if (pkg) {
         integrateMulti(dependencies, pkg.dependencies);
         integrateMulti(devDependencies, pkg.devDependencies);
+        integrateMulti(overrides, pkg.overrides);
       }
     }
     // remove all plugins that are locally installed
@@ -248,15 +224,25 @@ class Generator extends BasePhoveaGenerator {
     Object.keys(devDependencies).forEach((key) => {
       devDependencies[key] = NpmUtils.mergeVersions(key, devDependencies[key]);
     });
+    Object.keys(overrides).forEach((key) => {
+      overrides[key] = Array.from(new Set(overrides[key]));
+      if (overrides[key].length !== 1) {
+        console.error(`"overrides" of ${key} in package.json could not be merged, using first of: ${overrides[key]}`)
+      }
+      overrides[key] = overrides[key][0];
+    });
 
     // dependencies from package.tmpl.json
     const extraDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).dependencies;
     // devDependencies from package.tmpl.json
     const extraDevDependencies = this.fs.readJSON(this.templatePath('package.tmpl.json')).devDependencies;
+    // overrides from package.tmpl.json
+    const extraOverrides = this.fs.readJSON(this.templatePath('package.tmpl.json')).overrides || {};
+    const extraResolutions = this.fs.readJSON(this.templatePath('package.tmpl.json')).resolutions || {};
     // scripts from package.tmpl.json
     const extraScripts = this.fs.readJSON(this.templatePath('package.tmpl.json')).scripts;
 
-    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), scripts: Object.assign(scripts, extraScripts), watch, devRepos};
+    return {plugins, dependencies: Object.assign(Object.assign(dependencies, extraDependencies), this.options.addWorkspaceRepos ? repoDependencies : {}), devDependencies: Object.assign(devDependencies, extraDevDependencies), overrides: Object.assign(overrides, extraOverrides), resolutions: Object.assign(overrides, extraResolutions), scripts: Object.assign(scripts, extraScripts), devRepos};
   }
 
   _generateServerDependencies(additionalPlugins) {
@@ -299,32 +285,6 @@ class Generator extends BasePhoveaGenerator {
       const script = this.fs.read(this.destinationPath(`${p}/docker_script.sh`), {defaults: ''});
       if (script) {
         dockerScripts.push(script);
-      }
-
-      {
-        const pkg = this.fs.readJSON(this.destinationPath(p + '/package.json'));
-
-        // vagrantify commands
-        const cmds = Object.keys(pkg.scripts);
-
-        let toPatch;
-        if (cmds.includes('test:python')) { // hybrid
-          toPatch = /^(check|(test|dist|start|watch):python)$/;
-        } else { // regular server
-          toPatch = /^(check|test|dist|start|watch)$/;
-        }
-
-        // no pre post test tasks
-        cmds.filter((s) => toPatch.test(s)).forEach((s) => {
-          // generate scoped tasks
-          let cmd = `.${path.sep}withinEnv "exec 'cd ${p} && npm run ${s}'"`;
-          if (/^(start|watch)/g.test(s)) {
-            // special case for start to have the right working directory
-            let fixedscript = pkg.scripts[s].replace(/__main__\.py/, p);
-            cmd = `.${path.sep}withinEnv "${fixedscript}"`;
-          }
-          scripts[`${s}:${p}`] = cmd;
-        });
       }
 
       // merge docker-compose
@@ -539,7 +499,7 @@ class Generator extends BasePhoveaGenerator {
 
   writing() {
 
-    const {plugins, dependencies, devDependencies, scripts, watch, devRepos} = this._generateWebDependencies(this.props.modules);
+    const {plugins, dependencies, devDependencies, overrides, resolutions, scripts, devRepos} = this._generateWebDependencies(this.props.modules);
     const sdeps = this._generateServerDependencies(this.props.modules);
     const dockerWebHint =
       '  # Uncomment the following lines for testing the web production build\n' +
@@ -586,7 +546,7 @@ class Generator extends BasePhoveaGenerator {
     const config = {};
     config.workspace = path.basename(this.destinationPath());
     config.modules = _.union(this.props.modules, plugins, sdeps.plugins);
-    config.webmodules = plugins.filter((d) => fs.existsSync(this.destinationPath(d + '/phovea_registry.js')));
+    config.webmodules = plugins.filter((d) => fs.existsSync(this.destinationPath(d + '/src/phovea_registry.ts')));
     config.servermodules = sdeps.plugins;
     config.dockerCompose = path.resolve(this.destinationPath('docker-compose.yml'));
     config.wsName = this.options.wsName;
@@ -595,7 +555,7 @@ class Generator extends BasePhoveaGenerator {
 
     this._writeTemplates(config, false);
     // replace the added entries
-    this._patchPackageJSON(config, [], {devDependencies, dependencies, scripts, watch}, true);
+    this._patchPackageJSON(config, [], {devDependencies, overrides, resolutions, dependencies, scripts}, true);
 
     if (!fs.existsSync(this.destinationPath('config.json'))) {
       this.fs.copy(this.templatePath('config.tmpl.json'), this.destinationPath('config.json'));
@@ -634,8 +594,8 @@ class Generator extends BasePhoveaGenerator {
 
     this.log('\n\nNext steps: ');
 
-    this.log(chalk.red(' npm install'));
-    this.log(chalk.red(' docker-compose up'));
+    this.log(chalk.red(' yarn install'));
+    this.log(chalk.red(' docker compose up'));
   }
 }
 

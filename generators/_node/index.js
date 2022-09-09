@@ -5,7 +5,7 @@ const originUrl = require('git-remote-origin-url');
 const fs = require('fs-extra');
 const BasePhoveaGenerator = require('../../base/BasePhoveaGenerator');
 
-// based on https://github.com/yeoman/generator-node/blob/master/generators/app/index.js
+// based on https://github.com/yeoman/generator-node/blob/main/generators/app/index.js
 
 class PackageJSONGenerator extends BasePhoveaGenerator {
 

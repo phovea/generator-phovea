@@ -106,11 +106,6 @@ describe('Generate plugin with name `tdp_core`', () => {
   afterAll(() => {
     rimraf.sync(path.join(__dirname, target));
   });
-
-  it('generates `phovea_registry.js` with import statement adapted for `tdp_core`', () => {
-    const phoveaRegistryTmpl = template(fse.readFileSync(TestUtils.templatePath('_init-web', 'phovea_registry.js', 'processed')))({name: prompts.name, modules: [], isWeb: () => null});
-    assert.fileContent('phovea_registry.js', phoveaRegistryTmpl);
-  });
 });
 
 describe('Test options of yo phovea:init-lib', () => {
@@ -134,9 +129,9 @@ describe('Test options of yo phovea:init-lib', () => {
     rimraf.sync(path.join(__dirname, target));
   });
 
-  it('runs npm install', () => {
+  it('runs yarn install', () => {
     expect(SpawnUtils.spawnSync.mock.calls.length).toBe(1);
     const [cmd, args, cwd, verbose] = SpawnUtils.spawnSync.mock.calls[0];
-    expect([cmd, args, cwd, verbose]).toStrictEqual(['npm', 'install', '', true]);
+    expect([cmd, args, cwd, verbose]).toStrictEqual(['yarn', 'install', '', true]);
   });
 });

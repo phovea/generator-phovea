@@ -28,7 +28,7 @@ describe('mergeVersions list of versions with github or gitlab version tags', ()
         const name = 'target360';
         const versions = [
             'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#dv_develop',
-            'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#master',
+            'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#main',
             '4.0.0'
         ];
         expect(() => NpmUtils.mergeVersions(name, versions)).toThrow();
@@ -47,7 +47,7 @@ describe('mergeVersions list of versions with github or gitlab version tags', ()
         const name = 'tdp_core';
         const versions = [
             'github:datavisyn/tdp_core#semver:^7.0.1',
-            'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#master',
+            'git+ssh://git@gitlab.customer.com:Target360/plugins/target360#main',
         ];
         expect(() => NpmUtils.mergeVersions(name, versions)).toThrow();
     });

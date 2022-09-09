@@ -56,7 +56,7 @@ class Generator extends Base {
 
     this.option('branch', {
       alias: 'b',
-      defaults: 'master',
+      defaults: 'main',
       type: String
     });
 
@@ -122,7 +122,7 @@ class Generator extends Base {
    * @returns The parsed phovea_product.json file.
    */
   _getProduct() {
-    return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'master', null, '.', this.cwd, this.cloneSSH)
+    return WorkspaceUtils.cloneRepo(this.productName, this.options.branch || 'main', null, '.', this.cwd, this.cloneSSH)
       .then(() => {
         this._removeUnnecessaryProductFiles();
         const phoveaProductJSON = `${this.cwd}/phovea_product.json`;
@@ -289,7 +289,7 @@ class Generator extends Base {
       .then(() => GeneratorUtils.yo('workspace', {defaultApp: this.defaultApp, skipNextStepsLog: true}, null, this.cwd, this.env.adapter))
       .then(this._customizeWorkspace.bind(this))
       .then(this._downloadDataFiles.bind(this))
-      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('npm', 'install', this.cwd, true))
+      .then(() => this.options.skip.includes('install') ? null : SpawnUtils.spawnOrAbort('yarn', 'install', this.cwd, true))
       .then(this._downloadBackupFiles.bind(this))
       .then(this._buildDockerCompose.bind(this))
       .catch((msg) => {
@@ -315,7 +315,7 @@ class Generator extends Base {
     this.log(chalk.green((stepCounter++) + '. Switch to the created directory: '), chalk.yellow(`cd ${this.cwd}`));
 
     if (this.options.skip.includes('install')) {
-      this.log(chalk.green((stepCounter++) + '. Install npm dependencies: '), chalk.yellow('npm install'));
+      this.log(chalk.green((stepCounter++) + '. Install dependencies: '), chalk.yellow('yarn install'));
     }
 
     if (this.options.skip.includes('build')) {
